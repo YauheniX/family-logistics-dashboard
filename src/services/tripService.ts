@@ -90,7 +90,7 @@ export async function duplicateTrip(trip: Trip): Promise<Trip | null> {
   } catch (error) {
     try {
       await deleteTrip(duplicatedTrip.id);
-    } catch (_cleanupError) {
+    } catch (cleanupError) {
       // keep original error
     }
     throw error;

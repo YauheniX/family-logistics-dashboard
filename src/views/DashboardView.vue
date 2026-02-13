@@ -57,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import TripCard from '@/components/trips/TripCard.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';
@@ -70,7 +70,7 @@ const tripStore = useTripStore();
 const router = useRouter();
 const duplicatingTripId = ref<string | null>(null);
 const toast = ref<{ message: string; type: 'success' | 'error' }>({ message: '', type: 'success' });
-let toastTimer: ReturnType<typeof setTimeout> | null = null;
+const toastTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 
 const budgetTotal = computed(() => tripStore.totalBudget.toFixed(2));
 const currencyHint = computed(() => (tripStore.budget[0]?.currency ? tripStore.budget[0].currency : '')); // simple hint
@@ -90,12 +90,19 @@ onMounted(() => {
   }
 });
 
+onUnmounted(() => {
+  if (toastTimer.value) {
+    clearTimeout(toastTimer.value);
+    toastTimer.value = null;
+  }
+});
+
 const showToast = (message: string, type: 'success' | 'error') => {
   toast.value = { message, type };
-  if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => {
+  if (toastTimer.value) clearTimeout(toastTimer.value);
+  toastTimer.value = setTimeout(() => {
     toast.value.message = '';
-    toastTimer = null;
+    toastTimer.value = null;
   }, 3000);
 };
 

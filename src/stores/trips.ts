@@ -115,9 +115,9 @@ export const useTripStore = defineStore('trips', {
     },
 
     async duplicateTrip(id: string) {
-      const source =
-        this.trips.find((t) => t.id === id) ??
-        (this.currentTrip?.id === id ? this.currentTrip : await fetchTrip(id));
+      const fromList = this.trips.find((t) => t.id === id);
+      const fromCurrentTrip = this.currentTrip?.id === id ? this.currentTrip : null;
+      const source = fromList ?? fromCurrentTrip ?? (await fetchTrip(id));
       if (!source) return null;
       this.error = null;
       try {
