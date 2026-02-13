@@ -1,85 +1,195 @@
 {
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "Setup Local: Docker + Supabase",
-      "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "${workspaceFolder}\\setup-local.ps1"
-      ],
-      "group": "build",
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Supabase: Start",
-      "type": "shell",
-      "command": "npx.cmd",
-      "args": [
-        "supabase",
-        "start"
-      ],
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Supabase: Stop",
-      "type": "shell",
-      "command": "npx.cmd",
-      "args": [
-        "supabase",
-        "stop"
-      ],
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Supabase: Status",
-      "type": "shell",
-      "command": "npx.cmd",
-      "args": [
-        "supabase",
-        "status",
-        "-o",
-        "env"
-      ],
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "App: Dev Server",
-      "type": "shell",
-      "command": "npm.cmd",
-      "args": [
-        "run",
-        "dev"
-      ],
-      "group": {
-        "kind": "test",
-        "isDefault": true
-      },
-      "isBackground": true,
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared"
-      },
-      "problemMatcher": []
-    }
-  ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Setup Local: Docker + Supabase",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"${workspaceFolder}\\setup-local.ps1"
+			],
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Supabase: Start",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"supabase",
+				"start"
+			],
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Supabase: Stop",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"supabase",
+				"stop"
+			],
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Supabase: Status",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"supabase",
+				"status",
+				"-o",
+				"env"
+			],
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "App: Dev Server",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"dev"
+			],
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
+			"isBackground": true,
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Debug: Docker PS",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"ps",
+				"--format",
+				"table {{.Names}}\\t{{.Status}}"
+			]
+		},
+		{
+			"label": "DB: Apply schema.sql",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"Get-Content -Raw .\\supabase\\schema.sql | docker exec -i supabase_db_family-logistics-dashboard psql -U postgres -d postgres -v ON_ERROR_STOP=1"
+			]
+		},
+		{
+			"label": "DB: Apply rls.sql",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"Get-Content -Raw .\\supabase\\rls.sql | docker exec -i supabase_db_family-logistics-dashboard psql -U postgres -d postgres -v ON_ERROR_STOP=1"
+			]
+		},
+		{
+			"label": "DB: Apply schema.sql (retry)",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"Get-Content -Raw .\\supabase\\schema.sql | docker exec -i supabase_db_family-logistics-dashboard psql -U postgres -d postgres -v ON_ERROR_STOP=1"
+			]
+		},
+		{
+			"label": "DB: Apply rls.sql (retry)",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"Get-Content -Raw .\\supabase\\rls.sql | docker exec -i supabase_db_family-logistics-dashboard psql -U postgres -d postgres -v ON_ERROR_STOP=1"
+			]
+		},
+		{
+			"label": "DB: Verify trips table",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"exec",
+				"-i",
+				"supabase_db_family-logistics-dashboard",
+				"psql",
+				"-U",
+				"postgres",
+				"-d",
+				"postgres",
+				"-c",
+				"select to_regclass('public.trips') as trips_table;"
+			]
+		},
+		{
+			"label": "DB: Verify trips table (retry)",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"docker exec -i supabase_db_family-logistics-dashboard psql -U postgres -d postgres -c \"select to_regclass(''public.trips'') as trips_table;\""
+			]
+		},
+		{
+			"label": "DB: Verify trips regclass",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"docker exec -i supabase_db_family-logistics-dashboard psql -U postgres -d postgres -tAc \"select to_regclass(''public.trips'');\""
+			]
+		},
+		{
+			"label": "DB: Verify trips via \\dt",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"exec",
+				"-i",
+				"supabase_db_family-logistics-dashboard",
+				"psql",
+				"-U",
+				"postgres",
+				"-d",
+				"postgres",
+				"-c",
+				"\\dt public.trips"
+			]
+		}
+	]
 }

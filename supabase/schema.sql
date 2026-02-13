@@ -79,4 +79,11 @@ alter table public.packing_templates enable row level security;
 alter table public.packing_template_items enable row level security;
 
 -- Storage bucket for documents (policies live in rls.sql)
-select storage.create_bucket('documents', true);
+do $$
+begin
+  perform storage.create_bucket('documents', true);
+exception
+  when duplicate_object then
+    null;
+end;
+$$;

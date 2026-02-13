@@ -8,3 +8,4 @@ family-logistics-dashboard.code-workspace
 .tools/README.md
 .tools/supabase.exe
 .tools/supabase.tar.gz
+.env
