@@ -276,7 +276,10 @@ try {
     'VITE_SUPABASE_STORAGE_BUCKET=documents'
   )
 
-  Set-Content -Path $envPath -Value $envContent -Encoding UTF8
+  # Note: Write the .env file as UTF-8 without BOM for better cross-platform compatibility.
+  # This is more explicit than `Set-Content -Encoding UTF8`, which typically emits a BOM.
+  $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+  [System.IO.File]::WriteAllText($envPath, ($envContent -join [Environment]::NewLine) + [Environment]::NewLine, $utf8NoBom)
   Write-Step '.env updated successfully.'
 
   Write-Host ''
