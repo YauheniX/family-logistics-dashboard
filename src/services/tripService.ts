@@ -37,13 +37,64 @@ export async function deleteTrip(id: string): Promise<void> {
 
 export async function duplicateTrip(trip: Trip): Promise<Trip | null> {
   const clone: NewTripPayload = {
-    name: `${trip.name} (Copy)`,
+    name: `Copy of ${trip.name}`,
     start_date: trip.start_date,
     end_date: trip.end_date,
     status: 'planning',
     created_by: trip.created_by,
   };
-  return createTrip(clone);
+  const duplicatedTrip = await createTrip(clone);
+  if (!duplicatedTrip) return null;
+
+  try {
+    const [packingItems, budgetEntries, timelineEvents] = await Promise.all([
+      fetchPackingItems(trip.id),
+      fetchBudgetEntries(trip.id),
+      fetchTimelineEvents(trip.id),
+    ]);
+
+    if (packingItems.length) {
+      const packingPayload = packingItems.map((item) => ({
+        trip_id: duplicatedTrip.id,
+        title: item.title,
+        category: item.category,
+        is_packed: item.is_packed,
+      }));
+      const { error } = await supabase.from('packing_items').insert(packingPayload);
+      if (error) throw error;
+    }
+
+    if (budgetEntries.length) {
+      const budgetPayload = budgetEntries.map((entry) => ({
+        trip_id: duplicatedTrip.id,
+        category: entry.category,
+        amount: entry.amount,
+        currency: entry.currency,
+      }));
+      const { error } = await supabase.from('budget_entries').insert(budgetPayload);
+      if (error) throw error;
+    }
+
+    if (timelineEvents.length) {
+      const timelinePayload = timelineEvents.map((event) => ({
+        trip_id: duplicatedTrip.id,
+        title: event.title,
+        date_time: event.date_time,
+        notes: event.notes,
+      }));
+      const { error } = await supabase.from('timeline_events').insert(timelinePayload);
+      if (error) throw error;
+    }
+
+    return duplicatedTrip;
+  } catch (error) {
+    try {
+      await deleteTrip(duplicatedTrip.id);
+    } catch (_cleanupError) {
+      // keep original error
+    }
+    throw error;
+  }
 }
 
 export async function fetchPackingItems(tripId: string): Promise<PackingItem[]> {

@@ -25,6 +25,9 @@
       <RouterLink :to="{ name: 'trip-edit', params: { id: trip.id } }" class="btn-ghost">
         Edit
       </RouterLink>
+      <button class="btn-ghost" type="button" :disabled="isDuplicating" @click="emit('duplicate', trip.id)">
+        {{ isDuplicating ? 'Duplicating...' : 'Duplicate' }}
+      </button>
     </div>
   </div>
 </template>
@@ -34,7 +37,9 @@ import { computed } from 'vue';
 import { RouterLink } from 'vue-router';
 import type { Trip } from '@/types/entities';
 
-const props = defineProps<{ trip: Trip }>();
+const props = defineProps<{ trip: Trip; isDuplicating?: boolean }>();
+const emit = defineEmits<{ duplicate: [tripId: string] }>();
+const isDuplicating = computed(() => Boolean(props.isDuplicating));
 
 const statusClass = computed(() => {
   const base = 'border text-brand-900 bg-brand-50 border-brand-200';
