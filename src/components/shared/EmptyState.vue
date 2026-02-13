@@ -14,14 +14,12 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
+withDefaults(defineProps<{
   title: string;
   description: string;
   cta?: string;
   badge?: string;
-}>();
-
-withDefaults(props, {
+}>(), {
   badge: 'Getting started',
 });
 
