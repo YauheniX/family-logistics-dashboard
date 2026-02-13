@@ -23,7 +23,12 @@
         <div class="glass-card p-5">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-slate-900">Packing</h3>
-            <span class="text-sm text-slate-600">Toggle items as you pack</span>
+            <div class="flex items-center gap-2">
+              <button class="btn-ghost text-sm" type="button" @click="showTemplateModal = true">
+                📋 Apply Template
+              </button>
+              <span class="text-sm text-slate-600">Toggle items as you pack</span>
+            </div>
           </div>
           <div class="mt-3 space-y-2">
             <div v-for="item in tripStore.packing" :key="item.id" class="flex items-center gap-3">
@@ -134,6 +139,12 @@
         </div>
       </div>
     </div>
+    <ApplyTemplateModal
+      :open="showTemplateModal"
+      :trip-id="tripId"
+      @close="showTemplateModal = false"
+      @applied="onTemplateApplied"
+    />
   </div>
   <LoadingState v-else message="Loading trip..." />
 </template>
@@ -145,6 +156,7 @@ import { useTripStore } from '@/stores/trips';
 import { useAuthStore } from '@/stores/auth';
 import { uploadDocument } from '@/services/storageService';
 import LoadingState from '@/components/shared/LoadingState.vue';
+import ApplyTemplateModal from '@/components/trips/ApplyTemplateModal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -153,6 +165,7 @@ const authStore = useAuthStore();
 
 const newPackingTitle = ref('');
 const newPackingCategory = ref('adult');
+const showTemplateModal = ref(false);
 const documentTitle = ref('');
 const documentDescription = ref('');
 const selectedFile = ref<File | null>(null);
@@ -186,6 +199,12 @@ const addPackingItem = async () => {
     is_packed: false,
   });
   newPackingTitle.value = '';
+};
+
+const onTemplateApplied = async () => {
+  if (tripId.value) {
+    await tripStore.loadPacking(tripId.value);
+  }
 };
 
 const onFileChange = (event: Event) => {

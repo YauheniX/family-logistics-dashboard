@@ -1,5 +1,7 @@
 export type TripStatus = 'planning' | 'booked' | 'ready' | 'done';
 
+export type PackingCategory = 'adult' | 'kid' | 'baby' | 'roadtrip' | 'custom';
+
 export interface Trip {
   id: string;
   name: string;
@@ -15,7 +17,7 @@ export interface PackingItem {
   id: string;
   trip_id: string;
   title: string;
-  category: 'adult' | 'kid' | 'baby' | 'roadtrip' | 'custom';
+  category: PackingCategory;
   is_packed: boolean;
 }
 
@@ -46,3 +48,19 @@ export interface TimelineEvent {
 }
 
 export type NewTripPayload = Omit<Trip, 'id' | 'created_at' | 'packing_progress'>;
+
+export interface PackingTemplate {
+  id: string;
+  name: string;
+  category: PackingCategory;
+  created_by: string;
+  created_at?: string;
+}
+
+export interface PackingTemplateItem {
+  id: string;
+  template_id: string;
+  title: string;
+}
+
+export type NewPackingTemplatePayload = Omit<PackingTemplate, 'id' | 'created_at'>;
