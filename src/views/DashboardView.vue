@@ -29,7 +29,13 @@
     <LoadingState v-if="tripStore.loading" message="Loading your trips..." />
 
     <div v-else-if="tripStore.trips.length" class="page-grid">
-      <TripCard v-for="trip in tripStore.trips" :key="trip.id" :trip="trip" />
+      <TripCard
+        v-for="trip in tripStore.trips"
+        :key="trip.id"
+        :trip="trip"
+        :is-duplicating="duplicatingTripId === trip.id"
+        @duplicate="handleDuplicate"
+      />
     </div>
 
     <EmptyState
@@ -39,11 +45,19 @@
       cta="Create a trip"
       @action="() => router.push('/trips/new')"
     />
+
+    <div
+      v-if="toast.message"
+      class="fixed right-6 top-6 z-50 rounded-lg px-4 py-2 text-sm font-medium text-white shadow-lg"
+      :class="toast.type === 'success' ? 'bg-emerald-600' : 'bg-red-600'"
+    >
+      {{ toast.message }}
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import TripCard from '@/components/trips/TripCard.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';
@@ -54,6 +68,9 @@ import { useTripStore } from '@/stores/trips';
 const authStore = useAuthStore();
 const tripStore = useTripStore();
 const router = useRouter();
+const duplicatingTripId = ref<string | null>(null);
+const toast = ref<{ message: string; type: 'success' | 'error' }>({ message: '', type: 'success' });
+const toastTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 
 const budgetTotal = computed(() => tripStore.totalBudget.toFixed(2));
 const currencyHint = computed(() => (tripStore.budget[0]?.currency ? tripStore.budget[0].currency : '')); // simple hint
@@ -72,4 +89,36 @@ onMounted(() => {
     tripStore.loadTrips(authStore.user.id);
   }
 });
+
+onUnmounted(() => {
+  if (toastTimer.value) {
+    clearTimeout(toastTimer.value);
+    toastTimer.value = null;
+  }
+});
+
+const showToast = (message: string, type: 'success' | 'error') => {
+  toast.value = { message, type };
+  if (toastTimer.value) clearTimeout(toastTimer.value);
+  toastTimer.value = setTimeout(() => {
+    toast.value.message = '';
+    toastTimer.value = null;
+  }, 3000);
+};
+
+const handleDuplicate = async (tripId: string) => {
+  duplicatingTripId.value = tripId;
+  try {
+    const duplicated = await tripStore.duplicateTrip(tripId);
+    if (!duplicated) {
+      showToast('Unable to duplicate trip.', 'error');
+      return;
+    }
+    showToast('Trip duplicated successfully.', 'success');
+  } catch (error: any) {
+    showToast(error?.message ?? 'Unable to duplicate trip.', 'error');
+  } finally {
+    duplicatingTripId.value = null;
+  }
+};
 </script>

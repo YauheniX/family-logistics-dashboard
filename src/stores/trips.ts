@@ -115,15 +115,18 @@ export const useTripStore = defineStore('trips', {
     },
 
     async duplicateTrip(id: string) {
-      const source = this.trips.find((t) => t.id === id);
+      const fromList = this.trips.find((t) => t.id === id);
+      const fromCurrentTrip = this.currentTrip?.id === id ? this.currentTrip : null;
+      const source = fromList ?? fromCurrentTrip ?? (await fetchTrip(id));
       if (!source) return null;
-      this.loading = true;
+      this.error = null;
       try {
         const cloned = await duplicateTrip(source);
         if (cloned) this.trips.unshift(cloned);
         return cloned;
-      } finally {
-        this.loading = false;
+      } catch (err: any) {
+        this.error = err.message ?? 'Unable to duplicate trip';
+        throw err;
       }
     },
 

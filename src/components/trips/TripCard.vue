@@ -25,6 +25,9 @@
       <RouterLink :to="{ name: 'trip-edit', params: { id: trip.id } }" class="btn-ghost">
         Edit
       </RouterLink>
+      <button class="btn-ghost" type="button" :disabled="Boolean(isDuplicating)" @click="emit('duplicate', trip.id)">
+        {{ isDuplicating ? 'Duplicating...' : 'Duplicate' }}
+      </button>
     </div>
   </div>
 </template>
@@ -34,7 +37,8 @@ import { computed } from 'vue';
 import { RouterLink } from 'vue-router';
 import type { Trip } from '@/types/entities';
 
-const props = defineProps<{ trip: Trip }>();
+const { trip, isDuplicating } = defineProps<{ trip: Trip; isDuplicating?: boolean }>();
+const emit = defineEmits<{ duplicate: [tripId: string] }>();
 
 const statusClass = computed(() => {
   const base = 'border text-brand-900 bg-brand-50 border-brand-200';
@@ -44,14 +48,14 @@ const statusClass = computed(() => {
     ready: 'border text-amber-900 bg-amber-50 border-amber-200',
     done: 'border text-slate-900 bg-slate-100 border-slate-200',
   };
-  return statusMap[props.trip.status] || base;
+  return statusMap[trip.status] || base;
 });
 
 const formattedDateRange = computed(() => {
-  if (!props.trip.start_date || !props.trip.end_date) return 'Dates TBA';
+  if (!trip.start_date || !trip.end_date) return 'Dates TBA';
   const fmt = new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' });
-  return `${fmt.format(new Date(props.trip.start_date))} - ${fmt.format(
-    new Date(props.trip.end_date),
+  return `${fmt.format(new Date(trip.start_date))} - ${fmt.format(
+    new Date(trip.end_date),
   )}`;
 });
 </script>
