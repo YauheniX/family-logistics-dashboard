@@ -58,5 +58,25 @@ alter table public.documents enable row level security;
 alter table public.budget_entries enable row level security;
 alter table public.timeline_events enable row level security;
 
+-- Packing templates
+create table if not exists public.packing_templates (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  category text check (category in ('adult','kid','baby','roadtrip','custom')) default 'custom',
+  created_by uuid references auth.users(id) not null,
+  created_at timestamp with time zone default now()
+);
+
+-- Packing template items
+create table if not exists public.packing_template_items (
+  id uuid primary key default gen_random_uuid(),
+  template_id uuid references public.packing_templates(id) on delete cascade,
+  title text not null
+);
+
+-- Enable RLS on template tables
+alter table public.packing_templates enable row level security;
+alter table public.packing_template_items enable row level security;
+
 -- Storage bucket for documents (policies live in rls.sql)
 select storage.create_bucket('documents', true);
