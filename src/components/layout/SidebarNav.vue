@@ -48,6 +48,7 @@ const route = useRoute();
 const items = [
   { name: 'dashboard', label: 'Dashboard', to: '/', emoji: '📌' },
   { name: 'trip-new', label: 'New Trip', to: '/trips/new', emoji: '🧭' },
+  { name: 'templates', label: 'Packing Templates', to: '/templates', emoji: '📋' },
 ];
 
 const userEmail = props.userEmail;

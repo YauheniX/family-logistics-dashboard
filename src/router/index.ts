@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import DashboardView from '@/views/DashboardView.vue';
 import TripDetailView from '@/views/TripDetailView.vue';
 import TripFormView from '@/views/TripFormView.vue';
+import TemplatesView from '@/views/TemplatesView.vue';
 import LoginView from '@/views/auth/LoginView.vue';
 import RegisterView from '@/views/auth/RegisterView.vue';
 import { useAuthStore } from '@/stores/auth';
@@ -31,6 +32,12 @@ const router = createRouter({
       path: '/trips/new',
       name: 'trip-new',
       component: TripFormView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/templates',
+      name: 'templates',
+      component: TemplatesView,
       meta: { requiresAuth: true },
     },
     {

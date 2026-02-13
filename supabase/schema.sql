@@ -85,6 +85,38 @@ create policy if not exists "Trip owners manage timeline"
   for all
   using (exists (select 1 from public.trips t where t.id = trip_id and t.created_by = auth.uid()));
 
+-- Packing templates
+create table if not exists public.packing_templates (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  category text check (category in ('adult','kid','baby','roadtrip','custom')) default 'custom',
+  created_by uuid references auth.users(id) not null,
+  created_at timestamp with time zone default now()
+);
+
+-- Packing template items
+create table if not exists public.packing_template_items (
+  id uuid primary key default gen_random_uuid(),
+  template_id uuid references public.packing_templates(id) on delete cascade,
+  title text not null
+);
+
+-- Enable RLS on template tables
+alter table public.packing_templates enable row level security;
+alter table public.packing_template_items enable row level security;
+
+-- RLS policies: packing templates (user owns their templates)
+create policy if not exists "Users can manage their packing templates"
+  on public.packing_templates
+  for all
+  using (auth.uid() = created_by);
+
+-- RLS policies: packing template items (inherit template ownership)
+create policy if not exists "Template owners manage template items"
+  on public.packing_template_items
+  for all
+  using (exists (select 1 from public.packing_templates t where t.id = template_id and t.created_by = auth.uid()));
+
 -- Storage bucket for documents
 select storage.create_bucket('documents', true);
 
