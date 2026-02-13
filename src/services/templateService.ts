@@ -45,9 +45,7 @@ export async function createTemplate(
       template_id: template.id,
       title,
     }));
-    const { error: itemsError } = await supabase
-      .from('packing_template_items')
-      .insert(itemPayload);
+    const { error: itemsError } = await supabase.from('packing_template_items').insert(itemPayload);
 
     if (itemsError) {
       await supabase.from('packing_templates').delete().eq('id', template.id);

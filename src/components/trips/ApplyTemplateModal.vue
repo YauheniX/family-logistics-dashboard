@@ -7,7 +7,11 @@
 
     <div v-else-if="!templateStore.templates.length" class="text-sm text-slate-500">
       <p>No templates yet.</p>
-      <RouterLink to="/templates" class="mt-2 inline-block text-brand-600 hover:underline" @click="$emit('close')">
+      <RouterLink
+        to="/templates"
+        class="mt-2 inline-block text-brand-600 hover:underline"
+        @click="$emit('close')"
+      >
         Create your first template →
       </RouterLink>
     </div>
@@ -36,7 +40,9 @@
       </div>
 
       <div v-if="result" class="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">
-        ✓ Added {{ result.added }} item(s)<span v-if="result.skipped">, skipped {{ result.skipped }} duplicate(s)</span>.
+        ✓ Added {{ result.added }} item(s)<span v-if="result.skipped"
+          >, skipped {{ result.skipped }} duplicate(s)</span
+        >.
       </div>
     </div>
   </ModalDialog>

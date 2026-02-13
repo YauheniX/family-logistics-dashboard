@@ -6,10 +6,7 @@ import {
   fetchTemplates,
 } from '@/services/templateService';
 import { upsertPackingItem, fetchPackingItems } from '@/services/tripService';
-import type {
-  NewPackingTemplatePayload,
-  PackingTemplate,
-} from '@/types/entities';
+import type { NewPackingTemplatePayload, PackingTemplate } from '@/types/entities';
 
 interface TemplateState {
   templates: PackingTemplate[];
@@ -31,8 +28,8 @@ export const useTemplateStore = defineStore('templates', {
       this.error = null;
       try {
         this.templates = await fetchTemplates(userId);
-      } catch (err: any) {
-        this.error = err.message ?? 'Unable to load templates';
+      } catch (err: unknown) {
+        this.error = err instanceof Error ? err.message : 'Unable to load templates';
       } finally {
         this.loading = false;
       }
@@ -45,8 +42,8 @@ export const useTemplateStore = defineStore('templates', {
         const template = await createTemplate(payload, items);
         this.templates.push(template);
         return template;
-      } catch (err: any) {
-        this.error = err.message ?? 'Unable to create template';
+      } catch (err: unknown) {
+        this.error = err instanceof Error ? err.message : 'Unable to create template';
         throw err;
       } finally {
         this.loading = false;
@@ -59,8 +56,8 @@ export const useTemplateStore = defineStore('templates', {
       try {
         await deleteTemplate(id);
         this.templates = this.templates.filter((t) => t.id !== id);
-      } catch (err: any) {
-        this.error = err.message ?? 'Unable to delete template';
+      } catch (err: unknown) {
+        this.error = err instanceof Error ? err.message : 'Unable to delete template';
         throw err;
       } finally {
         this.loading = false;
@@ -79,9 +76,7 @@ export const useTemplateStore = defineStore('templates', {
           fetchPackingItems(tripId),
         ]);
 
-        const existingTitles = new Set(
-          existingItems.map((item) => item.title.toLowerCase()),
-        );
+        const existingTitles = new Set(existingItems.map((item) => item.title.toLowerCase()));
 
         const template = this.templates.find((t) => t.id === templateId);
         const category = template?.category ?? 'custom';
@@ -103,8 +98,8 @@ export const useTemplateStore = defineStore('templates', {
           added: newItems.length,
           skipped: templateItems.length - newItems.length,
         };
-      } catch (err: any) {
-        this.error = err.message ?? 'Unable to apply template';
+      } catch (err: unknown) {
+        this.error = err instanceof Error ? err.message : 'Unable to apply template';
         throw err;
       } finally {
         this.applying = false;

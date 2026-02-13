@@ -50,7 +50,11 @@
           </div>
 
           <form class="mt-4 grid gap-2 md:grid-cols-3" @submit.prevent="addPackingItem">
-            <input v-model="newPackingTitle" class="input md:col-span-2" placeholder="Add packing item" />
+            <input
+              v-model="newPackingTitle"
+              class="input md:col-span-2"
+              placeholder="Add packing item"
+            />
             <select v-model="newPackingCategory" class="input">
               <option value="adult">Adult</option>
               <option value="kid">Kid</option>
@@ -68,14 +72,22 @@
             <span class="text-sm text-slate-600">Upload files to Supabase Storage</span>
           </div>
           <ul class="mt-3 space-y-2">
-            <li v-for="doc in tripStore.documents" :key="doc.id" class="flex items-center justify-between text-sm">
+            <li
+              v-for="doc in tripStore.documents"
+              :key="doc.id"
+              class="flex items-center justify-between text-sm"
+            >
               <div>
                 <p class="font-medium text-slate-800">{{ doc.title }}</p>
                 <p class="text-xs text-slate-500">{{ doc.description }}</p>
               </div>
-              <a :href="doc.file_url" target="_blank" rel="noreferrer" class="text-brand-600">View</a>
+              <a :href="doc.file_url" target="_blank" rel="noreferrer" class="text-brand-600"
+                >View</a
+              >
             </li>
-            <p v-if="!tripStore.documents.length" class="text-sm text-slate-500">No documents yet.</p>
+            <p v-if="!tripStore.documents.length" class="text-sm text-slate-500">
+              No documents yet.
+            </p>
           </ul>
 
           <form class="mt-4 space-y-2" @submit.prevent="uploadDoc">
@@ -94,7 +106,11 @@
             <span class="text-sm text-slate-600">Track trip spend</span>
           </div>
           <ul class="mt-3 space-y-2">
-            <li v-for="entry in tripStore.budget" :key="entry.id" class="flex items-center justify-between text-sm">
+            <li
+              v-for="entry in tripStore.budget"
+              :key="entry.id"
+              class="flex items-center justify-between text-sm"
+            >
               <div>
                 <p class="font-medium text-slate-800">{{ entry.category }}</p>
                 <p class="text-xs text-slate-500">{{ entry.created_at?.slice(0, 10) }}</p>
@@ -108,7 +124,14 @@
 
           <form class="mt-4 grid gap-2 md:grid-cols-3" @submit.prevent="addBudget">
             <input v-model="budgetCategory" class="input" placeholder="Category" />
-            <input v-model.number="budgetAmount" type="number" min="0" step="0.01" class="input" placeholder="Amount" />
+            <input
+              v-model.number="budgetAmount"
+              type="number"
+              min="0"
+              step="0.01"
+              class="input"
+              placeholder="Amount"
+            />
             <input v-model="budgetCurrency" class="input" placeholder="Currency" />
             <button class="btn-primary md:col-span-3" type="submit">Add entry</button>
           </form>
@@ -120,7 +143,11 @@
             <span class="text-sm text-slate-600">Important moments</span>
           </div>
           <ul class="mt-3 space-y-2">
-            <li v-for="event in tripStore.timeline" :key="event.id" class="flex items-center justify-between text-sm">
+            <li
+              v-for="event in tripStore.timeline"
+              :key="event.id"
+              class="flex items-center justify-between text-sm"
+            >
               <div>
                 <p class="font-medium text-slate-800">{{ event.title }}</p>
                 <p class="text-xs text-slate-500">{{ formatDateTime(event.date_time) }}</p>
@@ -195,7 +222,7 @@ const addPackingItem = async () => {
   await tripStore.savePackingItem({
     trip_id: tripId.value,
     title: newPackingTitle.value,
-    category: newPackingCategory.value as any,
+    category: newPackingCategory.value,
     is_packed: false,
   });
   newPackingTitle.value = '';

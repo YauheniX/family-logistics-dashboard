@@ -11,8 +11,8 @@ export function useAsyncState<T>() {
     try {
       data.value = await fn();
       return data.value;
-    } catch (err: any) {
-      error.value = err.message ?? 'Something went wrong';
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Something went wrong';
       throw err;
     } finally {
       loading.value = false;

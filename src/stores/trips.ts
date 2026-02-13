@@ -55,8 +55,8 @@ export const useTripStore = defineStore('trips', {
       this.loading = true;
       try {
         this.trips = await fetchTrips(userId);
-      } catch (err: any) {
-        this.error = err.message ?? 'Unable to load trips';
+      } catch (err: unknown) {
+        this.error = err instanceof Error ? err.message : 'Unable to load trips';
       } finally {
         this.loading = false;
       }
@@ -74,8 +74,8 @@ export const useTripStore = defineStore('trips', {
             this.loadTimeline(id),
           ]);
         }
-      } catch (err: any) {
-        this.error = err.message ?? 'Unable to load trip';
+      } catch (err: unknown) {
+        this.error = err instanceof Error ? err.message : 'Unable to load trip';
       } finally {
         this.loading = false;
       }
@@ -124,8 +124,8 @@ export const useTripStore = defineStore('trips', {
         const cloned = await duplicateTrip(source);
         if (cloned) this.trips.unshift(cloned);
         return cloned;
-      } catch (err: any) {
-        this.error = err.message ?? 'Unable to duplicate trip';
+      } catch (err: unknown) {
+        this.error = err instanceof Error ? err.message : 'Unable to duplicate trip';
         throw err;
       }
     },

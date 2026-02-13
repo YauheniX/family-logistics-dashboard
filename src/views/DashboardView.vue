@@ -73,7 +73,9 @@ const toast = ref<{ message: string; type: 'success' | 'error' }>({ message: '',
 const toastTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 
 const budgetTotal = computed(() => tripStore.totalBudget.toFixed(2));
-const currencyHint = computed(() => (tripStore.budget[0]?.currency ? tripStore.budget[0].currency : '')); // simple hint
+const currencyHint = computed(() =>
+  tripStore.budget[0]?.currency ? tripStore.budget[0].currency : '',
+); // simple hint
 const packingCount = computed(() => tripStore.packing.length);
 
 watch(
@@ -115,8 +117,8 @@ const handleDuplicate = async (tripId: string) => {
       return;
     }
     showToast('Trip duplicated successfully.', 'success');
-  } catch (error: any) {
-    showToast(error?.message ?? 'Unable to duplicate trip.', 'error');
+  } catch (error: unknown) {
+    showToast(error instanceof Error ? error.message : 'Unable to duplicate trip.', 'error');
   } finally {
     duplicatingTripId.value = null;
   }

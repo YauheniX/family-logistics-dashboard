@@ -49,8 +49,8 @@ export const useAuthStore = defineStore('auth', {
         if (error) throw error;
         this.session = data.session;
         this.user = data.user;
-      } catch (err: any) {
-        this.error = err.message ?? 'Unable to login';
+      } catch (err: unknown) {
+        this.error = err instanceof Error ? err.message : 'Unable to login';
         throw err;
       } finally {
         this.loading = false;
@@ -65,8 +65,8 @@ export const useAuthStore = defineStore('auth', {
         if (error) throw error;
         this.session = data.session;
         this.user = data.user;
-      } catch (err: any) {
-        this.error = err.message ?? 'Unable to register';
+      } catch (err: unknown) {
+        this.error = err instanceof Error ? err.message : 'Unable to register';
         throw err;
       } finally {
         this.loading = false;

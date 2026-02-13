@@ -14,7 +14,9 @@
         <label class="label" for="password">Password</label>
         <input id="password" v-model="password" type="password" class="input" required />
       </div>
-      <button class="btn-primary w-full" type="submit" :disabled="authStore.loading">Sign in</button>
+      <button class="btn-primary w-full" type="submit" :disabled="authStore.loading">
+        Sign in
+      </button>
       <p v-if="authStore.error" class="text-sm text-red-600">{{ authStore.error }}</p>
       <p class="text-sm text-slate-600">
         No account?

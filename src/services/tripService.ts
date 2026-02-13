@@ -1,5 +1,12 @@
 import { supabase } from './supabaseClient';
-import type { BudgetEntry, NewTripPayload, PackingItem, TimelineEvent, Trip, TripDocument } from '@/types/entities';
+import type {
+  BudgetEntry,
+  NewTripPayload,
+  PackingItem,
+  TimelineEvent,
+  Trip,
+  TripDocument,
+} from '@/types/entities';
 
 export async function fetchTrips(userId: string): Promise<Trip[]> {
   const { data, error } = await supabase
@@ -24,8 +31,16 @@ export async function createTrip(payload: NewTripPayload): Promise<Trip | null> 
   return data ?? null;
 }
 
-export async function updateTrip(id: string, payload: Partial<NewTripPayload>): Promise<Trip | null> {
-  const { data, error } = await supabase.from('trips').update(payload).eq('id', id).select().single();
+export async function updateTrip(
+  id: string,
+  payload: Partial<NewTripPayload>,
+): Promise<Trip | null> {
+  const { data, error } = await supabase
+    .from('trips')
+    .update(payload)
+    .eq('id', id)
+    .select()
+    .single();
   if (error) throw error;
   return data ?? null;
 }
@@ -107,14 +122,19 @@ export async function fetchPackingItems(tripId: string): Promise<PackingItem[]> 
   return data ?? [];
 }
 
-export async function upsertPackingItem(item: Partial<PackingItem> & { trip_id: string }): Promise<PackingItem | null> {
+export async function upsertPackingItem(
+  item: Partial<PackingItem> & { trip_id: string },
+): Promise<PackingItem | null> {
   const { data, error } = await supabase.from('packing_items').upsert(item).select().single();
   if (error) throw error;
   return data ?? null;
 }
 
 export async function togglePacked(id: string, isPacked: boolean): Promise<void> {
-  const { error } = await supabase.from('packing_items').update({ is_packed: isPacked }).eq('id', id);
+  const { error } = await supabase
+    .from('packing_items')
+    .update({ is_packed: isPacked })
+    .eq('id', id);
   if (error) throw error;
 }
 
@@ -160,7 +180,9 @@ export async function fetchTimelineEvents(tripId: string): Promise<TimelineEvent
   return data ?? [];
 }
 
-export async function addTimelineEvent(event: Omit<TimelineEvent, 'id'>): Promise<TimelineEvent | null> {
+export async function addTimelineEvent(
+  event: Omit<TimelineEvent, 'id'>,
+): Promise<TimelineEvent | null> {
   const { data, error } = await supabase.from('timeline_events').insert(event).select().single();
   if (error) throw error;
   return data ?? null;
