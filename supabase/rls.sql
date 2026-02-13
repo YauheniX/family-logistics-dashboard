@@ -144,6 +144,65 @@ create policy if not exists "timeline_select_by_owner"
   ));
 
 create policy if not exists "timeline_insert_by_owner"
+
+-- Packing templates: user owns their templates
+create policy if not exists "templates_select_own"
+  on public.packing_templates
+  for select
+  using (auth.uid() = created_by);
+
+create policy if not exists "templates_insert_own"
+  on public.packing_templates
+  for insert
+  with check (auth.uid() = created_by);
+
+create policy if not exists "templates_update_own"
+  on public.packing_templates
+  for update
+  using (auth.uid() = created_by)
+  with check (auth.uid() = created_by);
+
+create policy if not exists "templates_delete_own"
+  on public.packing_templates
+  for delete
+  using (auth.uid() = created_by);
+
+-- Packing template items: inherit template ownership
+create policy if not exists "template_items_select_by_owner"
+  on public.packing_template_items
+  for select
+  using (exists (
+    select 1 from public.packing_templates t
+    where t.id = template_id and t.created_by = auth.uid()
+  ));
+
+create policy if not exists "template_items_insert_by_owner"
+  on public.packing_template_items
+  for insert
+  with check (exists (
+    select 1 from public.packing_templates t
+    where t.id = template_id and t.created_by = auth.uid()
+  ));
+
+create policy if not exists "template_items_update_by_owner"
+  on public.packing_template_items
+  for update
+  using (exists (
+    select 1 from public.packing_templates t
+    where t.id = template_id and t.created_by = auth.uid()
+  ))
+  with check (exists (
+    select 1 from public.packing_templates t
+    where t.id = template_id and t.created_by = auth.uid()
+  ));
+
+create policy if not exists "template_items_delete_by_owner"
+  on public.packing_template_items
+  for delete
+  using (exists (
+    select 1 from public.packing_templates t
+    where t.id = template_id and t.created_by = auth.uid()
+  ));
   on public.timeline_events
   for insert
   with check (exists (
