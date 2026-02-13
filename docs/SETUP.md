@@ -40,6 +40,8 @@ Make sure the following are installed on your system:
 | **npm** | 9.x or later | `npm -v` |
 | **Git** | any recent version | `git --version` |
 
+> **Windows note:** Use the **64-bit (x64)** Node.js installer. Supabase CLI does not support 32-bit Node (`ia32`) on Windows.
+
 You will also need a free **Supabase** account — sign up at [https://supabase.com](https://supabase.com).
 
 ---
@@ -337,6 +339,14 @@ The app throws this error at startup if `VITE_SUPABASE_URL` or `VITE_SUPABASE_AN
 - Ensure you ran `npm install` first.
 - Check you are using Node.js 18 or later (`node -v`).
 - Check terminal output for port conflicts — Vite defaults to port 5173. If that port is in use, Vite automatically picks the next available port.
+
+### `'supabase' is not recognized` during local setup
+
+- Run `node -p "process.arch"`.
+- If it returns `ia32`, reinstall **64-bit (x64)** Node.js and reopen your terminal.
+- Run `npm.cmd rebuild supabase` in the project root to regenerate the local Supabase launcher.
+- Verify the CLI with `npx.cmd supabase --version`.
+- Re-run the local setup task after reinstalling Node.
 
 ### Cannot register or log in
 

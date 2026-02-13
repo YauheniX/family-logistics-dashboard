@@ -6,11 +6,9 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
+withDefaults(defineProps<{
   message?: string;
-}>();
-
-withDefaults(props, {
+}>(), {
   message: 'Loading...'
 });
 </script>

@@ -4,3 +4,7 @@ node_modules/
 *.log
 .DS_Store
 family-logistics-dashboard.code-workspace
+.tools/LICENSE
+.tools/README.md
+.tools/supabase.exe
+.tools/supabase.tar.gz
