@@ -22,7 +22,6 @@ withDefaults(
     badge?: string;
   }>(),
   {
-    cta: undefined,
     badge: 'Getting started',
   },
 );
