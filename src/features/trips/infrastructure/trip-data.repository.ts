@@ -38,6 +38,7 @@ export class PackingItemRepository extends BaseRepository<
         .from('packing_items')
         .update({ is_packed: isPacked })
         .eq('id', id);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return { data: null as any, error };
     });
   }

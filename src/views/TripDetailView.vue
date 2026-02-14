@@ -214,6 +214,7 @@ import { uploadDocument } from '@/services/storageService';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import ApplyTemplateModal from '@/components/trips/ApplyTemplateModal.vue';
 import ShareTripModal from '@/components/trips/ShareTripModal.vue';
+import type { PackingCategory } from '@/features/shared/domain/entities';
 
 const route = useRoute();
 const router = useRouter();
@@ -221,7 +222,7 @@ const tripStore = useTripStore();
 const authStore = useAuthStore();
 
 const newPackingTitle = ref('');
-const newPackingCategory = ref('adult');
+const newPackingCategory = ref<PackingCategory>('adult');
 const showTemplateModal = ref(false);
 const showShareModal = ref(false);
 const documentTitle = ref('');
@@ -254,7 +255,7 @@ const addPackingItem = async () => {
   await tripStore.savePackingItem({
     trip_id: tripId.value,
     title: newPackingTitle.value,
-    category: newPackingCategory.value as any,
+    category: newPackingCategory.value,
     is_packed: false,
   });
   newPackingTitle.value = '';

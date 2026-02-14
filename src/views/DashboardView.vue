@@ -131,8 +131,8 @@ const handleDuplicate = async (tripId: string) => {
       return;
     }
     showToast('Trip duplicated successfully.', 'success');
-  } catch (error: any) {
-    showToast(error?.message ?? 'Unable to duplicate trip.', 'error');
+  } catch (error: unknown) {
+    showToast(error instanceof Error ? error.message : 'Unable to duplicate trip.', 'error');
   } finally {
     duplicatingTripId.value = null;
   }
