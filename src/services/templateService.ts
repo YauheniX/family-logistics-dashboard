@@ -1,5 +1,4 @@
 import { SupabaseService } from './supabaseService';
-import { supabase } from './supabaseClient';
 import type {
   NewPackingTemplatePayload,
   PackingTemplate,

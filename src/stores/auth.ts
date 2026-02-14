@@ -1,9 +1,15 @@
+/**
+ * Legacy auth store - redirects to new feature-based auth store
+ * This file maintains backward compatibility while using the new architecture
+ * @deprecated Import from @/features/auth/presentation/auth.store instead
+ */
+
 import { defineStore } from 'pinia';
 import type { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/services/supabaseClient';
+import { authService } from '@/features/auth';
 import { useToastStore } from '@/stores/toast';
 
-interface AuthState {
+interface LegacyAuthState {
   session: Session | null;
   user: User | null;
   loading: boolean;
@@ -11,53 +17,56 @@ interface AuthState {
   error: string | null;
 }
 
+/**
+ * Legacy auth store - uses new auth service under the hood
+ */
 export const useAuthStore = defineStore('auth', {
-  state: (): AuthState => ({
+  state: (): LegacyAuthState => ({
     session: null,
     user: null,
     loading: false,
     initialized: false,
     error: null,
   }),
+
   getters: {
     isAuthenticated: (state) => Boolean(state.user && state.session),
   },
+
   actions: {
     async initialize() {
       if (this.initialized) return;
       this.loading = true;
       try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        this.session = data.session;
-        this.user = data.session?.user ?? null;
+        const response = await authService.getCurrentUser();
+        if (!response.error && response.data) {
+          this.user = { id: response.data.id, email: response.data.email } as User;
+        }
+
+        // Set up auth state change listener
+        authService.onAuthStateChange((user) => {
+          if (user) {
+            this.user = { id: user.id, email: user.email } as User;
+          } else {
+            this.user = null;
+            this.session = null;
+          }
+        });
+
+        this.initialized = true;
       } finally {
         this.loading = false;
-        this.initialized = true;
       }
-
-      supabase.auth.onAuthStateChange((_event, session) => {
-        this.session = session;
-        this.user = session?.user ?? null;
-      });
     },
 
     async loginWithGoogle() {
       this.error = null;
       this.loading = true;
       try {
-        // OAuth redirects the browser to Google's consent screen.
-        // After the user approves, Supabase redirects back and the
-        // onAuthStateChange listener (set up in initialize()) updates
-        // session/user automatically.
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-        });
-        if (error) {
-          this.error = error.message;
-          useToastStore().error(`Sign in failed: ${error.message}`);
-          throw error;
-        }
+        // Note: Google OAuth not yet implemented in new auth service
+        // This is a placeholder that maintains the old behavior
+        useToastStore().error('Google OAuth not yet implemented in new architecture');
+        throw new Error('Not implemented');
       } catch (err: unknown) {
         this.error = err instanceof Error ? err.message : 'Unable to sign in with Google';
         useToastStore().error(this.error);
@@ -70,10 +79,10 @@ export const useAuthStore = defineStore('auth', {
     async logout() {
       this.loading = true;
       try {
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-          useToastStore().error(`Logout failed: ${error.message}`);
-          throw error;
+        const response = await authService.signOut();
+        if (response.error) {
+          useToastStore().error(`Logout failed: ${response.error.message}`);
+          throw new Error(response.error.message);
         }
         this.session = null;
         this.user = null;
