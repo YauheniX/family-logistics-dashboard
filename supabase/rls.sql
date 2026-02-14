@@ -39,7 +39,10 @@ create policy "user_profiles_update"
 -- A user can see families they belong to
 create policy "families_select"
   on families for select
-  using (user_is_family_member(id, auth.uid()));
+  using (
+    created_by = auth.uid()
+    or user_is_family_member(id, auth.uid())
+  );
 
 -- Any authenticated user can create a family
 create policy "families_insert"
@@ -54,7 +57,10 @@ create policy "families_update"
 -- Only family owner can delete the family
 create policy "families_delete"
   on families for delete
-  using (user_is_family_owner(id, auth.uid()));
+  using (
+    created_by = auth.uid()
+    or user_is_family_owner(id, auth.uid())
+  );
 
 -- ═════════════════════════════════════════════════════════════
 -- FAMILY MEMBERS
@@ -63,12 +69,26 @@ create policy "families_delete"
 -- Members can see other members of their family
 create policy "family_members_select"
   on family_members for select
-  using (user_is_family_member(family_id, auth.uid()));
+  using (
+    user_id = auth.uid()
+    or user_is_family_member(family_id, auth.uid())
+  );
 
 -- Only family owner can add members
 create policy "family_members_insert"
   on family_members for insert
-  with check (user_is_family_owner(family_id, auth.uid()));
+  with check (
+    user_is_family_owner(family_id, auth.uid())
+    or (
+      user_id = auth.uid()
+      and role = 'owner'
+      and exists (
+        select 1 from families f
+        where f.id = family_id
+          and f.created_by = auth.uid()
+      )
+    )
+  );
 
 -- Only family owner can remove members (or self-remove)
 create policy "family_members_delete"

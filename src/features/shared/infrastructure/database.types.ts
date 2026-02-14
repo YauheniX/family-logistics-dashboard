@@ -8,204 +8,232 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export interface Database {
   public: {
     Tables: {
-      trips: {
+      user_profiles: {
+        Row: {
+          id: string;
+          display_name: string;
+          avatar_url: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          display_name: string;
+          avatar_url?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          display_name?: string;
+          avatar_url?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      families: {
         Row: {
           id: string;
           name: string;
-          start_date: string | null;
-          end_date: string | null;
-          status: 'planning' | 'booked' | 'ready' | 'done';
           created_by: string;
           created_at: string;
         };
         Insert: {
           id?: string;
           name: string;
-          start_date?: string | null;
-          end_date?: string | null;
-          status?: 'planning' | 'booked' | 'ready' | 'done';
           created_by: string;
           created_at?: string;
         };
         Update: {
           id?: string;
           name?: string;
-          start_date?: string | null;
-          end_date?: string | null;
-          status?: 'planning' | 'booked' | 'ready' | 'done';
           created_by?: string;
           created_at?: string;
         };
+        Relationships: [];
       };
-      packing_items: {
+      family_members: {
         Row: {
           id: string;
-          trip_id: string | null;
-          title: string;
-          category: 'adult' | 'kid' | 'baby' | 'roadtrip' | 'custom';
-          is_packed: boolean;
+          family_id: string;
+          user_id: string;
+          role: 'owner' | 'member';
+          joined_at: string;
         };
         Insert: {
           id?: string;
-          trip_id?: string | null;
-          title: string;
-          category?: 'adult' | 'kid' | 'baby' | 'roadtrip' | 'custom';
-          is_packed?: boolean;
+          family_id: string;
+          user_id: string;
+          role?: 'owner' | 'member';
+          joined_at?: string;
         };
         Update: {
           id?: string;
-          trip_id?: string | null;
-          title?: string;
-          category?: 'adult' | 'kid' | 'baby' | 'roadtrip' | 'custom';
-          is_packed?: boolean;
+          family_id?: string;
+          user_id?: string;
+          role?: 'owner' | 'member';
+          joined_at?: string;
         };
+        Relationships: [];
       };
-      documents: {
+      shopping_lists: {
         Row: {
           id: string;
-          trip_id: string | null;
+          family_id: string;
           title: string;
           description: string | null;
-          file_url: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          trip_id?: string | null;
-          title: string;
-          description?: string | null;
-          file_url: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          trip_id?: string | null;
-          title?: string;
-          description?: string | null;
-          file_url?: string;
-          created_at?: string;
-        };
-      };
-      budget_entries: {
-        Row: {
-          id: string;
-          trip_id: string | null;
-          category: string;
-          amount: number;
-          currency: string;
-          is_planned: boolean;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          trip_id?: string | null;
-          category: string;
-          amount?: number;
-          currency?: string;
-          is_planned?: boolean;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          trip_id?: string | null;
-          category?: string;
-          amount?: number;
-          currency?: string;
-          is_planned?: boolean;
-          created_at?: string;
-        };
-      };
-      timeline_events: {
-        Row: {
-          id: string;
-          trip_id: string | null;
-          title: string;
-          date_time: string;
-          notes: string | null;
-        };
-        Insert: {
-          id?: string;
-          trip_id?: string | null;
-          title: string;
-          date_time: string;
-          notes?: string | null;
-        };
-        Update: {
-          id?: string;
-          trip_id?: string | null;
-          title?: string;
-          date_time?: string;
-          notes?: string | null;
-        };
-      };
-      packing_templates: {
-        Row: {
-          id: string;
-          name: string;
-          category: 'adult' | 'kid' | 'baby' | 'roadtrip' | 'custom';
           created_by: string;
           created_at: string;
+          status: 'active' | 'archived';
         };
         Insert: {
           id?: string;
-          name: string;
-          category?: 'adult' | 'kid' | 'baby' | 'roadtrip' | 'custom';
-          created_by: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-          category?: 'adult' | 'kid' | 'baby' | 'roadtrip' | 'custom';
+          family_id: string;
+          title: string;
+          description?: string | null;
           created_by?: string;
           created_at?: string;
-        };
-      };
-      packing_template_items: {
-        Row: {
-          id: string;
-          template_id: string | null;
-          title: string;
-        };
-        Insert: {
-          id?: string;
-          template_id?: string | null;
-          title: string;
+          status?: 'active' | 'archived';
         };
         Update: {
           id?: string;
-          template_id?: string | null;
+          family_id?: string;
           title?: string;
+          description?: string | null;
+          created_by?: string;
+          created_at?: string;
+          status?: 'active' | 'archived';
         };
+        Relationships: [];
       };
-      trip_members: {
+      shopping_items: {
         Row: {
           id: string;
-          trip_id: string;
-          user_id: string;
-          role: 'owner' | 'editor' | 'viewer';
+          list_id: string;
+          title: string;
+          quantity: number;
+          category: string;
+          is_purchased: boolean;
+          added_by: string;
+          purchased_by: string | null;
           created_at: string;
         };
         Insert: {
           id?: string;
-          trip_id: string;
-          user_id: string;
-          role?: 'owner' | 'editor' | 'viewer';
+          list_id: string;
+          title: string;
+          quantity?: number;
+          category?: string;
+          is_purchased?: boolean;
+          added_by?: string;
+          purchased_by?: string | null;
           created_at?: string;
         };
         Update: {
           id?: string;
-          trip_id?: string;
-          user_id?: string;
-          role?: 'owner' | 'editor' | 'viewer';
+          list_id?: string;
+          title?: string;
+          quantity?: number;
+          category?: string;
+          is_purchased?: boolean;
+          added_by?: string;
+          purchased_by?: string | null;
           created_at?: string;
         };
+        Relationships: [];
+      };
+      wishlists: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          description: string | null;
+          is_public: boolean;
+          share_slug: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string;
+          title: string;
+          description?: string | null;
+          is_public?: boolean;
+          share_slug: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          description?: string | null;
+          is_public?: boolean;
+          share_slug?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      wishlist_items: {
+        Row: {
+          id: string;
+          wishlist_id: string;
+          title: string;
+          description: string | null;
+          link: string | null;
+          price: number | null;
+          currency: string;
+          image_url: string | null;
+          priority: 'low' | 'medium' | 'high';
+          is_reserved: boolean;
+          reserved_by_email: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          wishlist_id: string;
+          title: string;
+          description?: string | null;
+          link?: string | null;
+          price?: number | null;
+          currency?: string;
+          image_url?: string | null;
+          priority?: 'low' | 'medium' | 'high';
+          is_reserved?: boolean;
+          reserved_by_email?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          wishlist_id?: string;
+          title?: string;
+          description?: string | null;
+          link?: string | null;
+          price?: number | null;
+          currency?: string;
+          image_url?: string | null;
+          priority?: 'low' | 'medium' | 'high';
+          is_reserved?: boolean;
+          reserved_by_email?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
       };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
+      user_is_family_member: {
+        Args: {
+          p_family_id: string;
+          p_user_id: string;
+        };
+        Returns: boolean;
+      };
+      user_is_family_owner: {
+        Args: {
+          p_family_id: string;
+          p_user_id: string;
+        };
+        Returns: boolean;
+      };
       get_user_id_by_email: {
         Args: {
           lookup_email: string;
@@ -218,8 +246,19 @@ export interface Database {
         };
         Returns: string;
       };
+      reserve_wishlist_item: {
+        Args: {
+          p_item_id: string;
+          p_reserved: boolean;
+          p_email?: string | null;
+        };
+        Returns: void;
+      };
     };
     Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
       [_ in never]: never;
     };
   };

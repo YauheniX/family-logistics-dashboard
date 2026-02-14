@@ -26,4 +26,8 @@ export interface Repository<TEntity, TCreateDto = Partial<TEntity>, TUpdateDto =
 /**
  * Query builder helper types
  */
-export type QueryBuilder<T = unknown> = (builder: T) => T;
+// We keep this intentionally permissive because table typings may vary
+// depending on whether the project is running against mock/local/remote schemas.
+// Repository implementations cast the builder to the right shape at call sites.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type QueryBuilder = (builder: any) => any;

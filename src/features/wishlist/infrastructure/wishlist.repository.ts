@@ -32,13 +32,33 @@ export class WishlistRepository extends BaseRepository<
     );
   }
 
+  async create(dto: CreateWishlistDto & { share_slug: string }): Promise<ApiResponse<Wishlist>> {
+    const userIdResponse = await this.getAuthenticatedUserId();
+    if (userIdResponse.error || !userIdResponse.data) {
+      return { data: null, error: userIdResponse.error };
+    }
+    const userId = userIdResponse.data;
+
+    return await this.execute(async () => {
+      return await supabase
+        .from('wishlists')
+        .insert({
+          ...dto,
+          user_id: userId,
+        })
+        .select()
+        .single();
+    });
+  }
+
   /**
    * Find a wishlist by its share slug (public access, no auth required)
    */
   async findBySlug(slug: string): Promise<ApiResponse<Wishlist>> {
     return this.query(async () => {
       return await this.supabase
-        .from(this.tableName)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(this.tableName as any)
         .select('*')
         .eq('share_slug', slug)
         .eq('is_public', true)
@@ -74,7 +94,8 @@ export class WishlistItemRepository extends BaseRepository<
   async reserveItem(id: string, dto: ReserveWishlistItemDto): Promise<ApiResponse<WishlistItem>> {
     return this.query(async () => {
       return await this.supabase
-        .from(this.tableName)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(this.tableName as any)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .update(dto as any)
         .eq('id', id)

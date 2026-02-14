@@ -30,6 +30,25 @@ export class ShoppingListRepository extends BaseRepository<
       builder.eq('family_id', familyId).order('created_at', { ascending: false }),
     );
   }
+
+  async create(dto: CreateShoppingListDto): Promise<ApiResponse<ShoppingList>> {
+    const userIdResponse = await this.getAuthenticatedUserId();
+    if (userIdResponse.error || !userIdResponse.data) {
+      return { data: null, error: userIdResponse.error };
+    }
+    const userId = userIdResponse.data;
+
+    return await this.execute(async () => {
+      return await supabase
+        .from('shopping_lists')
+        .insert({
+          ...dto,
+          created_by: userId,
+        })
+        .select()
+        .single();
+    });
+  }
 }
 
 /**
@@ -51,5 +70,24 @@ export class ShoppingItemRepository extends BaseRepository<
     return this.findAll((builder) =>
       builder.eq('list_id', listId).order('created_at', { ascending: true }),
     );
+  }
+
+  async create(dto: CreateShoppingItemDto): Promise<ApiResponse<ShoppingItem>> {
+    const userIdResponse = await this.getAuthenticatedUserId();
+    if (userIdResponse.error || !userIdResponse.data) {
+      return { data: null, error: userIdResponse.error };
+    }
+    const userId = userIdResponse.data;
+
+    return await this.execute(async () => {
+      return await supabase
+        .from('shopping_items')
+        .insert({
+          ...dto,
+          added_by: userId,
+        })
+        .select()
+        .single();
+    });
   }
 }

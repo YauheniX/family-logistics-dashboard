@@ -10,6 +10,9 @@
         </div>
         <div class="flex flex-wrap gap-2">
           <BaseButton @click="showInviteModal = true"> ➕ Invite Member </BaseButton>
+          <BaseButton v-if="isOwner" variant="danger" @click="showDeleteModal = true">
+            Delete Family
+          </BaseButton>
           <RouterLink to="/families">
             <BaseButton variant="ghost">← Back</BaseButton>
           </RouterLink>
@@ -150,13 +153,29 @@
         </div>
       </form>
     </ModalDialog>
+
+    <!-- Delete Family Modal -->
+    <ModalDialog :open="showDeleteModal" title="Delete Family" @close="showDeleteModal = false">
+      <div class="space-y-4">
+        <p class="text-sm text-neutral-600 dark:text-neutral-300">
+          Delete <span class="font-semibold">{{ familyStore.currentFamily.name }}</span
+          >? This action cannot be undone.
+        </p>
+        <div class="flex gap-3">
+          <BaseButton variant="danger" :disabled="familyStore.loading" @click="confirmDelete">
+            Delete
+          </BaseButton>
+          <BaseButton variant="ghost" @click="showDeleteModal = false">Cancel</BaseButton>
+        </div>
+      </div>
+    </ModalDialog>
   </div>
   <LoadingState v-else message="Loading family..." />
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { RouterLink } from 'vue-router';
+import { computed, onMounted, ref } from 'vue';
+import { RouterLink, useRouter } from 'vue-router';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
@@ -171,12 +190,24 @@ const props = defineProps<{ id: string }>();
 const authStore = useAuthStore();
 const familyStore = useFamilyStore();
 const shoppingStore = useShoppingStore();
+const router = useRouter();
 
 const showInviteModal = ref(false);
 const showCreateListModal = ref(false);
+const showDeleteModal = ref(false);
 const inviteEmail = ref('');
 const newListTitle = ref('');
 const newListDescription = ref('');
+
+const isOwner = computed(() => {
+  const userId = authStore.user?.id;
+  const family = familyStore.currentFamily;
+
+  if (!userId || !family) return false;
+  if (family.created_by === userId) return true;
+
+  return familyStore.members.some((member) => member.user_id === userId && member.role === 'owner');
+});
 
 const getInitials = (name: string): string => {
   const parts = name.trim().split(/[\s@]+/);
@@ -230,6 +261,16 @@ const handleCreateList = async () => {
     newListTitle.value = '';
     newListDescription.value = '';
     showCreateListModal.value = false;
+  }
+};
+
+const confirmDelete = async () => {
+  if (!familyStore.currentFamily) return;
+
+  const deleted = await familyStore.removeFamily(familyStore.currentFamily.id);
+  if (deleted) {
+    showDeleteModal.value = false;
+    router.push('/families');
   }
 };
 </script>

@@ -120,10 +120,23 @@ export class FamilyMemberRepository extends BaseRepository<
     });
 
     if (userIdResponse.error) {
+      const errorMessage = userIdResponse.error.message || 'Failed to look up user by email';
+      const normalized = errorMessage.toLowerCase();
+
+      if (normalized.includes('authentication required')) {
+        return {
+          data: null,
+          error: {
+            message: 'Authentication required. Please sign in again.',
+            details: userIdResponse.error,
+          },
+        };
+      }
+
       return {
         data: null,
         error: {
-          message: 'User not found with that email',
+          message: errorMessage,
           details: userIdResponse.error,
         },
       };

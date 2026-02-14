@@ -43,7 +43,7 @@ create table if not exists shopping_lists (
   family_id   uuid not null references families on delete cascade,
   title       text not null,
   description text,
-  created_by  uuid not null references auth.users on delete cascade,
+  created_by  uuid not null default auth.uid() references auth.users on delete cascade,
   created_at  timestamptz not null default now(),
   status      text not null default 'active' check (status in ('active', 'archived'))
 );
@@ -58,7 +58,7 @@ create table if not exists shopping_items (
   quantity      integer not null default 1,
   category      text not null default 'General',
   is_purchased  boolean not null default false,
-  added_by      uuid not null references auth.users on delete cascade,
+  added_by      uuid not null default auth.uid() references auth.users on delete cascade,
   purchased_by  uuid references auth.users on delete set null,
   created_at    timestamptz not null default now()
 );
@@ -68,7 +68,7 @@ comment on table shopping_items is 'Items in a shopping list';
 -- ─── Wishlists ──────────────────────────────────────────────
 create table if not exists wishlists (
   id          uuid primary key default uuid_generate_v4(),
-  user_id     uuid not null references auth.users on delete cascade,
+  user_id     uuid not null default auth.uid() references auth.users on delete cascade,
   title       text not null,
   description text,
   is_public   boolean not null default false,
@@ -143,12 +143,27 @@ returns uuid
 language plpgsql
 security definer
 stable
+set search_path = public, auth
 as $$
+declare
+  normalized_email text;
 begin
   if auth.uid() is null then
     raise exception 'Authentication required';
   end if;
-  return (select id from auth.users where email = lookup_email limit 1);
+
+  normalized_email := lower(trim(lookup_email));
+
+  if normalized_email is null or normalized_email = '' then
+    return null;
+  end if;
+
+  return (
+    select id
+    from auth.users
+    where lower(trim(email)) = normalized_email
+    limit 1
+  );
 end;
 $$;
 
@@ -158,6 +173,7 @@ returns text
 language plpgsql
 security definer
 stable
+set search_path = public, auth
 as $$
 begin
   if auth.uid() is null then
@@ -173,9 +189,10 @@ create or replace function handle_new_user()
 returns trigger
 language plpgsql
 security definer
+set search_path = public
 as $$
 begin
-  insert into user_profiles (id, display_name, avatar_url)
+  insert into public.user_profiles (id, display_name, avatar_url)
   values (
     new.id,
     coalesce(new.raw_user_meta_data ->> 'full_name', new.raw_user_meta_data ->> 'name', split_part(new.email, '@', 1)),
