@@ -22,6 +22,7 @@ import {
   removeTripMember,
   updateMemberRole,
 } from '@/services/tripMemberService';
+import { useToastStore } from '@/stores/toast';
 import type {
   BudgetEntry,
   CategoryTotal,
@@ -85,10 +86,15 @@ export const useTripStore = defineStore('trips', {
   actions: {
     async loadTrips(userId: string) {
       this.loading = true;
+      this.error = null;
       try {
-        this.trips = await fetchTrips(userId);
-      } catch (err: any) {
-        this.error = err.message ?? 'Unable to load trips';
+        const response = await fetchTrips(userId);
+        if (response.error) {
+          this.error = response.error.message;
+          useToastStore().error(`Failed to load trips: ${response.error.message}`);
+        } else {
+          this.trips = response.data ?? [];
+        }
       } finally {
         this.loading = false;
       }
@@ -96,19 +102,24 @@ export const useTripStore = defineStore('trips', {
 
     async loadTrip(id: string) {
       this.loading = true;
+      this.error = null;
       try {
-        this.currentTrip = await fetchTrip(id);
-        if (this.currentTrip) {
-          await Promise.all([
-            this.loadPacking(id),
-            this.loadDocuments(id),
-            this.loadBudget(id),
-            this.loadTimeline(id),
-            this.loadMembers(id),
-          ]);
+        const response = await fetchTrip(id);
+        if (response.error) {
+          this.error = response.error.message;
+          useToastStore().error(`Failed to load trip: ${response.error.message}`);
+        } else {
+          this.currentTrip = response.data;
+          if (this.currentTrip) {
+            await Promise.all([
+              this.loadPacking(id),
+              this.loadDocuments(id),
+              this.loadBudget(id),
+              this.loadTimeline(id),
+              this.loadMembers(id),
+            ]);
+          }
         }
-      } catch (err: any) {
-        this.error = err.message ?? 'Unable to load trip';
       } finally {
         this.loading = false;
       }
@@ -117,9 +128,16 @@ export const useTripStore = defineStore('trips', {
     async createTrip(payload: NewTripPayload) {
       this.loading = true;
       try {
-        const trip = await createTrip(payload);
-        if (trip) this.trips.unshift(trip);
-        return trip;
+        const response = await createTrip(payload);
+        if (response.error) {
+          useToastStore().error(`Failed to create trip: ${response.error.message}`);
+          return null;
+        }
+        if (response.data) {
+          this.trips.unshift(response.data);
+          useToastStore().success('Trip created successfully!');
+        }
+        return response.data;
       } finally {
         this.loading = false;
       }
@@ -128,10 +146,17 @@ export const useTripStore = defineStore('trips', {
     async updateTrip(id: string, payload: Partial<NewTripPayload>) {
       this.loading = true;
       try {
-        const updated = await updateTrip(id, payload);
-        this.trips = this.trips.map((t) => (t.id === id && updated ? updated : t));
-        this.currentTrip = updated;
-        return updated;
+        const response = await updateTrip(id, payload);
+        if (response.error) {
+          useToastStore().error(`Failed to update trip: ${response.error.message}`);
+          return null;
+        }
+        if (response.data) {
+          this.trips = this.trips.map((t) => (t.id === id ? response.data! : t));
+          this.currentTrip = response.data;
+          useToastStore().success('Trip updated successfully!');
+        }
+        return response.data;
       } finally {
         this.loading = false;
       }
@@ -140,8 +165,13 @@ export const useTripStore = defineStore('trips', {
     async removeTrip(id: string) {
       this.loading = true;
       try {
-        await deleteTrip(id);
-        this.trips = this.trips.filter((t) => t.id !== id);
+        const response = await deleteTrip(id);
+        if (response.error) {
+          useToastStore().error(`Failed to delete trip: ${response.error.message}`);
+        } else {
+          this.trips = this.trips.filter((t) => t.id !== id);
+          useToastStore().success('Trip deleted successfully!');
+        }
       } finally {
         this.loading = false;
       }
@@ -150,88 +180,163 @@ export const useTripStore = defineStore('trips', {
     async duplicateTrip(id: string) {
       const fromList = this.trips.find((t) => t.id === id);
       const fromCurrentTrip = this.currentTrip?.id === id ? this.currentTrip : null;
-      const source = fromList ?? fromCurrentTrip ?? (await fetchTrip(id));
-      if (!source) return null;
-      this.error = null;
-      try {
-        const cloned = await duplicateTrip(source);
-        if (cloned) this.trips.unshift(cloned);
-        return cloned;
-      } catch (err: any) {
-        this.error = err.message ?? 'Unable to duplicate trip';
-        throw err;
+      
+      let source = fromList ?? fromCurrentTrip;
+      if (!source) {
+        const response = await fetchTrip(id);
+        if (response.error) {
+          useToastStore().error(`Failed to fetch trip: ${response.error.message}`);
+          return null;
+        }
+        source = response.data;
       }
+      
+      if (!source) return null;
+      
+      this.error = null;
+      const response = await duplicateTrip(source);
+      if (response.error) {
+        this.error = response.error.message;
+        useToastStore().error(`Failed to duplicate trip: ${response.error.message}`);
+        return null;
+      }
+      if (response.data) {
+        this.trips.unshift(response.data);
+        useToastStore().success('Trip duplicated successfully!');
+      }
+      return response.data;
     },
 
     async loadPacking(tripId: string) {
-      this.packing = await fetchPackingItems(tripId);
+      const response = await fetchPackingItems(tripId);
+      if (response.error) {
+        useToastStore().error(`Failed to load packing items: ${response.error.message}`);
+      } else {
+        this.packing = response.data ?? [];
+      }
     },
 
     async savePackingItem(item: Partial<PackingItem> & { trip_id: string }) {
-      const saved = await upsertPackingItem(item);
-      if (saved) {
-        const exists = this.packing.find((i) => i.id === saved.id);
+      const response = await upsertPackingItem(item);
+      if (response.error) {
+        useToastStore().error(`Failed to save packing item: ${response.error.message}`);
+      } else if (response.data) {
+        const exists = this.packing.find((i) => i.id === response.data!.id);
         if (exists) {
-          this.packing = this.packing.map((i) => (i.id === saved.id ? saved : i));
+          this.packing = this.packing.map((i) => (i.id === response.data!.id ? response.data! : i));
         } else {
-          this.packing.push(saved);
+          this.packing.push(response.data);
         }
       }
     },
 
     async togglePacked(id: string, isPacked: boolean) {
-      await togglePacked(id, isPacked);
-      this.packing = this.packing.map((item) =>
-        item.id === id ? { ...item, is_packed: isPacked } : item,
-      );
+      const response = await togglePacked(id, isPacked);
+      if (response.error) {
+        useToastStore().error(`Failed to update packing item: ${response.error.message}`);
+      } else {
+        this.packing = this.packing.map((item) =>
+          item.id === id ? { ...item, is_packed: isPacked } : item,
+        );
+      }
     },
 
     async loadDocuments(tripId: string) {
-      this.documents = await fetchDocuments(tripId);
+      const response = await fetchDocuments(tripId);
+      if (response.error) {
+        useToastStore().error(`Failed to load documents: ${response.error.message}`);
+      } else {
+        this.documents = response.data ?? [];
+      }
     },
 
     async addDocument(doc: Omit<TripDocument, 'id'>) {
-      const saved = await addDocument(doc);
-      if (saved) this.documents.unshift(saved);
+      const response = await addDocument(doc);
+      if (response.error) {
+        useToastStore().error(`Failed to add document: ${response.error.message}`);
+      } else if (response.data) {
+        this.documents.unshift(response.data);
+        useToastStore().success('Document added successfully!');
+      }
     },
 
     async loadBudget(tripId: string) {
-      this.budget = await fetchBudgetEntries(tripId);
+      const response = await fetchBudgetEntries(tripId);
+      if (response.error) {
+        useToastStore().error(`Failed to load budget entries: ${response.error.message}`);
+      } else {
+        this.budget = response.data ?? [];
+      }
     },
 
     async addBudgetEntry(entry: Omit<BudgetEntry, 'id'>) {
-      const saved = await addBudgetEntry(entry);
-      if (saved) this.budget.unshift(saved);
+      const response = await addBudgetEntry(entry);
+      if (response.error) {
+        useToastStore().error(`Failed to add budget entry: ${response.error.message}`);
+      } else if (response.data) {
+        this.budget.unshift(response.data);
+        useToastStore().success('Budget entry added successfully!');
+      }
     },
 
     async loadTimeline(tripId: string) {
-      this.timeline = await fetchTimelineEvents(tripId);
+      const response = await fetchTimelineEvents(tripId);
+      if (response.error) {
+        useToastStore().error(`Failed to load timeline events: ${response.error.message}`);
+      } else {
+        this.timeline = response.data ?? [];
+      }
     },
 
     async addTimelineEvent(event: Omit<TimelineEvent, 'id'>) {
-      const saved = await addTimelineEvent(event);
-      if (saved) this.timeline.push(saved);
+      const response = await addTimelineEvent(event);
+      if (response.error) {
+        useToastStore().error(`Failed to add timeline event: ${response.error.message}`);
+      } else if (response.data) {
+        this.timeline.push(response.data);
+        useToastStore().success('Timeline event added successfully!');
+      }
     },
 
     async loadMembers(tripId: string) {
-      this.members = await fetchTripMembers(tripId);
+      const response = await fetchTripMembers(tripId);
+      if (response.error) {
+        useToastStore().error(`Failed to load members: ${response.error.message}`);
+      } else {
+        this.members = response.data ?? [];
+      }
     },
 
     async inviteMember(tripId: string, email: string, role: TripMemberRole = 'viewer', currentUserId?: string) {
-      const member = await inviteMemberByEmail(tripId, email, role, currentUserId);
-      if (member) this.members.push(member);
-      return member;
+      const response = await inviteMemberByEmail(tripId, email, role, currentUserId);
+      if (response.error) {
+        useToastStore().error(`Failed to invite member: ${response.error.message}`);
+        return null;
+      }
+      if (response.data) {
+        this.members.push(response.data);
+        useToastStore().success('Member invited successfully!');
+      }
+      return response.data;
     },
 
     async removeMember(memberId: string) {
-      await removeTripMember(memberId);
-      this.members = this.members.filter((m) => m.id !== memberId);
+      const response = await removeTripMember(memberId);
+      if (response.error) {
+        useToastStore().error(`Failed to remove member: ${response.error.message}`);
+      } else {
+        this.members = this.members.filter((m) => m.id !== memberId);
+        useToastStore().success('Member removed successfully!');
+      }
     },
 
     async updateMemberRole(memberId: string, role: TripMemberRole) {
-      const updated = await updateMemberRole(memberId, role);
-      if (updated) {
-        this.members = this.members.map((m) => (m.id === memberId ? updated : m));
+      const response = await updateMemberRole(memberId, role);
+      if (response.error) {
+        useToastStore().error(`Failed to update member role: ${response.error.message}`);
+      } else if (response.data) {
+        this.members = this.members.map((m) => (m.id === memberId ? response.data! : m));
+        useToastStore().success('Member role updated successfully!');
       }
     },
   },

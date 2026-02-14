@@ -1,0 +1,66 @@
+<template>
+  <div class="fixed bottom-4 right-4 z-50 flex flex-col gap-2" role="alert" aria-live="polite">
+    <transition-group name="toast">
+      <div
+        v-for="toast in toastStore.toasts"
+        :key="toast.id"
+        :class="toastClasses(toast.type)"
+        class="flex min-w-[300px] max-w-md items-center gap-3 rounded-lg px-4 py-3 shadow-lg"
+      >
+        <span class="text-lg">{{ toastIcon(toast.type) }}</span>
+        <p class="flex-1 text-sm font-medium">{{ toast.message }}</p>
+        <button
+          type="button"
+          class="text-lg opacity-70 hover:opacity-100"
+          @click="toastStore.remove(toast.id)"
+        >
+          ×
+        </button>
+      </div>
+    </transition-group>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { useToastStore } from '@/stores/toast';
+import type { ToastType } from '@/types/api';
+
+const toastStore = useToastStore();
+
+const toastClasses = (type: ToastType) => {
+  const classes = {
+    success: 'bg-emerald-50 text-emerald-900 border border-emerald-200',
+    error: 'bg-red-50 text-red-900 border border-red-200',
+    warning: 'bg-amber-50 text-amber-900 border border-amber-200',
+    info: 'bg-blue-50 text-blue-900 border border-blue-200',
+  };
+  return classes[type] || classes.info;
+};
+
+const toastIcon = (type: ToastType) => {
+  const icons = {
+    success: '✓',
+    error: '✕',
+    warning: '⚠',
+    info: 'ℹ',
+  };
+  return icons[type] || icons.info;
+};
+</script>
+
+<style scoped>
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.3s ease;
+}
+
+.toast-enter-from {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(100%);
+}
+</style>

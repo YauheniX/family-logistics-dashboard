@@ -1,16 +1,18 @@
+import { SupabaseService } from './supabaseService';
 import { supabase } from './supabaseClient';
 import type { TripMember, TripMemberRole } from '@/types/entities';
+import type { ApiResponse } from '@/types/api';
 
-export async function fetchTripMembers(tripId: string): Promise<TripMember[]> {
-  const { data, error } = await supabase
-    .from('trip_members')
-    .select('*')
-    .eq('trip_id', tripId)
-    .order('created_at');
+export async function fetchTripMembers(tripId: string): Promise<ApiResponse<TripMember[]>> {
+  const membersResponse = await SupabaseService.select<TripMember>('trip_members', (builder) =>
+    builder.eq('trip_id', tripId).order('created_at')
+  );
 
-  if (error) throw error;
+  if (membersResponse.error || !membersResponse.data) {
+    return membersResponse;
+  }
 
-  const members = data ?? [];
+  const members = membersResponse.data;
 
   // Resolve emails for each member via RPC
   const resolved = await Promise.all(
@@ -26,7 +28,7 @@ export async function fetchTripMembers(tripId: string): Promise<TripMember[]> {
     }),
   );
 
-  return resolved;
+  return { data: resolved, error: null };
 }
 
 export async function inviteMemberByEmail(
@@ -34,51 +36,80 @@ export async function inviteMemberByEmail(
   email: string,
   role: TripMemberRole = 'viewer',
   currentUserId?: string,
-): Promise<TripMember | null> {
+): Promise<ApiResponse<TripMember>> {
+  // Get user ID by email via RPC
   const { data: userData, error: userError } = await supabase
     .rpc('get_user_id_by_email', { lookup_email: email });
 
-  if (userError) throw new Error('Unable to find user. They may need to sign up first.');
-  if (!userData) throw new Error('No user found with that email address.');
+  if (userError) {
+    return {
+      data: null,
+      error: { message: 'Unable to find user. They may need to sign up first.' },
+    };
+  }
+
+  if (!userData) {
+    return {
+      data: null,
+      error: { message: 'No user found with that email address.' },
+    };
+  }
 
   const userId = userData as string;
 
   if (currentUserId && userId === currentUserId) {
-    throw new Error('You cannot invite yourself to your own trip.');
+    return {
+      data: null,
+      error: { message: 'You cannot invite yourself to your own trip.' },
+    };
   }
 
-  const { data, error } = await supabase
-    .from('trip_members')
-    .insert({ trip_id: tripId, user_id: userId, role })
-    .select()
-    .single();
+  const memberResponse = await SupabaseService.execute<TripMember>(async () => {
+    const { data, error } = await supabase
+      .from('trip_members')
+      .insert({ trip_id: tripId, user_id: userId, role })
+      .select()
+      .single();
 
-  if (error) {
-    if (error.code === '23505') {
-      throw new Error('This user is already a member of this trip.');
+    if (error) {
+      if (error.code === '23505') {
+        return {
+          data: null,
+          error: { ...error, message: 'This user is already a member of this trip.' },
+        };
+      }
+      return { data, error };
     }
-    throw error;
+
+    return { data, error };
+  });
+
+  if (memberResponse.error || !memberResponse.data) {
+    return memberResponse;
   }
 
-  return data ? { ...data, email } : null;
+  return {
+    data: { ...memberResponse.data, email },
+    error: null,
+  };
 }
 
-export async function removeTripMember(memberId: string): Promise<void> {
-  const { error } = await supabase.from('trip_members').delete().eq('id', memberId);
-  if (error) throw error;
+export async function removeTripMember(memberId: string): Promise<ApiResponse<null>> {
+  return SupabaseService.delete('trip_members', memberId);
 }
 
 export async function updateMemberRole(
   memberId: string,
   role: TripMemberRole,
-): Promise<TripMember | null> {
-  const { data, error } = await supabase
-    .from('trip_members')
-    .update({ role })
-    .eq('id', memberId)
-    .select()
-    .single();
+): Promise<ApiResponse<TripMember>> {
+  return SupabaseService.execute<TripMember>(async () => {
+    const { data, error } = await supabase
+      .from('trip_members')
+      .update({ role })
+      .eq('id', memberId)
+      .select()
+      .single();
 
-  if (error) throw error;
-  return data ?? null;
+    return { data, error };
+  });
 }

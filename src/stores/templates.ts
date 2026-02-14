@@ -6,6 +6,7 @@ import {
   fetchTemplates,
 } from '@/services/templateService';
 import { upsertPackingItem, fetchPackingItems } from '@/services/tripService';
+import { useToastStore } from '@/stores/toast';
 import type {
   NewPackingTemplatePayload,
   PackingTemplate,
@@ -30,9 +31,13 @@ export const useTemplateStore = defineStore('templates', {
       this.loading = true;
       this.error = null;
       try {
-        this.templates = await fetchTemplates(userId);
-      } catch (err: any) {
-        this.error = err.message ?? 'Unable to load templates';
+        const response = await fetchTemplates(userId);
+        if (response.error) {
+          this.error = response.error.message;
+          useToastStore().error(`Failed to load templates: ${response.error.message}`);
+        } else {
+          this.templates = response.data ?? [];
+        }
       } finally {
         this.loading = false;
       }
@@ -42,12 +47,18 @@ export const useTemplateStore = defineStore('templates', {
       this.loading = true;
       this.error = null;
       try {
-        const template = await createTemplate(payload, items);
-        this.templates.push(template);
-        return template;
-      } catch (err: any) {
-        this.error = err.message ?? 'Unable to create template';
-        throw err;
+        const response = await createTemplate(payload, items);
+        if (response.error) {
+          this.error = response.error.message;
+          useToastStore().error(`Failed to create template: ${response.error.message}`);
+          throw new Error(response.error.message);
+        }
+        if (response.data) {
+          this.templates.push(response.data);
+          useToastStore().success('Template created successfully!');
+          return response.data;
+        }
+        return null;
       } finally {
         this.loading = false;
       }
@@ -57,11 +68,14 @@ export const useTemplateStore = defineStore('templates', {
       this.loading = true;
       this.error = null;
       try {
-        await deleteTemplate(id);
+        const response = await deleteTemplate(id);
+        if (response.error) {
+          this.error = response.error.message;
+          useToastStore().error(`Failed to delete template: ${response.error.message}`);
+          throw new Error(response.error.message);
+        }
         this.templates = this.templates.filter((t) => t.id !== id);
-      } catch (err: any) {
-        this.error = err.message ?? 'Unable to delete template';
-        throw err;
+        useToastStore().success('Template deleted successfully!');
       } finally {
         this.loading = false;
       }
@@ -74,10 +88,25 @@ export const useTemplateStore = defineStore('templates', {
       this.applying = true;
       this.error = null;
       try {
-        const [templateItems, existingItems] = await Promise.all([
+        const [templateItemsResponse, existingItemsResponse] = await Promise.all([
           fetchTemplateItems(templateId),
           fetchPackingItems(tripId),
         ]);
+
+        if (templateItemsResponse.error) {
+          this.error = templateItemsResponse.error.message;
+          useToastStore().error(`Failed to fetch template items: ${templateItemsResponse.error.message}`);
+          throw new Error(templateItemsResponse.error.message);
+        }
+
+        if (existingItemsResponse.error) {
+          this.error = existingItemsResponse.error.message;
+          useToastStore().error(`Failed to fetch existing items: ${existingItemsResponse.error.message}`);
+          throw new Error(existingItemsResponse.error.message);
+        }
+
+        const templateItems = templateItemsResponse.data ?? [];
+        const existingItems = existingItemsResponse.data ?? [];
 
         const existingTitles = new Set(
           existingItems.map((item) => item.title.toLowerCase()),
@@ -99,12 +128,16 @@ export const useTemplateStore = defineStore('templates', {
           });
         }
 
-        return {
+        const result = {
           added: newItems.length,
           skipped: templateItems.length - newItems.length,
         };
+
+        useToastStore().success(`Template applied: ${result.added} items added, ${result.skipped} skipped`);
+        return result;
       } catch (err: any) {
         this.error = err.message ?? 'Unable to apply template';
+        useToastStore().error(`Failed to apply template: ${err.message ?? 'Unknown error'}`);
         throw err;
       } finally {
         this.applying = false;
