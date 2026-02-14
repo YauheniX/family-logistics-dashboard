@@ -169,8 +169,8 @@ export class AuthService {
    */
   async signInWithOAuth(provider: string): Promise<ApiResponse<AuthUser>> {
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: provider as any,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: provider as 'google' | 'github' | 'gitlab',
         options: {
           redirectTo: window.location.origin,
         },

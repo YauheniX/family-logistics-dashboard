@@ -64,7 +64,7 @@ export abstract class MockRepository<
   /**
    * Apply query filters (simplified version)
    */
-  protected applyFilters(data: TEntity[], query?: QueryBuilder): TEntity[] {
+  protected applyFilters(data: TEntity[], _query?: QueryBuilder): TEntity[] {
     // In a real implementation, this would parse and apply the query builder
     // For now, we return all data and let specific repositories override
     return data;
