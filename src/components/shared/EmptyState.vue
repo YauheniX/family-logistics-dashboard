@@ -23,6 +23,7 @@ withDefaults(
   }>(),
   {
     badge: 'Getting started',
+    cta: '',
   },
 );
 

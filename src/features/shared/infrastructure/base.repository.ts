@@ -78,6 +78,7 @@ export abstract class BaseRepository<
     return this.query(async () => {
       let builder = this.supabase.from(this.tableName).select('*');
       if (query) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         builder = query(builder as any) as any;
       }
       return await builder;
@@ -100,6 +101,7 @@ export abstract class BaseRepository<
     return this.query(async () => {
       return await this.supabase
         .from(this.tableName)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .insert(dto as any)
         .select()
         .single();
@@ -113,6 +115,7 @@ export abstract class BaseRepository<
     return this.query(async () => {
       return await this.supabase
         .from(this.tableName)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .insert(dtos as any)
         .select();
     });
@@ -125,6 +128,7 @@ export abstract class BaseRepository<
     return this.query(async () => {
       return await this.supabase
         .from(this.tableName)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .update(dto as any)
         .eq('id', id)
         .select()
@@ -139,6 +143,7 @@ export abstract class BaseRepository<
     return this.query(async () => {
       return await this.supabase
         .from(this.tableName)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .upsert(dto as any)
         .select()
         .single();
@@ -151,6 +156,7 @@ export abstract class BaseRepository<
   async delete(id: string): Promise<ApiResponse<void>> {
     return this.query(async () => {
       const { error } = await this.supabase.from(this.tableName).delete().eq('id', id);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return { data: null as any, error };
     });
   }

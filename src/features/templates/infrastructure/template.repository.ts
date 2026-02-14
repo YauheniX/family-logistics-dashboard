@@ -47,6 +47,7 @@ export class PackingTemplateItemRepository extends BaseRepository<
         .from('packing_template_items')
         .delete()
         .eq('template_id', templateId);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return { data: null as any, error };
     });
   }

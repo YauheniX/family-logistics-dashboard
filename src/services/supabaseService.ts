@@ -64,6 +64,7 @@ export class SupabaseService {
   /**
    * Fetch multiple records
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static async select<T>(table: string, query?: (builder: any) => any): Promise<ApiResponse<T[]>> {
     return this.query(async () => {
       let builder = supabase.from(table).select('*');
@@ -79,6 +80,7 @@ export class SupabaseService {
    */
   static async selectSingle<T>(
     table: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     query?: (builder: any) => any,
   ): Promise<ApiResponse<T>> {
     return this.query(async () => {

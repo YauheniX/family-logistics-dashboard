@@ -26,4 +26,4 @@ export interface Repository<TEntity, TCreateDto = Partial<TEntity>, TUpdateDto =
 /**
  * Query builder helper types
  */
-export type QueryBuilder<T = any> = (builder: T) => T;
+export type QueryBuilder<T = unknown> = (builder: T) => T;

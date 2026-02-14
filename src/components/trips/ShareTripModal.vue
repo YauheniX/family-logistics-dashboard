@@ -138,8 +138,8 @@ const handleInvite = async () => {
     );
     inviteSuccess.value = `Invited ${inviteEmail.value} as ${inviteRole.value}.`;
     inviteEmail.value = '';
-  } catch (err: any) {
-    inviteError.value = err.message ?? 'Unable to invite user.';
+  } catch (err: unknown) {
+    inviteError.value = err instanceof Error ? err.message : 'Unable to invite user.';
   } finally {
     inviting.value = false;
   }
@@ -148,8 +148,8 @@ const handleInvite = async () => {
 const handleRemove = async (memberId: string) => {
   try {
     await tripStore.removeMember(memberId);
-  } catch (err: any) {
-    inviteError.value = err.message ?? 'Unable to remove member.';
+  } catch (err: unknown) {
+    inviteError.value = err instanceof Error ? err.message : 'Unable to remove member.';
   }
 };
 </script>
