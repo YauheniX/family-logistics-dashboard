@@ -17,13 +17,28 @@ type ReportIssueRequest = {
   userId?: string | null; // client-provided (untrusted)
 };
 
+const supabaseUrl = Deno.env.get('SUPABASE_URL');
+const allowedCorsOrigin = (() => {
+  if (!supabaseUrl) return '*';
+  try {
+    return new URL(supabaseUrl).origin;
+  } catch {
+    return '*';
+  }
+})();
+
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': allowedCorsOrigin,
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 } as const;
 
 serve(async (req) => {
+  // NOTE: Rate limiting should be implemented to prevent abuse.
+  // Consider using Supabase's built-in rate limiting features or
+  // implementing custom rate limiting based on user ID.
+  // For production, track issue creation timestamps per user.
+  
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -53,8 +68,16 @@ serve(async (req) => {
   if (!description) return json({ error: 'Description is required.' }, 400);
 
   const screenshot = body.screenshot ?? null;
-  if (screenshot?.dataBase64 && screenshot.dataBase64.length > 4_000_000) {
-    return json({ error: 'Screenshot payload too large.' }, 413);
+  if (screenshot?.dataBase64) {
+    // Frontend validates 2MB file size; base64 encoding adds ~33% overhead
+    // So 2MB becomes ~2.67MB. We use 3MB limit to be safe.
+    if (screenshot.dataBase64.length > 3_000_000) {
+      return json({ error: 'Screenshot payload too large.' }, 413);
+    }
+    // Validate base64 format (alphanumeric + / + = padding)
+    if (!/^[A-Za-z0-9+/]*={0,2}$/.test(screenshot.dataBase64)) {
+      return json({ error: 'Invalid screenshot data format.' }, 400);
+    }
   }
 
   const verifiedUserId = await getVerifiedUserId(req);
@@ -82,7 +105,7 @@ serve(async (req) => {
         'User-Agent': 'family-logistics-dashboard',
       },
       body: JSON.stringify({
-        title,
+        title: sanitizeInline(title),
         body: issueBody,
       }),
     },
@@ -122,7 +145,7 @@ function buildIssueBody(input: {
 }) {
   const parts: string[] = [];
   parts.push('### Description');
-  parts.push(input.description);
+  parts.push(sanitizeDescription(input.description));
   parts.push('');
 
   parts.push('### Metadata');
@@ -150,6 +173,16 @@ function buildIssueBody(input: {
 
 function sanitizeInline(value: string) {
   return value.replace(/[\r\n]/g, ' ').slice(0, 500);
+}
+
+function sanitizeDescription(value: string): string {
+  // Preserve basic formatting but prevent breaking the issue structure
+  // Remove or escape characters that could break out of the Description section
+  // Limit to reasonable length
+  return value
+    .replace(/```/g, '` ` `') // Prevent code block injection
+    .replace(/^#+\s/gm, '') // Remove heading markers to prevent section injection
+    .slice(0, 5000); // Reasonable limit for descriptions
 }
 
 async function getVerifiedUserId(req: Request): Promise<string | null> {

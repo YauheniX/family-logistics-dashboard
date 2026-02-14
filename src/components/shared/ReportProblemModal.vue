@@ -31,6 +31,7 @@
         <label class="label" for="problem-screenshot">Optional screenshot</label>
         <input
           id="problem-screenshot"
+          ref="fileInputRef"
           class="input py-1.5"
           type="file"
           accept="image/*"
@@ -66,7 +67,7 @@ import { useToastStore } from '@/stores/toast';
 import { useAuthStore } from '@/stores/auth';
 import { reportProblem, type ScreenshotPayload } from '@/services/issueReporter';
 
-const props = defineProps<{ open: boolean }>();
+defineProps<{ open: boolean }>();
 
 const emit = defineEmits<{
   close: [];
@@ -78,6 +79,7 @@ const authStore = useAuthStore();
 const title = ref('');
 const description = ref('');
 const screenshot = ref<ScreenshotPayload | null>(null);
+const fileInputRef = ref<HTMLInputElement | null>(null);
 
 const submitting = ref(false);
 const errors = ref<{ title?: string; description?: string; screenshot?: string }>({});
@@ -90,6 +92,10 @@ const resetForm = () => {
   description.value = '';
   screenshot.value = null;
   errors.value = {};
+  // Clear file input
+  if (fileInputRef.value) {
+    fileInputRef.value.value = '';
+  }
 };
 
 const handleClose = () => {
@@ -109,12 +115,14 @@ const handleFileChange = async (event: Event) => {
   if (!file.type.startsWith('image/')) {
     errors.value.screenshot = 'Please choose an image file.';
     screenshot.value = null;
+    input.value = ''; // Clear input to allow re-selection
     return;
   }
 
   if (file.size > maxScreenshotBytes) {
     errors.value.screenshot = `Screenshot is too large (max ${maxScreenshotMb}MB).`;
     screenshot.value = null;
+    input.value = ''; // Clear input to allow re-selection
     return;
   }
 
