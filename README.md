@@ -238,6 +238,30 @@ Your app will be available at: `https://yourusername.github.io/family-logistics-
 
 ---
 
+## 🚀 Deploy to Vercel
+
+### Required Environment Variables
+
+Set the following environment variables in **Vercel → Project Settings → Environment Variables**:
+
+| Variable                  | Required | Description                                     |
+| ------------------------- | -------- | ----------------------------------------------- |
+| `VITE_SUPABASE_URL`       | Yes      | Your Supabase project URL (e.g., `https://xyz.supabase.co`) |
+| `VITE_SUPABASE_ANON_KEY`  | Yes      | Your Supabase anonymous/public API key          |
+| `VITE_USE_MOCK_BACKEND`   | No       | Set to `true` to use mock mode without Supabase |
+
+### How to Configure
+
+1. Go to [vercel.com](https://vercel.com) and import your repository
+2. In **Project Settings → Environment Variables**, add:
+   - `VITE_SUPABASE_URL` → Your Supabase project URL
+   - `VITE_SUPABASE_ANON_KEY` → Your Supabase anon key
+3. Redeploy the project for changes to take effect
+
+> **Note:** If `VITE_SUPABASE_URL` or `VITE_SUPABASE_ANON_KEY` are missing and mock mode is not enabled, the app will throw a clear error at startup. Set `VITE_USE_MOCK_BACKEND=true` if you want to run without Supabase.
+
+---
+
 ## 🔄 Switching Between Modes
 
 The app automatically detects which mode to use based on environment variables.
