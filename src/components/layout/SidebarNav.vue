@@ -45,7 +45,6 @@
         <span>{{ item.label }}</span>
       </RouterLink>
     </nav>
-
   </aside>
 
   <aside
@@ -84,7 +83,6 @@
         <span>{{ item.label }}</span>
       </RouterLink>
     </nav>
-
   </aside>
 </template>
 
