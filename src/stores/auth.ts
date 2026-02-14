@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/services/supabaseClient';
+import { useToastStore } from '@/stores/toast';
 
 interface AuthState {
   session: Session | null;
@@ -52,9 +53,14 @@ export const useAuthStore = defineStore('auth', {
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
         });
-        if (error) throw error;
+        if (error) {
+          this.error = error.message;
+          useToastStore().error(`Sign in failed: ${error.message}`);
+          throw error;
+        }
       } catch (err: unknown) {
         this.error = err instanceof Error ? err.message : 'Unable to sign in with Google';
+        useToastStore().error(this.error);
         throw err;
       } finally {
         this.loading = false;
@@ -65,7 +71,10 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true;
       try {
         const { error } = await supabase.auth.signOut();
-        if (error) throw error;
+        if (error) {
+          useToastStore().error(`Logout failed: ${error.message}`);
+          throw error;
+        }
         this.session = null;
         this.user = null;
       } finally {

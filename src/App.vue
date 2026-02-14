@@ -26,6 +26,9 @@
         </section>
       </main>
     </div>
+    
+    <!-- Global Toast Notifications -->
+    <ToastContainer />
   </div>
 </template>
 
@@ -33,6 +36,7 @@
 import { computed } from 'vue';
 import { RouterView, useRoute, useRouter } from 'vue-router';
 import SidebarNav from '@/components/layout/SidebarNav.vue';
+import ToastContainer from '@/components/shared/ToastContainer.vue';
 import { useAuthStore } from '@/stores/auth';
 
 const authStore = useAuthStore();
