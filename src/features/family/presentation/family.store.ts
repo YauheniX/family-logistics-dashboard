@@ -89,15 +89,21 @@ export const useFamilyStore = defineStore('family', () => {
     }
   }
 
-  async function removeFamily(id: string) {
+  async function removeFamily(id: string): Promise<boolean> {
     loading.value = true;
     try {
       const response = await familyService.deleteFamily(id);
       if (response.error) {
         useToastStore().error(`Failed to delete family: ${response.error.message}`);
+        return false;
       } else {
         families.value = families.value.filter((f) => f.id !== id);
+        if (currentFamily.value?.id === id) {
+          currentFamily.value = null;
+          members.value = [];
+        }
         useToastStore().success('Family deleted successfully!');
+        return true;
       }
     } finally {
       loading.value = false;

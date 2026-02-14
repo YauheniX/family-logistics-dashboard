@@ -11,6 +11,16 @@ export interface AuthUser {
  * Auth service - handles authentication operations
  */
 export class AuthService {
+  private normalizeAuthErrorMessage(message: string): string {
+    const normalized = message.toLowerCase();
+
+    if (normalized.includes('email not confirmed')) {
+      return 'Email not confirmed. Please check your inbox (and spam folder) and click the confirmation link.';
+    }
+
+    return message;
+  }
+
   /**
    * Sign in with email and password
    */
@@ -24,7 +34,7 @@ export class AuthService {
       if (error) {
         return {
           data: null,
-          error: { message: error.message, details: error },
+          error: { message: this.normalizeAuthErrorMessage(error.message), details: error },
         };
       }
 
@@ -63,7 +73,7 @@ export class AuthService {
       if (error) {
         return {
           data: null,
-          error: { message: error.message, details: error },
+          error: { message: this.normalizeAuthErrorMessage(error.message), details: error },
         };
       }
 

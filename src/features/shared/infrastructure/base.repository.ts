@@ -169,4 +169,23 @@ export abstract class BaseRepository<
   ): Promise<ApiResponse<T>> {
     return this.query(operation);
   }
+
+  protected async getAuthenticatedUserId(): Promise<ApiResponse<string>> {
+    try {
+      const { data, error } = await this.supabase.auth.getUser();
+
+      if (error) {
+        return { data: null, error: toApiError(error) };
+      }
+
+      const userId = data.user?.id;
+      if (!userId) {
+        return { data: null, error: { message: 'Authentication required' } };
+      }
+
+      return { data: userId, error: null };
+    } catch (err) {
+      return { data: null, error: toApiError(err) };
+    }
+  }
 }

@@ -288,7 +288,7 @@ onMounted(() => {
   if (savedPrefs) {
     try {
       preferences.value = JSON.parse(savedPrefs);
-    } catch (e) {
+    } catch {
       // Ignore parsing errors
     }
   }
