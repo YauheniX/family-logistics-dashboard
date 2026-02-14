@@ -1,608 +1,186 @@
 # 🏠 Family Logistics Dashboard
 
-Production-grade family travel planner built with **Vue 3 + Supabase**.  
-Organize trips, packing lists, documents, budgets, and timelines with enterprise-level architecture.
+> **Production-grade family travel planner** built with Vue 3, TypeScript, and Supabase.  
+> Organize trips, packing lists, budgets, documents, and timelines with ease.
 
-**🎯 New in v2.0: Production-Ready Architecture**
-
-- ✅ Feature-based folder structure
-- ✅ Repository pattern for data access
-- ✅ Typed Supabase client with generated types
-- ✅ Zod validation for forms
-- ✅ Clean separation: Domain → Infrastructure → Presentation
-- ✅ Full backward compatibility
+[![CI](https://github.com/YauheniX/family-logistics-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/YauheniX/family-logistics-dashboard/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/YauheniX/family-logistics-dashboard/actions/workflows/codeql.yml/badge.svg)](https://github.com/YauheniX/family-logistics-dashboard/actions/workflows/codeql.yml)
 
 ---
 
-## ✨ Features
+## ✨ Key Features
 
-### 🔐 Authentication
-
-- Google OAuth authentication (Supabase Auth)
-- Protected routes with AuthGuard
-- Persistent sessions
-
-### 🧳 Trips
-
-- Create / edit / delete trips
-- Duplicate trips
-- Trip status tracking (`planning | booked | ready | done`)
-- Dashboard with responsive trip cards
-
-### 🧺 Packing Lists
-
-- Add packing items per trip
-- Categories: `adult | kid | baby | roadtrip | custom`
-- Toggle packed state
-- Progress tracking
-
-### 📄 Documents
-
-- Upload files to Supabase Storage
-- Store booking references, insurance, tickets
-- Secure per-user access
-
-### 💰 Budget
-
-- Add expense entries
-- Categorized spending
-- Automatic total calculation
-
-### 📅 Timeline
-
-- Add trip events (check-in, departure, stops)
-- Date/time-based entries
-
-### 🎯 Centralized Error Handling
-
-- Type-safe API responses
-- Global toast notifications
-- Automatic loading states
-- Consistent error handling across the app
-
-### 🤝 Trip Sharing (NEW)
-
-- Invite members by email
-- Role-based access (owner, editor, viewer)
-- Secure user lookup functions
-- Real-time collaboration
+- 🧳 **Trip Management** - Create, edit, duplicate, and organize trips
+- 🎒 **Packing Lists** - Categorized items with progress tracking
+- 💰 **Budget Tracking** - Expense management by category
+- 📄 **Document Storage** - Upload and organize trip documents
+- 📅 **Timeline/Itinerary** - Schedule events and activities
+- 🤝 **Trip Sharing** - Collaborate with role-based access (owner, editor, viewer)
+- 🔐 **Secure Auth** - Google OAuth + email/password via Supabase
+- ✅ **Production-Ready** - Clean architecture, 70%+ test coverage, CI/CD pipeline
 
 ---
 
 ## 🛠 Tech Stack
 
-**Frontend**
+**Frontend:**  
+Vue 3 • TypeScript • Pinia • Vue Router • TailwindCSS • Vite • Zod
 
-- Vue 3 (Composition API)
-- TypeScript (strict mode)
-- Pinia (state management)
-- Vue Router
-- Vite (build tool)
-- TailwindCSS
-- Zod (runtime validation)
+**Backend:**  
+Supabase (PostgreSQL + Auth + Storage + RLS)
 
-**Backend**
-
-- Supabase
-  - Auth (Google OAuth)
-  - Postgres Database
-  - Storage (file uploads)
-  - Row Level Security (RLS)
-
-**Architecture**
-
-- **Feature-based structure** (trips, templates, auth, shared)
-- **Repository pattern** for data access
-- **Service layer** for business logic
-- **Typed database client** with generated types
-- **Zod validation** for forms and inputs
-- **Clean architecture** (Domain → Infrastructure → Presentation)
+**Architecture:**  
+Feature-based • Repository pattern • Clean architecture • Type-safe end-to-end
 
 ---
 
-## 📦 Project Structure
+## 🚀 Quick Start
 
-```
-src/
-  features/              # Feature-based architecture (NEW!)
-    trips/
-      domain/           # Business logic & services
-      infrastructure/   # Repositories & data access
-      presentation/     # Stores & UI (to be added)
-      index.ts          # Public API
-    templates/
-      domain/
-      infrastructure/
-      presentation/
-      index.ts
-    auth/
-      domain/
-      infrastructure/
-      presentation/
-      index.ts
-    shared/             # Common code
-      domain/           # Entities, validation, interfaces
-      infrastructure/   # Database types, Supabase client, base repository
-      presentation/     # Shared composables
-      index.ts
-  components/           # UI components (being migrated to features)
-    layout/            - Navigation, sidebar
-    shared/            - Reusable components
-    trips/             - Trip-specific components
-  views/               # Page components
-  stores/              # Legacy stores (backward compatibility layer)
-  services/            # Legacy services (being migrated)
-  composables/         # Reusable Vue composables
-  router/              # Vue Router configuration
-  types/               # Legacy type definitions
-docs/
-  ARCHITECTURE.md              # Architecture overview and design patterns
-  MIGRATION_GUIDE.md           # Step-by-step migration guide with examples
-  ERROR_HANDLING.md            # Error handling architecture
-  TOAST_GUIDE.md               # Toast notification usage
-  USE_ASYNC_HANDLER_GUIDE.md   # Async handler composable
-supabase/
-  schema.sql                   # Database schema
-  rls.sql                      # Row Level Security policies
-  migrations/
-    002_architecture_refactoring.sql  # Performance indexes
-```
+### Prerequisites
+- Node.js 18+ (LTS recommended)
+- Supabase account ([free tier](https://supabase.com))
+- Google Cloud Console account (for OAuth)
 
-### 📚 Architecture Documentation
-
-**New developers start here:**
-
-1. [ARCHITECTURE.md](docs/ARCHITECTURE.md) - Understand the architecture
-2. [MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md) - See code examples
-3. Feature folders - Explore the codebase
-
-**Key concepts:**
-
-- **Features are independent** - Each feature has its own domain, infrastructure, and presentation
-- **Repository pattern** - Clean data access abstraction
-- **Service layer** - Complex business logic
-- **Type safety** - From database to UI
-- **Validation** - Zod schemas for runtime checking
-
----
-
-## 🚀 Getting Started
-
-### 1. Clone the repository
+### Installation
 
 ```bash
-git clone https://github.com/your-username/family-logistics-dashboard.git
+# Clone repository
+git clone https://github.com/YauheniX/family-logistics-dashboard.git
 cd family-logistics-dashboard
-```
 
-### 2. Install dependencies
-
-```bash
+# Install dependencies
 npm install
+
+# Create .env file
+cp env.example .env
+# Edit .env with your Supabase credentials
 ```
 
-### 3. Create Supabase project
+### Supabase Setup
 
-Go to https://supabase.com  
-Create a new project and copy:
+1. Create a Supabase project at [supabase.com](https://supabase.com)
+2. Copy project URL and anon key to `.env`
+3. Run SQL scripts in Supabase SQL Editor (in order):
+   - `supabase/schema.sql` - Database tables
+   - `supabase/rls.sql` - Security policies
+   - `supabase/migrations/002_architecture_refactoring.sql` - Indexes
 
-- Project URL
-- Anon public key
+### Google OAuth Setup
 
----
+See detailed guide in [📚 Wiki → Authentication](wiki/Authentication.md)
 
-### 4. Set up Google OAuth
-
-#### A. Google Cloud Console
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project (or select an existing one)
-3. Navigate to **APIs & Services → Credentials**
-4. Click **Create Credentials → OAuth client ID**
-5. Select **Web application** as application type
-6. Under **Authorized redirect URIs**, add:
+Quick steps:
+1. Create OAuth credentials in Google Cloud Console
+2. Configure authorized redirect URI:
    ```
-   https://<your-supabase-project-ref>.supabase.co/auth/v1/callback
+   https://<your-supabase-ref>.supabase.co/auth/v1/callback
    ```
-7. Click **Create** and copy the **Client ID** and **Client Secret**
+3. Add Client ID and Secret to Supabase **Authentication → Providers → Google**
 
-> **Note**: You may also need to configure the **OAuth consent screen** under
-> APIs & Services → OAuth consent screen before creating credentials.
-
-#### B. Supabase Provider Configuration
-
-1. Go to your Supabase project dashboard
-2. Navigate to **Authentication → Providers**
-3. Find **Google** in the list and enable it
-4. Paste the **Client ID** and **Client Secret** from Google Cloud Console
-5. Save the configuration
-
----
-
-### 5. Configure environment variables
-
-Create a `.env` file in the root:
-
-```
-VITE_SUPABASE_URL=your_project_url
-VITE_SUPABASE_ANON_KEY=your_anon_key
-```
-
----
-
-### 6. Apply database schema and migrations
-
-Run the SQL files in your Supabase SQL Editor in order:
-
-1. `supabase/schema.sql` — creates tables and enables RLS
-2. `supabase/rls.sql` — creates row-level security policies
-3. `supabase/migrations/002_architecture_refactoring.sql` — adds performance indexes
-
----
-
-### 7. Run development server
+### Run Development Server
 
 ```bash
 npm run dev
 ```
 
+Visit `http://localhost:5173` 🎉
+
 ---
 
-## 🧪 Testing
-
-### Running Tests
+## 🧪 Testing & CI
 
 ```bash
-# Run all tests
+# Run tests
 npm test
 
-# Run tests with coverage report
+# Run tests with coverage
 npm run test:coverage
+
+# Lint code
+npm run lint
+
+# Build for production
+npm run build
 ```
 
-### Coverage Requirements
+**Coverage Requirements:** 70% minimum (lines, branches, functions, statements)
 
-Coverage thresholds are enforced at **70%** for lines, branches, functions, and statements.
-
-- Coverage is reported in **text** (terminal) and **lcov** (CI/artifact) formats
-- Tests use **jsdom** environment with **Vitest** as the test runner
-- All Supabase calls are mocked — tests are fully isolated
-
-### Test Structure
-
-```
-src/__tests__/
-  trips-store.test.ts       # Trip CRUD operations
-  packing-logic.test.ts     # Packing toggle and progress
-  budget-calculations.test.ts  # Budget totals and category breakdown
-  auth-guard.test.ts         # Router redirect logic
-  auth-store.test.ts         # Authentication state management
-```
+**CI Pipeline:**
+- ✅ Automated testing on every push/PR
+- ✅ ESLint + Prettier validation
+- ✅ CodeQL security scanning
+- ✅ Super Linter quality checks
+- ✅ Automatic deployment to Vercel (on `main` branch)
 
 ---
 
-## ⚙️ CI/CD Pipeline
+## 📚 Documentation
 
-### CI (Continuous Integration)
+**Comprehensive documentation available in the [Wiki](wiki/Home.md):**
 
-**File:** `.github/workflows/ci.yml`
+- **[Home](wiki/Home.md)** - Getting started guide
+- **[Architecture](wiki/Architecture.md)** - System design and patterns
+- **[Database Schema](wiki/Database-Schema.md)** - Tables, RLS policies, functions
+- **[Authentication](wiki/Authentication.md)** - Google OAuth + email/password setup
+- **[Features](wiki/Features.md)** - Detailed feature documentation
+- **[Testing](wiki/Testing.md)** - Test strategy and coverage
+- **[CI/CD](wiki/CI-CD.md)** - Continuous integration and deployment
+- **[Deployment](wiki/Deployment.md)** - Production deployment guide
+- **[Multi-Language & Dark Mode](wiki/Multi-Language-and-Dark-Mode.md)** - i18n and theming
+- **[FAQ](wiki/FAQ.md)** - Troubleshooting and common questions
 
-Runs on every **push to main** and **pull request** targeting main.
-
-Steps:
-
-1. Checkout repository
-2. Setup Node.js (LTS)
-3. Install dependencies (`npm ci`)
-4. Run linter (`npm run lint`)
-5. Run tests with coverage (`npm run test:coverage`)
-6. Upload coverage report as artifact
-
-The pipeline **fails** if:
-
-- Lint errors are found
-- Any test fails
-- Coverage drops below 70%
-
-### CD (Continuous Deployment)
-
-**File:** `.github/workflows/deploy.yml`
-
-Runs on **push to main** only after CI passes.
-
-Steps:
-
-1. Runs CI workflow first
-2. Builds the project
-3. Deploys to **Vercel** using the Vercel CLI
-
-### Configuring Vercel Secrets
-
-To enable deployment, add these **repository secrets** in GitHub:
-
-1. Go to **Settings → Secrets and variables → Actions**
-2. Add:
-   - `VERCEL_TOKEN` — from [Vercel Account Settings → Tokens](https://vercel.com/account/tokens)
-   - `VERCEL_ORG_ID` — from `.vercel/project.json` after running `vercel link`
-   - `VERCEL_PROJECT_ID` — from `.vercel/project.json` after running `vercel link`
-
-### How Deployment Works
-
-```
-Push to main
-  → CI runs (lint + test + coverage)
-  → If CI passes → Deploy job runs
-  → npm ci → npm run build → vercel deploy --prod
-```
-
-Deployment is **production-safe**: it only deploys after all quality checks pass, never exposes secrets, and fails fast on build errors.
+**Additional Technical Docs:**
+- [Architecture Guide](docs/ARCHITECTURE.md)
+- [Migration Guide](docs/MIGRATION_GUIDE.md)
+- [Error Handling](docs/ERROR_HANDLING.md)
 
 ---
 
-This repository uses **100% free GitHub-native solutions** for code quality and security checks. No API keys, no costs, no rate limits.
+## 🏗️ Project Structure
 
-### CodeQL Security Analysis
+```
+src/
+├── features/              # Feature-based architecture
+│   ├── trips/            # Trip management
+│   ├── templates/        # Packing templates
+│   ├── auth/             # Authentication
+│   └── shared/           # Shared utilities
+├── components/           # UI components
+├── views/                # Page views
+├── stores/               # Pinia stores
+└── router/               # Vue Router config
+```
 
-**What it does:**
+**Architecture Layers:**
+```
+Presentation (UI, Stores) → Domain (Services, Logic) → Infrastructure (Repositories, DB)
+```
 
-- Scans code for security vulnerabilities and coding errors
-- Analyzes TypeScript/JavaScript codebase
-- Runs on every push and pull request
-- Weekly scheduled scans for proactive security
-- Uses GitHub's official CodeQL action
-
-**File:** `.github/workflows/codeql.yml`
-
-**Key features:**
-
-- ✅ Deep static analysis (not just pattern matching)
-- ✅ Detects SQL injection, XSS, path traversal, etc.
-- ✅ Free for public and private repos
-- ✅ No external API dependencies
-- ✅ Results visible in Security tab
-
-### Super Linter
-
-**What it does:**
-
-- Enforces ESLint rules on TypeScript/Vue files
-- Validates code formatting with Prettier
-- Checks YAML, JSON, CSS, HTML syntax
-- Runs on every pull request
-- Fails PR if quality standards not met
-
-**File:** `.github/workflows/super-linter.yml`
-
-**Key features:**
-
-- ✅ Consistent code style enforcement
-- ✅ Catches common mistakes early
-- ✅ Prevents broken code from merging
-- ✅ 100% free and open source
-- ✅ No setup required beyond config files
-
-### Why This Is Better Than AI Review
-
-**Security & Privacy:**
-
-- ✅ No code sent to external APIs (OpenAI, etc.)
-- ✅ All analysis happens in GitHub's infrastructure
-- ✅ No API keys to manage or secure
-- ✅ No risk of data leaks to third parties
-
-**Reliability:**
-
-- ✅ No rate limits or API quotas
-- ✅ Deterministic results (not probabilistic)
-- ✅ No cost surprises
-- ✅ Always available
-
-**Effectiveness:**
-
-- ✅ CodeQL: Built by GitHub's security experts, backed by extensive vulnerability research
-- ✅ Super Linter: Runs actual linters, not approximations
-- ✅ Catches real bugs, not just style suggestions
-- ✅ No false positives from AI misunderstanding code
-
-**Maintenance:**
-
-- ✅ No dependencies to update or pay for
-- ✅ Backed by GitHub, always maintained
-- ✅ Transparent operation (open source)
-
-### Branch Protection Requirements
-
-To enforce these checks, configure branch protection rules:
-
-1. Go to **Settings → Branches**
-2. Add rule for `main` branch
-3. Enable:
-   - ✅ Require status checks to pass before merging
-   - ✅ Select: `Analyze Code (analyze)` (CodeQL)
-   - ✅ Select: `Lint Code Base (super-lint)` (Super Linter)
-   - ✅ Require branches to be up to date before merging
-
-Now all PRs must pass security analysis and linting before merge! 🎉
+Learn more in [Architecture Documentation](wiki/Architecture.md).
 
 ---
 
-## 🏗️ Production-Grade Architecture
+## 🤝 Contributing
 
-This project follows **clean architecture** principles with a **feature-based structure**.
+We welcome contributions! Please:
 
-### Layers
+1. Read the [Architecture Guide](wiki/Architecture.md)
+2. Check [open issues](https://github.com/YauheniX/family-logistics-dashboard/issues)
+3. Fork the repository
+4. Create a feature branch
+5. Make your changes (with tests!)
+6. Ensure CI passes (lint + tests + coverage)
+7. Submit a pull request
 
-```
-┌─────────────────────────────────────────┐
-│         Presentation Layer              │
-│  (Stores, Components, Composables)      │
-├─────────────────────────────────────────┤
-│           Domain Layer                  │
-│   (Entities, Services, Validation)      │
-├─────────────────────────────────────────┤
-│       Infrastructure Layer              │
-│  (Repositories, Database, External APIs)│
-└─────────────────────────────────────────┘
-```
-
-### Repository Pattern
-
-All data access goes through repositories:
-
-```typescript
-// Clean, consistent API
-import { tripRepository } from '@/features/trips';
-
-// Type-safe queries
-const response = await tripRepository.findByUserId(userId);
-if (response.data) {
-  console.log(response.data); // Trips[]
-}
-```
-
-### Service Layer
-
-Business logic lives in services:
-
-```typescript
-import { tripService } from '@/features/trips';
-
-// Complex operations handled for you
-const duplicated = await tripService.duplicateTrip(originalTrip);
-// ✅ Copies trip, packing items, budget, timeline
-// ✅ Handles errors and rollback
-// ✅ Returns typed result
-```
-
-### Form Validation
-
-Runtime validation with Zod:
-
-```typescript
-import { useFormValidation } from '@/features/shared/presentation/useFormValidation';
-import { TripFormSchema } from '@/features/shared/domain/validation.schemas';
-
-const { validate, errors } = useFormValidation(TripFormSchema);
-
-const result = validate(formData);
-if (result.success) {
-  // ✅ Data is validated and typed
-  await createTrip(result.data);
-} else {
-  // ❌ Errors available in errors.value
-  console.log(errors.value);
-}
-```
-
-### Type Safety
-
-End-to-end type safety from database to UI:
-
-```typescript
-// 1. Database types (auto-generated from schema)
-import type { Database } from '@/features/shared/infrastructure/database.types';
-
-// 2. Domain entities (clean business types)
-import type { Trip, CreateTripDto } from '@/features/shared/domain/entities';
-
-// 3. Typed Supabase client
-import { supabase } from '@/features/shared/infrastructure/supabase.client';
-const { data } = await supabase.from('trips').select('*');
-// data is typed as Trip[]
-```
-
-### Error Handling
-
-Consistent error handling across all layers:
-
-```typescript
-// All operations return ApiResponse<T>
-interface ApiResponse<T> {
-  data: T | null;
-  error: ApiError | null;
-}
-
-// Easy to handle
-const response = await tripRepository.findById(id);
-if (response.error) {
-  showError(response.error.message);
-} else {
-  const trip = response.data; // Typed!
-}
-```
-
-### Documentation
-
-**📚 Essential Reading:**
-
-- [Architecture Guide](docs/ARCHITECTURE.md) - Design patterns and structure
-- [Migration Guide](docs/MIGRATION_GUIDE.md) - Code examples and how-tos
-- [Error Handling](docs/ERROR_HANDLING.md) - Error handling patterns
-- [Toast Guide](docs/TOAST_GUIDE.md) - User notifications
-
----
-
-## 🗄 Example Database Schema
-
-```sql
-create table trips (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  start_date date,
-  end_date date,
-  status text default 'planning',
-  created_by uuid references auth.users(id),
-  created_at timestamp default now()
-);
-
-create table packing_items (
-  id uuid primary key default gen_random_uuid(),
-  trip_id uuid references trips(id) on delete cascade,
-  title text,
-  category text,
-  is_packed boolean default false
-);
-
-create table documents (
-  id uuid primary key default gen_random_uuid(),
-  trip_id uuid references trips(id) on delete cascade,
-  title text,
-  description text,
-  file_url text,
-  created_at timestamp default now()
-);
-
-create table budget_entries (
-  id uuid primary key default gen_random_uuid(),
-  trip_id uuid references trips(id) on delete cascade,
-  category text,
-  amount numeric,
-  currency text,
-  created_at timestamp default now()
-);
-
-create table timeline_events (
-  id uuid primary key default gen_random_uuid(),
-  trip_id uuid references trips(id) on delete cascade,
-  title text,
-  date_time timestamp,
-  notes text
-);
-```
-
----
-
-## 🔒 Security
-
-Enable **Row Level Security (RLS)** on all tables and create policies to ensure users can only access their own data.
-
-Example:
-
-```sql
-create policy "Users can manage their trips"
-on trips
-for all
-using (auth.uid() = created_by);
+**Development Workflow:**
+```bash
+git checkout -b feature/my-feature
+# Make changes
+npm run lint
+npm test
+git commit -m "feat: add my feature"
+git push origin feature/my-feature
+# Create PR on GitHub
 ```
 
 ---
@@ -610,34 +188,41 @@ using (auth.uid() = created_by);
 ## 📱 Roadmap
 
 **Completed ✅**
-
-- Feature-based architecture
-- Repository pattern
-- Typed Supabase client
-- Zod validation
-- Trip sharing with roles
-- Document upload
-- Budget tracking
-- Timeline/itinerary
-- Comprehensive test suite with CI/CD pipeline
+- Clean architecture with feature-based structure
+- Repository pattern and type-safe database client
+- Comprehensive test suite (70%+ coverage)
+- CI/CD pipeline with automated deployment
+- Trip sharing with role-based access
 
 **In Progress 🚧**
-
-- Migrate UI components to feature folders
-- API documentation with TypeDoc
+- Multi-language support (i18n)
+- Dark mode
 
 **Planned 📋**
-
 - Google Calendar sync
 - Offline mode (PWA)
 - Expense charts and analytics
 - Smart packing templates with AI
 - Mobile app (React Native)
 - Multi-currency support
-- Export to PDF
+- Export trips to PDF
 
 ---
 
 ## 📄 License
 
 Private project for personal use.
+
+---
+
+## 🙏 Acknowledgments
+
+Built with:
+- [Vue 3](https://vuejs.org/)
+- [Supabase](https://supabase.com/)
+- [TailwindCSS](https://tailwindcss.com/)
+- [Vite](https://vitejs.dev/)
+
+---
+
+**Questions?** Check the [FAQ](wiki/FAQ.md) or [open an issue](https://github.com/YauheniX/family-logistics-dashboard/issues).
