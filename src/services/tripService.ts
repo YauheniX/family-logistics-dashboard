@@ -96,6 +96,7 @@ export async function duplicateTrip(trip: Trip): Promise<Trip | null> {
         category: entry.category,
         amount: entry.amount,
         currency: entry.currency,
+        is_planned: entry.is_planned,
       }));
       const { error } = await supabase.from('budget_entries').insert(budgetPayload);
       if (error) throw error;

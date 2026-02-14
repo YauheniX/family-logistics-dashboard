@@ -36,7 +36,14 @@ export interface BudgetEntry {
   category: string;
   amount: number;
   currency: string;
+  is_planned: boolean;
   created_at?: string;
+}
+
+export interface CategoryTotal {
+  category: string;
+  planned: number;
+  spent: number;
 }
 
 export interface TimelineEvent {

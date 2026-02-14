@@ -24,6 +24,7 @@ import {
 } from '@/services/tripMemberService';
 import type {
   BudgetEntry,
+  CategoryTotal,
   NewTripPayload,
   PackingItem,
   TimelineEvent,
@@ -59,6 +60,27 @@ export const useTripStore = defineStore('trips', {
   }),
   getters: {
     totalBudget: (state) => state.budget.reduce((sum, entry) => sum + (entry.amount || 0), 0),
+    totalPlanned: (state) =>
+      state.budget.filter((e) => e.is_planned).reduce((sum, e) => sum + (e.amount || 0), 0),
+    totalSpent: (state) =>
+      state.budget.filter((e) => !e.is_planned).reduce((sum, e) => sum + (e.amount || 0), 0),
+    categoryBreakdown: (state): CategoryTotal[] => {
+      const map = new Map<string, { planned: number; spent: number }>();
+      for (const entry of state.budget) {
+        const key = entry.category;
+        const current = map.get(key) ?? { planned: 0, spent: 0 };
+        if (entry.is_planned) {
+          current.planned += entry.amount || 0;
+        } else {
+          current.spent += entry.amount || 0;
+        }
+        map.set(key, current);
+      }
+      return Array.from(map.entries()).map(([category, totals]) => ({
+        category,
+        ...totals,
+      }));
+    },
   },
   actions: {
     async loadTrips(userId: string) {

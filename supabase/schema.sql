@@ -39,6 +39,7 @@ create table if not exists public.budget_entries (
   category text not null,
   amount numeric not null default 0,
   currency text not null default 'USD',
+  is_planned boolean not null default false,
   created_at timestamp with time zone default now()
 );
 
