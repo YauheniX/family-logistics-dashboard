@@ -137,6 +137,7 @@ export const useTemplateStore = defineStore('templates', {
         return result;
       } catch (err: any) {
         this.error = err.message ?? 'Unable to apply template';
+        useToastStore().error(`Failed to apply template: ${err.message ?? 'Unknown error'}`);
         throw err;
       } finally {
         this.applying = false;

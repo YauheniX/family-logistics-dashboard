@@ -194,23 +194,17 @@ export const useTripStore = defineStore('trips', {
       if (!source) return null;
       
       this.error = null;
-      try {
-        const response = await duplicateTrip(source);
-        if (response.error) {
-          this.error = response.error.message;
-          useToastStore().error(`Failed to duplicate trip: ${response.error.message}`);
-          return null;
-        }
-        if (response.data) {
-          this.trips.unshift(response.data);
-          useToastStore().success('Trip duplicated successfully!');
-        }
-        return response.data;
-      } catch (err: any) {
-        this.error = err.message ?? 'Unable to duplicate trip';
-        useToastStore().error(`Failed to duplicate trip: ${err.message}`);
-        throw err;
+      const response = await duplicateTrip(source);
+      if (response.error) {
+        this.error = response.error.message;
+        useToastStore().error(`Failed to duplicate trip: ${response.error.message}`);
+        return null;
       }
+      if (response.data) {
+        this.trips.unshift(response.data);
+        useToastStore().success('Trip duplicated successfully!');
+      }
+      return response.data;
     },
 
     async loadPacking(tripId: string) {

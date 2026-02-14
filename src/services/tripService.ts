@@ -14,9 +14,12 @@ export async function fetchTrips(userId: string): Promise<ApiResponse<Trip[]>> {
   }
 
   // Fetch trips shared with the user via trip_members
-  const membershipsResponse = await SupabaseService.select<{ trip_id: string }>('trip_members', (builder) =>
-    builder.eq('user_id', userId).select('trip_id')
-  );
+  const membershipsResponse = await SupabaseService.execute<{ trip_id: string }[]>(async () => {
+    return await supabase
+      .from('trip_members')
+      .select('trip_id')
+      .eq('user_id', userId);
+  });
 
   if (membershipsResponse.error) {
     return { data: ownTripsResponse.data || [], error: null };
