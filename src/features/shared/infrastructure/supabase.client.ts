@@ -17,10 +17,7 @@ if (!isMockMode() && (!supabaseUrl || !supabaseAnonKey)) {
  * Note: In mock mode, this client won't be used but we still export it for type compatibility
  */
 export const supabase: SupabaseClient<Database> = isMockMode()
-  ? (createClient<Database>(
-      'https://mock.supabase.co',
-      'mock-key',
-    ) as SupabaseClient<Database>)
+  ? (createClient<Database>('https://mock.supabase.co', 'mock-key') as SupabaseClient<Database>)
   : createClient<Database>(supabaseUrl, supabaseAnonKey);
 
 /**

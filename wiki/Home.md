@@ -37,6 +37,7 @@ This wiki contains comprehensive guides for developers and contributors working 
 This application supports **two modes of operation**:
 
 ### 1️⃣ Frontend-Only Mode (Mock Backend)
+
 - **Perfect for:** Local development, demos, static hosting (GitHub Pages)
 - **No backend required** - runs entirely in browser
 - **Data storage:** localStorage
@@ -44,6 +45,7 @@ This application supports **two modes of operation**:
 - **Learn more:** [Frontend-Only Mode Guide](Frontend-Only-Mode.md)
 
 ### 2️⃣ Full-Stack Mode (Supabase Backend)
+
 - **Perfect for:** Production deployments, multi-user apps
 - **Backend:** Supabase (PostgreSQL + Auth + Storage)
 - **Data storage:** Cloud database

@@ -21,9 +21,8 @@ export class MockTripRepository extends MockRepository<Trip, CreateTripDto, Upda
       const ownTrips = trips.filter((trip) => trip.created_by === userId);
 
       // In mock mode, we also check trip_members table
-      const members = await this.storage.get<{ trip_id: string; user_id: string }[]>(
-        'table:trip_members',
-      );
+      const members =
+        await this.storage.get<{ trip_id: string; user_id: string }[]>('table:trip_members');
       const sharedTripIds =
         members
           ?.filter((m) => m.user_id === userId)

@@ -7,6 +7,7 @@ The Family Logistics Dashboard supports **frontend-only mode**, allowing you to 
 ## When to Use Mock Mode
 
 ✅ **Perfect for:**
+
 - Local development without setting up Supabase
 - Static hosting (GitHub Pages, Netlify, Vercel)
 - Demos, presentations, and prototyping
@@ -14,6 +15,7 @@ The Family Logistics Dashboard supports **frontend-only mode**, allowing you to 
 - Learning and experimenting with the codebase
 
 ❌ **Not suitable for:**
+
 - Production deployments requiring multi-user collaboration
 - Applications needing cloud data synchronization
 - Scenarios requiring real OAuth authentication
@@ -72,9 +74,7 @@ export function isMockMode(): boolean {
 ```typescript
 // infrastructure/repository.factory.ts
 export function getTripRepository() {
-  return isMockMode() 
-    ? new MockTripRepository() 
-    : new TripRepository();
+  return isMockMode() ? new MockTripRepository() : new TripRepository();
 }
 ```
 
@@ -119,6 +119,7 @@ The mock auth service (`MockAuthService`) simulates authentication without requi
 ### Usage
 
 **Google OAuth (Mock):**
+
 ```typescript
 // Click "Sign in with Google"
 // → Auto-creates demo-google@example.com
@@ -126,6 +127,7 @@ The mock auth service (`MockAuthService`) simulates authentication without requi
 ```
 
 **Email/Password:**
+
 ```typescript
 // Sign up with any email/password
 await authService.signUp('user@example.com', 'password123');
@@ -167,8 +169,8 @@ class MockTripRepository extends MockRepository<Trip> {
   async findByUserId(userId: string): Promise<ApiResponse<Trip[]>> {
     const trips = await this.loadAll();
     return {
-      data: trips.filter(t => t.created_by === userId),
-      error: null
+      data: trips.filter((t) => t.created_by === userId),
+      error: null,
     };
   }
 }
@@ -201,37 +203,37 @@ family-logistics:table:trip_members
 
 ### 1. Authentication
 
-| Feature | Mock Mode | Supabase Mode |
-|---------|-----------|---------------|
-| Google OAuth | ⚠️ Mock only (auto-creates demo user) | ✅ Real OAuth |
-| Email/Password | ⚠️ Mock only (localStorage) | ✅ Supabase Auth |
-| Password reset | ❌ Not available | ✅ Email-based |
-| Email verification | ❌ Not available | ✅ Supported |
+| Feature            | Mock Mode                             | Supabase Mode    |
+| ------------------ | ------------------------------------- | ---------------- |
+| Google OAuth       | ⚠️ Mock only (auto-creates demo user) | ✅ Real OAuth    |
+| Email/Password     | ⚠️ Mock only (localStorage)           | ✅ Supabase Auth |
+| Password reset     | ❌ Not available                      | ✅ Email-based   |
+| Email verification | ❌ Not available                      | ✅ Supported     |
 
 ### 2. Trip Sharing
 
-| Feature | Mock Mode | Supabase Mode |
-|---------|-----------|---------------|
-| Share trips | ⚠️ Limited (simulated only) | ✅ Real multi-user |
-| User roles | ⚠️ Mock only | ✅ owner/editor/viewer |
-| Email invites | ❌ Not sent | ✅ Real emails |
+| Feature       | Mock Mode                   | Supabase Mode          |
+| ------------- | --------------------------- | ---------------------- |
+| Share trips   | ⚠️ Limited (simulated only) | ✅ Real multi-user     |
+| User roles    | ⚠️ Mock only                | ✅ owner/editor/viewer |
+| Email invites | ❌ Not sent                 | ✅ Real emails         |
 
 ### 3. Document Storage
 
-| Feature | Mock Mode | Supabase Mode |
-|---------|-----------|---------------|
-| Upload docs | ⚠️ Base64 in localStorage (size limited) | ✅ Cloud storage |
-| Max file size | ⚠️ ~1-5MB (browser limit) | ✅ Configurable (up to GBs) |
-| File types | ✅ All types | ✅ All types |
+| Feature       | Mock Mode                                | Supabase Mode               |
+| ------------- | ---------------------------------------- | --------------------------- |
+| Upload docs   | ⚠️ Base64 in localStorage (size limited) | ✅ Cloud storage            |
+| Max file size | ⚠️ ~1-5MB (browser limit)                | ✅ Configurable (up to GBs) |
+| File types    | ✅ All types                             | ✅ All types                |
 
 ### 4. Data Storage
 
-| Feature | Mock Mode | Supabase Mode |
-|---------|-----------|---------------|
-| Storage location | ⚠️ Browser localStorage | ✅ Cloud database |
-| Storage limit | ⚠️ ~5-10MB (browser limit) | ✅ Unlimited (Supabase tier) |
-| Multi-device sync | ❌ Not available | ✅ Real-time sync |
-| Data export | ⚠️ Manual (copy localStorage) | ✅ Database export |
+| Feature           | Mock Mode                     | Supabase Mode                |
+| ----------------- | ----------------------------- | ---------------------------- |
+| Storage location  | ⚠️ Browser localStorage       | ✅ Cloud database            |
+| Storage limit     | ⚠️ ~5-10MB (browser limit)    | ✅ Unlimited (Supabase tier) |
+| Multi-device sync | ❌ Not available              | ✅ Real-time sync            |
+| Data export       | ⚠️ Manual (copy localStorage) | ✅ Database export           |
 
 ---
 
@@ -268,8 +270,8 @@ localStorage.getItem('family-logistics:table:trips');
 ```javascript
 // View all app data
 Object.keys(localStorage)
-  .filter(k => k.startsWith('family-logistics:'))
-  .forEach(k => console.log(k, localStorage.getItem(k)));
+  .filter((k) => k.startsWith('family-logistics:'))
+  .forEach((k) => console.log(k, localStorage.getItem(k)));
 ```
 
 ### Clear All Data
@@ -277,8 +279,8 @@ Object.keys(localStorage)
 ```javascript
 // Reset app (delete all data)
 Object.keys(localStorage)
-  .filter(k => k.startsWith('family-logistics:'))
-  .forEach(k => localStorage.removeItem(k));
+  .filter((k) => k.startsWith('family-logistics:'))
+  .forEach((k) => localStorage.removeItem(k));
 
 // Reload page
 location.reload();
@@ -291,6 +293,7 @@ location.reload();
 To migrate from mock mode to Supabase:
 
 1. **Export Data** (manual):
+
    ```javascript
    // Export trips
    const trips = JSON.parse(localStorage.getItem('family-logistics:table:trips'));
@@ -303,6 +306,7 @@ To migrate from mock mode to Supabase:
    - Configure OAuth
 
 3. **Update .env**:
+
    ```bash
    VITE_USE_MOCK_BACKEND=false
    VITE_SUPABASE_URL=https://your-project.supabase.co
@@ -321,12 +325,14 @@ To migrate from mock mode to Supabase:
 ### Development
 
 ✅ **Do:**
+
 - Use mock mode for rapid prototyping
 - Clear localStorage between test scenarios
 - Test with realistic data volumes
 - Document mock-specific behavior
 
 ❌ **Don't:**
+
 - Store sensitive data in mock mode (it's not encrypted)
 - Exceed browser storage limits (~5-10MB)
 - Rely on mock mode for production
@@ -334,12 +340,14 @@ To migrate from mock mode to Supabase:
 ### Deployment
 
 ✅ **Do:**
+
 - Use mock mode for static demos
 - Set `VITE_BASE_PATH` for GitHub Pages
 - Test builds locally before deploying
 - Document that it's a demo/offline version
 
 ❌ **Don't:**
+
 - Deploy mock mode as a production app
 - Share sensitive trip data in mock mode
 - Expect data to persist forever (users can clear browser data)
@@ -353,6 +361,7 @@ To migrate from mock mode to Supabase:
 **Cause:** localStorage quota exceeded
 
 **Solution:**
+
 ```javascript
 // Clear old data
 localStorage.clear();
@@ -364,6 +373,7 @@ location.reload();
 **Cause:** Auth state lost (cookies cleared)
 
 **Solution:**
+
 - Sign in again (mock OAuth is instant)
 - Or check localStorage for `family-logistics:auth-data`
 
@@ -372,6 +382,7 @@ location.reload();
 **Cause:** Browser data cleared
 
 **Solution:**
+
 - Mock mode data is not backed up
 - For important data, export manually or use Supabase mode
 

@@ -57,9 +57,7 @@ export class MockAuthService {
       const authData = await this.getAuthData();
 
       // Find user
-      const user = authData.users.find(
-        (u) => u.email === email && u.password === password,
-      );
+      const user = authData.users.find((u) => u.email === email && u.password === password);
 
       if (!user) {
         return {

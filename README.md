@@ -13,7 +13,9 @@
 This application supports **two modes of operation**:
 
 ### 1️⃣ **Frontend-Only Mode (Mock Backend)**
+
 Run the app entirely in the browser with **no backend required**. Perfect for:
+
 - Local development and testing
 - Static hosting (GitHub Pages, Netlify, Vercel)
 - Demos and prototyping
@@ -23,7 +25,9 @@ Run the app entirely in the browser with **no backend required**. Perfect for:
 **Authentication:** Simple mock auth (no Google OAuth setup needed)
 
 ### 2️⃣ **Full-Stack Mode (Supabase Backend)**
+
 Production-ready deployment with real backend. Includes:
+
 - PostgreSQL database with Row Level Security (RLS)
 - Google OAuth authentication
 - Cloud file storage for documents
@@ -41,8 +45,8 @@ Production-ready deployment with real backend. Includes:
 - 💰 **Budget Tracking** - Expense management by category
 - 📄 **Document Storage** - Upload and organize trip documents
 - 📅 **Timeline/Itinerary** - Schedule events and activities
-- 🤝 **Trip Sharing** - Collaborate with role-based access (owner, editor, viewer) *(Supabase mode only)*
-- 🔐 **Secure Auth** - Google OAuth + email/password *(Supabase mode only)*
+- 🤝 **Trip Sharing** - Collaborate with role-based access (owner, editor, viewer) _(Supabase mode only)_
+- 🔐 **Secure Auth** - Google OAuth + email/password _(Supabase mode only)_
 - ✅ **Production-Ready** - Clean architecture, 70%+ test coverage, CI/CD pipeline
 
 ---
@@ -189,29 +193,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Build
         env:
           VITE_USE_MOCK_BACKEND: 'true'
           VITE_BASE_PATH: '/family-logistics-dashboard/'
         run: npm run build
-        
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
-        
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: './dist'
-          
+
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
 ```
@@ -257,6 +261,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 ### Auto-Detect Mode
 
 If `VITE_USE_MOCK_BACKEND` is not set, the app will:
+
 - Use **mock mode** if Supabase credentials are missing
 - Use **Supabase mode** if credentials are present
 
@@ -264,18 +269,18 @@ If `VITE_USE_MOCK_BACKEND` is not set, the app will:
 
 ## ⚠️ Feature Limitations in Mock Mode
 
-| Feature | Mock Mode | Supabase Mode |
-|---------|-----------|---------------|
-| Trip CRUD | ✅ Full support | ✅ Full support |
-| Packing lists | ✅ Full support | ✅ Full support |
-| Budget tracking | ✅ Full support | ✅ Full support |
-| Timeline/Itinerary | ✅ Full support | ✅ Full support |
-| Packing templates | ✅ Full support | ✅ Full support |
-| Authentication | ⚠️ Mock only (no real OAuth) | ✅ Google OAuth + email/password |
-| Trip sharing | ⚠️ Limited (no real users) | ✅ Multi-user with roles |
-| Document upload | ⚠️ Base64 only (browser storage) | ✅ Cloud storage (Supabase) |
-| Data persistence | ⚠️ Browser only (localStorage) | ✅ Cloud database (PostgreSQL) |
-| Multi-device sync | ❌ Not available | ✅ Syncs across devices |
+| Feature            | Mock Mode                        | Supabase Mode                    |
+| ------------------ | -------------------------------- | -------------------------------- |
+| Trip CRUD          | ✅ Full support                  | ✅ Full support                  |
+| Packing lists      | ✅ Full support                  | ✅ Full support                  |
+| Budget tracking    | ✅ Full support                  | ✅ Full support                  |
+| Timeline/Itinerary | ✅ Full support                  | ✅ Full support                  |
+| Packing templates  | ✅ Full support                  | ✅ Full support                  |
+| Authentication     | ⚠️ Mock only (no real OAuth)     | ✅ Google OAuth + email/password |
+| Trip sharing       | ⚠️ Limited (no real users)       | ✅ Multi-user with roles         |
+| Document upload    | ⚠️ Base64 only (browser storage) | ✅ Cloud storage (Supabase)      |
+| Data persistence   | ⚠️ Browser only (localStorage)   | ✅ Cloud database (PostgreSQL)   |
+| Multi-device sync  | ❌ Not available                 | ✅ Syncs across devices          |
 
 ---
 

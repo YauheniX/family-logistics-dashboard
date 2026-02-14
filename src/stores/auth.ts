@@ -69,7 +69,7 @@ export const useAuthStore = defineStore('auth', {
           useToastStore().error(this.error);
           throw new Error(this.error);
         }
-        
+
         // In real OAuth, data is null (redirect happens)
         // In mock mode, data contains the user
         if (response.data) {
