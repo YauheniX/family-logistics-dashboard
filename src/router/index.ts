@@ -8,6 +8,7 @@ import WishlistEditView from '@/views/WishlistEditView.vue';
 import PublicWishlistView from '@/views/PublicWishlistView.vue';
 import LoginView from '@/views/auth/LoginView.vue';
 import RegisterView from '@/views/auth/RegisterView.vue';
+import SettingsView from '@/views/SettingsView.vue';
 import { useAuthStore } from '@/stores/auth';
 
 const router = createRouter({
@@ -69,6 +70,12 @@ const router = createRouter({
       name: 'public-wishlist',
       component: PublicWishlistView,
       props: true,
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: SettingsView,
+      meta: { requiresAuth: true },
     },
   ],
 });

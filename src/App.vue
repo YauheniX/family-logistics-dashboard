@@ -68,6 +68,7 @@ const pageTitle = computed(() => {
     'wishlist-list': 'Wishlists',
     'wishlist-edit': 'My Wishlist',
     'public-wishlist': 'Public Wishlist',
+    'settings': 'Settings',
   };
   return titles[routeName] || 'Family Logistics';
 });
