@@ -64,7 +64,7 @@ import ModalDialog from '@/components/shared/ModalDialog.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseInput from '@/components/shared/BaseInput.vue';
 import { useToastStore } from '@/stores/toast';
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '@/features/auth/presentation/auth.store';
 import { reportProblem, type ScreenshotPayload } from '@/services/issueReporter';
 
 defineProps<{ open: boolean }>();

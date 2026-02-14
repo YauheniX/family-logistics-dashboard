@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import ReportProblemModal from '@/components/shared/ReportProblemModal.vue';
 import { useToastStore } from '@/stores/toast';
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '@/features/auth/presentation/auth.store';
 import * as issueReporter from '@/services/issueReporter';
 import type { ScreenshotPayload } from '@/services/issueReporter';
 
@@ -56,7 +56,8 @@ describe('ReportProblemModal', () => {
             inheritAttrs: false,
           },
           BaseInput: {
-            template: '<input v-model="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+            template:
+              '<input v-model="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
             props: ['modelValue'],
             emits: ['update:modelValue'],
           },
@@ -204,7 +205,8 @@ describe('ReportProblemModal', () => {
             inheritAttrs: false,
           },
           BaseInput: {
-            template: '<input v-model="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+            template:
+              '<input v-model="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
             props: ['modelValue'],
             emits: ['update:modelValue'],
           },
@@ -228,7 +230,7 @@ describe('ReportProblemModal', () => {
     await wrapper.vm.$nextTick();
 
     // Wait for async operations
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(issueReporter.reportProblem).toHaveBeenCalledWith({
       title: 'Test Issue',
@@ -244,9 +246,7 @@ describe('ReportProblemModal', () => {
   });
 
   it('shows error toast on submission failure', async () => {
-    vi.mocked(issueReporter.reportProblem).mockRejectedValue(
-      new Error('Network error')
-    );
+    vi.mocked(issueReporter.reportProblem).mockRejectedValue(new Error('Network error'));
 
     const authStore = useAuthStore();
     authStore.user = { id: 'user-123', email: 'test@example.com' };
@@ -265,7 +265,8 @@ describe('ReportProblemModal', () => {
             inheritAttrs: false,
           },
           BaseInput: {
-            template: '<input v-model="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+            template:
+              '<input v-model="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
             props: ['modelValue'],
             emits: ['update:modelValue'],
           },
@@ -289,7 +290,7 @@ describe('ReportProblemModal', () => {
     await wrapper.vm.$nextTick();
 
     // Wait for async operations
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     const toastStore = useToastStore();
     expect(toastStore.toasts).toHaveLength(1);
@@ -312,7 +313,8 @@ describe('ReportProblemModal', () => {
             inheritAttrs: false,
           },
           BaseInput: {
-            template: '<input v-model="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+            template:
+              '<input v-model="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
             props: ['modelValue'],
             emits: ['update:modelValue'],
           },
