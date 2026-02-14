@@ -310,7 +310,7 @@ This repository uses **100% free GitHub-native solutions** for code quality and 
 
 **Effectiveness:**
 
-- ✅ CodeQL: Built by GitHub's security experts, trained on millions of vulnerabilities
+- ✅ CodeQL: Built by GitHub's security experts, backed by extensive vulnerability research
 - ✅ Super Linter: Runs actual linters, not approximations
 - ✅ Catches real bugs, not just style suggestions
 - ✅ No false positives from AI misunderstanding code
