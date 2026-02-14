@@ -47,8 +47,8 @@ const route = useRoute();
 
 const items = [
   { name: 'dashboard', label: 'Dashboard', to: '/', emoji: '📌' },
-  { name: 'trip-new', label: 'New Trip', to: '/trips/new', emoji: '🧭' },
-  { name: 'templates', label: 'Packing Templates', to: '/templates', emoji: '📋' },
+  { name: 'family-list', label: 'Families', to: '/families', emoji: '👨‍👩‍👧‍👦' },
+  { name: 'wishlist-list', label: 'Wishlists', to: '/wishlists', emoji: '🎁' },
 ];
 
 const userEmail = props.userEmail;

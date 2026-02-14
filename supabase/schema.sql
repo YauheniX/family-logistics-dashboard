@@ -1,155 +1,197 @@
--- Enable required extensions
+-- ============================================================
+-- Family Shopping & Wishlist Planner - Database Schema
+-- ============================================================
+
+-- Enable UUID extension
 create extension if not exists "uuid-ossp";
-create extension if not exists pgcrypto;
 
--- Trips table
-create table if not exists public.trips (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  start_date date,
-  end_date date,
-  status text check (status in ('planning','booked','ready','done')) default 'planning',
-  created_by uuid references auth.users(id) not null,
-  created_at timestamp with time zone default now()
+-- ─── User Profiles ──────────────────────────────────────────
+create table if not exists user_profiles (
+  id          uuid primary key references auth.users on delete cascade,
+  display_name text not null,
+  avatar_url  text,
+  created_at  timestamptz not null default now()
 );
 
--- Packing items
-create table if not exists public.packing_items (
-  id uuid primary key default gen_random_uuid(),
-  trip_id uuid references public.trips(id) on delete cascade,
-  title text not null,
-  category text check (category in ('adult','kid','baby','roadtrip','custom')) default 'custom',
-  is_packed boolean default false
+comment on table user_profiles is 'Extended user profile linked to auth.users';
+
+-- ─── Families ───────────────────────────────────────────────
+create table if not exists families (
+  id          uuid primary key default uuid_generate_v4(),
+  name        text not null,
+  created_by  uuid not null references auth.users on delete cascade,
+  created_at  timestamptz not null default now()
 );
 
--- Documents
-create table if not exists public.documents (
-  id uuid primary key default gen_random_uuid(),
-  trip_id uuid references public.trips(id) on delete cascade,
-  title text not null,
+comment on table families is 'Family groups that contain members and shared shopping lists';
+
+-- ─── Family Members ─────────────────────────────────────────
+create table if not exists family_members (
+  id          uuid primary key default uuid_generate_v4(),
+  family_id   uuid not null references families on delete cascade,
+  user_id     uuid not null references auth.users on delete cascade,
+  role        text not null default 'member' check (role in ('owner', 'member')),
+  joined_at   timestamptz not null default now(),
+  unique (family_id, user_id)
+);
+
+comment on table family_members is 'Members of a family with role-based access';
+
+-- ─── Shopping Lists ─────────────────────────────────────────
+create table if not exists shopping_lists (
+  id          uuid primary key default uuid_generate_v4(),
+  family_id   uuid not null references families on delete cascade,
+  title       text not null,
   description text,
-  file_url text not null,
-  created_at timestamp with time zone default now()
+  created_by  uuid not null references auth.users on delete cascade,
+  created_at  timestamptz not null default now(),
+  status      text not null default 'active' check (status in ('active', 'archived'))
 );
 
--- Budget entries
-create table if not exists public.budget_entries (
-  id uuid primary key default gen_random_uuid(),
-  trip_id uuid references public.trips(id) on delete cascade,
-  category text not null,
-  amount numeric not null default 0,
-  currency text not null default 'USD',
-  is_planned boolean not null default false,
-  created_at timestamp with time zone default now()
+comment on table shopping_lists is 'Shared shopping lists within a family';
+
+-- ─── Shopping Items ─────────────────────────────────────────
+create table if not exists shopping_items (
+  id            uuid primary key default uuid_generate_v4(),
+  list_id       uuid not null references shopping_lists on delete cascade,
+  title         text not null,
+  quantity      integer not null default 1,
+  category      text not null default 'General',
+  is_purchased  boolean not null default false,
+  added_by      uuid not null references auth.users on delete cascade,
+  purchased_by  uuid references auth.users on delete set null,
+  created_at    timestamptz not null default now()
 );
 
--- Timeline events
-create table if not exists public.timeline_events (
-  id uuid primary key default gen_random_uuid(),
-  trip_id uuid references public.trips(id) on delete cascade,
-  title text not null,
-  date_time timestamp with time zone not null,
-  notes text
+comment on table shopping_items is 'Items in a shopping list';
+
+-- ─── Wishlists ──────────────────────────────────────────────
+create table if not exists wishlists (
+  id          uuid primary key default uuid_generate_v4(),
+  user_id     uuid not null references auth.users on delete cascade,
+  title       text not null,
+  description text,
+  is_public   boolean not null default false,
+  share_slug  text not null unique,
+  created_at  timestamptz not null default now()
 );
 
--- Enable RLS
-alter table public.trips enable row level security;
-alter table public.packing_items enable row level security;
-alter table public.documents enable row level security;
-alter table public.budget_entries enable row level security;
-alter table public.timeline_events enable row level security;
+comment on table wishlists is 'Personal wishlists that can be publicly shared';
 
--- Packing templates
-create table if not exists public.packing_templates (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  category text check (category in ('adult','kid','baby','roadtrip','custom')) default 'custom',
-  created_by uuid references auth.users(id) not null,
-  created_at timestamp with time zone default now()
+-- ─── Wishlist Items ─────────────────────────────────────────
+create table if not exists wishlist_items (
+  id                uuid primary key default uuid_generate_v4(),
+  wishlist_id       uuid not null references wishlists on delete cascade,
+  title             text not null,
+  description       text,
+  link              text,
+  price             numeric(10, 2),
+  currency          text not null default 'USD',
+  image_url         text,
+  priority          text not null default 'medium' check (priority in ('low', 'medium', 'high')),
+  is_reserved       boolean not null default false,
+  reserved_by_email text,
+  created_at        timestamptz not null default now()
 );
 
--- Packing template items
-create table if not exists public.packing_template_items (
-  id uuid primary key default gen_random_uuid(),
-  template_id uuid references public.packing_templates(id) on delete cascade,
-  title text not null
-);
+comment on table wishlist_items is 'Items in a wishlist with reservation support';
 
--- Enable RLS on template tables
-alter table public.packing_templates enable row level security;
-alter table public.packing_template_items enable row level security;
+-- ─── Indexes ────────────────────────────────────────────────
 
--- Trip members (sharing)
-create table if not exists public.trip_members (
-  id uuid primary key default gen_random_uuid(),
-  trip_id uuid references public.trips(id) on delete cascade not null,
-  user_id uuid references auth.users(id) on delete cascade not null,
-  role text check (role in ('owner','editor','viewer')) not null default 'viewer',
-  created_at timestamp with time zone default now(),
-  unique (trip_id, user_id)
-);
+create index if not exists idx_family_members_user_id on family_members (user_id);
+create index if not exists idx_family_members_family_id on family_members (family_id);
+create index if not exists idx_shopping_lists_family_id on shopping_lists (family_id);
+create index if not exists idx_shopping_items_list_id on shopping_items (list_id);
+create index if not exists idx_wishlists_user_id on wishlists (user_id);
+create index if not exists idx_wishlists_share_slug on wishlists (share_slug);
+create index if not exists idx_wishlist_items_wishlist_id on wishlist_items (wishlist_id);
 
-alter table public.trip_members enable row level security;
+-- ─── Helper Functions ───────────────────────────────────────
 
--- Function to look up a user id by email (used for trip sharing invitations).
--- SECURITY DEFINER so the authenticated role can resolve emails to user ids
--- without having direct access to auth.users. Restricted to authenticated users.
-CREATE OR REPLACE FUNCTION public.get_user_id_by_email(lookup_email text)
-RETURNS uuid
-LANGUAGE plpgsql
-STABLE
-SECURITY DEFINER
-SET search_path = ''
-AS $$
-BEGIN
-  IF auth.uid() IS NULL THEN
-    RAISE EXCEPTION 'Authentication required';
-  END IF;
-  RETURN (SELECT id FROM auth.users WHERE email = lookup_email LIMIT 1);
-END;
+-- Check if a user belongs to a specific family
+create or replace function user_is_family_member(p_family_id uuid, p_user_id uuid)
+returns boolean
+language sql
+security definer
+stable
+as $$
+  select exists (
+    select 1 from family_members
+    where family_id = p_family_id
+      and user_id = p_user_id
+  );
 $$;
 
--- Function to look up a user email by id (used for displaying trip member emails).
--- Only returns the email if the caller shares a trip with the target user.
-CREATE OR REPLACE FUNCTION public.get_email_by_user_id(lookup_user_id uuid)
-RETURNS text
-LANGUAGE plpgsql
-STABLE
-SECURITY DEFINER
-SET search_path = ''
-AS $$
-BEGIN
-  IF auth.uid() IS NULL THEN
-    RAISE EXCEPTION 'Authentication required';
-  END IF;
-  -- Only allow lookup if caller shares at least one trip with the target user
-  IF NOT EXISTS (
-    SELECT 1 FROM public.trip_members tm1
-    JOIN public.trip_members tm2 ON tm1.trip_id = tm2.trip_id
-    WHERE tm1.user_id = auth.uid() AND tm2.user_id = lookup_user_id
-  ) AND NOT EXISTS (
-    -- Also allow if caller owns a trip the target is a member of
-    SELECT 1 FROM public.trips t
-    JOIN public.trip_members tm ON tm.trip_id = t.id
-    WHERE t.created_by = auth.uid() AND tm.user_id = lookup_user_id
-  ) AND NOT EXISTS (
-    -- Also allow if target owns a trip the caller is a member of
-    SELECT 1 FROM public.trips t
-    JOIN public.trip_members tm ON tm.trip_id = t.id
-    WHERE t.created_by = lookup_user_id AND tm.user_id = auth.uid()
-  ) THEN
-    RETURN NULL;
-  END IF;
-  RETURN (SELECT email FROM auth.users WHERE id = lookup_user_id LIMIT 1);
-END;
+-- Check if a user is the owner of a specific family
+create or replace function user_is_family_owner(p_family_id uuid, p_user_id uuid)
+returns boolean
+language sql
+security definer
+stable
+as $$
+  select exists (
+    select 1 from family_members
+    where family_id = p_family_id
+      and user_id = p_user_id
+      and role = 'owner'
+  );
 $$;
 
--- Storage bucket for documents (policies live in rls.sql)
-do $$
+-- Lookup user id by email (for invitations)
+create or replace function get_user_id_by_email(lookup_email text)
+returns uuid
+language plpgsql
+security definer
+stable
+as $$
 begin
-  perform storage.create_bucket('documents', true);
-exception
-  when duplicate_object then
-    null;
+  if auth.uid() is null then
+    raise exception 'Authentication required';
+  end if;
+  return (select id from auth.users where email = lookup_email limit 1);
 end;
 $$;
+
+-- Lookup email by user id (for displaying member emails)
+create or replace function get_email_by_user_id(lookup_user_id uuid)
+returns text
+language plpgsql
+security definer
+stable
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Authentication required';
+  end if;
+  return (select email from auth.users where id = lookup_user_id limit 1);
+end;
+$$;
+
+-- ─── Auto-create user profile on signup ─────────────────────
+
+create or replace function handle_new_user()
+returns trigger
+language plpgsql
+security definer
+as $$
+begin
+  insert into user_profiles (id, display_name, avatar_url)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data ->> 'full_name', new.raw_user_meta_data ->> 'name', split_part(new.email, '@', 1)),
+    coalesce(new.raw_user_meta_data ->> 'avatar_url', null)
+  );
+  return new;
+end;
+$$;
+
+-- Trigger on auth.users insert
+create or replace trigger on_auth_user_created
+  after insert on auth.users
+  for each row
+  execute function handle_new_user();
+
+-- ─── Storage ────────────────────────────────────────────────
+
+-- Create wishlist-images bucket (run via Supabase dashboard or API)
+-- insert into storage.buckets (id, name, public) values ('wishlist-images', 'wishlist-images', true);

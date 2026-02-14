@@ -1,132 +1,127 @@
 /**
- * Domain entities - clean types for business logic
- * These are separate from database types for better domain modeling
+ * Domain entities - Family Shopping & Wishlist Planner
  */
 
-export type TripStatus = 'planning' | 'booked' | 'ready' | 'done';
-export type PackingCategory = 'adult' | 'kid' | 'baby' | 'roadtrip' | 'custom';
-export type TripMemberRole = 'owner' | 'editor' | 'viewer';
+// ─── Enums ───────────────────────────────────────────────
+export type FamilyMemberRole = 'owner' | 'member';
+export type ShoppingListStatus = 'active' | 'archived';
+export type ItemPriority = 'low' | 'medium' | 'high';
 
-/**
- * Trip entity
- */
-export interface Trip {
+// ─── User Profile ────────────────────────────────────────
+export interface UserProfile {
+  id: string;
+  display_name: string;
+  avatar_url: string | null;
+  created_at: string;
+}
+
+export type CreateUserProfileDto = Omit<UserProfile, 'created_at'>;
+export type UpdateUserProfileDto = Partial<Pick<UserProfile, 'display_name' | 'avatar_url'>>;
+
+// ─── Family ──────────────────────────────────────────────
+export interface Family {
   id: string;
   name: string;
-  start_date: string | null;
-  end_date: string | null;
-  status: TripStatus;
   created_by: string;
   created_at: string;
 }
 
-export type CreateTripDto = Omit<Trip, 'id' | 'created_at'>;
-export type UpdateTripDto = Partial<Omit<Trip, 'id' | 'created_by' | 'created_at'>>;
+export type CreateFamilyDto = Pick<Family, 'name'>;
+export type UpdateFamilyDto = Partial<Pick<Family, 'name'>>;
 
-/**
- * Packing item entity
- */
-export interface PackingItem {
+// ─── Family Member ───────────────────────────────────────
+export interface FamilyMember {
   id: string;
-  trip_id: string | null;
-  title: string;
-  category: PackingCategory;
-  is_packed: boolean;
+  family_id: string;
+  user_id: string;
+  role: FamilyMemberRole;
+  joined_at: string;
+  display_name?: string;
+  email?: string;
 }
 
-export type CreatePackingItemDto = Omit<PackingItem, 'id'>;
-export type UpdatePackingItemDto = Partial<Omit<PackingItem, 'id'>>;
+export type CreateFamilyMemberDto = Pick<FamilyMember, 'family_id' | 'user_id' | 'role'>;
 
-/**
- * Document entity
- */
-export interface TripDocument {
+// ─── Shopping List ───────────────────────────────────────
+export interface ShoppingList {
   id: string;
-  trip_id: string | null;
+  family_id: string;
   title: string;
   description: string | null;
-  file_url: string;
-  created_at: string;
-}
-
-export type CreateDocumentDto = Omit<TripDocument, 'id' | 'created_at'>;
-export type UpdateDocumentDto = Partial<Omit<TripDocument, 'id' | 'created_at'>>;
-
-/**
- * Budget entry entity
- */
-export interface BudgetEntry {
-  id: string;
-  trip_id: string | null;
-  category: string;
-  amount: number;
-  currency: string;
-  is_planned: boolean;
-  created_at: string;
-}
-
-export type CreateBudgetEntryDto = Omit<BudgetEntry, 'id' | 'created_at'>;
-export type UpdateBudgetEntryDto = Partial<Omit<BudgetEntry, 'id' | 'created_at'>>;
-
-/**
- * Timeline event entity
- */
-export interface TimelineEvent {
-  id: string;
-  trip_id: string | null;
-  title: string;
-  date_time: string;
-  notes: string | null;
-}
-
-export type CreateTimelineEventDto = Omit<TimelineEvent, 'id'>;
-export type UpdateTimelineEventDto = Partial<Omit<TimelineEvent, 'id'>>;
-
-/**
- * Packing template entity
- */
-export interface PackingTemplate {
-  id: string;
-  name: string;
-  category: PackingCategory;
   created_by: string;
   created_at: string;
+  status: ShoppingListStatus;
 }
 
-export type CreatePackingTemplateDto = Omit<PackingTemplate, 'id' | 'created_at'>;
-export type UpdatePackingTemplateDto = Partial<Omit<PackingTemplate, 'id' | 'created_at'>>;
+export type CreateShoppingListDto = Pick<ShoppingList, 'family_id' | 'title' | 'description'>;
+export type UpdateShoppingListDto = Partial<Pick<ShoppingList, 'title' | 'description' | 'status'>>;
 
-/**
- * Packing template item entity
- */
-export interface PackingTemplateItem {
+// ─── Shopping Item ───────────────────────────────────────
+export interface ShoppingItem {
   id: string;
-  template_id: string | null;
+  list_id: string;
   title: string;
-}
-
-export type CreatePackingTemplateItemDto = Omit<PackingTemplateItem, 'id'>;
-
-/**
- * Trip member entity
- */
-export interface TripMember {
-  id: string;
-  trip_id: string;
-  user_id: string;
-  role: TripMemberRole;
-  created_at: string;
-  email?: string; // Populated via function
-}
-
-export type CreateTripMemberDto = Omit<TripMember, 'id' | 'created_at' | 'email'>;
-export type UpdateTripMemberDto = Partial<Pick<TripMember, 'role'>>;
-
-/**
- * Budget category total (computed)
- */
-export interface CategoryTotal {
+  quantity: number;
   category: string;
-  planned: number;
-  spent: number;
+  is_purchased: boolean;
+  added_by: string;
+  purchased_by: string | null;
+  created_at: string;
+}
+
+export type CreateShoppingItemDto = Pick<
+  ShoppingItem,
+  'list_id' | 'title' | 'quantity' | 'category'
+>;
+export type UpdateShoppingItemDto = Partial<
+  Pick<ShoppingItem, 'title' | 'quantity' | 'category' | 'is_purchased' | 'purchased_by'>
+>;
+
+// ─── Wishlist ────────────────────────────────────────────
+export interface Wishlist {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  is_public: boolean;
+  share_slug: string;
+  created_at: string;
+}
+
+export type CreateWishlistDto = Pick<Wishlist, 'title' | 'description' | 'is_public'>;
+export type UpdateWishlistDto = Partial<Pick<Wishlist, 'title' | 'description' | 'is_public'>>;
+
+// ─── Wishlist Item ───────────────────────────────────────
+export interface WishlistItem {
+  id: string;
+  wishlist_id: string;
+  title: string;
+  description: string | null;
+  link: string | null;
+  price: number | null;
+  currency: string;
+  image_url: string | null;
+  priority: ItemPriority;
+  is_reserved: boolean;
+  reserved_by_email: string | null;
+  created_at: string;
+}
+
+export type CreateWishlistItemDto = Pick<
+  WishlistItem,
+  'wishlist_id' | 'title' | 'description' | 'link' | 'price' | 'currency' | 'image_url' | 'priority'
+>;
+export type UpdateWishlistItemDto = Partial<
+  Pick<
+    WishlistItem,
+    'title' | 'description' | 'link' | 'price' | 'currency' | 'image_url' | 'priority'
+  >
+>;
+export type ReserveWishlistItemDto = Pick<WishlistItem, 'is_reserved' | 'reserved_by_email'>;
+
+// ─── Dashboard Stats ─────────────────────────────────────
+export interface DashboardStats {
+  activeLists: number;
+  itemsToBuy: number;
+  reservedWishlistItems: number;
 }
