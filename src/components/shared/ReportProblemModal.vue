@@ -67,7 +67,7 @@ import { useToastStore } from '@/stores/toast';
 import { useAuthStore } from '@/stores/auth';
 import { reportProblem, type ScreenshotPayload } from '@/services/issueReporter';
 
-const props = defineProps<{ open: boolean }>();
+defineProps<{ open: boolean }>();
 
 const emit = defineEmits<{
   close: [];
