@@ -245,12 +245,14 @@ const onFileChange = (event: Event) => {
 
 const uploadDoc = async () => {
   if (!selectedFile.value || !tripId.value || !authStore.user) return;
-  const url = await uploadDocument(selectedFile.value, authStore.user.id);
+  const response = await uploadDocument(selectedFile.value, authStore.user.id);
+  if (response.error || !response.data) return;
+  
   await tripStore.addDocument({
     trip_id: tripId.value,
     title: documentTitle.value || selectedFile.value.name,
     description: documentDescription.value,
-    file_url: url,
+    file_url: response.data,
   });
   documentTitle.value = '';
   documentDescription.value = '';
