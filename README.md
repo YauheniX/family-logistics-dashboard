@@ -115,25 +115,79 @@ cp env.example .env
 
 #### Supabase Setup
 
-1. Create a Supabase project at [supabase.com](https://supabase.com)
-2. Copy project URL and anon key to `.env`
-3. Run SQL scripts in Supabase SQL Editor (in order):
-   - `supabase/schema.sql` - Database tables
-   - `supabase/rls.sql` - Security policies
-   - `supabase/migrations/002_architecture_refactoring.sql` - Indexes
+1. **Create a Supabase project**
+   - Go to [supabase.com](https://supabase.com) and create a free account
+   - Click "New Project" and fill in the details
+   - Wait for the project to finish setting up
+
+2. **Configure environment variables**
+   - Copy your project URL and anon key from **Project Settings → API**
+   - Update your `.env` file:
+     ```bash
+     VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+     VITE_SUPABASE_ANON_KEY=your-anon-key
+     VITE_USE_MOCK_BACKEND=false
+     ```
+
+3. **Set up database tables**
+   - Open **SQL Editor** in Supabase dashboard
+   - Run the following SQL scripts in order:
+     - `supabase/schema.sql` - Creates database tables with RLS enabled
+     - `supabase/rls.sql` - Sets up Row Level Security policies
+     - `supabase/migrations/002_architecture_refactoring.sql` - Adds indexes (if available)
+
+4. **Enable Email Authentication**
+   - Go to **Authentication → Providers** in Supabase dashboard
+   - Enable **Email** provider (it should be enabled by default)
+   - Configure email settings:
+     - **Enable Email Confirmations** (recommended for production)
+     - **Secure Email Change** (enabled by default)
+     - **Secure Password Change** (enabled by default)
+
+5. **Create Storage Bucket**
+   - Go to **Storage** in Supabase dashboard
+   - Create a new bucket named `documents`
+   - Make it **public** or **private** (RLS policies will handle access)
 
 #### Google OAuth Setup
 
-See detailed guide in [📚 Wiki → Authentication](wiki/Authentication.md)
+**Step 1: Configure Google Cloud Console**
 
-Quick steps:
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable **Google+ API** (if not already enabled)
+4. Go to **APIs & Services → Credentials**
+5. Click **Create Credentials → OAuth 2.0 Client ID**
+6. Configure OAuth consent screen:
+   - Choose **External** user type
+   - Fill in app name, support email, and developer contact
+   - Add scopes: `email`, `profile`, `openid`
+   - Save and continue
+7. Create OAuth 2.0 Client ID:
+   - Application type: **Web application**
+   - Name: `Family Logistics Dashboard`
+   - Authorized redirect URIs:
+     ```
+     https://<your-project-ref>.supabase.co/auth/v1/callback
+     ```
+   - Click **Create**
+8. Copy the **Client ID** and **Client Secret**
 
-1. Create OAuth credentials in Google Cloud Console
-2. Configure authorized redirect URI:
-   ```
-   https://<your-supabase-ref>.supabase.co/auth/v1/callback
-   ```
-3. Add Client ID and Secret to Supabase **Authentication → Providers → Google**
+**Step 2: Configure Supabase**
+
+1. Go to **Authentication → Providers** in Supabase dashboard
+2. Find **Google** provider and enable it
+3. Paste your **Client ID** and **Client Secret** from Google Cloud Console
+4. Click **Save**
+
+**Step 3: Test OAuth**
+
+1. Run your app: `npm run dev`
+2. Click "Sign in with Google" button
+3. You should be redirected to Google login
+4. After successful login, you'll be redirected back to your app
+
+> **Important:** Replace `<your-project-ref>` with your actual Supabase project reference ID (found in your project URL)
 
 #### Run Development Server
 

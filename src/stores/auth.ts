@@ -41,12 +41,14 @@ export const useAuthStore = defineStore('auth', {
         const response = await authService.getCurrentUser();
         if (!response.error && response.data) {
           this.user = { id: response.data.id, email: response.data.email } as User;
+          this.session = {} as Session; // Set session when user exists
         }
 
         // Set up auth state change listener
         authService.onAuthStateChange((user) => {
           if (user) {
             this.user = { id: user.id, email: user.email } as User;
+            this.session = {} as Session;
           } else {
             this.user = null;
             this.session = null;

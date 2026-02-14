@@ -2,11 +2,11 @@
   <div class="mx-auto max-w-md space-y-6">
     <div class="glass-card p-6 text-center">
       <p class="text-sm text-slate-500">Welcome</p>
-      <h1 class="text-2xl font-semibold text-slate-900">Sign in</h1>
+      <h1 class="text-2xl font-semibold text-slate-900">Create Account</h1>
     </div>
 
     <div class="glass-card space-y-4 p-6">
-      <form class="space-y-4" @submit.prevent="handleEmailLogin">
+      <form class="space-y-4" @submit.prevent="handleRegister">
         <div>
           <label for="email" class="block text-sm font-medium text-slate-700 mb-1">
             Email
@@ -43,16 +43,35 @@
           </p>
         </div>
 
+        <div>
+          <label for="confirmPassword" class="block text-sm font-medium text-slate-700 mb-1">
+            Confirm Password
+          </label>
+          <input
+            id="confirmPassword"
+            v-model="confirmPassword"
+            type="password"
+            required
+            class="w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            :disabled="loading"
+            placeholder="Re-enter your password"
+          />
+          <p v-if="validationErrors.confirmPassword" class="mt-1 text-sm text-red-600">
+            {{ validationErrors.confirmPassword }}
+          </p>
+        </div>
+
         <button
           type="submit"
           class="btn-primary w-full flex items-center justify-center gap-2"
           :disabled="loading"
         >
           <span v-if="loading" class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
-          {{ loading ? 'Signing in...' : 'Sign In' }}
+          {{ loading ? 'Creating account...' : 'Create Account' }}
         </button>
 
         <p v-if="error" class="text-sm text-red-600 text-center">{{ error }}</p>
+        <p v-if="success" class="text-sm text-green-600 text-center">{{ success }}</p>
       </form>
 
       <div class="relative">
@@ -68,7 +87,7 @@
         class="btn-primary w-full flex items-center justify-center gap-2"
         type="button"
         :disabled="loading"
-        @click="handleGoogleLogin"
+        @click="handleGoogleRegister"
       >
         <svg class="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
           <path
@@ -88,14 +107,14 @@
             fill="#EA4335"
           />
         </svg>
-        Sign in with Google
+        Sign up with Google
       </button>
 
       <div class="text-center">
         <p class="text-sm text-slate-600">
-          Don't have an account?
-          <router-link to="/register" class="text-blue-600 hover:text-blue-700 font-medium">
-            Create account
+          Already have an account?
+          <router-link to="/login" class="text-blue-600 hover:text-blue-700 font-medium">
+            Sign in
           </router-link>
         </p>
       </div>
@@ -105,21 +124,23 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { authService } from '@/features/auth';
 import { useToastStore } from '@/stores/toast';
 
 const router = useRouter();
-const route = useRoute();
 const toastStore = useToastStore();
 
 const email = ref('');
 const password = ref('');
+const confirmPassword = ref('');
 const loading = ref(false);
 const error = ref('');
+const success = ref('');
 const validationErrors = ref<{
   email?: string;
   password?: string;
+  confirmPassword?: string;
 }>({});
 
 const validateForm = (): boolean => {
@@ -145,11 +166,21 @@ const validateForm = (): boolean => {
     isValid = false;
   }
 
+  // Confirm password validation
+  if (!confirmPassword.value) {
+    validationErrors.value.confirmPassword = 'Please confirm your password';
+    isValid = false;
+  } else if (password.value !== confirmPassword.value) {
+    validationErrors.value.confirmPassword = 'Passwords do not match';
+    isValid = false;
+  }
+
   return isValid;
 };
 
-const handleEmailLogin = async () => {
+const handleRegister = async () => {
   error.value = '';
+  success.value = '';
 
   if (!validateForm()) {
     return;
@@ -158,25 +189,34 @@ const handleEmailLogin = async () => {
   loading.value = true;
 
   try {
-    const response = await authService.signIn(email.value, password.value);
+    const response = await authService.signUp(email.value, password.value);
     
     if (response.error) {
       error.value = response.error.message;
       toastStore.error(error.value);
     } else {
-      toastStore.success('Successfully signed in!');
-      const redirect = (route.query.redirect as string) || '/';
-      router.push(redirect);
+      success.value = 'Account created successfully! Please check your email to confirm your account.';
+      toastStore.success(success.value);
+      
+      // Clear form
+      email.value = '';
+      password.value = '';
+      confirmPassword.value = '';
+      
+      // Redirect to login after 2 seconds
+      setTimeout(() => {
+        router.push('/login');
+      }, 2000);
     }
   } catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : 'Failed to sign in';
+    error.value = err instanceof Error ? err.message : 'Failed to create account';
     toastStore.error(error.value);
   } finally {
     loading.value = false;
   }
 };
 
-const handleGoogleLogin = async () => {
+const handleGoogleRegister = async () => {
   loading.value = true;
   error.value = '';
 
@@ -188,7 +228,7 @@ const handleGoogleLogin = async () => {
       toastStore.error(error.value);
     }
   } catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : 'Failed to sign in with Google';
+    error.value = err instanceof Error ? err.message : 'Failed to sign up with Google';
     toastStore.error(error.value);
   } finally {
     loading.value = false;
