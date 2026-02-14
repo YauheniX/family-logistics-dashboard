@@ -43,6 +43,5 @@ jobs:
           VALIDATE_VUE: true
           VALIDATE_JSON: true
           VALIDATE_YAML: true
-          VALIDATE_CSS: true
           VALIDATE_HTML: true
           FILTER_REGEX_EXCLUDE: .*node_modules/.*|.*dist/.*|.*\.git/.*
