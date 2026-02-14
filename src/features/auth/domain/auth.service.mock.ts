@@ -192,7 +192,9 @@ export class MockAuthService {
    * Subscribe to auth state changes (mock)
    */
   onAuthStateChange(callback: (user: AuthUser | null, session: unknown) => void) {
-    this.authChangeCallbacks.push((user) => callback(user, user ? { user } : null));
+    // Create wrapper function to track for unsubscribe
+    const wrapper = (user: AuthUser | null) => callback(user, user ? { user } : null);
+    this.authChangeCallbacks.push(wrapper);
 
     // Immediately call with current user
     this.getCurrentUser().then((result) => {
@@ -204,7 +206,7 @@ export class MockAuthService {
       data: {
         subscription: {
           unsubscribe: () => {
-            const index = this.authChangeCallbacks.indexOf(callback);
+            const index = this.authChangeCallbacks.indexOf(wrapper);
             if (index > -1) {
               this.authChangeCallbacks.splice(index, 1);
             }

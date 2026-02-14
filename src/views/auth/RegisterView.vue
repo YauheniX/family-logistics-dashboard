@@ -123,7 +123,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import { authService } from '@/features/auth';
 import { useToastStore } from '@/stores/toast';
@@ -143,6 +143,14 @@ const validationErrors = ref<{
   password?: string;
   confirmPassword?: string;
 }>({});
+
+let redirectTimeoutId: number | null = null;
+
+onBeforeUnmount(() => {
+  if (redirectTimeoutId !== null) {
+    clearTimeout(redirectTimeoutId);
+  }
+});
 
 const validateForm = (): boolean => {
   validationErrors.value = {};
@@ -204,7 +212,7 @@ const handleRegister = async () => {
       confirmPassword.value = '';
       
       // Redirect to login after 2 seconds
-      setTimeout(() => {
+      redirectTimeoutId = window.setTimeout(() => {
         router.push('/login');
       }, 2000);
     }

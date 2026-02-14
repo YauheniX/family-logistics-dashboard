@@ -155,15 +155,14 @@ cp env.example .env
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project or select an existing one
-3. Enable **Google+ API** (if not already enabled)
-4. Go to **APIs & Services → Credentials**
-5. Click **Create Credentials → OAuth 2.0 Client ID**
-6. Configure OAuth consent screen:
+3. Go to **APIs & Services → Credentials**
+4. Click **Create Credentials → OAuth 2.0 Client ID**
+5. Configure OAuth consent screen:
    - Choose **External** user type
    - Fill in app name, support email, and developer contact
    - Add scopes: `email`, `profile`, `openid`
    - Save and continue
-7. Create OAuth 2.0 Client ID:
+6. Create OAuth 2.0 Client ID:
    - Application type: **Web application**
    - Name: `Family Logistics Dashboard`
    - Authorized redirect URIs:
@@ -171,7 +170,7 @@ cp env.example .env
      https://<your-project-ref>.supabase.co/auth/v1/callback
      ```
    - Click **Create**
-8. Copy the **Client ID** and **Client Secret**
+7. Copy the **Client ID** and **Client Secret**
 
 **Step 2: Configure Supabase**
 
