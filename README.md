@@ -38,6 +38,12 @@ Organize trips, packing lists, documents, budgets, and timelines in one secure p
 - Add trip events (check-in, departure, stops)
 - Date/time-based entries
 
+### 🎯 Centralized Error Handling (NEW)
+- Type-safe API responses
+- Global toast notifications
+- Automatic loading states
+- Consistent error handling across the app
+
 ---
 
 ## 🛠 Tech Stack
@@ -56,6 +62,12 @@ Organize trips, packing lists, documents, budgets, and timelines in one secure p
   - Postgres Database
   - Storage
 
+**Architecture**
+- Clean layered architecture (Services → Stores → Components)
+- Type-safe error handling with `ApiResponse<T>`
+- Global toast notification system
+- Reusable `useAsyncHandler` composable
+
 ---
 
 ## 📦 Project Structure
@@ -63,12 +75,20 @@ Organize trips, packing lists, documents, budgets, and timelines in one secure p
 ```
 src/
   components/
-  views/
-  stores/
-  services/
-  composables/
-  router/
-  types/
+    layout/         - Navigation, sidebar
+    shared/         - Reusable components (LoadingState, ToastContainer)
+    trips/          - Trip-specific components
+  views/            - Page components
+  stores/           - Pinia stores (auth, trips, templates, toast)
+  services/         - API layer with Supabase wrapper
+  composables/      - Reusable Vue composables (useAsyncHandler, useAsyncState)
+  router/           - Vue Router configuration
+  types/            - TypeScript type definitions
+docs/
+  ERROR_HANDLING.md           - Error handling architecture guide
+  TOAST_GUIDE.md              - Toast notification usage guide
+  USE_ASYNC_HANDLER_GUIDE.md  - useAsyncHandler composable guide
+  REFACTORING_SUMMARY.md      - Summary of error handling refactoring
 ```
 
 ---
@@ -151,6 +171,73 @@ Run the SQL files in your Supabase SQL Editor:
 ```bash
 npm run dev
 ```
+
+---
+
+## 🏗️ Architecture & Error Handling
+
+This project uses a **clean, layered architecture** with centralized error handling:
+
+### Service Layer
+- All services return `ApiResponse<T>` instead of throwing errors
+- Type-safe responses with `{ data: T | null, error: ApiError | null }`
+- Centralized Supabase wrapper eliminates boilerplate
+
+```typescript
+// Example service function
+export async function fetchTrips(userId: string): Promise<ApiResponse<Trip[]>> {
+  return SupabaseService.select<Trip>('trips', builder =>
+    builder.eq('created_by', userId)
+  );
+}
+```
+
+### Store Layer
+- Stores handle errors and show toast notifications
+- Loading states managed automatically
+- Consistent error messages
+
+```typescript
+// Example store action
+async loadTrips(userId: string) {
+  const response = await fetchTrips(userId);
+  if (response.error) {
+    useToastStore().error(`Failed to load trips: ${response.error.message}`);
+  } else {
+    this.trips = response.data ?? [];
+  }
+}
+```
+
+### Component Layer
+- Components use stores or `useAsyncHandler` composable
+- Automatic loading states and error handling
+- Clean, minimal code
+
+```typescript
+// Example component with useAsyncHandler
+const { loading, execute } = useAsyncHandler({
+  successMessage: 'Trip created!',
+});
+
+const handleCreate = async () => {
+  const result = await execute(() => createTrip(payload));
+  if (result) {
+    router.push({ name: 'trip-detail', params: { id: result.id } });
+  }
+};
+```
+
+### Toast Notifications
+- Global toast system for user feedback
+- Auto-dismiss with configurable duration
+- Four types: success, error, warning, info
+
+**For detailed documentation, see:**
+- [Error Handling Architecture](docs/ERROR_HANDLING.md)
+- [Toast Notification Guide](docs/TOAST_GUIDE.md)
+- [useAsyncHandler Guide](docs/USE_ASYNC_HANDLER_GUIDE.md)
+- [Refactoring Summary](docs/REFACTORING_SUMMARY.md)
 
 ---
 
