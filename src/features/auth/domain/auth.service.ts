@@ -172,7 +172,7 @@ export class AuthService {
       // Get the base path from Vite config, ensuring proper URL construction
       const basePath = import.meta.env.BASE_URL || '/';
       const redirectTo = `${window.location.origin}${basePath}`;
-      
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: provider as 'google' | 'github' | 'gitlab',
         options: {

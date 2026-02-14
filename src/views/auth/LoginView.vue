@@ -8,9 +8,7 @@
     <div class="glass-card space-y-4 p-6">
       <form class="space-y-4" @submit.prevent="handleEmailLogin">
         <div>
-          <label for="email" class="block text-sm font-medium text-slate-700 mb-1">
-            Email
-          </label>
+          <label for="email" class="block text-sm font-medium text-slate-700 mb-1"> Email </label>
           <input
             id="email"
             v-model="email"
@@ -48,7 +46,10 @@
           class="btn-primary w-full flex items-center justify-center gap-2"
           :disabled="loading"
         >
-          <span v-if="loading" class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+          <span
+            v-if="loading"
+            class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+          ></span>
           {{ loading ? 'Signing in...' : 'Sign In' }}
         </button>
 
@@ -159,7 +160,7 @@ const handleEmailLogin = async () => {
 
   try {
     const response = await authService.signIn(email.value, password.value);
-    
+
     if (response.error) {
       error.value = response.error.message;
       toastStore.error(error.value);
@@ -182,7 +183,7 @@ const handleGoogleLogin = async () => {
 
   try {
     const response = await authService.signInWithOAuth('google');
-    
+
     if (response.error) {
       error.value = response.error.message;
       toastStore.error(error.value);

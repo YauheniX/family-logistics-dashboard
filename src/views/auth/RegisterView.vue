@@ -8,9 +8,7 @@
     <div class="glass-card space-y-4 p-6">
       <form class="space-y-4" @submit.prevent="handleRegister">
         <div>
-          <label for="email" class="block text-sm font-medium text-slate-700 mb-1">
-            Email
-          </label>
+          <label for="email" class="block text-sm font-medium text-slate-700 mb-1"> Email </label>
           <input
             id="email"
             v-model="email"
@@ -66,7 +64,10 @@
           class="btn-primary w-full flex items-center justify-center gap-2"
           :disabled="loading"
         >
-          <span v-if="loading" class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+          <span
+            v-if="loading"
+            class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+          ></span>
           {{ loading ? 'Creating account...' : 'Create Account' }}
         </button>
 
@@ -198,19 +199,20 @@ const handleRegister = async () => {
 
   try {
     const response = await authService.signUp(email.value, password.value);
-    
+
     if (response.error) {
       error.value = response.error.message;
       toastStore.error(error.value);
     } else {
-      success.value = 'Account created successfully! Please check your email to confirm your account.';
+      success.value =
+        'Account created successfully! Please check your email to confirm your account.';
       toastStore.success(success.value);
-      
+
       // Clear form
       email.value = '';
       password.value = '';
       confirmPassword.value = '';
-      
+
       // Redirect to login after 2 seconds
       redirectTimeoutId = window.setTimeout(() => {
         router.push('/login');
@@ -230,7 +232,7 @@ const handleGoogleRegister = async () => {
 
   try {
     const response = await authService.signInWithOAuth('google');
-    
+
     if (response.error) {
       error.value = response.error.message;
       toastStore.error(error.value);
