@@ -2,14 +2,40 @@ import { supabase } from './supabaseClient';
 import type { BudgetEntry, NewTripPayload, PackingItem, TimelineEvent, Trip, TripDocument } from '@/types/entities';
 
 export async function fetchTrips(userId: string): Promise<Trip[]> {
-  const { data, error } = await supabase
+  // Fetch trips owned by the user
+  const { data: ownTrips, error: ownError } = await supabase
     .from('trips')
     .select('*')
     .eq('created_by', userId)
     .order('start_date', { ascending: true });
 
-  if (error) throw error;
-  return data ?? [];
+  if (ownError) throw ownError;
+
+  // Fetch trips shared with the user via trip_members
+  const { data: memberships, error: memberError } = await supabase
+    .from('trip_members')
+    .select('trip_id')
+    .eq('user_id', userId);
+
+  if (memberError) throw memberError;
+
+  const sharedTripIds = (memberships ?? [])
+    .map((m) => m.trip_id)
+    .filter((id) => !(ownTrips ?? []).some((t) => t.id === id));
+
+  let sharedTrips: Trip[] = [];
+  if (sharedTripIds.length) {
+    const { data, error } = await supabase
+      .from('trips')
+      .select('*')
+      .in('id', sharedTripIds)
+      .order('start_date', { ascending: true });
+
+    if (error) throw error;
+    sharedTrips = data ?? [];
+  }
+
+  return [...(ownTrips ?? []), ...sharedTrips];
 }
 
 export async function fetchTrip(id: string): Promise<Trip | null> {

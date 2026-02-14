@@ -16,6 +16,12 @@ import {
   updateTrip,
   upsertPackingItem,
 } from '@/services/tripService';
+import {
+  fetchTripMembers,
+  inviteMemberByEmail,
+  removeTripMember,
+  updateMemberRole,
+} from '@/services/tripMemberService';
 import type {
   BudgetEntry,
   NewTripPayload,
@@ -23,6 +29,8 @@ import type {
   TimelineEvent,
   Trip,
   TripDocument,
+  TripMember,
+  TripMemberRole,
 } from '@/types/entities';
 
 interface TripState {
@@ -32,6 +40,7 @@ interface TripState {
   documents: TripDocument[];
   budget: BudgetEntry[];
   timeline: TimelineEvent[];
+  members: TripMember[];
   loading: boolean;
   error: string | null;
 }
@@ -44,6 +53,7 @@ export const useTripStore = defineStore('trips', {
     documents: [],
     budget: [],
     timeline: [],
+    members: [],
     loading: false,
     error: null,
   }),
@@ -72,6 +82,7 @@ export const useTripStore = defineStore('trips', {
             this.loadDocuments(id),
             this.loadBudget(id),
             this.loadTimeline(id),
+            this.loadMembers(id),
           ]);
         }
       } catch (err: any) {
@@ -178,6 +189,28 @@ export const useTripStore = defineStore('trips', {
     async addTimelineEvent(event: Omit<TimelineEvent, 'id'>) {
       const saved = await addTimelineEvent(event);
       if (saved) this.timeline.push(saved);
+    },
+
+    async loadMembers(tripId: string) {
+      this.members = await fetchTripMembers(tripId);
+    },
+
+    async inviteMember(tripId: string, email: string, role: TripMemberRole = 'viewer', currentUserId?: string) {
+      const member = await inviteMemberByEmail(tripId, email, role, currentUserId);
+      if (member) this.members.push(member);
+      return member;
+    },
+
+    async removeMember(memberId: string) {
+      await removeTripMember(memberId);
+      this.members = this.members.filter((m) => m.id !== memberId);
+    },
+
+    async updateMemberRole(memberId: string, role: TripMemberRole) {
+      const updated = await updateMemberRole(memberId, role);
+      if (updated) {
+        this.members = this.members.map((m) => (m.id === memberId ? updated : m));
+      }
     },
   },
 });

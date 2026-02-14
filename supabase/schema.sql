@@ -78,6 +78,71 @@ create table if not exists public.packing_template_items (
 alter table public.packing_templates enable row level security;
 alter table public.packing_template_items enable row level security;
 
+-- Trip members (sharing)
+create table if not exists public.trip_members (
+  id uuid primary key default gen_random_uuid(),
+  trip_id uuid references public.trips(id) on delete cascade not null,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  role text check (role in ('owner','editor','viewer')) not null default 'viewer',
+  created_at timestamp with time zone default now(),
+  unique (trip_id, user_id)
+);
+
+alter table public.trip_members enable row level security;
+
+-- Function to look up a user id by email (used for trip sharing invitations).
+-- SECURITY DEFINER so the authenticated role can resolve emails to user ids
+-- without having direct access to auth.users. Restricted to authenticated users.
+CREATE OR REPLACE FUNCTION public.get_user_id_by_email(lookup_email text)
+RETURNS uuid
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Authentication required';
+  END IF;
+  RETURN (SELECT id FROM auth.users WHERE email = lookup_email LIMIT 1);
+END;
+$$;
+
+-- Function to look up a user email by id (used for displaying trip member emails).
+-- Only returns the email if the caller shares a trip with the target user.
+CREATE OR REPLACE FUNCTION public.get_email_by_user_id(lookup_user_id uuid)
+RETURNS text
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Authentication required';
+  END IF;
+  -- Only allow lookup if caller shares at least one trip with the target user
+  IF NOT EXISTS (
+    SELECT 1 FROM public.trip_members tm1
+    JOIN public.trip_members tm2 ON tm1.trip_id = tm2.trip_id
+    WHERE tm1.user_id = auth.uid() AND tm2.user_id = lookup_user_id
+  ) AND NOT EXISTS (
+    -- Also allow if caller owns a trip the target is a member of
+    SELECT 1 FROM public.trips t
+    JOIN public.trip_members tm ON tm.trip_id = t.id
+    WHERE t.created_by = auth.uid() AND tm.user_id = lookup_user_id
+  ) AND NOT EXISTS (
+    -- Also allow if target owns a trip the caller is a member of
+    SELECT 1 FROM public.trips t
+    JOIN public.trip_members tm ON tm.trip_id = t.id
+    WHERE t.created_by = lookup_user_id AND tm.user_id = auth.uid()
+  ) THEN
+    RETURN NULL;
+  END IF;
+  RETURN (SELECT email FROM auth.users WHERE id = lookup_user_id LIMIT 1);
+END;
+$$;
+
 -- Storage bucket for documents (policies live in rls.sql)
 do $$
 begin
