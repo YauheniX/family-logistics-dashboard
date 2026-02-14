@@ -8,8 +8,8 @@
 # - Validating credential format
 # - Creating .env file with proper structure
 # - Testing connection to Supabase
-# - Offering to run database migrations
-# - Offering to create storage bucket
+# - Verifying database migrations were run
+# - Verifying storage bucket was created
 # - Providing next steps guidance
 ###############################################################################
 
@@ -165,12 +165,12 @@ print_header "Step 3: Testing Connection"
 
 print_info "Testing connection to Supabase..."
 
-# Use Node.js to test connection
-node << 'NODESCRIPT'
-const { createClient } = require('@supabase/supabase-js');
+# Create a temporary test script using ES modules
+cat > /tmp/test-supabase-connection.mjs << 'TESTSCRIPT'
+import { createClient } from '@supabase/supabase-js';
 
-const url = process.env.VITE_SUPABASE_URL || process.argv[2];
-const key = process.env.VITE_SUPABASE_ANON_KEY || process.argv[3];
+const url = process.env.VITE_SUPABASE_URL;
+const key = process.env.VITE_SUPABASE_ANON_KEY;
 
 if (!url || !key) {
   console.error('Missing credentials');
@@ -180,26 +180,33 @@ if (!url || !key) {
 const supabase = createClient(url, key);
 
 // Test a simple query
-supabase
-  .from('user_profiles')
-  .select('id')
-  .limit(0)
-  .then(({ error }) => {
-    if (error && !error.message.includes('permission') && !error.message.includes('policy') && !error.message.includes('does not exist')) {
-      console.error('Connection failed:', error.message);
-      process.exit(1);
-    } else {
-      console.log('Connection successful!');
-      process.exit(0);
-    }
-  })
-  .catch(err => {
-    console.error('Connection error:', err.message);
+try {
+  const { error } = await supabase
+    .from('user_profiles')
+    .select('id')
+    .limit(0);
+  
+  if (error && !error.message.includes('permission') && !error.message.includes('policy') && !error.message.includes('does not exist')) {
+    console.error('Connection failed:', error.message);
     process.exit(1);
-  });
-NODESCRIPT
+  } else {
+    console.log('Connection successful!');
+    process.exit(0);
+  }
+} catch (err) {
+  console.error('Connection error:', err.message);
+  process.exit(1);
+}
+TESTSCRIPT
 
-if [ $? -eq 0 ]; then
+# Export environment variables and run the test
+export VITE_SUPABASE_URL="$SUPABASE_URL"
+export VITE_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+node /tmp/test-supabase-connection.mjs
+test_result=$?
+rm -f /tmp/test-supabase-connection.mjs
+
+if [ $test_result -eq 0 ]; then
   print_success "Connection to Supabase successful"
 else
   print_error "Connection test failed"
