@@ -5,11 +5,18 @@ import { isMockMode } from '@/config/backend.config';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
-// Only throw error if not in mock mode
-if (!isMockMode() && (!supabaseUrl || !supabaseAnonKey)) {
-  throw new Error(
-    'Missing Supabase environment variables. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
-  );
+if (!isMockMode()) {
+  if (!supabaseUrl) {
+    throw new Error('Missing VITE_SUPABASE_URL');
+  }
+  if (!supabaseAnonKey) {
+    throw new Error('Missing VITE_SUPABASE_ANON_KEY');
+  }
+
+  if (import.meta.env.DEV) {
+    console.log('Supabase URL:', supabaseUrl);
+    console.log('Supabase Anon Key:', supabaseAnonKey ? '***loaded***' : 'MISSING');
+  }
 }
 
 /**
