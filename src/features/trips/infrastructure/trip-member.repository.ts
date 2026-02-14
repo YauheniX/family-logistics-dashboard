@@ -1,6 +1,10 @@
 import { BaseRepository } from '../../shared/infrastructure/base.repository';
 import { supabase } from '../../shared/infrastructure/supabase.client';
-import type { TripMember, CreateTripMemberDto, UpdateTripMemberDto } from '../../shared/domain/entities';
+import type {
+  TripMember,
+  CreateTripMemberDto,
+  UpdateTripMemberDto,
+} from '../../shared/domain/entities';
 import type { ApiResponse } from '../../shared/domain/repository.interface';
 
 /**
@@ -20,7 +24,7 @@ export class TripMemberRepository extends BaseRepository<
    */
   async findByTripId(tripId: string): Promise<ApiResponse<TripMember[]>> {
     const membersResponse = await this.findAll((builder) =>
-      builder.eq('trip_id', tripId).order('created_at')
+      builder.eq('trip_id', tripId).order('created_at'),
     );
 
     if (membersResponse.error || !membersResponse.data) {
@@ -40,7 +44,7 @@ export class TripMemberRepository extends BaseRepository<
           ...member,
           email: emailResponse.data || undefined,
         };
-      })
+      }),
     );
 
     return { data: membersWithEmails, error: null };
@@ -53,7 +57,7 @@ export class TripMemberRepository extends BaseRepository<
     tripId: string,
     email: string,
     role: 'owner' | 'editor' | 'viewer',
-    currentUserId?: string
+    currentUserId?: string,
   ): Promise<ApiResponse<TripMember>> {
     // First, look up the user ID by email
     const userIdResponse = await this.execute<string>(async () => {

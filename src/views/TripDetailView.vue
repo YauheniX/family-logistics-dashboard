@@ -51,7 +51,11 @@
           </div>
 
           <form class="mt-4 grid gap-2 md:grid-cols-3" @submit.prevent="addPackingItem">
-            <input v-model="newPackingTitle" class="input md:col-span-2" placeholder="Add packing item" />
+            <input
+              v-model="newPackingTitle"
+              class="input md:col-span-2"
+              placeholder="Add packing item"
+            />
             <select v-model="newPackingCategory" class="input">
               <option value="adult">Adult</option>
               <option value="kid">Kid</option>
@@ -69,14 +73,22 @@
             <span class="text-sm text-slate-600">Upload files to Supabase Storage</span>
           </div>
           <ul class="mt-3 space-y-2">
-            <li v-for="doc in tripStore.documents" :key="doc.id" class="flex items-center justify-between text-sm">
+            <li
+              v-for="doc in tripStore.documents"
+              :key="doc.id"
+              class="flex items-center justify-between text-sm"
+            >
               <div>
                 <p class="font-medium text-slate-800">{{ doc.title }}</p>
                 <p class="text-xs text-slate-500">{{ doc.description }}</p>
               </div>
-              <a :href="doc.file_url" target="_blank" rel="noreferrer" class="text-brand-600">View</a>
+              <a :href="doc.file_url" target="_blank" rel="noreferrer" class="text-brand-600"
+                >View</a
+              >
             </li>
-            <p v-if="!tripStore.documents.length" class="text-sm text-slate-500">No documents yet.</p>
+            <p v-if="!tripStore.documents.length" class="text-sm text-slate-500">
+              No documents yet.
+            </p>
           </ul>
 
           <form class="mt-4 space-y-2" @submit.prevent="uploadDoc">
@@ -97,7 +109,8 @@
 
           <div v-if="tripStore.budget.length" class="mt-3 flex gap-4 text-sm">
             <span class="text-slate-600">
-              Planned: <strong class="text-slate-900">{{ tripStore.totalPlanned.toFixed(2) }}</strong>
+              Planned:
+              <strong class="text-slate-900">{{ tripStore.totalPlanned.toFixed(2) }}</strong>
             </span>
             <span class="text-slate-600">
               Spent: <strong class="text-slate-900">{{ tripStore.totalSpent.toFixed(2) }}</strong>
@@ -105,13 +118,21 @@
           </div>
 
           <ul class="mt-3 space-y-2">
-            <li v-for="entry in tripStore.budget" :key="entry.id" class="flex items-center justify-between text-sm">
+            <li
+              v-for="entry in tripStore.budget"
+              :key="entry.id"
+              class="flex items-center justify-between text-sm"
+            >
               <div>
                 <p class="font-medium text-slate-800">
                   {{ entry.category }}
                   <span
                     class="ml-1 rounded-full px-2 py-0.5 text-xs"
-                    :class="entry.is_planned ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'"
+                    :class="
+                      entry.is_planned
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-emerald-100 text-emerald-700'
+                    "
                   >
                     {{ entry.is_planned ? 'Planned' : 'Spent' }}
                   </span>
@@ -127,7 +148,14 @@
 
           <form class="mt-4 grid gap-2 md:grid-cols-3" @submit.prevent="addBudget">
             <input v-model="budgetCategory" class="input" placeholder="Category" />
-            <input v-model.number="budgetAmount" type="number" min="0" step="0.01" class="input" placeholder="Amount" />
+            <input
+              v-model.number="budgetAmount"
+              type="number"
+              min="0"
+              step="0.01"
+              class="input"
+              placeholder="Amount"
+            />
             <input v-model="budgetCurrency" class="input" placeholder="Currency" />
             <label class="flex items-center gap-2 text-sm text-slate-700 md:col-span-3">
               <input v-model="budgetIsPlanned" type="checkbox" class="h-4 w-4" />
@@ -143,7 +171,11 @@
             <span class="text-sm text-slate-600">Important moments</span>
           </div>
           <ul class="mt-3 space-y-2">
-            <li v-for="event in tripStore.timeline" :key="event.id" class="flex items-center justify-between text-sm">
+            <li
+              v-for="event in tripStore.timeline"
+              :key="event.id"
+              class="flex items-center justify-between text-sm"
+            >
               <div>
                 <p class="font-medium text-slate-800">{{ event.title }}</p>
                 <p class="text-xs text-slate-500">{{ formatDateTime(event.date_time) }}</p>
@@ -168,11 +200,7 @@
       @close="showTemplateModal = false"
       @applied="onTemplateApplied"
     />
-    <ShareTripModal
-      :open="showShareModal"
-      :trip-id="tripId"
-      @close="showShareModal = false"
-    />
+    <ShareTripModal :open="showShareModal" :trip-id="tripId" @close="showShareModal = false" />
   </div>
   <LoadingState v-else message="Loading trip..." />
 </template>
@@ -247,7 +275,7 @@ const uploadDoc = async () => {
   if (!selectedFile.value || !tripId.value || !authStore.user) return;
   const response = await uploadDocument(selectedFile.value, authStore.user.id);
   if (response.error || !response.data) return;
-  
+
   await tripStore.addDocument({
     trip_id: tripId.value,
     title: documentTitle.value || selectedFile.value.name,

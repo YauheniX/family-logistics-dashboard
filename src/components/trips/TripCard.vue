@@ -5,10 +5,7 @@
         <p class="text-xs uppercase tracking-wide text-slate-500">Trip</p>
         <h3 class="text-lg font-semibold text-slate-900">{{ trip.name }}</h3>
       </div>
-      <span
-        class="rounded-full px-3 py-1 text-xs font-semibold capitalize"
-        :class="statusClass"
-      >
+      <span class="rounded-full px-3 py-1 text-xs font-semibold capitalize" :class="statusClass">
         {{ trip.status }}
       </span>
     </div>
@@ -25,7 +22,12 @@
       <RouterLink :to="{ name: 'trip-edit', params: { id: trip.id } }" class="btn-ghost">
         Edit
       </RouterLink>
-      <button class="btn-ghost" type="button" :disabled="Boolean(isDuplicating)" @click="emit('duplicate', trip.id)">
+      <button
+        class="btn-ghost"
+        type="button"
+        :disabled="Boolean(isDuplicating)"
+        @click="emit('duplicate', trip.id)"
+      >
         {{ isDuplicating ? 'Duplicating...' : 'Duplicate' }}
       </button>
     </div>
@@ -54,8 +56,6 @@ const statusClass = computed(() => {
 const formattedDateRange = computed(() => {
   if (!trip.start_date || !trip.end_date) return 'Dates TBA';
   const fmt = new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' });
-  return `${fmt.format(new Date(trip.start_date))} - ${fmt.format(
-    new Date(trip.end_date),
-  )}`;
+  return `${fmt.format(new Date(trip.start_date))} - ${fmt.format(new Date(trip.end_date))}`;
 });
 </script>

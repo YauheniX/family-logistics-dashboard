@@ -290,6 +290,7 @@ src/__tests__/
 Runs on every **push to main** and **pull request** targeting main.
 
 Steps:
+
 1. Checkout repository
 2. Setup Node.js (LTS)
 3. Install dependencies (`npm ci`)
@@ -298,6 +299,7 @@ Steps:
 6. Upload coverage report as artifact
 
 The pipeline **fails** if:
+
 - Lint errors are found
 - Any test fails
 - Coverage drops below 70%
@@ -309,6 +311,7 @@ The pipeline **fails** if:
 Runs on **push to main** only after CI passes.
 
 Steps:
+
 1. Runs CI workflow first
 2. Builds the project
 3. Deploys to **Vercel** using the Vercel CLI

@@ -303,7 +303,7 @@ export const useTripStore = defineStore('trips', {
       tripId: string,
       email: string,
       role: TripMemberRole = 'viewer',
-      currentUserId?: string
+      currentUserId?: string,
     ) {
       const response = await tripMemberRepository.inviteByEmail(tripId, email, role, currentUserId);
       if (response.error) {

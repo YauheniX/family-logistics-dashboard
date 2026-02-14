@@ -1,7 +1,7 @@
 import { tripRepository } from '../infrastructure/trip.repository';
-import { 
-  packingItemRepository, 
-  budgetEntryRepository, 
+import {
+  packingItemRepository,
+  budgetEntryRepository,
   timelineEventRepository,
 } from '../infrastructure/trip-data.repository';
 import type { Trip, CreateTripDto, UpdateTripDto } from '../../shared/domain/entities';

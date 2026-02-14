@@ -1,12 +1,19 @@
 import { SupabaseService } from './supabaseService';
 import { supabase } from './supabaseClient';
-import type { BudgetEntry, NewTripPayload, PackingItem, TimelineEvent, Trip, TripDocument } from '@/types/entities';
+import type {
+  BudgetEntry,
+  NewTripPayload,
+  PackingItem,
+  TimelineEvent,
+  Trip,
+  TripDocument,
+} from '@/types/entities';
 import type { ApiResponse } from '@/types/api';
 
 export async function fetchTrips(userId: string): Promise<ApiResponse<Trip[]>> {
   // Fetch trips owned by the user
   const ownTripsResponse = await SupabaseService.select<Trip>('trips', (builder) =>
-    builder.eq('created_by', userId).order('start_date', { ascending: true })
+    builder.eq('created_by', userId).order('start_date', { ascending: true }),
   );
 
   if (ownTripsResponse.error) {
@@ -15,10 +22,7 @@ export async function fetchTrips(userId: string): Promise<ApiResponse<Trip[]>> {
 
   // Fetch trips shared with the user via trip_members
   const membershipsResponse = await SupabaseService.execute<{ trip_id: string }[]>(async () => {
-    return await supabase
-      .from('trip_members')
-      .select('trip_id')
-      .eq('user_id', userId);
+    return await supabase.from('trip_members').select('trip_id').eq('user_id', userId);
   });
 
   if (membershipsResponse.error) {
@@ -32,7 +36,7 @@ export async function fetchTrips(userId: string): Promise<ApiResponse<Trip[]>> {
   let sharedTrips: Trip[] = [];
   if (sharedTripIds.length) {
     const sharedResponse = await SupabaseService.select<Trip>('trips', (builder) =>
-      builder.in('id', sharedTripIds).order('start_date', { ascending: true })
+      builder.in('id', sharedTripIds).order('start_date', { ascending: true }),
     );
 
     if (!sharedResponse.error) {
@@ -54,7 +58,10 @@ export async function createTrip(payload: NewTripPayload): Promise<ApiResponse<T
   return SupabaseService.insert<Trip>('trips', payload);
 }
 
-export async function updateTrip(id: string, payload: Partial<NewTripPayload>): Promise<ApiResponse<Trip>> {
+export async function updateTrip(
+  id: string,
+  payload: Partial<NewTripPayload>,
+): Promise<ApiResponse<Trip>> {
   return SupabaseService.update<Trip>('trips', id, payload);
 }
 
@@ -136,11 +143,13 @@ export async function duplicateTrip(trip: Trip): Promise<ApiResponse<Trip>> {
 
 export async function fetchPackingItems(tripId: string): Promise<ApiResponse<PackingItem[]>> {
   return SupabaseService.select<PackingItem>('packing_items', (builder) =>
-    builder.eq('trip_id', tripId).order('title')
+    builder.eq('trip_id', tripId).order('title'),
   );
 }
 
-export async function upsertPackingItem(item: Partial<PackingItem> & { trip_id: string }): Promise<ApiResponse<PackingItem>> {
+export async function upsertPackingItem(
+  item: Partial<PackingItem> & { trip_id: string },
+): Promise<ApiResponse<PackingItem>> {
   return SupabaseService.upsert<PackingItem>('packing_items', item);
 }
 
@@ -156,30 +165,36 @@ export async function togglePacked(id: string, isPacked: boolean): Promise<ApiRe
 
 export async function fetchDocuments(tripId: string): Promise<ApiResponse<TripDocument[]>> {
   return SupabaseService.select<TripDocument>('documents', (builder) =>
-    builder.eq('trip_id', tripId).order('created_at', { ascending: false })
+    builder.eq('trip_id', tripId).order('created_at', { ascending: false }),
   );
 }
 
-export async function addDocument(doc: Omit<TripDocument, 'id'>): Promise<ApiResponse<TripDocument>> {
+export async function addDocument(
+  doc: Omit<TripDocument, 'id'>,
+): Promise<ApiResponse<TripDocument>> {
   return SupabaseService.insert<TripDocument>('documents', doc);
 }
 
 export async function fetchBudgetEntries(tripId: string): Promise<ApiResponse<BudgetEntry[]>> {
   return SupabaseService.select<BudgetEntry>('budget_entries', (builder) =>
-    builder.eq('trip_id', tripId).order('created_at', { ascending: false })
+    builder.eq('trip_id', tripId).order('created_at', { ascending: false }),
   );
 }
 
-export async function addBudgetEntry(entry: Omit<BudgetEntry, 'id'>): Promise<ApiResponse<BudgetEntry>> {
+export async function addBudgetEntry(
+  entry: Omit<BudgetEntry, 'id'>,
+): Promise<ApiResponse<BudgetEntry>> {
   return SupabaseService.insert<BudgetEntry>('budget_entries', entry);
 }
 
 export async function fetchTimelineEvents(tripId: string): Promise<ApiResponse<TimelineEvent[]>> {
   return SupabaseService.select<TimelineEvent>('timeline_events', (builder) =>
-    builder.eq('trip_id', tripId).order('date_time')
+    builder.eq('trip_id', tripId).order('date_time'),
   );
 }
 
-export async function addTimelineEvent(event: Omit<TimelineEvent, 'id'>): Promise<ApiResponse<TimelineEvent>> {
+export async function addTimelineEvent(
+  event: Omit<TimelineEvent, 'id'>,
+): Promise<ApiResponse<TimelineEvent>> {
   return SupabaseService.insert<TimelineEvent>('timeline_events', event);
 }

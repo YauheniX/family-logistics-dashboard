@@ -3,6 +3,7 @@
 This guide shows how to migrate from the old code structure to the new feature-based architecture.
 
 ## Table of Contents
+
 1. [Using Repositories](#using-repositories)
 2. [Using Services](#using-services)
 3. [Using Stores](#using-stores)
@@ -12,6 +13,7 @@ This guide shows how to migrate from the old code structure to the new feature-b
 ## Using Repositories
 
 ### Before (Old Service Layer)
+
 ```typescript
 // Old way - directly importing service functions
 import { fetchTrips, createTrip, updateTrip } from '@/services/tripService';
@@ -35,6 +37,7 @@ const newTrip = await createTrip({
 ```
 
 ### After (Repository Pattern)
+
 ```typescript
 // New way - using repository
 import { tripRepository } from '@/features/trips/infrastructure/trip.repository';
@@ -58,6 +61,7 @@ const newTrip = await tripRepository.create({
 ```
 
 **Benefits:**
+
 - ✅ Consistent interface across all repositories
 - ✅ Easy to mock for testing
 - ✅ Type-safe with generated database types
@@ -86,6 +90,7 @@ if (response.error) {
 ```
 
 **What the service does for you:**
+
 1. Creates the duplicate trip
 2. Copies all packing items
 3. Copies all budget entries
@@ -97,6 +102,7 @@ if (response.error) {
 Stores are backward compatible but have a cleaner API now.
 
 ### Before
+
 ```typescript
 import { useTripStore } from '@/stores/trips';
 
@@ -114,6 +120,7 @@ const trip = await tripStore.createTrip({
 ```
 
 ### After (Same API!)
+
 ```typescript
 // Option 1: Use the old import (still works)
 import { useTripStore } from '@/stores/trips';
@@ -133,6 +140,7 @@ const trip = await tripStore.createTrip({
 ```
 
 **Under the hood:**
+
 - Stores now use repositories instead of direct service calls
 - Better type safety
 - Cleaner separation of concerns
@@ -161,19 +169,19 @@ const formData = ref({
 const handleSubmit = async () => {
   // Validate the form
   const result = validate(formData.value);
-  
+
   if (!result.success) {
     // Validation failed - errors are now in `errors.value`
     console.log('Validation errors:', errors.value);
     return;
   }
-  
+
   // Validation passed - result.data is now properly typed!
   const trip = await tripStore.createTrip({
     ...result.data,
     created_by: authStore.userId!,
   });
-  
+
   if (trip) {
     // Success!
     router.push({ name: 'trip-detail', params: { id: trip.id } });
@@ -185,40 +193,28 @@ const handleSubmit = async () => {
   <form @submit.prevent="handleSubmit">
     <div>
       <label>Trip Name</label>
-      <input 
-        v-model="formData.name" 
-        type="text"
-        :class="{ 'error': hasError('name') }"
-      />
+      <input v-model="formData.name" type="text" :class="{ error: hasError('name') }" />
       <span v-if="hasError('name')" class="error-message">
         {{ getError('name') }}
       </span>
     </div>
-    
+
     <div>
       <label>Start Date</label>
-      <input 
-        v-model="formData.start_date" 
-        type="date"
-        :class="{ 'error': hasError('start_date') }"
-      />
+      <input v-model="formData.start_date" type="date" :class="{ error: hasError('start_date') }" />
       <span v-if="hasError('start_date')" class="error-message">
         {{ getError('start_date') }}
       </span>
     </div>
-    
+
     <div>
       <label>End Date</label>
-      <input 
-        v-model="formData.end_date" 
-        type="date"
-        :class="{ 'error': hasError('end_date') }"
-      />
+      <input v-model="formData.end_date" type="date" :class="{ error: hasError('end_date') }" />
       <span v-if="hasError('end_date')" class="error-message">
         {{ getError('end_date') }}
       </span>
     </div>
-    
+
     <button type="submit">Create Trip</button>
   </form>
 </template>
@@ -230,15 +226,15 @@ All schemas are in `@/features/shared/domain/validation.schemas`:
 
 ```typescript
 import {
-  TripFormSchema,           // Trip creation/update
-  PackingItemFormSchema,    // Packing items
-  BudgetEntryFormSchema,    // Budget entries
-  TimelineEventFormSchema,  // Timeline events
-  DocumentFormSchema,       // Documents
-  PackingTemplateFormSchema,// Packing templates
-  TripMemberInviteSchema,   // Member invitations
-  LoginFormSchema,          // Login
-  RegisterFormSchema,       // Registration
+  TripFormSchema, // Trip creation/update
+  PackingItemFormSchema, // Packing items
+  BudgetEntryFormSchema, // Budget entries
+  TimelineEventFormSchema, // Timeline events
+  DocumentFormSchema, // Documents
+  PackingTemplateFormSchema, // Packing templates
+  TripMemberInviteSchema, // Member invitations
+  LoginFormSchema, // Login
+  RegisterFormSchema, // Registration
 } from '@/features/shared/domain/validation.schemas';
 ```
 
@@ -253,7 +249,7 @@ import { z } from 'zod';
 const CustomFormSchema = z.object({
   email: z.string().email('Invalid email'),
   age: z.number().min(18, 'Must be 18 or older'),
-  terms: z.boolean().refine(val => val === true, 'Must accept terms'),
+  terms: z.boolean().refine((val) => val === true, 'Must accept terms'),
 });
 
 // Use it with the validation composable
@@ -276,11 +272,7 @@ type TripUpdate = Database['public']['Tables']['trips']['Update'];
 ### Using Domain Entities
 
 ```typescript
-import type { 
-  Trip, 
-  CreateTripDto, 
-  UpdateTripDto 
-} from '@/features/shared/domain/entities';
+import type { Trip, CreateTripDto, UpdateTripDto } from '@/features/shared/domain/entities';
 
 // Use in your components
 const trip: Trip = {
@@ -315,14 +307,14 @@ import { supabase } from '@/features/shared/infrastructure/supabase.client';
 
 // The client is now fully typed!
 const { data, error } = await supabase
-  .from('trips')  // ✅ Autocomplete for table names
+  .from('trips') // ✅ Autocomplete for table names
   .select('*')
-  .eq('status', 'planning');  // ✅ Type-safe column names and values
+  .eq('status', 'planning'); // ✅ Type-safe column names and values
 
 // data is typed as Trip[]
 if (data) {
-  data.forEach(trip => {
-    console.log(trip.name);  // ✅ Autocomplete for properties
+  data.forEach((trip) => {
+    console.log(trip.name); // ✅ Autocomplete for properties
   });
 }
 ```
@@ -378,7 +370,7 @@ const formData = ref({
 
 const handleSubmit = async () => {
   const result = validate(formData.value);
-  
+
   if (result.success) {
     await tripStore.addBudgetEntry({
       ...result.data,

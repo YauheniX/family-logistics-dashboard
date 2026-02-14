@@ -26,7 +26,7 @@
         </section>
       </main>
     </div>
-    
+
     <!-- Global Toast Notifications -->
     <ToastContainer />
   </div>

@@ -34,11 +34,11 @@ This application is a private family travel planner that lets you organize trips
 
 Make sure the following are installed on your system:
 
-| Tool | Minimum Version | Check command |
-|------|-----------------|---------------|
-| **Node.js** | 18.x or later | `node -v` |
-| **npm** | 9.x or later | `npm -v` |
-| **Git** | any recent version | `git --version` |
+| Tool        | Minimum Version    | Check command   |
+| ----------- | ------------------ | --------------- |
+| **Node.js** | 18.x or later      | `node -v`       |
+| **npm**     | 9.x or later       | `npm -v`        |
+| **Git**     | any recent version | `git --version` |
 
 > **Windows note:** Use the **64-bit (x64)** Node.js installer. Supabase CLI does not support 32-bit Node (`ia32`) on Windows.
 
@@ -97,13 +97,13 @@ The app uses [Supabase](https://supabase.com) as its backend for authentication,
 
 This creates the following tables with Row Level Security (RLS) enabled:
 
-| Table | Purpose |
-|-------|---------|
-| `trips` | Core trip data — name, dates, status, owner |
-| `packing_items` | Per-trip packing checklist with categories |
-| `documents` | File metadata (title, description, storage URL) |
-| `budget_entries` | Expense tracking with category, amount, currency |
-| `timeline_events` | Trip milestones with date/time and notes |
+| Table             | Purpose                                          |
+| ----------------- | ------------------------------------------------ |
+| `trips`           | Core trip data — name, dates, status, owner      |
+| `packing_items`   | Per-trip packing checklist with categories       |
+| `documents`       | File metadata (title, description, storage URL)  |
+| `budget_entries`  | Expense tracking with category, amount, currency |
+| `timeline_events` | Trip milestones with date/time and notes         |
 
 All tables have RLS policies so each user can only access their own data.
 
@@ -133,10 +133,10 @@ The schema script automatically creates a `documents` storage bucket. If it does
    VITE_SUPABASE_STORAGE_BUCKET=documents
    ```
 
-   | Variable | Description |
-   |----------|-------------|
-   | `VITE_SUPABASE_URL` | Your Supabase project URL (from Settings → API) |
-   | `VITE_SUPABASE_ANON_KEY` | Your anon/public API key (from Settings → API) |
+   | Variable                       | Description                                                            |
+   | ------------------------------ | ---------------------------------------------------------------------- |
+   | `VITE_SUPABASE_URL`            | Your Supabase project URL (from Settings → API)                        |
+   | `VITE_SUPABASE_ANON_KEY`       | Your anon/public API key (from Settings → API)                         |
    | `VITE_SUPABASE_STORAGE_BUCKET` | Name of the storage bucket for document uploads (default: `documents`) |
 
 > **Note:** The `.env` file is git-ignored. Never commit real credentials to version control.
@@ -168,13 +168,13 @@ Open the URL in your browser.
 
 ## 7. Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start the Vite development server with hot-reload |
-| `npm run build` | Create an optimized production build in `dist/` |
-| `npm run preview` | Preview the production build locally |
-| `npm run lint` | Run ESLint on `.ts` and `.vue` files |
-| `npm run format` | Auto-format all files with Prettier |
+| Command           | Description                                       |
+| ----------------- | ------------------------------------------------- |
+| `npm run dev`     | Start the Vite development server with hot-reload |
+| `npm run build`   | Create an optimized production build in `dist/`   |
+| `npm run preview` | Preview the production build locally              |
+| `npm run lint`    | Run ESLint on `.ts` and `.vue` files              |
+| `npm run format`  | Auto-format all files with Prettier               |
 
 ---
 
@@ -190,12 +190,12 @@ The central entity of the application. Each trip contains:
 
 **Routes:**
 
-| Page | Path | Description |
-|------|------|-------------|
-| Dashboard | `/` | Lists all your trips with summary stats |
-| New Trip | `/trips/new` | Form to create a trip |
-| Trip Detail | `/trips/:id` | Full trip view with packing, documents, budget, timeline |
-| Edit Trip | `/trips/:id/edit` | Edit an existing trip |
+| Page        | Path              | Description                                              |
+| ----------- | ----------------- | -------------------------------------------------------- |
+| Dashboard   | `/`               | Lists all your trips with summary stats                  |
+| New Trip    | `/trips/new`      | Form to create a trip                                    |
+| Trip Detail | `/trips/:id`      | Full trip view with packing, documents, budget, timeline |
+| Edit Trip   | `/trips/:id/edit` | Edit an existing trip                                    |
 
 From the dashboard you can **view**, **edit**, **duplicate**, or **delete** any trip.
 

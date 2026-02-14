@@ -12,12 +12,10 @@ export class StorageService {
    */
   async uploadFile(file: File, path: string): Promise<ApiResponse<string>> {
     try {
-      const { data, error } = await supabase.storage
-        .from(this.bucket)
-        .upload(path, file, {
-          cacheControl: '3600',
-          upsert: false,
-        });
+      const { data, error } = await supabase.storage.from(this.bucket).upload(path, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
 
       if (error) {
         return {
@@ -27,9 +25,7 @@ export class StorageService {
       }
 
       // Get public URL
-      const { data: urlData } = supabase.storage
-        .from(this.bucket)
-        .getPublicUrl(data.path);
+      const { data: urlData } = supabase.storage.from(this.bucket).getPublicUrl(data.path);
 
       return {
         data: urlData.publicUrl,
@@ -51,9 +47,7 @@ export class StorageService {
    */
   async deleteFile(path: string): Promise<ApiResponse<void>> {
     try {
-      const { error } = await supabase.storage
-        .from(this.bucket)
-        .remove([path]);
+      const { error } = await supabase.storage.from(this.bucket).remove([path]);
 
       if (error) {
         return {

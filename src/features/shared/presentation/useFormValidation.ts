@@ -3,21 +3,21 @@ import type { ZodSchema, ZodError } from 'zod';
 
 /**
  * Composable for form validation using Zod schemas
- * 
+ *
  * @example
  * ```typescript
  * import { useFormValidation } from '@/features/shared/presentation/useFormValidation';
  * import { TripFormSchema } from '@/features/shared/domain/validation.schemas';
- * 
+ *
  * const { validate, errors, clearErrors } = useFormValidation(TripFormSchema);
- * 
+ *
  * const formData = ref({
  *   name: '',
  *   start_date: null,
  *   end_date: null,
  *   status: 'planning'
  * });
- * 
+ *
  * const handleSubmit = () => {
  *   const result = validate(formData.value);
  *   if (result.success) {
@@ -41,11 +41,14 @@ export function useFormValidation<T>(schema: ZodSchema<T>) {
     } catch (error) {
       if (error instanceof Error && 'issues' in error) {
         const zodError = error as ZodError;
-        errors.value = zodError.issues.reduce((acc, issue) => {
-          const path = issue.path.join('.');
-          acc[path] = issue.message;
-          return acc;
-        }, {} as Record<string, string>);
+        errors.value = zodError.issues.reduce(
+          (acc, issue) => {
+            const path = issue.path.join('.');
+            acc[path] = issue.message;
+            return acc;
+          },
+          {} as Record<string, string>,
+        );
       }
       return { success: false };
     }
@@ -61,9 +64,7 @@ export function useFormValidation<T>(schema: ZodSchema<T>) {
       // schema.pick() or schema.shape[field] for better field validation
       const result = schema.safeParse({ [field]: value });
       if (!result.success) {
-        const fieldError = result.error.issues.find(
-          (issue) => issue.path.join('.') === field
-        );
+        const fieldError = result.error.issues.find((issue) => issue.path.join('.') === field);
         return fieldError?.message || null;
       }
       delete errors.value[field];

@@ -311,7 +311,16 @@ describe('Trip Store', () => {
   it('loads documents for a trip', async () => {
     const { documentRepository } = await import('@/features/trips');
     vi.mocked(documentRepository.findByTripId).mockResolvedValue({
-      data: [{ id: 'd1', trip_id: '1', title: 'Passport', description: null, file_url: 'url', created_at: '' }],
+      data: [
+        {
+          id: 'd1',
+          trip_id: '1',
+          title: 'Passport',
+          description: null,
+          file_url: 'url',
+          created_at: '',
+        },
+      ],
       error: null,
     });
 
@@ -323,7 +332,14 @@ describe('Trip Store', () => {
 
   it('adds a document', async () => {
     const { documentRepository } = await import('@/features/trips');
-    const doc = { id: 'd1', trip_id: '1', title: 'Ticket', description: null, file_url: 'url', created_at: '' };
+    const doc = {
+      id: 'd1',
+      trip_id: '1',
+      title: 'Ticket',
+      description: null,
+      file_url: 'url',
+      created_at: '',
+    };
     vi.mocked(documentRepository.create).mockResolvedValue({ data: doc, error: null });
 
     const store = useTripStore();
@@ -335,7 +351,15 @@ describe('Trip Store', () => {
   it('loads timeline events', async () => {
     const { timelineEventRepository } = await import('@/features/trips');
     vi.mocked(timelineEventRepository.findByTripId).mockResolvedValue({
-      data: [{ id: 't1', trip_id: '1', title: 'Departure', date_time: '2026-03-01T10:00:00Z', notes: null }],
+      data: [
+        {
+          id: 't1',
+          trip_id: '1',
+          title: 'Departure',
+          date_time: '2026-03-01T10:00:00Z',
+          notes: null,
+        },
+      ],
       error: null,
     });
 
@@ -347,17 +371,29 @@ describe('Trip Store', () => {
 
   it('adds a timeline event', async () => {
     const { timelineEventRepository } = await import('@/features/trips');
-    const event = { id: 't1', trip_id: '1', title: 'Arrival', date_time: '2026-03-01T14:00:00Z', notes: null };
+    const event = {
+      id: 't1',
+      trip_id: '1',
+      title: 'Arrival',
+      date_time: '2026-03-01T14:00:00Z',
+      notes: null,
+    };
     vi.mocked(timelineEventRepository.create).mockResolvedValue({ data: event, error: null });
 
     const store = useTripStore();
-    await store.addTimelineEvent({ trip_id: '1', title: 'Arrival', date_time: '2026-03-01T14:00:00Z', notes: null });
+    await store.addTimelineEvent({
+      trip_id: '1',
+      title: 'Arrival',
+      date_time: '2026-03-01T14:00:00Z',
+      notes: null,
+    });
 
     expect(store.timeline).toHaveLength(1);
   });
 
   it('loads members for a trip', async () => {
-    const { tripMemberRepository } = await import('@/features/trips/infrastructure/trip-member.repository');
+    const { tripMemberRepository } =
+      await import('@/features/trips/infrastructure/trip-member.repository');
     vi.mocked(tripMemberRepository.findByTripId).mockResolvedValue({
       data: [{ id: 'm1', trip_id: '1', user_id: 'u2', role: 'editor', created_at: '' }],
       error: null,
@@ -370,8 +406,15 @@ describe('Trip Store', () => {
   });
 
   it('invites a member', async () => {
-    const { tripMemberRepository } = await import('@/features/trips/infrastructure/trip-member.repository');
-    const member = { id: 'm1', trip_id: '1', user_id: 'u2', role: 'viewer' as const, created_at: '' };
+    const { tripMemberRepository } =
+      await import('@/features/trips/infrastructure/trip-member.repository');
+    const member = {
+      id: 'm1',
+      trip_id: '1',
+      user_id: 'u2',
+      role: 'viewer' as const,
+      created_at: '',
+    };
     vi.mocked(tripMemberRepository.inviteByEmail).mockResolvedValue({ data: member, error: null });
 
     const store = useTripStore();
@@ -382,7 +425,8 @@ describe('Trip Store', () => {
   });
 
   it('removes a member', async () => {
-    const { tripMemberRepository } = await import('@/features/trips/infrastructure/trip-member.repository');
+    const { tripMemberRepository } =
+      await import('@/features/trips/infrastructure/trip-member.repository');
     vi.mocked(tripMemberRepository.delete).mockResolvedValue({ data: undefined, error: null });
 
     const store = useTripStore();
@@ -394,8 +438,15 @@ describe('Trip Store', () => {
   });
 
   it('updates a member role', async () => {
-    const { tripMemberRepository } = await import('@/features/trips/infrastructure/trip-member.repository');
-    const updated = { id: 'm1', trip_id: '1', user_id: 'u2', role: 'editor' as const, created_at: '' };
+    const { tripMemberRepository } =
+      await import('@/features/trips/infrastructure/trip-member.repository');
+    const updated = {
+      id: 'm1',
+      trip_id: '1',
+      user_id: 'u2',
+      role: 'editor' as const,
+      created_at: '',
+    };
     vi.mocked(tripMemberRepository.update).mockResolvedValue({ data: updated, error: null });
 
     const store = useTripStore();
@@ -427,20 +478,36 @@ describe('Trip Store', () => {
     });
 
     const store = useTripStore();
-    await store.savePackingItem({ trip_id: '1', title: 'Item', category: 'adult', is_packed: false });
+    await store.savePackingItem({
+      trip_id: '1',
+      title: 'Item',
+      category: 'adult',
+      is_packed: false,
+    });
 
     expect(store.packing).toEqual([]);
   });
 
   it('updates existing packing item via savePackingItem', async () => {
     const { packingItemRepository } = await import('@/features/trips');
-    const existing = { id: 'p1', trip_id: '1', title: 'Updated', category: 'adult' as const, is_packed: true };
+    const existing = {
+      id: 'p1',
+      trip_id: '1',
+      title: 'Updated',
+      category: 'adult' as const,
+      is_packed: true,
+    };
     vi.mocked(packingItemRepository.upsert).mockResolvedValue({ data: existing, error: null });
 
     const store = useTripStore();
     store.packing = [{ id: 'p1', trip_id: '1', title: 'Old', category: 'adult', is_packed: false }];
 
-    await store.savePackingItem({ trip_id: '1', title: 'Updated', category: 'adult', is_packed: true });
+    await store.savePackingItem({
+      trip_id: '1',
+      title: 'Updated',
+      category: 'adult',
+      is_packed: true,
+    });
 
     expect(store.packing[0].title).toBe('Updated');
     expect(store.packing).toHaveLength(1);
@@ -493,7 +560,13 @@ describe('Trip Store', () => {
     });
 
     const store = useTripStore();
-    await store.addBudgetEntry({ trip_id: '1', category: 'Food', amount: 50, currency: 'USD', is_planned: false });
+    await store.addBudgetEntry({
+      trip_id: '1',
+      category: 'Food',
+      amount: 50,
+      currency: 'USD',
+      is_planned: false,
+    });
 
     expect(store.budget).toEqual([]);
   });
@@ -519,13 +592,19 @@ describe('Trip Store', () => {
     });
 
     const store = useTripStore();
-    await store.addTimelineEvent({ trip_id: '1', title: 'Event', date_time: '2026-03-01T10:00:00Z', notes: null });
+    await store.addTimelineEvent({
+      trip_id: '1',
+      title: 'Event',
+      date_time: '2026-03-01T10:00:00Z',
+      notes: null,
+    });
 
     expect(store.timeline).toEqual([]);
   });
 
   it('handles load members error', async () => {
-    const { tripMemberRepository } = await import('@/features/trips/infrastructure/trip-member.repository');
+    const { tripMemberRepository } =
+      await import('@/features/trips/infrastructure/trip-member.repository');
     vi.mocked(tripMemberRepository.findByTripId).mockResolvedValue({
       data: null,
       error: { message: 'Load members failed' },
@@ -538,7 +617,8 @@ describe('Trip Store', () => {
   });
 
   it('handles invite member error', async () => {
-    const { tripMemberRepository } = await import('@/features/trips/infrastructure/trip-member.repository');
+    const { tripMemberRepository } =
+      await import('@/features/trips/infrastructure/trip-member.repository');
     vi.mocked(tripMemberRepository.inviteByEmail).mockResolvedValue({
       data: null,
       error: { message: 'Invite failed' },
@@ -551,7 +631,8 @@ describe('Trip Store', () => {
   });
 
   it('handles remove member error', async () => {
-    const { tripMemberRepository } = await import('@/features/trips/infrastructure/trip-member.repository');
+    const { tripMemberRepository } =
+      await import('@/features/trips/infrastructure/trip-member.repository');
     vi.mocked(tripMemberRepository.delete).mockResolvedValue({
       data: null,
       error: { message: 'Remove failed' },
@@ -566,7 +647,8 @@ describe('Trip Store', () => {
   });
 
   it('handles update member role error', async () => {
-    const { tripMemberRepository } = await import('@/features/trips/infrastructure/trip-member.repository');
+    const { tripMemberRepository } =
+      await import('@/features/trips/infrastructure/trip-member.repository');
     vi.mocked(tripMemberRepository.update).mockResolvedValue({
       data: null,
       error: { message: 'Update role failed' },

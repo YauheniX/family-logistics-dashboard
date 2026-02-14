@@ -18,23 +18,25 @@ export const TripMemberRoleSchema = z.enum(['owner', 'editor', 'viewer']);
 /**
  * Trip creation/update schema
  */
-export const TripFormSchema = z.object({
-  name: z.string().min(1, 'Trip name is required').max(200, 'Trip name is too long'),
-  start_date: z.string().nullable().optional(),
-  end_date: z.string().nullable().optional(),
-  status: TripStatusSchema.default('planning'),
-}).refine(
-  (data) => {
-    if (data.start_date && data.end_date) {
-      return new Date(data.start_date) <= new Date(data.end_date);
-    }
-    return true;
-  },
-  {
-    message: 'End date must be after start date',
-    path: ['end_date'],
-  }
-);
+export const TripFormSchema = z
+  .object({
+    name: z.string().min(1, 'Trip name is required').max(200, 'Trip name is too long'),
+    start_date: z.string().nullable().optional(),
+    end_date: z.string().nullable().optional(),
+    status: TripStatusSchema.default('planning'),
+  })
+  .refine(
+    (data) => {
+      if (data.start_date && data.end_date) {
+        return new Date(data.start_date) <= new Date(data.end_date);
+      }
+      return true;
+    },
+    {
+      message: 'End date must be after start date',
+      path: ['end_date'],
+    },
+  );
 
 export type TripFormData = z.infer<typeof TripFormSchema>;
 
@@ -116,13 +118,15 @@ export type LoginFormData = z.infer<typeof LoginFormSchema>;
 /**
  * Register schema
  */
-export const RegisterFormSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string().min(6, 'Password must be at least 6 characters'),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-});
+export const RegisterFormSchema = z
+  .object({
+    email: z.string().email('Invalid email address'),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
+    confirmPassword: z.string().min(6, 'Password must be at least 6 characters'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
 export type RegisterFormData = z.infer<typeof RegisterFormSchema>;

@@ -8,13 +8,15 @@ import type { ApiResponse } from '@/types/api';
 
 export async function fetchTemplates(userId: string): Promise<ApiResponse<PackingTemplate[]>> {
   return SupabaseService.select<PackingTemplate>('packing_templates', (builder) =>
-    builder.eq('created_by', userId).order('name')
+    builder.eq('created_by', userId).order('name'),
   );
 }
 
-export async function fetchTemplateItems(templateId: string): Promise<ApiResponse<PackingTemplateItem[]>> {
+export async function fetchTemplateItems(
+  templateId: string,
+): Promise<ApiResponse<PackingTemplateItem[]>> {
   return SupabaseService.select<PackingTemplateItem>('packing_template_items', (builder) =>
-    builder.eq('template_id', templateId).order('title')
+    builder.eq('template_id', templateId).order('title'),
   );
 }
 
@@ -22,7 +24,10 @@ export async function createTemplate(
   payload: NewPackingTemplatePayload,
   items: string[],
 ): Promise<ApiResponse<PackingTemplate>> {
-  const templateResponse = await SupabaseService.insert<PackingTemplate>('packing_templates', payload);
+  const templateResponse = await SupabaseService.insert<PackingTemplate>(
+    'packing_templates',
+    payload,
+  );
 
   if (templateResponse.error || !templateResponse.data) {
     return templateResponse;
@@ -38,7 +43,7 @@ export async function createTemplate(
 
     const itemsResponse = await SupabaseService.insertMany<PackingTemplateItem>(
       'packing_template_items',
-      itemPayload
+      itemPayload,
     );
 
     if (itemsResponse.error) {

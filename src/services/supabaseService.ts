@@ -9,14 +9,14 @@ function toApiError(error: PostgrestError | Error | unknown): ApiError {
   if (!error) {
     return { message: 'An unknown error occurred' };
   }
-  
+
   if (error instanceof Error) {
     return {
       message: error.message,
       details: error,
     };
   }
-  
+
   const postgrestError = error as PostgrestError;
   if (postgrestError.message) {
     return {
@@ -25,7 +25,7 @@ function toApiError(error: PostgrestError | Error | unknown): ApiError {
       details: postgrestError.details,
     };
   }
-  
+
   return { message: 'An unknown error occurred', details: error };
 }
 
@@ -37,18 +37,18 @@ export class SupabaseService {
    * Execute a query and return a typed response with error handling
    */
   static async query<T>(
-    operation: () => Promise<{ data: T | null; error: PostgrestError | null }>
+    operation: () => Promise<{ data: T | null; error: PostgrestError | null }>,
   ): Promise<ApiResponse<T>> {
     try {
       const { data, error } = await operation();
-      
+
       if (error) {
         return {
           data: null,
           error: toApiError(error),
         };
       }
-      
+
       return {
         data,
         error: null,
@@ -64,10 +64,7 @@ export class SupabaseService {
   /**
    * Fetch multiple records
    */
-  static async select<T>(
-    table: string,
-    query?: (builder: any) => any
-  ): Promise<ApiResponse<T[]>> {
+  static async select<T>(table: string, query?: (builder: any) => any): Promise<ApiResponse<T[]>> {
     return this.query(async () => {
       let builder = supabase.from(table).select('*');
       if (query) {
@@ -82,7 +79,7 @@ export class SupabaseService {
    */
   static async selectSingle<T>(
     table: string,
-    query?: (builder: any) => any
+    query?: (builder: any) => any,
   ): Promise<ApiResponse<T>> {
     return this.query(async () => {
       let builder = supabase.from(table).select('*');
@@ -96,65 +93,36 @@ export class SupabaseService {
   /**
    * Insert a record
    */
-  static async insert<T>(
-    table: string,
-    data: Partial<T> | Partial<T>[]
-  ): Promise<ApiResponse<T>> {
+  static async insert<T>(table: string, data: Partial<T> | Partial<T>[]): Promise<ApiResponse<T>> {
     return this.query(async () => {
-      return await supabase
-        .from(table)
-        .insert(data)
-        .select()
-        .single();
+      return await supabase.from(table).insert(data).select().single();
     });
   }
 
   /**
    * Insert multiple records
    */
-  static async insertMany<T>(
-    table: string,
-    data: Partial<T>[]
-  ): Promise<ApiResponse<T[]>> {
+  static async insertMany<T>(table: string, data: Partial<T>[]): Promise<ApiResponse<T[]>> {
     return this.query(async () => {
-      return await supabase
-        .from(table)
-        .insert(data)
-        .select();
+      return await supabase.from(table).insert(data).select();
     });
   }
 
   /**
    * Update a record
    */
-  static async update<T>(
-    table: string,
-    id: string,
-    data: Partial<T>
-  ): Promise<ApiResponse<T>> {
+  static async update<T>(table: string, id: string, data: Partial<T>): Promise<ApiResponse<T>> {
     return this.query(async () => {
-      return await supabase
-        .from(table)
-        .update(data)
-        .eq('id', id)
-        .select()
-        .single();
+      return await supabase.from(table).update(data).eq('id', id).select().single();
     });
   }
 
   /**
    * Upsert a record
    */
-  static async upsert<T>(
-    table: string,
-    data: Partial<T> | Partial<T>[]
-  ): Promise<ApiResponse<T>> {
+  static async upsert<T>(table: string, data: Partial<T> | Partial<T>[]): Promise<ApiResponse<T>> {
     return this.query(async () => {
-      return await supabase
-        .from(table)
-        .upsert(data)
-        .select()
-        .single();
+      return await supabase.from(table).upsert(data).select().single();
     });
   }
 
@@ -172,7 +140,7 @@ export class SupabaseService {
    * Execute a custom query
    */
   static async execute<T>(
-    operation: () => Promise<{ data: T | null; error: PostgrestError | null }>
+    operation: () => Promise<{ data: T | null; error: PostgrestError | null }>,
   ): Promise<ApiResponse<T>> {
     return this.query(operation);
   }

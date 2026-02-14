@@ -5,36 +5,44 @@
 The toast notification system supports four types of messages:
 
 ### 1. Success Toast (Green)
+
 ```typescript
 useToastStore().success('Trip created successfully!');
 ```
+
 - **Color**: Green background with green border
 - **Icon**: ✓ (checkmark)
 - **Default Duration**: 3 seconds
 - **Use Cases**: Successful operations (create, update, delete)
 
 ### 2. Error Toast (Red)
+
 ```typescript
 useToastStore().error('Failed to load trips: Connection timeout');
 ```
+
 - **Color**: Red background with red border
 - **Icon**: ✕ (cross)
 - **Default Duration**: 5 seconds
 - **Use Cases**: Failed operations, validation errors
 
 ### 3. Warning Toast (Yellow)
+
 ```typescript
 useToastStore().warning('Some items were skipped');
 ```
+
 - **Color**: Yellow/amber background with amber border
 - **Icon**: ⚠ (warning symbol)
 - **Default Duration**: 4 seconds
 - **Use Cases**: Partial success, warnings, deprecation notices
 
 ### 4. Info Toast (Blue)
+
 ```typescript
 useToastStore().info('Loading trip data...');
 ```
+
 - **Color**: Blue background with blue border
 - **Icon**: ℹ (information symbol)
 - **Default Duration**: 3 seconds
@@ -43,25 +51,31 @@ useToastStore().info('Loading trip data...');
 ## Features
 
 ### Auto-Dismiss
+
 All toasts automatically dismiss after their duration:
+
 ```typescript
 // Custom duration (in milliseconds)
 useToastStore().success('Message', 10000); // 10 seconds
 ```
 
 ### Manual Close
+
 Users can close any toast by clicking the × button
 
 ### Multiple Toasts
+
 Multiple toasts stack vertically in the bottom-right corner
 
 ### Smooth Animations
+
 - **Slide In**: Toast slides in from the right
 - **Slide Out**: Toast slides out to the right when dismissed
 
 ## Usage in Different Layers
 
 ### In Stores (Recommended)
+
 ```typescript
 // stores/trips.ts
 async createTrip(payload: NewTripPayload) {
@@ -78,6 +92,7 @@ async createTrip(payload: NewTripPayload) {
 ```
 
 ### In Components with useAsyncHandler
+
 ```typescript
 // Automatic toast handling
 const { loading, execute } = useAsyncHandler({
@@ -90,6 +105,7 @@ await execute(() => tripService.createTrip(payload));
 ```
 
 ### Direct Usage in Components (Edge Cases)
+
 ```typescript
 import { useToastStore } from '@/stores/toast';
 
@@ -105,12 +121,14 @@ const handleCustomAction = () => {
 ## Best Practices
 
 ### ✅ DO
+
 - Use success toasts for completed actions
 - Use error toasts for failures with clear messages
 - Keep messages concise and actionable
 - Use consistent message patterns
 
 ### ❌ DON'T
+
 - Don't show toasts for every minor action
 - Don't use technical error messages (show user-friendly text)
 - Don't stack too many toasts (they auto-dismiss)
@@ -119,6 +137,7 @@ const handleCustomAction = () => {
 ## Examples
 
 ### Good Toast Messages
+
 ```typescript
 ✅ "Trip created successfully!"
 ✅ "Failed to save: Network connection lost"
@@ -127,6 +146,7 @@ const handleCustomAction = () => {
 ```
 
 ### Poor Toast Messages
+
 ```typescript
 ❌ "Error: PostgrestError: 23505"  // Too technical
 ❌ "Something went wrong"  // Too vague
@@ -140,6 +160,7 @@ The toast container uses Tailwind CSS classes and can be customized in:
 `src/components/shared/ToastContainer.vue`
 
 Current styling:
+
 - **Position**: Fixed, bottom-right (4rem from bottom and right)
 - **Width**: Min 300px, Max 400px
 - **Shadow**: Large shadow for depth

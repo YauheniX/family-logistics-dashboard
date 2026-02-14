@@ -1,8 +1,8 @@
 import { BaseRepository } from '../../shared/infrastructure/base.repository';
 import { supabase } from '../../shared/infrastructure/supabase.client';
-import type { 
-  PackingItem, 
-  CreatePackingItemDto, 
+import type {
+  PackingItem,
+  CreatePackingItemDto,
   UpdatePackingItemDto,
   BudgetEntry,
   CreateBudgetEntryDto,
@@ -12,7 +12,7 @@ import type {
   UpdateTimelineEventDto,
   TripDocument,
   CreateDocumentDto,
-  UpdateDocumentDto
+  UpdateDocumentDto,
 } from '../../shared/domain/entities';
 import type { ApiResponse } from '../../shared/domain/repository.interface';
 
@@ -29,9 +29,7 @@ export class PackingItemRepository extends BaseRepository<
   }
 
   async findByTripId(tripId: string): Promise<ApiResponse<PackingItem[]>> {
-    return this.findAll((builder) =>
-      builder.eq('trip_id', tripId).order('title')
-    );
+    return this.findAll((builder) => builder.eq('trip_id', tripId).order('title'));
   }
 
   async togglePacked(id: string, isPacked: boolean): Promise<ApiResponse<void>> {
@@ -59,7 +57,7 @@ export class BudgetEntryRepository extends BaseRepository<
 
   async findByTripId(tripId: string): Promise<ApiResponse<BudgetEntry[]>> {
     return this.findAll((builder) =>
-      builder.eq('trip_id', tripId).order('created_at', { ascending: false })
+      builder.eq('trip_id', tripId).order('created_at', { ascending: false }),
     );
   }
 }
@@ -77,9 +75,7 @@ export class TimelineEventRepository extends BaseRepository<
   }
 
   async findByTripId(tripId: string): Promise<ApiResponse<TimelineEvent[]>> {
-    return this.findAll((builder) =>
-      builder.eq('trip_id', tripId).order('date_time')
-    );
+    return this.findAll((builder) => builder.eq('trip_id', tripId).order('date_time'));
   }
 }
 
@@ -97,7 +93,7 @@ export class DocumentRepository extends BaseRepository<
 
   async findByTripId(tripId: string): Promise<ApiResponse<TripDocument[]>> {
     return this.findAll((builder) =>
-      builder.eq('trip_id', tripId).order('created_at', { ascending: false })
+      builder.eq('trip_id', tripId).order('created_at', { ascending: false }),
     );
   }
 }

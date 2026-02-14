@@ -14,14 +14,17 @@
 </template>
 
 <script setup lang="ts">
-withDefaults(defineProps<{
-  title: string;
-  description: string;
-  cta?: string;
-  badge?: string;
-}>(), {
-  badge: 'Getting started',
-});
+withDefaults(
+  defineProps<{
+    title: string;
+    description: string;
+    cta?: string;
+    badge?: string;
+  }>(),
+  {
+    badge: 'Getting started',
+  },
+);
 
 defineEmits<{ (e: 'action'): void }>();
 </script>

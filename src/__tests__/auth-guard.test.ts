@@ -13,7 +13,9 @@ vi.mock('@/views/auth/LoginView.vue', () => ({ default: { template: '<div />' } 
 // Mock auth service to prevent Supabase calls
 vi.mock('@/features/auth', () => ({
   authService: {
-    getCurrentUser: vi.fn().mockResolvedValue({ data: null, error: { message: 'Not authenticated' } }),
+    getCurrentUser: vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: 'Not authenticated' } }),
     onAuthStateChange: vi.fn(),
     signIn: vi.fn(),
     signUp: vi.fn(),
@@ -26,7 +28,9 @@ vi.mock('@/features/shared/infrastructure/supabase.client', () => ({
   supabase: {
     auth: {
       getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
-      onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
+      onAuthStateChange: vi
+        .fn()
+        .mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
     },
   },
 }));
@@ -35,9 +39,24 @@ function createTestRouter() {
   const router = createRouter({
     history: createWebHistory(),
     routes: [
-      { path: '/login', name: 'login', component: { template: '<div />' }, meta: { guestOnly: true } },
-      { path: '/', name: 'dashboard', component: { template: '<div />' }, meta: { requiresAuth: true } },
-      { path: '/trips/new', name: 'trip-new', component: { template: '<div />' }, meta: { requiresAuth: true } },
+      {
+        path: '/login',
+        name: 'login',
+        component: { template: '<div />' },
+        meta: { guestOnly: true },
+      },
+      {
+        path: '/',
+        name: 'dashboard',
+        component: { template: '<div />' },
+        meta: { requiresAuth: true },
+      },
+      {
+        path: '/trips/new',
+        name: 'trip-new',
+        component: { template: '<div />' },
+        meta: { requiresAuth: true },
+      },
     ],
   });
 

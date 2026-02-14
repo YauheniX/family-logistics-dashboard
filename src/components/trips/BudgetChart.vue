@@ -15,7 +15,9 @@
         <div class="space-y-2">
           <div class="flex items-center justify-between text-sm">
             <span class="text-slate-600">Planned</span>
-            <span class="font-semibold text-slate-900">{{ planned.toFixed(2) }} {{ currency }}</span>
+            <span class="font-semibold text-slate-900"
+              >{{ planned.toFixed(2) }} {{ currency }}</span
+            >
           </div>
           <div class="flex items-center justify-between text-sm">
             <span class="text-slate-600">Spent</span>
@@ -57,8 +59,14 @@ const props = defineProps<{
 }>();
 
 const COLORS = [
-  '#6366f1', '#8b5cf6', '#a78bfa', '#c4b5fd',
-  '#818cf8', '#4f46e5', '#7c3aed', '#5b21b6',
+  '#6366f1',
+  '#8b5cf6',
+  '#a78bfa',
+  '#c4b5fd',
+  '#818cf8',
+  '#4f46e5',
+  '#7c3aed',
+  '#5b21b6',
 ];
 
 const chartData = computed(() => ({
@@ -79,8 +87,7 @@ const chartOptions = {
     legend: { display: false },
     tooltip: {
       callbacks: {
-        label: (ctx: { label: string; parsed: number }) =>
-          `${ctx.label}: ${ctx.parsed.toFixed(2)}`,
+        label: (ctx: { label: string; parsed: number }) => `${ctx.label}: ${ctx.parsed.toFixed(2)}`,
       },
     },
   },

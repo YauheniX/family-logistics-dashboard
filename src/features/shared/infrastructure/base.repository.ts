@@ -9,14 +9,14 @@ function toApiError(error: PostgrestError | Error | unknown): ApiError {
   if (!error) {
     return { message: 'An unknown error occurred' };
   }
-  
+
   if (error instanceof Error) {
     return {
       message: error.message,
       details: error,
     };
   }
-  
+
   const postgrestError = error as PostgrestError;
   if (postgrestError.message) {
     return {
@@ -25,7 +25,7 @@ function toApiError(error: PostgrestError | Error | unknown): ApiError {
       details: postgrestError.details,
     };
   }
-  
+
   return { message: 'An unknown error occurred', details: error };
 }
 
@@ -36,29 +36,29 @@ function toApiError(error: PostgrestError | Error | unknown): ApiError {
 export abstract class BaseRepository<
   TEntity,
   TCreateDto = Partial<TEntity>,
-  TUpdateDto = Partial<TEntity>
+  TUpdateDto = Partial<TEntity>,
 > {
   constructor(
     protected readonly supabase: TypedSupabaseClient,
-    protected readonly tableName: string
+    protected readonly tableName: string,
   ) {}
 
   /**
    * Execute a query and return a typed response with error handling
    */
   protected async query<T>(
-    operation: () => Promise<{ data: T | null; error: PostgrestError | null }>
+    operation: () => Promise<{ data: T | null; error: PostgrestError | null }>,
   ): Promise<ApiResponse<T>> {
     try {
       const { data, error } = await operation();
-      
+
       if (error) {
         return {
           data: null,
           error: toApiError(error),
         };
       }
-      
+
       return {
         data,
         error: null,
@@ -89,11 +89,7 @@ export abstract class BaseRepository<
    */
   async findById(id: string): Promise<ApiResponse<TEntity>> {
     return this.query(async () => {
-      return await this.supabase
-        .from(this.tableName)
-        .select('*')
-        .eq('id', id)
-        .single();
+      return await this.supabase.from(this.tableName).select('*').eq('id', id).single();
     });
   }
 
@@ -154,10 +150,7 @@ export abstract class BaseRepository<
    */
   async delete(id: string): Promise<ApiResponse<void>> {
     return this.query(async () => {
-      const { error } = await this.supabase
-        .from(this.tableName)
-        .delete()
-        .eq('id', id);
+      const { error } = await this.supabase.from(this.tableName).delete().eq('id', id);
       return { data: null as any, error };
     });
   }
@@ -166,7 +159,7 @@ export abstract class BaseRepository<
    * Execute a custom query
    */
   protected async execute<T>(
-    operation: () => Promise<{ data: T | null; error: PostgrestError | null }>
+    operation: () => Promise<{ data: T | null; error: PostgrestError | null }>,
   ): Promise<ApiResponse<T>> {
     return this.query(operation);
   }
