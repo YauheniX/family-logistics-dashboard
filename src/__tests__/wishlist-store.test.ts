@@ -1,0 +1,267 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { setActivePinia, createPinia } from 'pinia';
+import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
+
+vi.mock('@/features/wishlist/domain/wishlist.service', () => ({
+  wishlistService: {
+    getUserWishlists: vi.fn(),
+    getWishlist: vi.fn(),
+    getWishlistBySlug: vi.fn(),
+    createWishlist: vi.fn(),
+    updateWishlist: vi.fn(),
+    deleteWishlist: vi.fn(),
+    getWishlistItems: vi.fn(),
+    addItem: vi.fn(),
+    updateItem: vi.fn(),
+    deleteItem: vi.fn(),
+    reserveItem: vi.fn(),
+  },
+}));
+
+const mockWishlist = {
+  id: 'w1',
+  user_id: 'u1',
+  title: 'Birthday Wishes',
+  description: null,
+  is_public: true,
+  share_slug: 'abc12345',
+  created_at: '2024-01-01T00:00:00Z',
+};
+
+const mockItem = {
+  id: 'wi1',
+  wishlist_id: 'w1',
+  title: 'Headphones',
+  description: null,
+  link: null,
+  price: 99.99,
+  currency: 'USD',
+  image_url: null,
+  priority: 'high' as const,
+  is_reserved: false,
+  reserved_by_email: null,
+  created_at: '2024-01-01T00:00:00Z',
+};
+
+describe('Wishlist Store', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    vi.clearAllMocks();
+  });
+
+  it('initializes with default state', () => {
+    const store = useWishlistStore();
+    expect(store.wishlists).toEqual([]);
+    expect(store.currentWishlist).toBeNull();
+    expect(store.items).toEqual([]);
+    expect(store.loading).toBe(false);
+    expect(store.error).toBeNull();
+  });
+
+  // ─── loadWishlists ────────────────────────────────────────
+
+  it('loads wishlists successfully', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.getUserWishlists).mockResolvedValue({
+      data: [mockWishlist],
+      error: null,
+    });
+
+    const store = useWishlistStore();
+    await store.loadWishlists('u1');
+
+    expect(store.wishlists).toEqual([mockWishlist]);
+    expect(store.loading).toBe(false);
+    expect(store.error).toBeNull();
+  });
+
+  it('handles loadWishlists error', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.getUserWishlists).mockResolvedValue({
+      data: null,
+      error: { message: 'Network error' },
+    });
+
+    const store = useWishlistStore();
+    await store.loadWishlists('u1');
+
+    expect(store.wishlists).toEqual([]);
+    expect(store.error).toBe('Network error');
+  });
+
+  // ─── createWishlist ───────────────────────────────────────
+
+  it('creates a wishlist successfully', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.createWishlist).mockResolvedValue({
+      data: mockWishlist,
+      error: null,
+    });
+
+    const store = useWishlistStore();
+    const result = await store.createWishlist({
+      title: 'Birthday Wishes',
+      description: null,
+      is_public: true,
+    });
+
+    expect(result).toEqual(mockWishlist);
+    expect(store.wishlists).toContainEqual(mockWishlist);
+    expect(store.loading).toBe(false);
+  });
+
+  it('handles createWishlist error', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.createWishlist).mockResolvedValue({
+      data: null,
+      error: { message: 'Creation failed' },
+    });
+
+    const store = useWishlistStore();
+    const result = await store.createWishlist({
+      title: 'Birthday Wishes',
+      description: null,
+      is_public: true,
+    });
+
+    expect(result).toBeNull();
+    expect(store.wishlists).toEqual([]);
+  });
+
+  // ─── loadWishlistBySlug ───────────────────────────────────
+
+  it('loads a wishlist by slug successfully', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.getWishlistBySlug).mockResolvedValue({
+      data: mockWishlist,
+      error: null,
+    });
+    vi.mocked(wishlistService.getWishlistItems).mockResolvedValue({
+      data: [mockItem],
+      error: null,
+    });
+
+    const store = useWishlistStore();
+    await store.loadWishlistBySlug('abc12345');
+
+    expect(store.currentWishlist).toEqual(mockWishlist);
+    expect(store.items).toEqual([mockItem]);
+    expect(store.loading).toBe(false);
+  });
+
+  it('handles loadWishlistBySlug error', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.getWishlistBySlug).mockResolvedValue({
+      data: null,
+      error: { message: 'Not found' },
+    });
+
+    const store = useWishlistStore();
+    await store.loadWishlistBySlug('badslug');
+
+    expect(store.currentWishlist).toBeNull();
+    expect(store.error).toBe('Not found');
+  });
+
+  // ─── addItem ──────────────────────────────────────────────
+
+  it('adds an item successfully', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.addItem).mockResolvedValue({
+      data: mockItem,
+      error: null,
+    });
+
+    const store = useWishlistStore();
+    const result = await store.addItem({
+      wishlist_id: 'w1',
+      title: 'Headphones',
+      description: null,
+      link: null,
+      price: 99.99,
+      currency: 'USD',
+      image_url: null,
+      priority: 'high',
+    });
+
+    expect(result).toEqual(mockItem);
+    expect(store.items).toContainEqual(mockItem);
+  });
+
+  it('handles addItem error', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.addItem).mockResolvedValue({
+      data: null,
+      error: { message: 'Add failed' },
+    });
+
+    const store = useWishlistStore();
+    const result = await store.addItem({
+      wishlist_id: 'w1',
+      title: 'Headphones',
+      description: null,
+      link: null,
+      price: 99.99,
+      currency: 'USD',
+      image_url: null,
+      priority: 'high',
+    });
+
+    expect(result).toBeNull();
+    expect(store.items).toEqual([]);
+  });
+
+  // ─── reserveItem ──────────────────────────────────────────
+
+  it('reserves an item successfully', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    const reservedItem = { ...mockItem, is_reserved: true, reserved_by_email: 'gift@test.com' };
+    vi.mocked(wishlistService.reserveItem).mockResolvedValue({
+      data: reservedItem,
+      error: null,
+    });
+
+    const store = useWishlistStore();
+    store.items = [mockItem];
+    const result = await store.reserveItem('wi1', 'gift@test.com');
+
+    expect(result).toEqual(reservedItem);
+    expect(store.items[0].is_reserved).toBe(true);
+    expect(store.items[0].reserved_by_email).toBe('gift@test.com');
+  });
+
+  it('handles reserveItem error', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.reserveItem).mockResolvedValue({
+      data: null,
+      error: { message: 'Reserve failed' },
+    });
+
+    const store = useWishlistStore();
+    store.items = [mockItem];
+    const result = await store.reserveItem('wi1', 'gift@test.com');
+
+    expect(result).toBeNull();
+    expect(store.items[0].is_reserved).toBe(false);
+  });
+
+  // ─── Getters ──────────────────────────────────────────────
+
+  it('computes reservedItems and unreservedItems', () => {
+    const store = useWishlistStore();
+    const reserved = { ...mockItem, id: 'wi2', is_reserved: true, reserved_by_email: 'a@b.com' };
+    store.items = [mockItem, reserved];
+
+    expect(store.reservedItems).toEqual([reserved]);
+    expect(store.unreservedItems).toEqual([mockItem]);
+  });
+
+  it('computes itemsByPriority', () => {
+    const store = useWishlistStore();
+    const lowItem = { ...mockItem, id: 'wi2', priority: 'low' as const };
+    store.items = [mockItem, lowItem];
+
+    expect(store.itemsByPriority['high']).toEqual([mockItem]);
+    expect(store.itemsByPriority['low']).toEqual([lowItem]);
+  });
+});
