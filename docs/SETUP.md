@@ -141,6 +141,24 @@ The schema script automatically creates a `documents` storage bucket. If it does
 
 > **Note:** The `.env` file is git-ignored. Never commit real credentials to version control.
 
+### 4b. Enable in-app issue reporting (optional)
+
+The app can create GitHub issues via a **Supabase Edge Function** so the GitHub token is never exposed to the browser.
+
+1. Deploy the function:
+
+   ```bash
+   npx supabase functions deploy report-issue
+   ```
+
+2. Set function secrets (server-side only):
+
+   ```bash
+   npx supabase secrets set GITHUB_TOKEN=... GITHUB_OWNER=... GITHUB_REPO=...
+   ```
+
+The UI button is available when running with Supabase enabled (not in mock backend mode).
+
 ---
 
 ## 5. Start the Development Server

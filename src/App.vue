@@ -29,6 +29,7 @@
             </h1>
           </div>
           <div class="flex items-center gap-2 md:gap-3">
+            <BaseButton variant="ghost" @click="reportModalOpen = true">Report a problem</BaseButton>
             <div class="hidden sm:block">
               <ThemeToggle />
             </div>
@@ -52,6 +53,8 @@
       </main>
     </div>
 
+    <ReportProblemModal :open="reportModalOpen" @close="reportModalOpen = false" />
+
     <!-- Global Toast Notifications -->
     <ToastContainer />
   </div>
@@ -64,6 +67,7 @@ import SidebarNav from '@/components/layout/SidebarNav.vue';
 import ToastContainer from '@/components/shared/ToastContainer.vue';
 import ThemeToggle from '@/components/shared/ThemeToggle.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
+import ReportProblemModal from '@/components/shared/ReportProblemModal.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useTheme } from '@/composables/useTheme';
 
@@ -72,6 +76,7 @@ const route = useRoute();
 const router = useRouter();
 const { initTheme } = useTheme();
 const mobileNavOpen = ref(false);
+const reportModalOpen = ref(false);
 
 // Initialize theme
 initTheme();
