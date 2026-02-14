@@ -78,6 +78,30 @@ create table if not exists public.packing_template_items (
 alter table public.packing_templates enable row level security;
 alter table public.packing_template_items enable row level security;
 
+-- Trip members (sharing)
+create table if not exists public.trip_members (
+  id uuid primary key default gen_random_uuid(),
+  trip_id uuid references public.trips(id) on delete cascade not null,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  role text check (role in ('owner','editor','viewer')) not null default 'viewer',
+  created_at timestamp with time zone default now(),
+  unique (trip_id, user_id)
+);
+
+alter table public.trip_members enable row level security;
+
+-- Function to look up a user id by email (used for trip sharing invitations).
+-- SECURITY DEFINER so the anon/authenticated role can resolve emails to user ids
+-- without having direct access to auth.users.
+CREATE OR REPLACE FUNCTION public.get_user_id_by_email(lookup_email text)
+RETURNS uuid
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+AS $$
+  SELECT id FROM auth.users WHERE email = lookup_email LIMIT 1;
+$$;
+
 -- Storage bucket for documents (policies live in rls.sql)
 do $$
 begin

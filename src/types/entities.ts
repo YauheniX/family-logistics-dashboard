@@ -64,3 +64,14 @@ export interface PackingTemplateItem {
 }
 
 export type NewPackingTemplatePayload = Omit<PackingTemplate, 'id' | 'created_at'>;
+
+export type TripMemberRole = 'owner' | 'editor' | 'viewer';
+
+export interface TripMember {
+  id: string;
+  trip_id: string;
+  user_id: string;
+  role: TripMemberRole;
+  created_at?: string;
+  email?: string;
+}

@@ -13,6 +13,7 @@
         >
           Edit
         </RouterLink>
+        <button class="btn-ghost" type="button" @click="showShareModal = true">Share</button>
         <button class="btn-ghost" type="button" @click="handleDuplicate">Duplicate</button>
         <button class="btn-ghost" type="button" @click="handleDelete">Delete</button>
       </div>
@@ -145,6 +146,11 @@
       @close="showTemplateModal = false"
       @applied="onTemplateApplied"
     />
+    <ShareTripModal
+      :open="showShareModal"
+      :trip-id="tripId"
+      @close="showShareModal = false"
+    />
   </div>
   <LoadingState v-else message="Loading trip..." />
 </template>
@@ -157,6 +163,7 @@ import { useAuthStore } from '@/stores/auth';
 import { uploadDocument } from '@/services/storageService';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import ApplyTemplateModal from '@/components/trips/ApplyTemplateModal.vue';
+import ShareTripModal from '@/components/trips/ShareTripModal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -166,6 +173,7 @@ const authStore = useAuthStore();
 const newPackingTitle = ref('');
 const newPackingCategory = ref('adult');
 const showTemplateModal = ref(false);
+const showShareModal = ref(false);
 const documentTitle = ref('');
 const documentDescription = ref('');
 const selectedFile = ref<File | null>(null);
