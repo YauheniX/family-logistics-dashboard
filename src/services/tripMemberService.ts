@@ -33,6 +33,7 @@ export async function inviteMemberByEmail(
   tripId: string,
   email: string,
   role: TripMemberRole = 'viewer',
+  currentUserId?: string,
 ): Promise<TripMember | null> {
   const { data: userData, error: userError } = await supabase
     .rpc('get_user_id_by_email', { lookup_email: email });
@@ -41,6 +42,10 @@ export async function inviteMemberByEmail(
   if (!userData) throw new Error('No user found with that email address.');
 
   const userId = userData as string;
+
+  if (currentUserId && userId === currentUserId) {
+    throw new Error('You cannot invite yourself to your own trip.');
+  }
 
   const { data, error } = await supabase
     .from('trip_members')

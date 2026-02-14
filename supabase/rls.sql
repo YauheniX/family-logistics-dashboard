@@ -22,6 +22,7 @@ RETURNS boolean
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
+SET search_path = ''
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.trips t WHERE t.id = p_trip_id AND t.created_by = p_user_id
@@ -39,6 +40,7 @@ RETURNS boolean
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
+SET search_path = ''
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.trips t WHERE t.id = p_trip_id AND t.created_by = p_user_id

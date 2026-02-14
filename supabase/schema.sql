@@ -91,25 +91,56 @@ create table if not exists public.trip_members (
 alter table public.trip_members enable row level security;
 
 -- Function to look up a user id by email (used for trip sharing invitations).
--- SECURITY DEFINER so the anon/authenticated role can resolve emails to user ids
--- without having direct access to auth.users.
+-- SECURITY DEFINER so the authenticated role can resolve emails to user ids
+-- without having direct access to auth.users. Restricted to authenticated users.
 CREATE OR REPLACE FUNCTION public.get_user_id_by_email(lookup_email text)
 RETURNS uuid
-LANGUAGE sql
+LANGUAGE plpgsql
 STABLE
 SECURITY DEFINER
+SET search_path = ''
 AS $$
-  SELECT id FROM auth.users WHERE email = lookup_email LIMIT 1;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Authentication required';
+  END IF;
+  RETURN (SELECT id FROM auth.users WHERE email = lookup_email LIMIT 1);
+END;
 $$;
 
 -- Function to look up a user email by id (used for displaying trip member emails).
+-- Only returns the email if the caller shares a trip with the target user.
 CREATE OR REPLACE FUNCTION public.get_email_by_user_id(lookup_user_id uuid)
 RETURNS text
-LANGUAGE sql
+LANGUAGE plpgsql
 STABLE
 SECURITY DEFINER
+SET search_path = ''
 AS $$
-  SELECT email FROM auth.users WHERE id = lookup_user_id LIMIT 1;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Authentication required';
+  END IF;
+  -- Only allow lookup if caller shares at least one trip with the target user
+  IF NOT EXISTS (
+    SELECT 1 FROM public.trip_members tm1
+    JOIN public.trip_members tm2 ON tm1.trip_id = tm2.trip_id
+    WHERE tm1.user_id = auth.uid() AND tm2.user_id = lookup_user_id
+  ) AND NOT EXISTS (
+    -- Also allow if caller owns a trip the target is a member of
+    SELECT 1 FROM public.trips t
+    JOIN public.trip_members tm ON tm.trip_id = t.id
+    WHERE t.created_by = auth.uid() AND tm.user_id = lookup_user_id
+  ) AND NOT EXISTS (
+    -- Also allow if target owns a trip the caller is a member of
+    SELECT 1 FROM public.trips t
+    JOIN public.trip_members tm ON tm.trip_id = t.id
+    WHERE t.created_by = lookup_user_id AND tm.user_id = auth.uid()
+  ) THEN
+    RETURN NULL;
+  END IF;
+  RETURN (SELECT email FROM auth.users WHERE id = lookup_user_id LIMIT 1);
+END;
 $$;
 
 -- Storage bucket for documents (policies live in rls.sql)

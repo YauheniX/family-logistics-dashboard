@@ -195,8 +195,8 @@ export const useTripStore = defineStore('trips', {
       this.members = await fetchTripMembers(tripId);
     },
 
-    async inviteMember(tripId: string, email: string, role: TripMemberRole = 'viewer') {
-      const member = await inviteMemberByEmail(tripId, email, role);
+    async inviteMember(tripId: string, email: string, role: TripMemberRole = 'viewer', currentUserId?: string) {
+      const member = await inviteMemberByEmail(tripId, email, role, currentUserId);
       if (member) this.members.push(member);
       return member;
     },

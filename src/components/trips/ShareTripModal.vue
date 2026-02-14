@@ -130,7 +130,7 @@ const handleInvite = async () => {
   inviteError.value = '';
   inviteSuccess.value = '';
   try {
-    await tripStore.inviteMember(props.tripId, inviteEmail.value.trim(), inviteRole.value);
+    await tripStore.inviteMember(props.tripId, inviteEmail.value.trim(), inviteRole.value, authStore.user?.id);
     inviteSuccess.value = `Invited ${inviteEmail.value} as ${inviteRole.value}.`;
     inviteEmail.value = '';
   } catch (err: any) {
