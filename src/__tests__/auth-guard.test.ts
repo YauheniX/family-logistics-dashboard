@@ -5,9 +5,12 @@ import { useAuthStore } from '@/features/auth/presentation/auth.store';
 
 // Mock Vue components
 vi.mock('@/views/DashboardView.vue', () => ({ default: { template: '<div />' } }));
-vi.mock('@/views/TripDetailView.vue', () => ({ default: { template: '<div />' } }));
-vi.mock('@/views/TripFormView.vue', () => ({ default: { template: '<div />' } }));
-vi.mock('@/views/TemplatesView.vue', () => ({ default: { template: '<div />' } }));
+vi.mock('@/views/FamilyListView.vue', () => ({ default: { template: '<div />' } }));
+vi.mock('@/views/FamilyDetailView.vue', () => ({ default: { template: '<div />' } }));
+vi.mock('@/views/ShoppingListView.vue', () => ({ default: { template: '<div />' } }));
+vi.mock('@/views/WishlistListView.vue', () => ({ default: { template: '<div />' } }));
+vi.mock('@/views/WishlistEditView.vue', () => ({ default: { template: '<div />' } }));
+vi.mock('@/views/PublicWishlistView.vue', () => ({ default: { template: '<div />' } }));
 vi.mock('@/views/auth/LoginView.vue', () => ({ default: { template: '<div />' } }));
 
 // Mock auth service to prevent Supabase calls
@@ -52,8 +55,8 @@ function createTestRouter() {
         meta: { requiresAuth: true },
       },
       {
-        path: '/trips/new',
-        name: 'trip-new',
+        path: '/families',
+        name: 'family-list',
         component: { template: '<div />' },
         meta: { requiresAuth: true },
       },
@@ -101,11 +104,11 @@ describe('Auth Guard', () => {
     authStore.user = null;
 
     const router = createTestRouter();
-    router.push('/trips/new');
+    router.push('/families');
     await router.isReady();
 
     expect(router.currentRoute.value.name).toBe('login');
-    expect(router.currentRoute.value.query.redirect).toBe('/trips/new');
+    expect(router.currentRoute.value.query.redirect).toBe('/families');
   });
 
   it('allows authenticated user to access protected routes', async () => {

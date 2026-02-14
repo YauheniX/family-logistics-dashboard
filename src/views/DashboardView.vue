@@ -2,139 +2,155 @@
   <div class="space-y-6">
     <div class="glass-card flex flex-wrap items-center justify-between gap-4 p-6">
       <div>
-        <p class="text-sm text-slate-500">Your trips</p>
-        <h2 class="text-2xl font-semibold text-slate-900">Plan, pack, and go</h2>
+        <p class="text-sm text-slate-500">Dashboard</p>
+        <h2 class="text-2xl font-semibold text-slate-900">Family Shopping & Wishlists</h2>
         <p class="mt-1 text-sm text-slate-600">
-          Manage itineraries, packing lists, documents, budgets, and timelines in one place.
+          Manage your families, shopping lists, and wishlists in one place.
         </p>
       </div>
-      <RouterLink to="/trips/new" class="btn-primary">➕ New Trip</RouterLink>
     </div>
 
-    <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+    <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
       <div class="glass-card p-4">
-        <p class="text-sm text-slate-500">Trips</p>
-        <p class="text-2xl font-bold text-slate-900">{{ tripStore.trips.length }}</p>
+        <p class="text-sm text-slate-500">Active Lists</p>
+        <p class="text-2xl font-bold text-slate-900">{{ activeListCount }}</p>
       </div>
       <div class="glass-card p-4">
-        <p class="text-sm text-slate-500">Planned</p>
-        <p class="text-2xl font-bold text-slate-900">{{ totalPlanned }} {{ currencyHint }}</p>
+        <p class="text-sm text-slate-500">Items to Buy</p>
+        <p class="text-2xl font-bold text-slate-900">{{ itemsToBuyCount }}</p>
       </div>
       <div class="glass-card p-4">
-        <p class="text-sm text-slate-500">Spent</p>
-        <p class="text-2xl font-bold text-slate-900">{{ totalSpent }} {{ currencyHint }}</p>
-      </div>
-      <div class="glass-card p-4">
-        <p class="text-sm text-slate-500">Packing items</p>
-        <p class="text-2xl font-bold text-slate-900">{{ packingCount }}</p>
+        <p class="text-sm text-slate-500">Reserved Wishlist Items</p>
+        <p class="text-2xl font-bold text-slate-900">{{ reservedItemsCount }}</p>
       </div>
     </div>
 
-    <BudgetChart
-      v-if="tripStore.categoryBreakdown.length"
-      :categories="tripStore.categoryBreakdown"
-      :planned="tripStore.totalPlanned"
-      :spent="tripStore.totalSpent"
-      :currency="currencyHint"
-    />
+    <LoadingState v-if="familyStore.loading" message="Loading your data..." />
 
-    <LoadingState v-if="tripStore.loading" message="Loading your trips..." />
+    <template v-else>
+      <!-- My Families -->
+      <div class="glass-card p-5">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold text-slate-900">My Families</h3>
+          <RouterLink to="/families" class="btn-ghost text-sm">View All</RouterLink>
+        </div>
+        <div v-if="familyStore.families.length" class="mt-3 space-y-2">
+          <RouterLink
+            v-for="family in familyStore.families"
+            :key="family.id"
+            :to="{ name: 'family-detail', params: { id: family.id } }"
+            class="flex items-center justify-between rounded-lg border border-slate-100 p-3 text-sm hover:bg-slate-50"
+          >
+            <p class="font-medium text-slate-800">{{ family.name }}</p>
+            <span class="text-xs text-slate-500">View →</span>
+          </RouterLink>
+        </div>
+        <p v-else class="mt-3 text-sm text-slate-500">No families yet.</p>
+      </div>
 
-    <div v-else-if="tripStore.trips.length" class="page-grid">
-      <TripCard
-        v-for="trip in tripStore.trips"
-        :key="trip.id"
-        :trip="trip"
-        :is-duplicating="duplicatingTripId === trip.id"
-        @duplicate="handleDuplicate"
-      />
-    </div>
+      <!-- Active Shopping Lists -->
+      <div class="glass-card p-5">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold text-slate-900">Active Shopping Lists</h3>
+          <span class="text-sm text-slate-600">{{ activeListCount }} lists · {{ itemsToBuyCount }} items to buy</span>
+        </div>
+        <div v-if="allActiveLists.length" class="mt-3 space-y-2">
+          <RouterLink
+            v-for="list in allActiveLists"
+            :key="list.id"
+            :to="{ name: 'shopping-list', params: { listId: list.id } }"
+            class="flex items-center justify-between rounded-lg border border-slate-100 p-3 text-sm hover:bg-slate-50"
+          >
+            <div>
+              <p class="font-medium text-slate-800">{{ list.title }}</p>
+              <p v-if="list.description" class="text-xs text-slate-500">{{ list.description }}</p>
+            </div>
+            <span
+              class="rounded-full px-2 py-0.5 text-xs"
+              :class="list.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'"
+            >
+              {{ list.status }}
+            </span>
+          </RouterLink>
+        </div>
+        <p v-else class="mt-3 text-sm text-slate-500">No active shopping lists.</p>
+      </div>
+
+      <!-- My Wishlists -->
+      <div class="glass-card p-5">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold text-slate-900">My Wishlists</h3>
+          <RouterLink to="/wishlists" class="btn-ghost text-sm">View All</RouterLink>
+        </div>
+        <div v-if="wishlistStore.wishlists.length" class="mt-3 space-y-2">
+          <RouterLink
+            v-for="wishlist in wishlistStore.wishlists"
+            :key="wishlist.id"
+            :to="{ name: 'wishlist-edit', params: { id: wishlist.id } }"
+            class="flex items-center justify-between rounded-lg border border-slate-100 p-3 text-sm hover:bg-slate-50"
+          >
+            <p class="font-medium text-slate-800">{{ wishlist.title }}</p>
+            <span
+              class="rounded-full px-2 py-0.5 text-xs"
+              :class="wishlist.is_public ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'"
+            >
+              {{ wishlist.is_public ? 'Public' : 'Private' }}
+            </span>
+          </RouterLink>
+        </div>
+        <p v-else class="mt-3 text-sm text-slate-500">No wishlists yet.</p>
+      </div>
+    </template>
 
     <EmptyState
-      v-else
-      title="No trips yet"
-      description="Create your first trip to start tracking packing, documents, budgets, and timeline."
-      cta="Create a trip"
-      @action="() => router.push('/trips/new')"
+      v-if="!familyStore.loading && !familyStore.families.length && !wishlistStore.wishlists.length"
+      title="Welcome!"
+      description="Get started by creating a family or a wishlist."
+      cta="Create a Family"
+      @action="() => router.push('/families')"
     />
-
-    <div
-      v-if="toast.message"
-      class="fixed right-6 top-6 z-50 rounded-lg px-4 py-2 text-sm font-medium text-white shadow-lg"
-      :class="toast.type === 'success' ? 'bg-emerald-600' : 'bg-red-600'"
-    >
-      {{ toast.message }}
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, watch } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
-import TripCard from '@/components/trips/TripCard.vue';
-import BudgetChart from '@/components/trips/BudgetChart.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import { useAuthStore } from '@/stores/auth';
-import { useTripStore } from '@/stores/trips';
+import { useFamilyStore } from '@/features/family/presentation/family.store';
+import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
+import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
 
 const authStore = useAuthStore();
-const tripStore = useTripStore();
+const familyStore = useFamilyStore();
+const shoppingStore = useShoppingStore();
+const wishlistStore = useWishlistStore();
 const router = useRouter();
-const duplicatingTripId = ref<string | null>(null);
-const toast = ref<{ message: string; type: 'success' | 'error' }>({ message: '', type: 'success' });
-const toastTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 
-const totalPlanned = computed(() => tripStore.totalPlanned.toFixed(2));
-const totalSpent = computed(() => tripStore.totalSpent.toFixed(2));
-const currencyHint = computed(() =>
-  tripStore.budget[0]?.currency ? tripStore.budget[0].currency : '',
+const allActiveLists = computed(() =>
+  shoppingStore.lists.filter((l) => l.status === 'active'),
 );
-const packingCount = computed(() => tripStore.packing.length);
+
+const activeListCount = computed(() => allActiveLists.value.length);
+const itemsToBuyCount = computed(() => shoppingStore.unpurchasedItems.length);
+const reservedItemsCount = computed(() => wishlistStore.reservedItems.length);
+
+async function loadDashboardData(userId: string) {
+  await Promise.all([
+    familyStore.loadFamilies(userId),
+    wishlistStore.loadWishlists(userId),
+  ]);
+
+  // Load shopping lists for all families concurrently
+  await Promise.all(familyStore.families.map((family) => shoppingStore.loadLists(family.id)));
+}
 
 watch(
   () => authStore.user?.id,
   (userId) => {
-    if (userId) tripStore.loadTrips(userId);
+    if (userId) loadDashboardData(userId);
   },
   { immediate: true },
 );
-
-onMounted(() => {
-  if (authStore.user?.id) {
-    tripStore.loadTrips(authStore.user.id);
-  }
-});
-
-onUnmounted(() => {
-  if (toastTimer.value) {
-    clearTimeout(toastTimer.value);
-    toastTimer.value = null;
-  }
-});
-
-const showToast = (message: string, type: 'success' | 'error') => {
-  toast.value = { message, type };
-  if (toastTimer.value) clearTimeout(toastTimer.value);
-  toastTimer.value = setTimeout(() => {
-    toast.value.message = '';
-    toastTimer.value = null;
-  }, 3000);
-};
-
-const handleDuplicate = async (tripId: string) => {
-  duplicatingTripId.value = tripId;
-  try {
-    const duplicated = await tripStore.duplicateTrip(tripId);
-    if (!duplicated) {
-      showToast('Unable to duplicate trip.', 'error');
-      return;
-    }
-    showToast('Trip duplicated successfully.', 'success');
-  } catch (error: unknown) {
-    showToast(error instanceof Error ? error.message : 'Unable to duplicate trip.', 'error');
-  } finally {
-    duplicatingTripId.value = null;
-  }
-};
 </script>

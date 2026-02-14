@@ -1,8 +1,11 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import DashboardView from '@/views/DashboardView.vue';
-import TripDetailView from '@/views/TripDetailView.vue';
-import TripFormView from '@/views/TripFormView.vue';
-import TemplatesView from '@/views/TemplatesView.vue';
+import FamilyListView from '@/views/FamilyListView.vue';
+import FamilyDetailView from '@/views/FamilyDetailView.vue';
+import ShoppingListView from '@/views/ShoppingListView.vue';
+import WishlistListView from '@/views/WishlistListView.vue';
+import WishlistEditView from '@/views/WishlistEditView.vue';
+import PublicWishlistView from '@/views/PublicWishlistView.vue';
 import LoginView from '@/views/auth/LoginView.vue';
 import RegisterView from '@/views/auth/RegisterView.vue';
 import { useAuthStore } from '@/stores/auth';
@@ -29,30 +32,43 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: '/trips/new',
-      name: 'trip-new',
-      component: TripFormView,
+      path: '/families',
+      name: 'family-list',
+      component: FamilyListView,
       meta: { requiresAuth: true },
     },
     {
-      path: '/templates',
-      name: 'templates',
-      component: TemplatesView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/trips/:id',
-      name: 'trip-detail',
-      component: TripDetailView,
+      path: '/families/:id',
+      name: 'family-detail',
+      component: FamilyDetailView,
       props: true,
       meta: { requiresAuth: true },
     },
     {
-      path: '/trips/:id/edit',
-      name: 'trip-edit',
-      component: TripFormView,
+      path: '/shopping/:listId',
+      name: 'shopping-list',
+      component: ShoppingListView,
       props: true,
       meta: { requiresAuth: true },
+    },
+    {
+      path: '/wishlists',
+      name: 'wishlist-list',
+      component: WishlistListView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/wishlists/:id',
+      name: 'wishlist-edit',
+      component: WishlistEditView,
+      props: true,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/wishlist/:shareSlug',
+      name: 'public-wishlist',
+      component: PublicWishlistView,
+      props: true,
     },
   ],
 });
