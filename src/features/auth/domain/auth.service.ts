@@ -1,5 +1,5 @@
 import { supabase } from '../../shared/infrastructure/supabase.client';
-import type { User } from '@supabase/supabase-js';
+import type { User, Session } from '@supabase/supabase-js';
 import type { ApiResponse } from '../../shared/domain/repository.interface';
 
 export interface AuthUser {
@@ -154,12 +154,12 @@ export class AuthService {
   /**
    * Subscribe to auth state changes
    */
-  onAuthStateChange(callback: (user: AuthUser | null) => void) {
+  onAuthStateChange(callback: (user: AuthUser | null, session: Session | null) => void) {
     return supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
-        callback(this.mapUser(session.user));
+        callback(this.mapUser(session.user), session);
       } else {
-        callback(null);
+        callback(null, null);
       }
     });
   }
@@ -169,10 +169,14 @@ export class AuthService {
    */
   async signInWithOAuth(provider: string): Promise<ApiResponse<AuthUser>> {
     try {
+      // Get the base path from Vite config, ensuring proper URL construction
+      const basePath = import.meta.env.BASE_URL || '/';
+      const redirectTo = `${window.location.origin}${basePath}`;
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: provider as 'google' | 'github' | 'gitlab',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo,
         },
       });
 

@@ -351,11 +351,13 @@ CREATE POLICY template_items_delete_by_owner
 
 -- ---------------------------------------------------------------------------
 -- Storage policies — users can upload to and read from their own folder only.
--- Folder structure: <user_uuid>/filename
+-- Folder structure: <user_id>/<trip_id>/filename
+-- This allows organizing documents by trip within each user's folder
 -- ---------------------------------------------------------------------------
 
 DROP POLICY IF EXISTS storage_insert_user_folder ON storage.objects;
--- Allow users to upload files only into their own folder (uid/...).
+-- Allow users to upload files only into their own folder (user_id/trip_id/...).
+-- Files must be organized as: <user_id>/<trip_id>/<filename>
 CREATE POLICY storage_insert_user_folder
   ON storage.objects
   FOR INSERT
@@ -371,6 +373,22 @@ CREATE POLICY storage_select_user_folder
   ON storage.objects
   FOR SELECT
   USING (
+    bucket_id = 'documents'
+    AND auth.uid() = owner
+    AND POSITION(auth.uid()::text || '/' IN name) = 1
+  );
+
+DROP POLICY IF EXISTS storage_update_user_folder ON storage.objects;
+-- Allow users to update files only in their own folder.
+CREATE POLICY storage_update_user_folder
+  ON storage.objects
+  FOR UPDATE
+  USING (
+    bucket_id = 'documents'
+    AND auth.uid() = owner
+    AND POSITION(auth.uid()::text || '/' IN name) = 1
+  )
+  WITH CHECK (
     bucket_id = 'documents'
     AND auth.uid() = owner
     AND POSITION(auth.uid()::text || '/' IN name) = 1
