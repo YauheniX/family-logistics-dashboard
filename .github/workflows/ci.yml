@@ -12,7 +12,7 @@ permissions:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    
+
     env:
       # Force mock mode for tests - no Supabase needed
       VITE_USE_MOCK_BACKEND: 'true'

@@ -10,13 +10,11 @@ on:
 
 permissions:
   contents: read
-  issues: write
-  pull-requests: write
 
 jobs:
   health-check:
     runs-on: ubuntu-latest
-    
+
     env:
       VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
       VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
@@ -83,47 +81,18 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Date**: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ "${{ steps.verify.outputs.exit_code }}" = "0" ]; then
             echo "✅ **Status**: All checks passed" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Status**: Health check failed" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Detailed Report" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           cat health-check-output.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-
-      - name: Comment on PR (if applicable)
-        if: always() && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const output = fs.readFileSync('health-check-output.txt', 'utf8');
-            const status = ${{ steps.verify.outputs.exit_code }} === 0 ? '✅ Passed' : '❌ Failed';
-            
-            const body = `## Supabase Health Check ${status}
-            
-            **Date**: ${new Date().toUTCString()}
-            
-            <details>
-            <summary>View detailed report</summary>
-            
-            \`\`\`
-            ${output}
-            \`\`\`
-            </details>
-            `;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            });
 
       - name: Fail workflow if health check failed
         if: steps.verify.outputs.exit_code != '0'

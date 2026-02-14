@@ -123,7 +123,7 @@ Visit `http://localhost:5173` — uses localStorage, no Supabase needed.
 
 ### Option B: Full-Stack Mode (Supabase Backend)
 
-See the **[🔧 Supabase Setup](#-supabase-setup)** section below for detailed instructions.
+See the **[🔧 Supabase Setup](#supabase-setup)** section below for detailed instructions.
 
 ---
 
@@ -134,9 +134,11 @@ See the **[🔧 Supabase Setup](#-supabase-setup)** section below for detailed i
 ### Quick Setup (3 steps)
 
 1. **Run the interactive setup script**:
+
    ```bash
    npm run supabase:init
    ```
+
    This will prompt you for your Supabase URL and anon key, then create a `.env` file.
 
 2. **Run database migrations** in [Supabase SQL Editor](https://supabase.com/dashboard):
@@ -154,6 +156,7 @@ npm run supabase:verify
 ```
 
 This checks:
+
 - ✅ Environment variables are set
 - ✅ Connection to Supabase works
 - ✅ All tables exist

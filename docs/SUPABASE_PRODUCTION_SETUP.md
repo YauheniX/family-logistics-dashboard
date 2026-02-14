@@ -69,6 +69,7 @@ npm run supabase:init
 ```
 
 This will:
+
 - Prompt you for Supabase URL and anon key
 - Validate credentials format
 - Create `.env` file automatically
@@ -77,20 +78,22 @@ This will:
 ### Option B: Manual Setup
 
 1. **Copy the example environment file**:
+
    ```bash
    cp env.example .env
    ```
 
 2. **Edit `.env`** and fill in your Supabase credentials:
+
    ```bash
    # Supabase Configuration (Production)
    VITE_SUPABASE_URL=https://xxxxxxxxxxxxx.supabase.co
    VITE_SUPABASE_ANON_KEY=eyJhbGc...your-anon-key-here
    VITE_SUPABASE_STORAGE_BUCKET=wishlist-images
-   
+
    # Backend Mode
    VITE_USE_MOCK_BACKEND=false
-   
+
    # Base Path
    VITE_BASE_PATH=/
    ```
@@ -116,6 +119,7 @@ The application requires several database tables and security policies.
 4. Verify success (you should see "Success. No rows returned")
 
 This creates:
+
 - ✅ 7 tables: `user_profiles`, `families`, `family_members`, `shopping_lists`, `shopping_items`, `wishlists`, `wishlist_items`
 - ✅ Helper functions for family membership checks
 - ✅ Auto-profile creation trigger
@@ -131,6 +135,7 @@ This creates:
 4. Verify success
 
 This enables:
+
 - ✅ RLS on all tables
 - ✅ Security policies for data access
 - ✅ Public wishlist sharing function
@@ -138,6 +143,7 @@ This enables:
 ### Verify Tables
 
 Go to **Table Editor** and confirm these tables exist:
+
 - `families`
 - `family_members`
 - `shopping_lists`
@@ -163,19 +169,16 @@ The application uses Supabase Storage for wishlist item images.
    - Click "Create bucket"
 
 3. **Configure storage policies** (optional, for enhanced security):
-   
+
    Go to Storage → Policies → wishlist-images
-   
    - **INSERT policy**: Allow authenticated users to upload to their own folder
      ```sql
      (bucket_id = 'wishlist-images' AND (storage.foldername(name))[1] = auth.uid()::text)
      ```
-   
    - **SELECT policy**: Public read access
      ```sql
      (bucket_id = 'wishlist-images')
      ```
-   
    - **DELETE policy**: Users can only delete their own files
      ```sql
      (bucket_id = 'wishlist-images' AND (storage.foldername(name))[1] = auth.uid()::text)
@@ -296,6 +299,7 @@ npm run supabase:verify
 ```
 
 This checks:
+
 - ✅ `.env` file exists
 - ✅ Valid Supabase credentials
 - ✅ Connection to Supabase
@@ -306,6 +310,7 @@ This checks:
 ### Manual Verification
 
 1. **Start development server**:
+
    ```bash
    npm run dev
    ```
@@ -328,7 +333,8 @@ This checks:
 
 ### Problem: "Missing VITE_SUPABASE_URL"
 
-**Solution**: 
+**Solution**:
+
 - Ensure `.env` file exists in project root
 - Check that `VITE_SUPABASE_URL` is set correctly
 - Restart dev server after changing `.env`
@@ -336,6 +342,7 @@ This checks:
 ### Problem: "Invalid API key"
 
 **Solution**:
+
 - Verify you copied the **anon/public** key, not service_role key
 - Check for extra spaces or newlines in the key
 - Regenerate key if corrupted: Supabase → Settings → API → Reset
@@ -343,6 +350,7 @@ This checks:
 ### Problem: "relation does not exist"
 
 **Solution**:
+
 - Tables not created yet
 - Run `supabase/schema.sql` in Supabase SQL Editor
 - Verify in Table Editor that tables exist
@@ -350,6 +358,7 @@ This checks:
 ### Problem: "Row level security policy violation"
 
 **Solution**:
+
 - RLS policies not applied
 - Run `supabase/rls.sql` in Supabase SQL Editor
 - Check that user is authenticated before accessing data
@@ -357,6 +366,7 @@ This checks:
 ### Problem: "Storage bucket not found"
 
 **Solution**:
+
 - Create `wishlist-images` bucket in Supabase Storage
 - Make sure it's marked as **public**
 - Verify bucket name matches `.env` setting
@@ -364,6 +374,7 @@ This checks:
 ### Problem: Google OAuth not working
 
 **Solution**:
+
 - Check redirect URI matches exactly: `https://your-project.supabase.co/auth/v1/callback`
 - Verify Google Client ID and Secret are correct in Supabase
 - Make sure OAuth consent screen is configured
@@ -372,6 +383,7 @@ This checks:
 ### Problem: Build fails in Vercel
 
 **Solution**:
+
 - Check that all environment variables are set in Vercel
 - Verify build command is correct: `vite build`
 - Check build logs for specific errors
@@ -380,6 +392,7 @@ This checks:
 ### Problem: "Application runs in mock mode despite credentials"
 
 **Solution**:
+
 - Check that `VITE_USE_MOCK_BACKEND` is NOT set to `'true'`
 - Verify credentials are actually loaded (check browser console)
 - Clear browser cache and restart dev server

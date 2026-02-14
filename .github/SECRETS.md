@@ -7,27 +7,30 @@ This document describes the GitHub repository secrets required for CI/CD workflo
 ### Supabase Credentials
 
 #### `VITE_SUPABASE_URL`
+
 - **Description**: Production Supabase project URL
 - **Format**: `https://xxxxxxxxxxxxx.supabase.co`
 - **Where to get it**: Supabase Dashboard → Project Settings → API → Project URL
-- **Used in**: 
+- **Used in**:
   - `.github/workflows/deploy.yml` (production builds)
   - `.github/workflows/supabase-health-check.yml` (health monitoring)
 
 #### `VITE_SUPABASE_ANON_KEY`
+
 - **Description**: Production Supabase anon/public key
 - **Format**: Long JWT token starting with `eyJ...`
 - **Where to get it**: Supabase Dashboard → Project Settings → API → anon/public key
 - **⚠️ Important**: Use the **anon/public** key, NOT the service_role key
-- **Used in**: 
+- **Used in**:
   - `.github/workflows/deploy.yml` (production builds)
   - `.github/workflows/supabase-health-check.yml` (health monitoring)
 
 ### Vercel Deployment
 
 #### `VERCEL_TOKEN`
+
 - **Description**: Vercel authentication token for deployments
-- **Where to get it**: 
+- **Where to get it**:
   1. Go to [Vercel Account Settings](https://vercel.com/account/tokens)
   2. Click "Create Token"
   3. Name it (e.g., "GitHub Actions")
@@ -35,8 +38,9 @@ This document describes the GitHub repository secrets required for CI/CD workflo
 - **Used in**: `.github/workflows/deploy.yml`
 
 #### `VERCEL_ORG_ID`
+
 - **Description**: Vercel organization/team ID
-- **Where to get it**: 
+- **Where to get it**:
   1. Go to your Vercel project settings
   2. Look for "Project ID" section
   3. Or run: `vercel project ls` in your local project
@@ -45,8 +49,9 @@ This document describes the GitHub repository secrets required for CI/CD workflo
 - **Used in**: `.github/workflows/deploy.yml`
 
 #### `VERCEL_PROJECT_ID`
+
 - **Description**: Vercel project ID
-- **Where to get it**: 
+- **Where to get it**:
   1. Go to Vercel project → Settings → General
   2. Look for "Project ID"
   3. Or run: `vercel project ls` in your local project
@@ -123,6 +128,7 @@ To update a secret:
 5. Click **Update secret**
 
 Or via CLI:
+
 ```bash
 gh secret set SECRET_NAME --body "new-value"
 ```
@@ -132,6 +138,7 @@ gh secret set SECRET_NAME --body "new-value"
 ### CI Workflow (`.github/workflows/ci.yml`)
 
 **Environment Variables Set**:
+
 - `VITE_USE_MOCK_BACKEND: 'true'` (hardcoded, no secret needed)
 
 **Purpose**: Tests always run in mock mode (no Supabase needed)
@@ -139,6 +146,7 @@ gh secret set SECRET_NAME --body "new-value"
 ### Deploy Workflow (`.github/workflows/deploy.yml`)
 
 **Secrets Required**:
+
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 - `VERCEL_TOKEN`
@@ -150,6 +158,7 @@ gh secret set SECRET_NAME --body "new-value"
 ### Supabase Health Check Workflow (`.github/workflows/supabase-health-check.yml`)
 
 **Secrets Required**:
+
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 
@@ -160,6 +169,7 @@ gh secret set SECRET_NAME --body "new-value"
 ### Problem: Workflow fails with "Secret not found"
 
 **Solution**:
+
 - Verify secret name matches exactly (case-sensitive)
 - Check that secret is set in repository settings
 - Ensure you're looking at repository secrets, not organization secrets
@@ -167,6 +177,7 @@ gh secret set SECRET_NAME --body "new-value"
 ### Problem: "Invalid Supabase credentials"
 
 **Solution**:
+
 - Verify you copied the full URL and key
 - Check for extra spaces or newlines
 - Ensure you're using the anon/public key, not service_role key
@@ -175,6 +186,7 @@ gh secret set SECRET_NAME --body "new-value"
 ### Problem: Vercel deployment fails with "Invalid token"
 
 **Solution**:
+
 - Regenerate Vercel token
 - Ensure token has correct permissions
 - Check that token hasn't expired

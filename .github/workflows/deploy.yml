@@ -10,7 +10,7 @@ permissions:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    
+
     env:
       # Use mock mode for tests
       VITE_USE_MOCK_BACKEND: 'true'

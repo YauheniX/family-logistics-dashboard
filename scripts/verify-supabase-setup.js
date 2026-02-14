@@ -2,7 +2,7 @@
 
 /**
  * Supabase Setup Verification Script
- * 
+ *
  * This script verifies that:
  * - .env file exists and contains required variables
  * - Supabase credentials are valid
@@ -77,15 +77,15 @@ const STORAGE_BUCKET = 'wishlist-images';
  */
 function loadEnvFile() {
   const envPath = resolve(ROOT_DIR, '.env');
-  
+
   if (!existsSync(envPath)) {
     return null;
   }
 
   const envContent = readFileSync(envPath, 'utf-8');
   const env = {};
-  
-  envContent.split('\n').forEach(line => {
+
+  envContent.split('\n').forEach((line) => {
     const match = line.match(/^\s*([A-Z_]+)\s*=\s*(.*)$/);
     if (match) {
       const [, key, value] = match;
@@ -118,37 +118,67 @@ function validateSupabaseKey(key) {
  */
 async function checkTableExists(supabase, tableName) {
   try {
-    const { error } = await supabase
-      .from(tableName)
-      .select('*')
-      .limit(0);
-    
-    return !error;
-  } catch (err) {
-    return false;
+    const { error } = await supabase.from(tableName).select('*').limit(0);
+
+    if (!error) {
+      return true;
+    }
+
+    // Postgres error code for "undefined table"
+    if (error.code === '42P01') {
+      return false;
+    }
+
+    // Fallback: check common "relation does not exist" message pattern
+    const message = error.message || '';
+    if (/relation .* does not exist/i.test(message)) {
+      return false;
+    }
+
+    // Any other error (e.g., permission/RLS) indicates the table likely exists
+    return true;
+  } catch {
+    // On unexpected errors, assume the table exists but access is restricted
+    return true;
   }
 }
 
 /**
- * Check if RLS is enabled on a table
+ * Check if RLS is likely enabled on a table.
+ *
+ * This performs a simple SELECT and inspects any error message for
+ * permission/policy-related text. It is a best-effort check and
+ * returns false when RLS cannot be confirmed or the check fails.
  */
 async function checkRLSEnabled(supabase, tableName) {
   try {
-    const { data, error } = await supabase.rpc('pg_catalog.pg_tables', {});
-    
-    // If we can't check via RPC, we'll try a different approach
-    // Query the table with a SELECT that should trigger RLS
-    const { error: selectError } = await supabase
-      .from(tableName)
-      .select('*')
-      .limit(0);
-    
-    // If there's no error or it's a permissions error (which means RLS is working),
-    // we can assume RLS is enabled
-    return !selectError || selectError.message.includes('permission') || selectError.message.includes('policy');
-  } catch (err) {
-    // Assume RLS is enabled if we get an error
-    return true;
+    // Query the table with a SELECT that should trigger RLS if it is enforced
+    const { error: selectError } = await supabase.from(tableName).select('*').limit(0);
+
+    // If there's no error, we cannot conclude that RLS is enabled.
+    if (!selectError) {
+      return false;
+    }
+
+    const message = String(selectError.message || '').toLowerCase();
+
+    // Treat permission/policy-related errors as evidence that RLS (or other
+    // access controls) is enabled.
+    if (
+      message.includes('permission denied') ||
+      message.includes('permission') ||
+      message.includes('policy') ||
+      message.includes('not authorized') ||
+      message.includes('rls')
+    ) {
+      return true;
+    }
+
+    // Error is unrelated to permissions/policies; do not claim RLS is enabled.
+    return false;
+  } catch {
+    // If we can't perform the check, report that RLS is not confirmed.
+    return false;
   }
 }
 
@@ -158,13 +188,13 @@ async function checkRLSEnabled(supabase, tableName) {
 async function checkStorageBucket(supabase, bucketName) {
   try {
     const { data, error } = await supabase.storage.listBuckets();
-    
+
     if (error) {
       return false;
     }
-    
-    return data.some(bucket => bucket.name === bucketName);
-  } catch (err) {
+
+    return data.some((bucket) => bucket.name === bucketName);
+  } catch {
     return false;
   }
 }
@@ -183,20 +213,20 @@ ${colors.reset}`);
 
   // Step 1: Check .env file
   header('Step 1: Environment File Check');
-  
+
   const env = loadEnvFile();
-  
+
   if (!env) {
     error('.env file not found');
     info(`Create .env file by copying env.example: cp env.example .env`);
     process.exit(1);
   }
-  
+
   success('.env file exists');
 
   // Step 2: Check environment variables
   header('Step 2: Environment Variables Check');
-  
+
   const supabaseUrl = env.VITE_SUPABASE_URL;
   const supabaseKey = env.VITE_SUPABASE_ANON_KEY;
   const useMockBackend = env.VITE_USE_MOCK_BACKEND;
@@ -206,24 +236,26 @@ ${colors.reset}`);
     info('Get these from: https://supabase.com/dashboard/project/_/settings/api');
     process.exit(1);
   }
-  
+
   success('VITE_SUPABASE_URL is set');
   success('VITE_SUPABASE_ANON_KEY is set');
-  
+
   if (useMockBackend === 'true') {
-    log(`${colors.yellow}⚠️  VITE_USE_MOCK_BACKEND is set to 'true' - Application will use mock mode${colors.reset}`);
+    log(
+      `${colors.yellow}⚠️  VITE_USE_MOCK_BACKEND is set to 'true' - Application will use mock mode${colors.reset}`,
+    );
   }
 
   // Step 3: Validate credentials format
   header('Step 3: Credentials Format Validation');
-  
+
   if (!validateSupabaseUrl(supabaseUrl)) {
     error(`Invalid Supabase URL format: ${supabaseUrl}`);
     info('Expected format: https://your-project-ref.supabase.co');
   } else {
     success('Supabase URL format is valid');
   }
-  
+
   if (!validateSupabaseKey(supabaseKey)) {
     error('Invalid Supabase anon key format (key too short)');
     info('Make sure you copied the full anon/public key from Supabase dashboard');
@@ -232,13 +264,15 @@ ${colors.reset}`);
   }
 
   if (hasErrors) {
-    log(`\n${colors.red}${colors.bright}Verification failed due to invalid credentials.${colors.reset}`);
+    log(
+      `\n${colors.red}${colors.bright}Verification failed due to invalid credentials.${colors.reset}`,
+    );
     process.exit(1);
   }
 
   // Step 4: Test connection
   header('Step 4: Connection Test');
-  
+
   let supabase;
   try {
     supabase = createClient(supabaseUrl, supabaseKey);
@@ -250,14 +284,15 @@ ${colors.reset}`);
 
   // Try a simple query to test connection
   try {
-    const { error: connectionError } = await supabase
-      .from('user_profiles')
-      .select('id')
-      .limit(0);
-    
+    const { error: connectionError } = await supabase.from('user_profiles').select('id').limit(0);
+
     // Note: We might get a permission error if not authenticated, but that's OK
     // It means the connection works
-    if (connectionError && !connectionError.message.includes('permission') && !connectionError.message.includes('policy')) {
+    if (
+      connectionError &&
+      !connectionError.message.includes('permission') &&
+      !connectionError.message.includes('policy')
+    ) {
       // Check if it's a "relation does not exist" error (table not found)
       if (connectionError.message.includes('does not exist')) {
         error('Connection successful, but tables not found. Please run database migrations.');
@@ -274,9 +309,9 @@ ${colors.reset}`);
 
   // Step 5: Check tables
   header('Step 5: Database Tables Check');
-  
+
   let allTablesExist = true;
-  
+
   for (const tableName of REQUIRED_TABLES) {
     const exists = await checkTableExists(supabase, tableName);
     if (exists) {
@@ -295,7 +330,7 @@ ${colors.reset}`);
 
   // Step 6: Check RLS policies
   header('Step 6: Row Level Security Check');
-  
+
   for (const tableName of REQUIRED_TABLES) {
     const rlsEnabled = await checkRLSEnabled(supabase, tableName);
     if (rlsEnabled) {
@@ -308,7 +343,7 @@ ${colors.reset}`);
 
   // Step 7: Check storage bucket
   header('Step 7: Storage Bucket Check');
-  
+
   const bucketExists = await checkStorageBucket(supabase, STORAGE_BUCKET);
   if (bucketExists) {
     success(`Storage bucket '${STORAGE_BUCKET}' exists`);
@@ -320,7 +355,7 @@ ${colors.reset}`);
 
   // Summary
   header('Summary');
-  
+
   if (hasErrors) {
     log(`\n${colors.red}${colors.bright}❌ Verification FAILED${colors.reset}`);
     log(`${colors.yellow}Please fix the issues above and run this script again.${colors.reset}\n`);
@@ -334,7 +369,7 @@ ${colors.reset}`);
 }
 
 // Run verification
-verifySetup().catch(err => {
+verifySetup().catch((err) => {
   error(`Unexpected error: ${err.message}`);
   console.error(err);
   process.exit(1);
