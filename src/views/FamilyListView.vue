@@ -1,17 +1,17 @@
 <template>
   <div class="space-y-6">
-    <div class="glass-card flex flex-wrap items-center justify-between gap-4 p-6">
-      <div>
-        <p class="text-sm text-slate-500">Families</p>
-        <h2 class="text-2xl font-semibold text-slate-900">My Families</h2>
-        <p class="mt-1 text-sm text-slate-600">
-          Manage your family groups and their shopping lists.
-        </p>
+    <BaseCard>
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p class="text-sm text-neutral-500 dark:text-neutral-400">Families</p>
+          <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">My Families</h2>
+          <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
+            Manage your family groups and their shopping lists.
+          </p>
+        </div>
+        <BaseButton @click="showCreateModal = true"> ➕ Create Family </BaseButton>
       </div>
-      <button class="btn-primary" type="button" @click="showCreateModal = true">
-        ➕ Create Family
-      </button>
-    </div>
+    </BaseCard>
 
     <LoadingState v-if="familyStore.loading" message="Loading families..." />
 
@@ -20,12 +20,15 @@
         v-for="family in familyStore.families"
         :key="family.id"
         :to="{ name: 'family-detail', params: { id: family.id } }"
-        class="glass-card p-5 transition hover:shadow-md"
       >
-        <h3 class="text-lg font-semibold text-slate-900">{{ family.name }}</h3>
-        <p class="mt-1 text-sm text-slate-500">
-          Created {{ new Date(family.created_at).toLocaleDateString() }}
-        </p>
+        <BaseCard hover>
+          <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+            {{ family.name }}
+          </h3>
+          <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+            Created {{ new Date(family.created_at).toLocaleDateString() }}
+          </p>
+        </BaseCard>
       </RouterLink>
     </div>
 
@@ -50,8 +53,8 @@
           />
         </div>
         <div class="flex gap-3">
-          <button class="btn-primary" type="submit" :disabled="familyStore.loading">Create</button>
-          <button class="btn-ghost" type="button" @click="showCreateModal = false">Cancel</button>
+          <BaseButton type="submit" :disabled="familyStore.loading">Create</BaseButton>
+          <BaseButton variant="ghost" @click="showCreateModal = false">Cancel</BaseButton>
         </div>
       </form>
     </ModalDialog>
@@ -61,6 +64,8 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
+import BaseButton from '@/components/shared/BaseButton.vue';
+import BaseCard from '@/components/shared/BaseCard.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import ModalDialog from '@/components/shared/ModalDialog.vue';

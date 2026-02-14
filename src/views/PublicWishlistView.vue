@@ -1,69 +1,99 @@
 <template>
-  <div class="mx-auto max-w-2xl space-y-6">
+  <div class="space-y-6">
     <div v-if="wishlistStore.currentWishlist" class="space-y-6">
-      <div class="glass-card p-6 text-center">
-        <p class="text-sm text-slate-500">Wishlist</p>
-        <h1 class="text-2xl font-semibold text-slate-900">
-          {{ wishlistStore.currentWishlist.title }}
-        </h1>
-        <p v-if="wishlistStore.currentWishlist.description" class="mt-1 text-sm text-slate-600">
-          {{ wishlistStore.currentWishlist.description }}
-        </p>
-      </div>
+      <BaseCard>
+        <div class="text-center">
+          <p class="text-sm text-neutral-500 dark:text-neutral-400">Public Wishlist</p>
+          <h1 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
+            {{ wishlistStore.currentWishlist.title }}
+          </h1>
+          <p
+            v-if="wishlistStore.currentWishlist.description"
+            class="mt-1 text-sm text-neutral-600 dark:text-neutral-400"
+          >
+            {{ wishlistStore.currentWishlist.description }}
+          </p>
+        </div>
+      </BaseCard>
 
-      <div v-if="wishlistStore.items.length" class="space-y-3">
-        <div v-for="item in wishlistStore.items" :key="item.id" class="glass-card p-5">
-          <div class="flex items-start justify-between gap-4">
-            <div class="flex-1">
-              <div class="flex items-center gap-2">
-                <h3 class="font-medium text-slate-800">{{ item.title }}</h3>
-                <span
-                  class="rounded-full px-2 py-0.5 text-xs"
-                  :class="priorityClass(item.priority)"
-                >
-                  {{ item.priority }}
-                </span>
-              </div>
-              <p v-if="item.description" class="mt-1 text-sm text-slate-500">
-                {{ item.description }}
-              </p>
-              <div class="mt-2 flex flex-wrap gap-3 text-sm text-slate-600">
-                <span v-if="item.price !== null">{{ item.price }} {{ item.currency }}</span>
-                <a
-                  v-if="safeUrl(item.link)"
-                  :href="safeUrl(item.link)"
-                  target="_blank"
-                  rel="noreferrer"
-                  class="text-brand-600 hover:underline"
-                >
-                  View link →
-                </a>
-              </div>
-              <img
-                v-if="item.image_url"
-                :src="item.image_url"
-                :alt="item.title"
-                class="mt-3 h-32 w-32 rounded-md object-cover"
+      <div
+        v-if="wishlistStore.items.length"
+        class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      >
+        <BaseCard v-for="item in wishlistStore.items" :key="item.id" :padding="false">
+          <div
+            class="aspect-square bg-neutral-100 dark:bg-neutral-700 rounded-t-card flex items-center justify-center overflow-hidden"
+          >
+            <img
+              v-if="item.image_url"
+              :src="item.image_url"
+              :alt="item.title"
+              class="w-full h-full object-cover"
+            />
+            <svg
+              v-else
+              class="w-16 h-16 text-neutral-400 dark:text-neutral-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
               />
+            </svg>
+          </div>
+          <div class="p-3 space-y-2">
+            <div class="flex items-start justify-between gap-2">
+              <h4 class="font-medium text-neutral-900 dark:text-neutral-50 line-clamp-2">
+                {{ item.title }}
+              </h4>
+              <BaseBadge :variant="priorityVariant(item.priority)">
+                {{ item.priority }}
+              </BaseBadge>
             </div>
-            <div>
-              <span
-                v-if="item.is_reserved"
-                class="rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-700"
+            <p
+              v-if="item.description"
+              class="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2"
+            >
+              {{ item.description }}
+            </p>
+            <p
+              v-if="item.price !== null"
+              class="text-sm font-medium text-neutral-900 dark:text-neutral-50"
+            >
+              {{ item.price }} {{ item.currency }}
+            </p>
+            <a
+              v-if="safeUrl(item.link)"
+              :href="safeUrl(item.link)"
+              target="_blank"
+              rel="noreferrer"
+              class="text-xs text-primary-600 dark:text-primary-400 hover:underline block"
+            >
+              View link →
+            </a>
+            <div v-if="item.is_reserved" class="pt-2 space-y-2">
+              <BaseBadge variant="warning" class="w-full text-center block">
+                Reserved{{ item.reserved_by_email ? ` by ${item.reserved_by_email}` : '' }}
+              </BaseBadge>
+              <BaseButton
+                class="w-full text-sm"
+                variant="tertiary"
+                @click="handleUnreserve(item.id)"
               >
-                Reserved ✓
-              </span>
-              <button
-                v-else
-                class="btn-primary text-sm"
-                type="button"
-                @click="startReserve(item.id)"
-              >
-                Reserve
-              </button>
+                Unreserve
+              </BaseButton>
+            </div>
+            <div v-else class="pt-2">
+              <BaseButton class="w-full text-sm" variant="secondary" @click="startReserve(item.id)">
+                Reserve This
+              </BaseButton>
             </div>
           </div>
-        </div>
+        </BaseCard>
       </div>
 
       <EmptyState
@@ -74,34 +104,42 @@
       />
     </div>
 
-    <div v-else-if="wishlistStore.error" class="glass-card p-6 text-center">
-      <h2 class="text-2xl font-semibold text-slate-900">Wishlist not found</h2>
-      <p class="mt-1 text-sm text-slate-600">This wishlist may not exist or is not public.</p>
-    </div>
+    <BaseCard v-else-if="wishlistStore.error">
+      <div class="text-center">
+        <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
+          Wishlist not found
+        </h2>
+        <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+          This wishlist may not exist or is not public.
+        </p>
+      </div>
+    </BaseCard>
 
     <LoadingState v-else message="Loading wishlist..." />
 
     <!-- Reserve Modal -->
     <ModalDialog :open="showReserveModal" title="Reserve Item" @close="showReserveModal = false">
       <div class="space-y-4">
-        <p class="text-sm text-slate-600">
-          Optionally enter your email so the wishlist owner knows who reserved this item.
+        <p class="text-sm text-neutral-600 dark:text-neutral-400">
+          Optionally enter your name so the wishlist owner knows who reserved this item.
         </p>
         <div>
-          <label class="label" for="reserve-email">Email (optional)</label>
+          <label class="label" for="reserve-email">Your Name (optional)</label>
           <input
             id="reserve-email"
             v-model="reserveEmail"
-            type="email"
+            type="text"
             class="input"
-            placeholder="your@email.com"
+            placeholder="Your name"
           />
         </div>
         <div class="flex gap-3">
-          <button class="btn-primary" type="button" @click="handleReserve">
+          <BaseButton variant="primary" type="button" @click="handleReserve">
             Confirm Reservation
-          </button>
-          <button class="btn-ghost" type="button" @click="showReserveModal = false">Cancel</button>
+          </BaseButton>
+          <BaseButton variant="ghost" type="button" @click="showReserveModal = false"
+            >Cancel</BaseButton
+          >
         </div>
       </div>
     </ModalDialog>
@@ -110,6 +148,9 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import BaseButton from '@/components/shared/BaseButton.vue';
+import BaseCard from '@/components/shared/BaseCard.vue';
+import BaseBadge from '@/components/shared/BaseBadge.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import ModalDialog from '@/components/shared/ModalDialog.vue';
@@ -126,14 +167,14 @@ const showReserveModal = ref(false);
 const reserveEmail = ref('');
 const reservingItemId = ref<string | null>(null);
 
-const priorityClass = (priority: ItemPriority) => {
+const priorityVariant = (priority: ItemPriority): 'danger' | 'warning' | 'neutral' => {
   switch (priority) {
     case 'high':
-      return 'bg-red-100 text-red-700';
+      return 'danger';
     case 'medium':
-      return 'bg-yellow-100 text-yellow-700';
+      return 'warning';
     case 'low':
-      return 'bg-slate-100 text-slate-600';
+      return 'neutral';
   }
 };
 
@@ -171,6 +212,13 @@ const handleReserve = async () => {
     showReserveModal.value = false;
     reservingItemId.value = null;
     reserveEmail.value = '';
+  }
+};
+
+const handleUnreserve = async (itemId: string) => {
+  const result = await wishlistStore.reserveItem(itemId);
+  if (result) {
+    toastStore.success('Item unreserved successfully!');
   }
 };
 </script>

@@ -1,212 +1,195 @@
 <template>
   <div v-if="wishlistStore.currentWishlist" class="space-y-6">
-    <div class="glass-card flex flex-wrap items-center justify-between gap-4 p-6">
-      <div>
-        <p class="text-sm text-slate-500">Wishlist</p>
-        <h2 class="text-2xl font-semibold text-slate-900">
-          {{ wishlistStore.currentWishlist.title }}
-        </h2>
-        <p v-if="wishlistStore.currentWishlist.description" class="mt-1 text-sm text-slate-600">
-          {{ wishlistStore.currentWishlist.description }}
-        </p>
+    <BaseCard>
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p class="text-sm text-neutral-500 dark:text-neutral-400">Wishlist</p>
+          <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
+            {{ wishlistStore.currentWishlist.title }}
+          </h2>
+          <p
+            v-if="wishlistStore.currentWishlist.description"
+            class="mt-1 text-sm text-neutral-600 dark:text-neutral-400"
+          >
+            {{ wishlistStore.currentWishlist.description }}
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <BaseButton
+            v-if="wishlistStore.currentWishlist.is_public"
+            variant="ghost"
+            @click="copyPublicLink"
+          >
+            📋 Copy Public Link
+          </BaseButton>
+          <BaseButton variant="ghost" @click="$router.push('/wishlists')">← Back</BaseButton>
+        </div>
       </div>
-      <div class="flex flex-wrap gap-2">
-        <button
-          v-if="wishlistStore.currentWishlist.is_public"
-          class="btn-ghost text-sm"
-          type="button"
-          @click="copyPublicLink"
-        >
-          📋 Copy Public Link
-        </button>
-        <RouterLink to="/wishlists" class="btn-ghost">← Back</RouterLink>
-      </div>
-    </div>
+    </BaseCard>
 
     <!-- Edit Wishlist Details -->
-    <div class="glass-card p-5">
-      <h3 class="text-lg font-semibold text-slate-900">Details</h3>
-      <form class="mt-4 space-y-3" @submit.prevent="handleUpdateWishlist">
-        <div>
-          <label class="label" for="edit-title">Title</label>
-          <input id="edit-title" v-model="editTitle" class="input" required />
-        </div>
-        <div>
-          <label class="label" for="edit-description">Description</label>
-          <input
-            id="edit-description"
-            v-model="editDescription"
-            class="input"
-            placeholder="Optional"
-          />
-        </div>
-        <label class="flex items-center gap-2 text-sm text-slate-700">
-          <input v-model="editIsPublic" type="checkbox" class="h-4 w-4" />
+    <BaseCard>
+      <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50 mb-4">Details</h3>
+      <form class="space-y-3" @submit.prevent="handleUpdateWishlist">
+        <BaseInput v-model="editTitle" label="Title" required />
+        <BaseInput v-model="editDescription" label="Description" placeholder="Optional" />
+        <label class="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
+          <input v-model="editIsPublic" type="checkbox" class="checkbox" />
           Public (shareable link)
         </label>
-        <button class="btn-primary" type="submit" :disabled="wishlistStore.loading">
+        <BaseButton variant="primary" type="submit" :disabled="wishlistStore.loading">
           Save Changes
-        </button>
+        </BaseButton>
       </form>
-    </div>
+    </BaseCard>
 
     <!-- Items List -->
-    <div class="glass-card p-5">
-      <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-slate-900">Items</h3>
-        <span class="text-sm text-slate-600">{{ wishlistStore.items.length }} items</span>
+    <BaseCard>
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50">Items</h3>
+        <span class="text-sm text-neutral-600 dark:text-neutral-400"
+          >{{ wishlistStore.items.length }} items</span
+        >
       </div>
 
-      <div v-if="wishlistStore.items.length" class="mt-3 space-y-3">
-        <div
-          v-for="item in wishlistStore.items"
-          :key="item.id"
-          class="flex items-start justify-between rounded-lg border border-slate-100 p-3"
-        >
-          <div class="flex-1">
-            <div class="flex items-center gap-2">
-              <p class="font-medium text-slate-800">{{ item.title }}</p>
-              <span class="rounded-full px-2 py-0.5 text-xs" :class="priorityClass(item.priority)">
-                {{ item.priority }}
-              </span>
-              <span
-                v-if="item.is_reserved"
-                class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700"
-              >
-                Reserved
-              </span>
-            </div>
-            <p v-if="item.description" class="mt-1 text-sm text-slate-500">
-              {{ item.description }}
-            </p>
-            <div class="mt-1 flex flex-wrap gap-3 text-xs text-slate-400">
-              <span v-if="item.price !== null">{{ item.price }} {{ item.currency }}</span>
-              <a
-                v-if="safeUrl(item.link)"
-                :href="safeUrl(item.link)"
-                target="_blank"
-                rel="noreferrer"
-                class="text-brand-600 hover:underline"
-              >
-                View link →
-              </a>
-            </div>
+      <div
+        v-if="wishlistStore.items.length"
+        class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      >
+        <BaseCard v-for="item in wishlistStore.items" :key="item.id" :padding="false">
+          <div
+            class="aspect-square bg-neutral-100 dark:bg-neutral-700 rounded-t-card flex items-center justify-center overflow-hidden"
+          >
             <img
               v-if="item.image_url"
               :src="item.image_url"
               :alt="item.title"
-              class="mt-2 h-20 w-20 rounded-md object-cover"
+              class="w-full h-full object-cover"
             />
-          </div>
-          <div class="flex gap-1">
-            <button type="button" class="btn-ghost text-sm" @click="startEditItem(item)">
-              Edit
-            </button>
-            <button
-              type="button"
-              class="btn-ghost text-sm text-red-600 hover:text-red-800"
-              @click="wishlistStore.removeItem(item.id)"
+            <svg
+              v-else
+              class="w-16 h-16 text-neutral-400 dark:text-neutral-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              Delete
-            </button>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
           </div>
-        </div>
+          <div class="p-3 space-y-2">
+            <div class="flex items-start justify-between gap-2">
+              <h4 class="font-medium text-neutral-900 dark:text-neutral-50 line-clamp-2">
+                {{ item.title }}
+              </h4>
+              <BaseBadge :variant="priorityVariant(item.priority)">
+                {{ item.priority }}
+              </BaseBadge>
+            </div>
+            <p
+              v-if="item.description"
+              class="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2"
+            >
+              {{ item.description }}
+            </p>
+            <div class="flex items-center gap-2">
+              <p
+                v-if="item.price !== null"
+                class="text-sm font-medium text-neutral-900 dark:text-neutral-50"
+              >
+                {{ item.price }} {{ item.currency }}
+              </p>
+              <BaseBadge v-if="item.is_reserved" variant="success"> Reserved </BaseBadge>
+            </div>
+            <a
+              v-if="safeUrl(item.link)"
+              :href="safeUrl(item.link)"
+              target="_blank"
+              rel="noreferrer"
+              class="text-xs text-primary-600 dark:text-primary-400 hover:underline block"
+            >
+              View link →
+            </a>
+            <div class="flex gap-2 pt-2">
+              <BaseButton class="flex-1 text-sm" variant="ghost" @click="startEditItem(item)">
+                Edit
+              </BaseButton>
+              <BaseButton
+                class="flex-1 text-sm"
+                variant="danger"
+                @click="wishlistStore.removeItem(item.id)"
+              >
+                Delete
+              </BaseButton>
+            </div>
+          </div>
+        </BaseCard>
       </div>
-      <p v-else class="mt-3 text-sm text-slate-500">No items yet. Add one below.</p>
-    </div>
+      <p v-else class="text-sm text-neutral-600 dark:text-neutral-400">
+        No items yet. Add one below.
+      </p>
+    </BaseCard>
 
     <!-- Add/Edit Item Form -->
-    <div class="glass-card p-5">
-      <h3 class="text-lg font-semibold text-slate-900">
-        {{ editingItemId ? 'Edit Item' : 'Add Item' }}
-      </h3>
-      <form class="mt-4 space-y-3" @submit.prevent="handleSaveItem">
-        <div class="grid gap-3 md:grid-cols-2">
-          <div>
-            <label class="label" for="item-title">Title</label>
-            <input
-              id="item-title"
-              v-model="itemForm.title"
-              class="input"
-              required
-              placeholder="Item name"
-            />
-          </div>
-          <div>
-            <label class="label" for="item-priority">Priority</label>
-            <select id="item-priority" v-model="itemForm.priority" class="input">
+    <BaseCard>
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
+          {{ editingItemId ? 'Edit Item' : 'Add Item' }}
+        </h3>
+        <BaseButton v-if="editingItemId" variant="ghost" type="button" @click="cancelEditItem">
+          Cancel
+        </BaseButton>
+      </div>
+      <form class="space-y-4" @submit.prevent="handleSaveItem">
+        <div class="grid gap-4 md:grid-cols-2">
+          <BaseInput v-model="itemForm.title" label="Title" required placeholder="Item name" />
+          <div class="space-y-1">
+            <label class="label">Priority</label>
+            <select v-model="itemForm.priority" class="input w-full">
               <option value="low">Low</option>
               <option value="medium">Medium</option>
               <option value="high">High</option>
             </select>
           </div>
         </div>
-        <div>
-          <label class="label" for="item-description">Description</label>
-          <input
-            id="item-description"
-            v-model="itemForm.description"
-            class="input"
-            placeholder="Optional"
+        <BaseInput v-model="itemForm.description" label="Description" placeholder="Optional" />
+        <div class="grid gap-4 md:grid-cols-2">
+          <BaseInput v-model="itemForm.link" label="Link" type="url" placeholder="https://..." />
+          <BaseInput
+            v-model="itemForm.image_url"
+            label="Image URL"
+            type="url"
+            placeholder="https://..."
           />
         </div>
-        <div class="grid gap-3 md:grid-cols-2">
-          <div>
-            <label class="label" for="item-link">Link</label>
-            <input
-              id="item-link"
-              v-model="itemForm.link"
-              type="url"
-              class="input"
-              placeholder="https://..."
-            />
-          </div>
-          <div>
-            <label class="label" for="item-image">Image URL</label>
-            <input
-              id="item-image"
-              v-model="itemForm.image_url"
-              type="url"
-              class="input"
-              placeholder="https://..."
-            />
-          </div>
+        <div class="grid gap-4 md:grid-cols-2">
+          <BaseInput
+            v-model.number="itemForm.price"
+            label="Price"
+            type="number"
+            placeholder="0.00"
+          />
+          <BaseInput v-model="itemForm.currency" label="Currency" placeholder="USD" />
         </div>
-        <div class="grid gap-3 md:grid-cols-2">
-          <div>
-            <label class="label" for="item-price">Price</label>
-            <input
-              id="item-price"
-              v-model.number="itemForm.price"
-              type="number"
-              min="0"
-              step="0.01"
-              class="input"
-              placeholder="0.00"
-            />
-          </div>
-          <div>
-            <label class="label" for="item-currency">Currency</label>
-            <input id="item-currency" v-model="itemForm.currency" class="input" placeholder="USD" />
-          </div>
-        </div>
-        <div class="flex gap-3">
-          <button class="btn-primary" type="submit">
-            {{ editingItemId ? 'Update Item' : 'Add Item' }}
-          </button>
-          <button v-if="editingItemId" class="btn-ghost" type="button" @click="cancelEditItem">
-            Cancel
-          </button>
-        </div>
+        <BaseButton variant="primary" type="submit">
+          {{ editingItemId ? 'Update Item' : 'Add Item' }}
+        </BaseButton>
       </form>
-    </div>
+    </BaseCard>
   </div>
   <LoadingState v-else message="Loading wishlist..." />
 </template>
 
 <script setup lang="ts">
 import { onMounted, reactive, ref, watch } from 'vue';
-import { RouterLink } from 'vue-router';
+import BaseButton from '@/components/shared/BaseButton.vue';
+import BaseCard from '@/components/shared/BaseCard.vue';
+import BaseBadge from '@/components/shared/BaseBadge.vue';
+import BaseInput from '@/components/shared/BaseInput.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import { useToastStore } from '@/stores/toast';
 import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
@@ -232,14 +215,14 @@ const itemForm = reactive({
   priority: 'medium' as ItemPriority,
 });
 
-const priorityClass = (priority: ItemPriority) => {
+const priorityVariant = (priority: ItemPriority): 'danger' | 'warning' | 'neutral' => {
   switch (priority) {
     case 'high':
-      return 'bg-red-100 text-red-700';
+      return 'danger';
     case 'medium':
-      return 'bg-yellow-100 text-yellow-700';
+      return 'warning';
     case 'low':
-      return 'bg-slate-100 text-slate-600';
+      return 'neutral';
   }
 };
 

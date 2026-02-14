@@ -1,64 +1,87 @@
 <template>
   <div v-if="shoppingStore.currentList" class="space-y-6">
-    <div class="glass-card flex flex-wrap items-center justify-between gap-4 p-6">
-      <div>
-        <p class="text-sm text-slate-500">Shopping List</p>
-        <h2 class="text-2xl font-semibold text-slate-900">{{ shoppingStore.currentList.title }}</h2>
-        <p v-if="shoppingStore.currentList.description" class="mt-1 text-sm text-slate-600">
-          {{ shoppingStore.currentList.description }}
-        </p>
-      </div>
-      <button class="btn-ghost" type="button" @click="router.back()">← Back</button>
-    </div>
+    <BaseCard>
+      <template #header>
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p class="text-sm text-neutral-500 dark:text-neutral-400">Shopping List</p>
+            <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
+              {{ shoppingStore.currentList.title }}
+            </h2>
+            <p
+              v-if="shoppingStore.currentList.description"
+              class="mt-1 text-sm text-neutral-600 dark:text-neutral-400"
+            >
+              {{ shoppingStore.currentList.description }}
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <BaseButton variant="primary" @click="showAddItemForm = true"> + Add Item </BaseButton>
+            <BaseButton variant="ghost" @click="router.back()">← Back</BaseButton>
+          </div>
+        </div>
+      </template>
+    </BaseCard>
 
     <!-- Filters -->
-    <div class="glass-card flex flex-wrap gap-3 p-4">
-      <label class="flex items-center gap-2 text-sm text-slate-700">
-        <input v-model="showPurchased" type="checkbox" class="h-4 w-4" />
-        Show purchased
-      </label>
-      <label class="flex items-center gap-2 text-sm text-slate-700">
-        <input v-model="showOnlyMine" type="checkbox" class="h-4 w-4" />
-        Show only mine
-      </label>
-    </div>
+    <BaseCard :padding="true">
+      <div class="flex flex-wrap gap-4">
+        <label class="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
+          <input v-model="showPurchased" type="checkbox" class="checkbox" />
+          Show purchased
+        </label>
+        <label class="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
+          <input v-model="showOnlyMine" type="checkbox" class="checkbox" />
+          Show only mine
+        </label>
+      </div>
+    </BaseCard>
 
     <!-- Items by Category -->
-    <div
+    <BaseCard
       v-for="(categoryItems, category) in filteredByCategory"
       :key="category"
-      class="glass-card p-5"
+      :padding="false"
     >
-      <h3 class="text-lg font-semibold text-slate-900">{{ category }}</h3>
-      <div class="mt-3 space-y-2">
-        <div v-for="item in categoryItems" :key="item.id" class="flex items-center gap-3">
+      <div class="border-b border-neutral-200 dark:border-neutral-700 px-4 py-3">
+        <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50">{{ category }}</h3>
+      </div>
+      <div class="divide-y divide-neutral-200 dark:divide-neutral-700">
+        <div
+          v-for="item in categoryItems"
+          :key="item.id"
+          class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors"
+        >
           <input
             :id="item.id"
             type="checkbox"
-            class="h-4 w-4"
+            class="checkbox"
             :checked="item.is_purchased"
             @change="handleTogglePurchased(item.id)"
           />
           <label
             :for="item.id"
-            class="flex-1 text-sm"
-            :class="item.is_purchased ? 'text-slate-400 line-through' : 'text-slate-800'"
+            class="flex-1 cursor-pointer text-sm"
+            :class="
+              item.is_purchased
+                ? 'text-neutral-400 dark:text-neutral-500 line-through'
+                : 'text-neutral-800 dark:text-neutral-200'
+            "
           >
             {{ item.title }}
-            <span v-if="item.quantity > 1" class="ml-1 text-xs text-slate-500"
-              >×{{ item.quantity }}</span
-            >
           </label>
+          <BaseBadge v-if="item.quantity > 1" variant="neutral">×{{ item.quantity }}</BaseBadge>
           <button
             type="button"
-            class="rounded-md px-2 text-slate-400 hover:text-red-500"
+            class="rounded-md px-2 py-1 text-neutral-400 hover:text-danger-500 dark:hover:text-danger-400 transition-colors"
+            aria-label="Remove item"
             @click="shoppingStore.removeItem(item.id)"
           >
             ✕
           </button>
         </div>
       </div>
-    </div>
+    </BaseCard>
 
     <EmptyState
       v-if="!shoppingStore.items.length"
@@ -68,25 +91,38 @@
     />
 
     <!-- Add Item Form -->
-    <div class="glass-card p-5">
-      <h3 class="text-lg font-semibold text-slate-900">Add Item</h3>
-      <form class="mt-4 grid gap-2 md:grid-cols-3" @submit.prevent="handleAddItem">
-        <input v-model="newItemTitle" class="input md:col-span-2" placeholder="Item name" />
-        <input
-          v-model.number="newItemQuantity"
+    <BaseCard v-if="showAddItemForm">
+      <template #header>
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50">Add Item</h3>
+          <button
+            type="button"
+            class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
+            @click="showAddItemForm = false"
+          >
+            ✕
+          </button>
+        </div>
+      </template>
+      <form class="grid gap-4 md:grid-cols-3" @submit.prevent="handleAddItem">
+        <BaseInput v-model="newItemTitle" placeholder="Item name" class="md:col-span-2" required />
+        <BaseInput
+          v-model="newItemQuantity"
           type="number"
-          min="1"
-          class="input"
           placeholder="Qty"
+          :model-value="newItemQuantity.toString()"
+          @update:model-value="(v) => (newItemQuantity = Number(v) || 1)"
         />
-        <input
+        <BaseInput
           v-model="newItemCategory"
-          class="input md:col-span-3"
           placeholder="Category (e.g. Produce, Dairy)"
+          class="md:col-span-3"
         />
-        <button class="btn-primary md:col-span-3" type="submit">Add item</button>
+        <BaseButton type="submit" variant="primary" class="md:col-span-3" full-width>
+          Add item
+        </BaseButton>
       </form>
-    </div>
+    </BaseCard>
   </div>
   <LoadingState v-else message="Loading shopping list..." />
 </template>
@@ -94,6 +130,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import BaseButton from '@/components/shared/BaseButton.vue';
+import BaseCard from '@/components/shared/BaseCard.vue';
+import BaseInput from '@/components/shared/BaseInput.vue';
+import BaseBadge from '@/components/shared/BaseBadge.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import { useAuthStore } from '@/stores/auth';
@@ -108,6 +148,7 @@ const shoppingStore = useShoppingStore();
 
 const showPurchased = ref(true);
 const showOnlyMine = ref(false);
+const showAddItemForm = ref(false);
 const newItemTitle = ref('');
 const newItemQuantity = ref(1);
 const newItemCategory = ref('');
@@ -154,5 +195,6 @@ const handleAddItem = async () => {
   newItemTitle.value = '';
   newItemQuantity.value = 1;
   newItemCategory.value = '';
+  showAddItemForm.value = false;
 };
 </script>

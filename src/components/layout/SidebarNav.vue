@@ -1,43 +1,51 @@
 <template>
   <aside
-    class="hidden w-72 shrink-0 border-r border-slate-200 bg-white/90 px-5 py-6 backdrop-blur lg:block"
+    class="hidden w-64 shrink-0 border-r border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 px-5 py-6 lg:block"
   >
-    <div class="mb-8 flex items-center justify-between">
-      <div>
-        <p class="text-xs uppercase tracking-wide text-brand-500">Family</p>
-        <h2 class="text-lg font-bold text-slate-900">Logistics</h2>
-      </div>
-      <span class="rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-700">
-        Private
-      </span>
+    <!-- Logo/Brand -->
+    <div class="mb-8">
+      <p class="text-xs uppercase tracking-wide text-primary-500 dark:text-primary-400">Family</p>
+      <h2 class="text-h2 text-neutral-900 dark:text-neutral-50">FamilyBoard</h2>
     </div>
 
-    <div class="mb-6 rounded-lg bg-slate-50 p-4 text-sm text-slate-700">
-      <p class="font-semibold text-slate-900">Welcome</p>
-      <p class="mt-1 break-words text-slate-600">{{ userEmail || 'Authenticated user' }}</p>
+    <!-- User Info -->
+    <div
+      class="mb-6 rounded-lg bg-white dark:bg-neutral-900 p-4 text-sm border border-neutral-200 dark:border-neutral-700"
+    >
+      <p class="font-semibold text-neutral-900 dark:text-neutral-50">Welcome</p>
+      <p class="mt-1 break-words text-neutral-600 dark:text-neutral-400">
+        {{ userEmail || 'Authenticated user' }}
+      </p>
     </div>
 
-    <nav class="space-y-1 text-sm font-medium text-slate-700">
+    <!-- Navigation -->
+    <nav class="space-y-1">
       <RouterLink
         v-for="item in items"
         :key="item.to"
         :to="item.to"
-        class="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors"
+        class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
         :class="
           route.name === item.name
-            ? 'bg-brand-50 text-brand-700 border border-brand-100'
-            : 'hover:bg-slate-100'
+            ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-400 border border-primary-200 dark:border-primary-800'
+            : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
         "
       >
-        <span class="text-lg">{{ item.emoji }}</span>
+        <span class="text-lg" aria-hidden="true">{{ item.emoji }}</span>
         <span>{{ item.label }}</span>
       </RouterLink>
     </nav>
+
+    <!-- Theme Toggle at Bottom -->
+    <div class="mt-8 pt-6 border-t border-neutral-200 dark:border-neutral-700">
+      <ThemeToggle />
+    </div>
   </aside>
 </template>
 
 <script setup lang="ts">
 import { RouterLink, useRoute } from 'vue-router';
+import ThemeToggle from '@/components/shared/ThemeToggle.vue';
 
 const props = defineProps<{
   userEmail?: string | null;
@@ -46,9 +54,11 @@ const props = defineProps<{
 const route = useRoute();
 
 const items = [
-  { name: 'dashboard', label: 'Dashboard', to: '/', emoji: '📌' },
-  { name: 'family-list', label: 'Families', to: '/families', emoji: '👨‍👩‍👧‍👦' },
+  { name: 'dashboard', label: 'Dashboard', to: '/', emoji: '📊' },
+  { name: 'family-list', label: 'Family', to: '/families', emoji: '👨‍👩‍👧‍👦' },
+  { name: 'shopping-list', label: 'Shopping Lists', to: '/families', emoji: '🛒' },
   { name: 'wishlist-list', label: 'Wishlists', to: '/wishlists', emoji: '🎁' },
+  { name: 'settings', label: 'Settings', to: '/settings', emoji: '⚙️' },
 ];
 
 const userEmail = props.userEmail;

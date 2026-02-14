@@ -1,23 +1,31 @@
 <template>
-  <div class="min-h-screen bg-slate-50 text-slate-900">
+  <div class="min-h-screen bg-white dark:bg-dark-bg text-neutral-900 dark:text-neutral-50">
     <div class="flex min-h-screen">
       <SidebarNav v-if="showShell" :user-email="authStore.user?.email" />
 
       <main class="flex-1">
         <header
           v-if="showShell"
-          class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white/90 px-6 py-4 backdrop-blur"
+          class="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-6 py-4 h-16"
         >
           <div>
-            <p class="text-sm text-slate-500">Family Shopping & Wishlist Planner</p>
-            <h1 class="text-xl font-semibold text-slate-900">Plan, shop, and share wishlists</h1>
+            <h1 class="text-h2 text-neutral-900 dark:text-neutral-50">
+              {{ pageTitle }}
+            </h1>
           </div>
           <div class="flex items-center gap-3">
-            <div class="text-right">
-              <p class="text-sm font-semibold text-slate-800">{{ authStore.user?.email }}</p>
-              <p class="text-xs text-slate-500">Signed in</p>
+            <ThemeToggle />
+            <div
+              class="flex items-center gap-3 border-l border-neutral-200 dark:border-neutral-700 pl-3"
+            >
+              <div class="text-right">
+                <p class="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+                  {{ authStore.user?.email }}
+                </p>
+                <p class="text-xs text-neutral-500 dark:text-neutral-400">Signed in</p>
+              </div>
+              <BaseButton variant="ghost" @click="logout">Logout</BaseButton>
             </div>
-            <button class="btn-ghost" type="button" @click="logout">Logout</button>
           </div>
         </header>
 
@@ -37,13 +45,35 @@ import { computed } from 'vue';
 import { RouterView, useRoute, useRouter } from 'vue-router';
 import SidebarNav from '@/components/layout/SidebarNav.vue';
 import ToastContainer from '@/components/shared/ToastContainer.vue';
+import ThemeToggle from '@/components/shared/ThemeToggle.vue';
+import BaseButton from '@/components/shared/BaseButton.vue';
 import { useAuthStore } from '@/stores/auth';
+import { useTheme } from '@/composables/useTheme';
 
 const authStore = useAuthStore();
 const route = useRoute();
 const router = useRouter();
+const { initTheme } = useTheme();
+
+// Initialize theme
+initTheme();
 
 const showShell = computed(() => Boolean(route.meta.requiresAuth));
+
+const pageTitle = computed(() => {
+  const routeName = route.name as string;
+  const titles: Record<string, string> = {
+    dashboard: 'Dashboard',
+    'family-list': 'Families',
+    'family-detail': 'Family Details',
+    'shopping-list': 'Shopping List',
+    'wishlist-list': 'Wishlists',
+    'wishlist-edit': 'My Wishlist',
+    'public-wishlist': 'Public Wishlist',
+    settings: 'Settings',
+  };
+  return titles[routeName] || 'Family Logistics';
+});
 
 const logout = async () => {
   await authStore.logout();

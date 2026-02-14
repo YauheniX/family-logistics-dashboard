@@ -1,92 +1,100 @@
 <template>
   <div v-if="familyStore.currentFamily" class="space-y-6">
-    <div class="glass-card flex flex-wrap items-center justify-between gap-4 p-6">
-      <div>
-        <p class="text-sm text-slate-500">Family</p>
-        <h2 class="text-2xl font-semibold text-slate-900">{{ familyStore.currentFamily.name }}</h2>
+    <BaseCard>
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p class="text-sm text-neutral-500 dark:text-neutral-400">Family</p>
+          <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+            {{ familyStore.currentFamily.name }}
+          </h2>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <BaseButton @click="showInviteModal = true"> ➕ Invite Member </BaseButton>
+          <RouterLink to="/families">
+            <BaseButton variant="ghost">← Back</BaseButton>
+          </RouterLink>
+        </div>
       </div>
-      <div class="flex flex-wrap gap-2">
-        <button class="btn-ghost" type="button" @click="showInviteModal = true">
-          Invite Member
-        </button>
-        <RouterLink to="/families" class="btn-ghost">← Back</RouterLink>
-      </div>
-    </div>
+    </BaseCard>
 
     <div class="grid gap-6 lg:grid-cols-2">
       <!-- Members -->
-      <div class="glass-card p-5">
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-slate-900">Members</h3>
-          <span class="text-sm text-slate-600">{{ familyStore.members.length }} members</span>
+      <BaseCard>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Members</h3>
+          <span class="text-sm text-neutral-600 dark:text-neutral-300"
+            >{{ familyStore.members.length }} members</span
+          >
         </div>
-        <ul class="mt-3 space-y-2">
+        <ul class="space-y-3">
           <li
             v-for="member in familyStore.members"
             :key="member.id"
-            class="flex items-center justify-between text-sm"
+            class="flex items-center gap-3 p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800"
           >
-            <div>
-              <p class="font-medium text-slate-800">
+            <div
+              class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
+              :style="{
+                backgroundColor: getAvatarColor(
+                  member.display_name || member.email || member.user_id,
+                ),
+              }"
+            >
+              {{ getInitials(member.display_name || member.email || member.user_id) }}
+            </div>
+            <div class="flex-1">
+              <p class="font-medium text-neutral-800 dark:text-neutral-200">
                 {{ member.display_name || member.email || member.user_id }}
               </p>
-              <span
-                class="rounded-full px-2 py-0.5 text-xs"
-                :class="
-                  member.role === 'owner'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-slate-100 text-slate-600'
-                "
-              >
+              <BaseBadge :variant="member.role === 'owner' ? 'primary' : 'neutral'">
                 {{ member.role }}
-              </span>
+              </BaseBadge>
             </div>
-            <button
+            <BaseButton
               v-if="member.role !== 'owner'"
-              type="button"
-              class="btn-ghost text-sm text-red-600 hover:text-red-800"
+              variant="danger"
               @click="familyStore.removeMember(member.id)"
             >
               Remove
-            </button>
+            </BaseButton>
           </li>
-          <p v-if="!familyStore.members.length" class="text-sm text-slate-500">No members yet.</p>
+          <p
+            v-if="!familyStore.members.length"
+            class="text-sm text-neutral-500 dark:text-neutral-400"
+          >
+            No members yet.
+          </p>
         </ul>
-      </div>
+      </BaseCard>
 
       <!-- Shopping Lists -->
-      <div class="glass-card p-5">
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-slate-900">Shopping Lists</h3>
-          <button class="btn-ghost text-sm" type="button" @click="showCreateListModal = true">
-            + New List
-          </button>
+      <BaseCard>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+            Shopping Lists
+          </h3>
+          <BaseButton variant="ghost" @click="showCreateListModal = true"> + New List </BaseButton>
         </div>
-        <div v-if="shoppingStore.lists.length" class="mt-3 space-y-2">
+        <div v-if="shoppingStore.lists.length" class="space-y-2">
           <RouterLink
             v-for="list in shoppingStore.lists"
             :key="list.id"
             :to="{ name: 'shopping-list', params: { listId: list.id } }"
-            class="flex items-center justify-between rounded-lg border border-slate-100 p-3 text-sm hover:bg-slate-50"
+            class="flex items-center justify-between rounded-lg border border-neutral-200 dark:border-neutral-700 p-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
           >
             <div>
-              <p class="font-medium text-slate-800">{{ list.title }}</p>
-              <p v-if="list.description" class="text-xs text-slate-500">{{ list.description }}</p>
+              <p class="font-medium text-neutral-800 dark:text-neutral-200">{{ list.title }}</p>
+              <p v-if="list.description" class="text-xs text-neutral-500 dark:text-neutral-400">
+                {{ list.description }}
+              </p>
             </div>
-            <span
-              class="rounded-full px-2 py-0.5 text-xs"
-              :class="
-                list.status === 'active'
-                  ? 'bg-emerald-100 text-emerald-700'
-                  : 'bg-slate-100 text-slate-600'
-              "
-            >
+            <BaseBadge :variant="list.status === 'active' ? 'success' : 'neutral'">
               {{ list.status }}
-            </span>
+            </BaseBadge>
           </RouterLink>
         </div>
-        <p v-else class="mt-3 text-sm text-slate-500">No shopping lists yet.</p>
-      </div>
+        <p v-else class="text-sm text-neutral-500 dark:text-neutral-400">No shopping lists yet.</p>
+      </BaseCard>
     </div>
 
     <!-- Invite Member Modal -->
@@ -104,8 +112,8 @@
           />
         </div>
         <div class="flex gap-3">
-          <button class="btn-primary" type="submit">Invite</button>
-          <button class="btn-ghost" type="button" @click="showInviteModal = false">Cancel</button>
+          <BaseButton type="submit">Invite</BaseButton>
+          <BaseButton variant="ghost" @click="showInviteModal = false">Cancel</BaseButton>
         </div>
       </form>
     </ModalDialog>
@@ -137,12 +145,8 @@
           />
         </div>
         <div class="flex gap-3">
-          <button class="btn-primary" type="submit" :disabled="shoppingStore.loading">
-            Create
-          </button>
-          <button class="btn-ghost" type="button" @click="showCreateListModal = false">
-            Cancel
-          </button>
+          <BaseButton type="submit" :disabled="shoppingStore.loading"> Create </BaseButton>
+          <BaseButton variant="ghost" @click="showCreateListModal = false"> Cancel </BaseButton>
         </div>
       </form>
     </ModalDialog>
@@ -153,6 +157,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
+import BaseButton from '@/components/shared/BaseButton.vue';
+import BaseCard from '@/components/shared/BaseCard.vue';
+import BaseBadge from '@/components/shared/BaseBadge.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import ModalDialog from '@/components/shared/ModalDialog.vue';
 import { useAuthStore } from '@/stores/auth';
@@ -170,6 +177,29 @@ const showCreateListModal = ref(false);
 const inviteEmail = ref('');
 const newListTitle = ref('');
 const newListDescription = ref('');
+
+const getInitials = (name: string): string => {
+  const parts = name.trim().split(/[\s@]+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+};
+
+const getAvatarColor = (name: string): string => {
+  const colors = [
+    '#3B82F6', // blue
+    '#8B5CF6', // purple
+    '#EC4899', // pink
+    '#10B981', // green
+    '#F59E0B', // amber
+    '#EF4444', // red
+    '#06B6D4', // cyan
+    '#6366F1', // indigo
+  ];
+  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return colors[hash % colors.length];
+};
 
 onMounted(async () => {
   await familyStore.loadFamily(props.id);

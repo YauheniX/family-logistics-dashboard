@@ -1,113 +1,134 @@
 <template>
   <div class="space-y-6">
-    <div class="glass-card flex flex-wrap items-center justify-between gap-4 p-6">
-      <div>
-        <p class="text-sm text-slate-500">Dashboard</p>
-        <h2 class="text-2xl font-semibold text-slate-900">Family Shopping & Wishlists</h2>
-        <p class="mt-1 text-sm text-slate-600">
+    <BaseCard>
+      <div class="p-6">
+        <h2 class="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+          Good morning, {{ userName }}!
+        </h2>
+        <p class="mt-2 text-neutral-600 dark:text-neutral-400">
           Manage your families, shopping lists, and wishlists in one place.
         </p>
       </div>
-    </div>
+    </BaseCard>
 
     <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-      <div class="glass-card p-4">
-        <p class="text-sm text-slate-500">Active Lists</p>
-        <p class="text-2xl font-bold text-slate-900">{{ activeListCount }}</p>
-      </div>
-      <div class="glass-card p-4">
-        <p class="text-sm text-slate-500">Items to Buy</p>
-        <p class="text-2xl font-bold text-slate-900">{{ itemsToBuyCount }}</p>
-      </div>
-      <div class="glass-card p-4">
-        <p class="text-sm text-slate-500">Reserved Wishlist Items</p>
-        <p class="text-2xl font-bold text-slate-900">{{ reservedItemsCount }}</p>
-      </div>
+      <BaseCard>
+        <div class="p-5">
+          <p class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Active Lists</p>
+          <p class="mt-2 text-4xl font-bold text-primary-600 dark:text-primary-400">
+            {{ activeListCount }}
+          </p>
+        </div>
+      </BaseCard>
+      <BaseCard>
+        <div class="p-5">
+          <p class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Items to Buy</p>
+          <p class="mt-2 text-4xl font-bold text-primary-600 dark:text-primary-400">
+            {{ itemsToBuyCount }}
+          </p>
+        </div>
+      </BaseCard>
+      <BaseCard>
+        <div class="p-5">
+          <p class="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+            Reserved Wishlist Items
+          </p>
+          <p class="mt-2 text-4xl font-bold text-primary-600 dark:text-primary-400">
+            {{ reservedItemsCount }}
+          </p>
+        </div>
+      </BaseCard>
     </div>
 
     <LoadingState v-if="familyStore.loading" message="Loading your data..." />
 
     <template v-else>
       <!-- My Families -->
-      <div class="glass-card p-5">
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-slate-900">My Families</h3>
-          <RouterLink to="/families" class="btn-ghost text-sm">View All</RouterLink>
+      <BaseCard :padding="false">
+        <div class="p-5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+              My Families
+            </h3>
+            <RouterLink to="/families" class="btn-ghost text-sm">View All</RouterLink>
+          </div>
+          <div v-if="familyStore.families.length" class="mt-3 space-y-2">
+            <RouterLink
+              v-for="family in familyStore.families"
+              :key="family.id"
+              :to="{ name: 'family-detail', params: { id: family.id } }"
+              class="flex items-center justify-between rounded-lg border border-neutral-200 dark:border-neutral-700 p-3 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+            >
+              <p class="font-medium text-neutral-800 dark:text-neutral-200">{{ family.name }}</p>
+              <span class="text-xs text-neutral-500 dark:text-neutral-400">View →</span>
+            </RouterLink>
+          </div>
+          <p v-else class="mt-3 text-sm text-neutral-500 dark:text-neutral-400">No families yet.</p>
         </div>
-        <div v-if="familyStore.families.length" class="mt-3 space-y-2">
-          <RouterLink
-            v-for="family in familyStore.families"
-            :key="family.id"
-            :to="{ name: 'family-detail', params: { id: family.id } }"
-            class="flex items-center justify-between rounded-lg border border-slate-100 p-3 text-sm hover:bg-slate-50"
-          >
-            <p class="font-medium text-slate-800">{{ family.name }}</p>
-            <span class="text-xs text-slate-500">View →</span>
-          </RouterLink>
-        </div>
-        <p v-else class="mt-3 text-sm text-slate-500">No families yet.</p>
-      </div>
+      </BaseCard>
 
       <!-- Active Shopping Lists -->
-      <div class="glass-card p-5">
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-slate-900">Active Shopping Lists</h3>
-          <span class="text-sm text-slate-600"
-            >{{ activeListCount }} lists · {{ itemsToBuyCount }} items to buy</span
-          >
-        </div>
-        <div v-if="allActiveLists.length" class="mt-3 space-y-2">
-          <RouterLink
-            v-for="list in allActiveLists"
-            :key="list.id"
-            :to="{ name: 'shopping-list', params: { listId: list.id } }"
-            class="flex items-center justify-between rounded-lg border border-slate-100 p-3 text-sm hover:bg-slate-50"
-          >
-            <div>
-              <p class="font-medium text-slate-800">{{ list.title }}</p>
-              <p v-if="list.description" class="text-xs text-slate-500">{{ list.description }}</p>
-            </div>
-            <span
-              class="rounded-full px-2 py-0.5 text-xs"
-              :class="
-                list.status === 'active'
-                  ? 'bg-emerald-100 text-emerald-700'
-                  : 'bg-slate-100 text-slate-600'
-              "
+      <BaseCard :padding="false">
+        <div class="p-5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+              Active Shopping Lists
+            </h3>
+            <span class="text-sm text-neutral-600 dark:text-neutral-400"
+              >{{ activeListCount }} lists · {{ itemsToBuyCount }} items to buy</span
             >
-              {{ list.status }}
-            </span>
-          </RouterLink>
+          </div>
+          <div v-if="allActiveLists.length" class="mt-3 space-y-2">
+            <RouterLink
+              v-for="list in allActiveLists"
+              :key="list.id"
+              :to="{ name: 'shopping-list', params: { listId: list.id } }"
+              class="flex items-center justify-between rounded-lg border border-neutral-200 dark:border-neutral-700 p-3 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+            >
+              <div>
+                <p class="font-medium text-neutral-800 dark:text-neutral-200">{{ list.title }}</p>
+                <p v-if="list.description" class="text-xs text-neutral-500 dark:text-neutral-400">
+                  {{ list.description }}
+                </p>
+              </div>
+              <BaseBadge :variant="list.status === 'active' ? 'success' : 'neutral'">
+                {{ list.status }}
+              </BaseBadge>
+            </RouterLink>
+          </div>
+          <p v-else class="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
+            No active shopping lists.
+          </p>
         </div>
-        <p v-else class="mt-3 text-sm text-slate-500">No active shopping lists.</p>
-      </div>
+      </BaseCard>
 
       <!-- My Wishlists -->
-      <div class="glass-card p-5">
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-slate-900">My Wishlists</h3>
-          <RouterLink to="/wishlists" class="btn-ghost text-sm">View All</RouterLink>
-        </div>
-        <div v-if="wishlistStore.wishlists.length" class="mt-3 space-y-2">
-          <RouterLink
-            v-for="wishlist in wishlistStore.wishlists"
-            :key="wishlist.id"
-            :to="{ name: 'wishlist-edit', params: { id: wishlist.id } }"
-            class="flex items-center justify-between rounded-lg border border-slate-100 p-3 text-sm hover:bg-slate-50"
-          >
-            <p class="font-medium text-slate-800">{{ wishlist.title }}</p>
-            <span
-              class="rounded-full px-2 py-0.5 text-xs"
-              :class="
-                wishlist.is_public ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
-              "
+      <BaseCard :padding="false">
+        <div class="p-5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+              My Wishlists
+            </h3>
+            <RouterLink to="/wishlists" class="btn-ghost text-sm">View All</RouterLink>
+          </div>
+          <div v-if="wishlistStore.wishlists.length" class="mt-3 space-y-2">
+            <RouterLink
+              v-for="wishlist in wishlistStore.wishlists"
+              :key="wishlist.id"
+              :to="{ name: 'wishlist-edit', params: { id: wishlist.id } }"
+              class="flex items-center justify-between rounded-lg border border-neutral-200 dark:border-neutral-700 p-3 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
             >
-              {{ wishlist.is_public ? 'Public' : 'Private' }}
-            </span>
-          </RouterLink>
+              <p class="font-medium text-neutral-800 dark:text-neutral-200">{{ wishlist.title }}</p>
+              <BaseBadge :variant="wishlist.is_public ? 'primary' : 'neutral'">
+                {{ wishlist.is_public ? 'Public' : 'Private' }}
+              </BaseBadge>
+            </RouterLink>
+          </div>
+          <p v-else class="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
+            No wishlists yet.
+          </p>
         </div>
-        <p v-else class="mt-3 text-sm text-slate-500">No wishlists yet.</p>
-      </div>
+      </BaseCard>
     </template>
 
     <EmptyState
@@ -123,6 +144,8 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
+import BaseCard from '@/components/shared/BaseCard.vue';
+import BaseBadge from '@/components/shared/BaseBadge.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import { useAuthStore } from '@/stores/auth';
@@ -135,6 +158,11 @@ const familyStore = useFamilyStore();
 const shoppingStore = useShoppingStore();
 const wishlistStore = useWishlistStore();
 const router = useRouter();
+
+const userName = computed(() => {
+  const email = authStore.user?.email;
+  return email ? email.split('@')[0] : 'there';
+});
 
 const allActiveLists = computed(() => shoppingStore.lists.filter((l) => l.status === 'active'));
 
