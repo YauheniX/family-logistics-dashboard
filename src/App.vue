@@ -29,7 +29,13 @@
             </h1>
           </div>
           <div class="flex items-center gap-2 md:gap-3">
-            <BaseButton variant="ghost" @click="reportModalOpen = true">Report a problem</BaseButton>
+            <BaseButton
+              variant="ghost"
+              aria-label="Report a problem"
+              @click="reportModalOpen = true"
+            >
+              Report a problem
+            </BaseButton>
             <div class="hidden sm:block">
               <ThemeToggle />
             </div>
