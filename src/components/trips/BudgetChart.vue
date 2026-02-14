@@ -28,7 +28,12 @@
             class="flex items-center justify-between text-sm"
           >
             <span class="text-slate-600">{{ cat.category }}</span>
-            <span class="font-semibold text-slate-900">{{ cat.spent.toFixed(2) }}</span>
+            <span class="font-semibold text-slate-900">
+              {{ cat.spent.toFixed(2) }}
+              <span v-if="cat.planned > 0" class="text-xs font-normal text-slate-500">
+                / {{ cat.planned.toFixed(2) }}
+              </span>
+            </span>
           </div>
         </div>
       </div>
@@ -60,7 +65,7 @@ const chartData = computed(() => ({
   labels: props.categories.map((c) => c.category),
   datasets: [
     {
-      data: props.categories.map((c) => c.spent),
+      data: props.categories.map((c) => c.spent + c.planned),
       backgroundColor: props.categories.map((_, i) => COLORS[i % COLORS.length]),
       borderWidth: 0,
     },
