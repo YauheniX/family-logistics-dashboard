@@ -102,6 +102,16 @@ AS $$
   SELECT id FROM auth.users WHERE email = lookup_email LIMIT 1;
 $$;
 
+-- Function to look up a user email by id (used for displaying trip member emails).
+CREATE OR REPLACE FUNCTION public.get_email_by_user_id(lookup_user_id uuid)
+RETURNS text
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+AS $$
+  SELECT email FROM auth.users WHERE id = lookup_user_id LIMIT 1;
+$$;
+
 -- Storage bucket for documents (policies live in rls.sql)
 do $$
 begin

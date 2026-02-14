@@ -9,7 +9,24 @@ export async function fetchTripMembers(tripId: string): Promise<TripMember[]> {
     .order('created_at');
 
   if (error) throw error;
-  return data ?? [];
+
+  const members = data ?? [];
+
+  // Resolve emails for each member via RPC
+  const resolved = await Promise.all(
+    members.map(async (m) => {
+      try {
+        const { data: email } = await supabase.rpc('get_email_by_user_id', {
+          lookup_user_id: m.user_id,
+        });
+        return { ...m, email: email ?? undefined };
+      } catch {
+        return m;
+      }
+    }),
+  );
+
+  return resolved;
 }
 
 export async function inviteMemberByEmail(
@@ -17,27 +34,6 @@ export async function inviteMemberByEmail(
   email: string,
   role: TripMemberRole = 'viewer',
 ): Promise<TripMember | null> {
-  // Look up the user by email via Supabase auth admin or a profiles lookup.
-  // Since we don't have admin access from the client, we query the trip_members
-  // table after inserting via an RPC or look up the user id via a public profiles
-  // table. For simplicity, we use Supabase's auth API to find the user.
-  //
-  // Approach: We'll use a Supabase RPC or direct query. Since the anon key
-  // doesn't have access to auth.users, we look up users by querying existing
-  // trip_members or use the approach of searching with a filter.
-  //
-  // Best practice: Use a Supabase Edge Function or a lookup table. For now,
-  // we query the auth.users via the supabase client if the user has the right
-  // permissions, or we simply try to insert and let it fail gracefully.
-  //
-  // Practical approach: Look up user by email using the Supabase admin API
-  // is not available on the client side. Instead, we'll use a simple RPC.
-  // If no RPC is available, we need a profiles table or an alternative.
-  //
-  // Simplest approach that works: We'll try to find the user via a Supabase
-  // function. If not available, we can store the email and resolve later.
-  // For now, let's use a direct lookup approach with a database function.
-
   const { data: userData, error: userError } = await supabase
     .rpc('get_user_id_by_email', { lookup_email: email });
 

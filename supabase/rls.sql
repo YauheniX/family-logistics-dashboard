@@ -45,7 +45,7 @@ AS $$
   )
   OR EXISTS (
     SELECT 1 FROM public.trip_members tm
-    WHERE tm.trip_id = p_trip_id AND tm.user_id = p_user_id AND tm.role IN ('owner', 'editor')
+    WHERE tm.trip_id = p_trip_id AND tm.user_id = p_user_id AND tm.role = 'editor'
   );
 $$;
 
