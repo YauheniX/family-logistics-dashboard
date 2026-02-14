@@ -123,47 +123,54 @@ Visit `http://localhost:5173` — uses localStorage, no Supabase needed.
 
 ### Option B: Full-Stack Mode (Supabase Backend)
 
-#### Prerequisites
+See the **[🔧 Supabase Setup](#-supabase-setup)** section below for detailed instructions.
 
-- Node.js 18+
-- [Supabase account](https://supabase.com) (free tier)
-- Google Cloud Console account (for OAuth)
+---
 
-#### Setup
+## 🔧 Supabase Setup
 
-```bash
-git clone https://github.com/YauheniX/family-logistics-dashboard.git
-cd family-logistics-dashboard
-npm install
-cp env.example .env
-# Edit .env with your Supabase credentials
-```
+> **Complete guide**: [docs/SUPABASE_PRODUCTION_SETUP.md](docs/SUPABASE_PRODUCTION_SETUP.md)
 
-#### Supabase Configuration
+### Quick Setup (3 steps)
 
-1. **Create a project** at [supabase.com](https://supabase.com)
-2. **Set environment variables** (from Project Settings → API):
+1. **Run the interactive setup script**:
    ```bash
-   VITE_SUPABASE_URL=https://your-project-ref.supabase.co
-   VITE_SUPABASE_ANON_KEY=your-anon-key
-   VITE_USE_MOCK_BACKEND=false
+   npm run supabase:init
    ```
-3. **Run SQL scripts** in Supabase SQL Editor:
-   - `supabase/schema.sql` — Creates tables and functions
-   - `supabase/rls.sql` — Sets up RLS policies
-4. **Create storage bucket** named `wishlist-images` (public read)
-5. **Enable Auth providers**: Email + Google OAuth
+   This will prompt you for your Supabase URL and anon key, then create a `.env` file.
 
-#### Google OAuth Setup
+2. **Run database migrations** in [Supabase SQL Editor](https://supabase.com/dashboard):
+   - Execute `supabase/schema.sql` (creates tables)
+   - Execute `supabase/rls.sql` (enables security)
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials
-2. Create OAuth 2.0 Client ID (Web application)
-3. Add redirect URI: `https://<your-project-ref>.supabase.co/auth/v1/callback`
-4. Copy Client ID and Secret to Supabase Authentication → Providers → Google
+3. **Create storage bucket** in [Supabase Storage](https://supabase.com/dashboard):
+   - Name: `wishlist-images`
+   - Public: ✅ Yes
+
+### Verify Your Setup
 
 ```bash
-npm run dev
+npm run supabase:verify
 ```
+
+This checks:
+- ✅ Environment variables are set
+- ✅ Connection to Supabase works
+- ✅ All tables exist
+- ✅ Storage bucket exists
+- ✅ RLS policies enabled
+
+### Get Supabase Credentials
+
+1. Create a project at [supabase.com](https://supabase.com)
+2. Go to **Project Settings** → **API**
+3. Copy:
+   - **Project URL** (`VITE_SUPABASE_URL`)
+   - **anon/public key** (`VITE_SUPABASE_ANON_KEY`)
+
+### Optional: Google OAuth
+
+See [docs/SUPABASE_PRODUCTION_SETUP.md#configure-google-oauth](docs/SUPABASE_PRODUCTION_SETUP.md#configure-google-oauth) for Google sign-in setup.
 
 ---
 
