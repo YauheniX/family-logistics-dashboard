@@ -7,6 +7,7 @@ import vue from '@vitejs/plugin-vue';
 export default defineConfig(() => {
   return {
     plugins: [vue()],
+    publicDir: 'public',
     base: process.env.VITE_BASE_PATH || '/',
     define: {
       __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? '0.0.0'),
