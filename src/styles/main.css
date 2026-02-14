@@ -5,12 +5,12 @@
 @tailwind utilities;
 
 :root {
-  color: #1A202C;
-  background-color: #FFFFFF;
+  color: #1a202c;
+  background-color: #ffffff;
 }
 
 .dark {
-  color: #F7FAFC;
+  color: #f7fafc;
   background-color: #121212;
 }
 
@@ -25,12 +25,12 @@ body {
     BlinkMacSystemFont,
     'Segoe UI',
     sans-serif;
-  color: #1A202C;
-  background: #FFFFFF;
+  color: #1a202c;
+  background: #ffffff;
 }
 
 .dark body {
-  color: #F7FAFC;
+  color: #f7fafc;
   background: #121212;
 }
 

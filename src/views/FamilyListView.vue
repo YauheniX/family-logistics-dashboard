@@ -9,9 +9,7 @@
             Manage your family groups and their shopping lists.
           </p>
         </div>
-        <BaseButton @click="showCreateModal = true">
-          ➕ Create Family
-        </BaseButton>
+        <BaseButton @click="showCreateModal = true"> ➕ Create Family </BaseButton>
       </div>
     </BaseCard>
 
@@ -24,7 +22,9 @@
         :to="{ name: 'family-detail', params: { id: family.id } }"
       >
         <BaseCard hover>
-          <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{{ family.name }}</h3>
+          <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+            {{ family.name }}
+          </h3>
           <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
             Created {{ new Date(family.created_at).toLocaleDateString() }}
           </p>

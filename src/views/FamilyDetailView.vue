@@ -4,12 +4,12 @@
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p class="text-sm text-neutral-500 dark:text-neutral-400">Family</p>
-          <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">{{ familyStore.currentFamily.name }}</h2>
+          <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+            {{ familyStore.currentFamily.name }}
+          </h2>
         </div>
         <div class="flex flex-wrap gap-2">
-          <BaseButton @click="showInviteModal = true">
-            ➕ Invite Member
-          </BaseButton>
+          <BaseButton @click="showInviteModal = true"> ➕ Invite Member </BaseButton>
           <RouterLink to="/families">
             <BaseButton variant="ghost">← Back</BaseButton>
           </RouterLink>
@@ -22,7 +22,9 @@
       <BaseCard>
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Members</h3>
-          <span class="text-sm text-neutral-600 dark:text-neutral-300">{{ familyStore.members.length }} members</span>
+          <span class="text-sm text-neutral-600 dark:text-neutral-300"
+            >{{ familyStore.members.length }} members</span
+          >
         </div>
         <ul class="space-y-3">
           <li
@@ -30,9 +32,13 @@
             :key="member.id"
             class="flex items-center gap-3 p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800"
           >
-            <div 
+            <div
               class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
-              :style="{ backgroundColor: getAvatarColor(member.display_name || member.email || member.user_id) }"
+              :style="{
+                backgroundColor: getAvatarColor(
+                  member.display_name || member.email || member.user_id,
+                ),
+              }"
             >
               {{ getInitials(member.display_name || member.email || member.user_id) }}
             </div>
@@ -52,17 +58,22 @@
               Remove
             </BaseButton>
           </li>
-          <p v-if="!familyStore.members.length" class="text-sm text-neutral-500 dark:text-neutral-400">No members yet.</p>
+          <p
+            v-if="!familyStore.members.length"
+            class="text-sm text-neutral-500 dark:text-neutral-400"
+          >
+            No members yet.
+          </p>
         </ul>
       </BaseCard>
 
       <!-- Shopping Lists -->
       <BaseCard>
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Shopping Lists</h3>
-          <BaseButton variant="ghost" @click="showCreateListModal = true">
-            + New List
-          </BaseButton>
+          <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+            Shopping Lists
+          </h3>
+          <BaseButton variant="ghost" @click="showCreateListModal = true"> + New List </BaseButton>
         </div>
         <div v-if="shoppingStore.lists.length" class="space-y-2">
           <RouterLink
@@ -73,7 +84,9 @@
           >
             <div>
               <p class="font-medium text-neutral-800 dark:text-neutral-200">{{ list.title }}</p>
-              <p v-if="list.description" class="text-xs text-neutral-500 dark:text-neutral-400">{{ list.description }}</p>
+              <p v-if="list.description" class="text-xs text-neutral-500 dark:text-neutral-400">
+                {{ list.description }}
+              </p>
             </div>
             <BaseBadge :variant="list.status === 'active' ? 'success' : 'neutral'">
               {{ list.status }}
@@ -132,12 +145,8 @@
           />
         </div>
         <div class="flex gap-3">
-          <BaseButton type="submit" :disabled="shoppingStore.loading">
-            Create
-          </BaseButton>
-          <BaseButton variant="ghost" @click="showCreateListModal = false">
-            Cancel
-          </BaseButton>
+          <BaseButton type="submit" :disabled="shoppingStore.loading"> Create </BaseButton>
+          <BaseButton variant="ghost" @click="showCreateListModal = false"> Cancel </BaseButton>
         </div>
       </form>
     </ModalDialog>

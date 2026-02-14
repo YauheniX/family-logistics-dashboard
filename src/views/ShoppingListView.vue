@@ -16,9 +16,7 @@
             </p>
           </div>
           <div class="flex items-center gap-2">
-            <BaseButton variant="primary" @click="showAddItemForm = true">
-              + Add Item
-            </BaseButton>
+            <BaseButton variant="primary" @click="showAddItemForm = true"> + Add Item </BaseButton>
             <BaseButton variant="ghost" @click="router.back()">← Back</BaseButton>
           </div>
         </div>
@@ -107,12 +105,7 @@
         </div>
       </template>
       <form class="grid gap-4 md:grid-cols-3" @submit.prevent="handleAddItem">
-        <BaseInput
-          v-model="newItemTitle"
-          placeholder="Item name"
-          class="md:col-span-2"
-          required
-        />
+        <BaseInput v-model="newItemTitle" placeholder="Item name" class="md:col-span-2" required />
         <BaseInput
           v-model="newItemQuantity"
           type="number"

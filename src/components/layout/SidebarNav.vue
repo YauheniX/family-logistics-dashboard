@@ -9,7 +9,9 @@
     </div>
 
     <!-- User Info -->
-    <div class="mb-6 rounded-lg bg-white dark:bg-neutral-900 p-4 text-sm border border-neutral-200 dark:border-neutral-700">
+    <div
+      class="mb-6 rounded-lg bg-white dark:bg-neutral-900 p-4 text-sm border border-neutral-200 dark:border-neutral-700"
+    >
       <p class="font-semibold text-neutral-900 dark:text-neutral-50">Welcome</p>
       <p class="mt-1 break-words text-neutral-600 dark:text-neutral-400">
         {{ userEmail || 'Authenticated user' }}

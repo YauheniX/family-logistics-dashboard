@@ -1,10 +1,5 @@
 <template>
-  <button
-    type="button"
-    class="btn-ghost p-2"
-    aria-label="Toggle theme"
-    @click="toggleTheme"
-  >
+  <button type="button" class="btn-ghost p-2" aria-label="Toggle theme" @click="toggleTheme">
     <svg
       v-if="currentTheme === 'dark'"
       xmlns="http://www.w3.org/2000/svg"

@@ -16,12 +16,7 @@
       />
 
       <div class="flex items-center gap-3 pt-2">
-        <BaseButton
-          variant="secondary"
-          type="button"
-          :full-width="true"
-          @click="handleClose"
-        >
+        <BaseButton variant="secondary" type="button" :full-width="true" @click="handleClose">
           Cancel
         </BaseButton>
         <BaseButton
@@ -67,28 +62,31 @@ const error = ref('');
 const loading = ref(false);
 
 // Reset form when modal is opened
-watch(() => props.open, (isOpen) => {
-  if (isOpen) {
-    email.value = '';
-    emailError.value = '';
-    error.value = '';
-    loading.value = false;
-  }
-});
+watch(
+  () => props.open,
+  (isOpen) => {
+    if (isOpen) {
+      email.value = '';
+      emailError.value = '';
+      error.value = '';
+      loading.value = false;
+    }
+  },
+);
 
 const validateEmail = (): boolean => {
   emailError.value = '';
-  
+
   if (!email.value) {
     emailError.value = 'Email is required';
     return false;
   }
-  
+
   if (!isValidEmail(email.value)) {
     emailError.value = 'Please enter a valid email address';
     return false;
   }
-  
+
   return true;
 };
 

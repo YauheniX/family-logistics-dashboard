@@ -15,7 +15,9 @@
           </div>
           <div class="flex items-center gap-3">
             <ThemeToggle />
-            <div class="flex items-center gap-3 border-l border-neutral-200 dark:border-neutral-700 pl-3">
+            <div
+              class="flex items-center gap-3 border-l border-neutral-200 dark:border-neutral-700 pl-3"
+            >
               <div class="text-right">
                 <p class="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
                   {{ authStore.user?.email }}
@@ -61,14 +63,14 @@ const showShell = computed(() => Boolean(route.meta.requiresAuth));
 const pageTitle = computed(() => {
   const routeName = route.name as string;
   const titles: Record<string, string> = {
-    'dashboard': 'Dashboard',
+    dashboard: 'Dashboard',
     'family-list': 'Families',
     'family-detail': 'Family Details',
     'shopping-list': 'Shopping List',
     'wishlist-list': 'Wishlists',
     'wishlist-edit': 'My Wishlist',
     'public-wishlist': 'Public Wishlist',
-    'settings': 'Settings',
+    settings: 'Settings',
   };
   return titles[routeName] || 'Family Logistics';
 });

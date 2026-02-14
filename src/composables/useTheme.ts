@@ -15,7 +15,7 @@ export function useTheme() {
 
   const applyTheme = (theme: Theme) => {
     const effectiveTheme = theme === 'system' ? getSystemTheme() : theme;
-    
+
     if (effectiveTheme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {

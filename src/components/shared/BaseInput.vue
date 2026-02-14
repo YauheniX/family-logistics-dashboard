@@ -83,7 +83,7 @@ const inputClasses = computed(() => {
   const hasIconLeft = props.$slots?.iconLeft ? 'pl-10' : '';
   const hasIconRight = props.$slots?.iconRight ? 'pr-10' : '';
   const errorClass = props.error ? 'error' : '';
-  
+
   return [base, hasIconLeft, hasIconRight, errorClass].filter(Boolean).join(' ');
 });
 

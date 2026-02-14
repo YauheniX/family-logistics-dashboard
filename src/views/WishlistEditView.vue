@@ -7,7 +7,10 @@
           <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
             {{ wishlistStore.currentWishlist.title }}
           </h2>
-          <p v-if="wishlistStore.currentWishlist.description" class="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+          <p
+            v-if="wishlistStore.currentWishlist.description"
+            class="mt-1 text-sm text-neutral-600 dark:text-neutral-400"
+          >
             {{ wishlistStore.currentWishlist.description }}
           </p>
         </div>
@@ -28,16 +31,8 @@
     <BaseCard>
       <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50 mb-4">Details</h3>
       <form class="space-y-3" @submit.prevent="handleUpdateWishlist">
-        <BaseInput
-          v-model="editTitle"
-          label="Title"
-          required
-        />
-        <BaseInput
-          v-model="editDescription"
-          label="Description"
-          placeholder="Optional"
-        />
+        <BaseInput v-model="editTitle" label="Title" required />
+        <BaseInput v-model="editDescription" label="Description" placeholder="Optional" />
         <label class="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
           <input v-model="editIsPublic" type="checkbox" class="checkbox" />
           Public (shareable link)
@@ -52,43 +47,63 @@
     <BaseCard>
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50">Items</h3>
-        <span class="text-sm text-neutral-600 dark:text-neutral-400">{{ wishlistStore.items.length }} items</span>
+        <span class="text-sm text-neutral-600 dark:text-neutral-400"
+          >{{ wishlistStore.items.length }} items</span
+        >
       </div>
 
-      <div v-if="wishlistStore.items.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        <BaseCard
-          v-for="item in wishlistStore.items"
-          :key="item.id"
-          :padding="false"
-        >
-          <div class="aspect-square bg-neutral-100 dark:bg-neutral-700 rounded-t-card flex items-center justify-center overflow-hidden">
+      <div
+        v-if="wishlistStore.items.length"
+        class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      >
+        <BaseCard v-for="item in wishlistStore.items" :key="item.id" :padding="false">
+          <div
+            class="aspect-square bg-neutral-100 dark:bg-neutral-700 rounded-t-card flex items-center justify-center overflow-hidden"
+          >
             <img
               v-if="item.image_url"
               :src="item.image_url"
               :alt="item.title"
               class="w-full h-full object-cover"
             />
-            <svg v-else class="w-16 h-16 text-neutral-400 dark:text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <svg
+              v-else
+              class="w-16 h-16 text-neutral-400 dark:text-neutral-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
             </svg>
           </div>
           <div class="p-3 space-y-2">
             <div class="flex items-start justify-between gap-2">
-              <h4 class="font-medium text-neutral-900 dark:text-neutral-50 line-clamp-2">{{ item.title }}</h4>
+              <h4 class="font-medium text-neutral-900 dark:text-neutral-50 line-clamp-2">
+                {{ item.title }}
+              </h4>
               <BaseBadge :variant="priorityVariant(item.priority)">
                 {{ item.priority }}
               </BaseBadge>
             </div>
-            <p v-if="item.description" class="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2">
+            <p
+              v-if="item.description"
+              class="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2"
+            >
               {{ item.description }}
             </p>
             <div class="flex items-center gap-2">
-              <p v-if="item.price !== null" class="text-sm font-medium text-neutral-900 dark:text-neutral-50">
+              <p
+                v-if="item.price !== null"
+                class="text-sm font-medium text-neutral-900 dark:text-neutral-50"
+              >
                 {{ item.price }} {{ item.currency }}
               </p>
-              <BaseBadge v-if="item.is_reserved" variant="success">
-                Reserved
-              </BaseBadge>
+              <BaseBadge v-if="item.is_reserved" variant="success"> Reserved </BaseBadge>
             </div>
             <a
               v-if="safeUrl(item.link)"
@@ -103,14 +118,20 @@
               <BaseButton class="flex-1 text-sm" variant="ghost" @click="startEditItem(item)">
                 Edit
               </BaseButton>
-              <BaseButton class="flex-1 text-sm" variant="danger" @click="wishlistStore.removeItem(item.id)">
+              <BaseButton
+                class="flex-1 text-sm"
+                variant="danger"
+                @click="wishlistStore.removeItem(item.id)"
+              >
                 Delete
               </BaseButton>
             </div>
           </div>
         </BaseCard>
       </div>
-      <p v-else class="text-sm text-neutral-600 dark:text-neutral-400">No items yet. Add one below.</p>
+      <p v-else class="text-sm text-neutral-600 dark:text-neutral-400">
+        No items yet. Add one below.
+      </p>
     </BaseCard>
 
     <!-- Add/Edit Item Form -->
@@ -125,12 +146,7 @@
       </div>
       <form class="space-y-4" @submit.prevent="handleSaveItem">
         <div class="grid gap-4 md:grid-cols-2">
-          <BaseInput
-            v-model="itemForm.title"
-            label="Title"
-            required
-            placeholder="Item name"
-          />
+          <BaseInput v-model="itemForm.title" label="Title" required placeholder="Item name" />
           <div class="space-y-1">
             <label class="label">Priority</label>
             <select v-model="itemForm.priority" class="input w-full">
@@ -140,18 +156,9 @@
             </select>
           </div>
         </div>
-        <BaseInput
-          v-model="itemForm.description"
-          label="Description"
-          placeholder="Optional"
-        />
+        <BaseInput v-model="itemForm.description" label="Description" placeholder="Optional" />
         <div class="grid gap-4 md:grid-cols-2">
-          <BaseInput
-            v-model="itemForm.link"
-            label="Link"
-            type="url"
-            placeholder="https://..."
-          />
+          <BaseInput v-model="itemForm.link" label="Link" type="url" placeholder="https://..." />
           <BaseInput
             v-model="itemForm.image_url"
             label="Image URL"
@@ -166,11 +173,7 @@
             type="number"
             placeholder="0.00"
           />
-          <BaseInput
-            v-model="itemForm.currency"
-            label="Currency"
-            placeholder="USD"
-          />
+          <BaseInput v-model="itemForm.currency" label="Currency" placeholder="USD" />
         </div>
         <BaseButton variant="primary" type="submit">
           {{ editingItemId ? 'Update Item' : 'Add Item' }}

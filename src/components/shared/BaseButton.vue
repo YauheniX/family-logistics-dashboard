@@ -48,11 +48,12 @@ const buttonClasses = computed(() => {
     secondary: 'btn-secondary',
     tertiary: 'btn-tertiary',
     ghost: 'btn-ghost',
-    danger: 'btn bg-danger-500 text-white hover:bg-danger-600 dark:bg-danger-400 dark:text-neutral-900 dark:hover:bg-danger-300 focus:ring-danger-500 dark:focus:ring-danger-400',
+    danger:
+      'btn bg-danger-500 text-white hover:bg-danger-600 dark:bg-danger-400 dark:text-neutral-900 dark:hover:bg-danger-300 focus:ring-danger-500 dark:focus:ring-danger-400',
   }[props.variant];
-  
+
   const width = props.fullWidth ? 'w-full' : '';
-  
+
   return [base, variant, width].filter(Boolean).join(' ');
 });
 </script>

@@ -95,12 +95,12 @@ module.exports = {
       },
       fontSize: {
         // Typography system from design spec
-        'h1': ['24px', { lineHeight: '32px', fontWeight: '700' }],
-        'h2': ['20px', { lineHeight: '28px', fontWeight: '600' }],
-        'h3': ['16px', { lineHeight: '24px', fontWeight: '600' }],
-        'body': ['14px', { lineHeight: '20px', fontWeight: '400' }],
+        h1: ['24px', { lineHeight: '32px', fontWeight: '700' }],
+        h2: ['20px', { lineHeight: '28px', fontWeight: '600' }],
+        h3: ['16px', { lineHeight: '24px', fontWeight: '600' }],
+        body: ['14px', { lineHeight: '20px', fontWeight: '400' }],
         'body-semibold': ['14px', { lineHeight: '20px', fontWeight: '600' }],
-        'small': ['12px', { lineHeight: '16px', fontWeight: '500' }],
+        small: ['12px', { lineHeight: '16px', fontWeight: '500' }],
       },
     },
   },

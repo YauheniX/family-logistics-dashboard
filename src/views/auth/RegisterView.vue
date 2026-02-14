@@ -3,9 +3,7 @@
     <!-- Header Card -->
     <div class="glass-card p-6 text-center">
       <h1 class="text-h1 text-neutral-900 dark:text-neutral-50 mb-2">Create Account</h1>
-      <p class="text-body text-neutral-700 dark:text-neutral-300">
-        Join to manage your family
-      </p>
+      <p class="text-body text-neutral-700 dark:text-neutral-300">Join to manage your family</p>
     </div>
 
     <!-- Register Form Card -->

@@ -27,7 +27,7 @@ const badgeClasses = computed(() => {
     neutral: 'badge-neutral',
     primary: 'bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-400',
   }[props.variant];
-  
+
   return [base, variant].filter(Boolean).join(' ');
 });
 </script>

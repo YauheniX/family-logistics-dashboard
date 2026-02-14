@@ -136,7 +136,9 @@
         </div>
 
         <!-- Email Notifications Toggle -->
-        <div class="flex items-center justify-between p-3 rounded-lg border border-neutral-200 dark:border-neutral-700">
+        <div
+          class="flex items-center justify-between p-3 rounded-lg border border-neutral-200 dark:border-neutral-700"
+        >
           <div>
             <p class="text-body-semibold text-neutral-900 dark:text-neutral-50">
               Email Notifications
@@ -159,7 +161,9 @@
         </div>
 
         <!-- Push Notifications Toggle -->
-        <div class="flex items-center justify-between p-3 rounded-lg border border-neutral-200 dark:border-neutral-700">
+        <div
+          class="flex items-center justify-between p-3 rounded-lg border border-neutral-200 dark:border-neutral-700"
+        >
           <div>
             <p class="text-body-semibold text-neutral-900 dark:text-neutral-50">
               Push Notifications
@@ -235,7 +239,11 @@ const userInitials = computed(() => {
   const email = authStore.user?.email || '';
   if (profileForm.value.name) {
     const names = profileForm.value.name.split(' ');
-    return names.map((n) => n[0]).join('').toUpperCase().slice(0, 2);
+    return names
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   }
   return email.slice(0, 2).toUpperCase();
 });
@@ -246,14 +254,14 @@ const handleAvatarUpload = () => {
 
 const handleSaveProfile = () => {
   errors.value = {};
-  
+
   if (!profileForm.value.name || profileForm.value.name.trim().length < 2) {
     errors.value.name = 'Name must be at least 2 characters';
     return;
   }
 
   saving.value = true;
-  
+
   // Simulate save
   setTimeout(() => {
     saving.value = false;

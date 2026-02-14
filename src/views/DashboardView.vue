@@ -15,19 +15,27 @@
       <BaseCard>
         <div class="p-5">
           <p class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Active Lists</p>
-          <p class="mt-2 text-4xl font-bold text-primary-600 dark:text-primary-400">{{ activeListCount }}</p>
+          <p class="mt-2 text-4xl font-bold text-primary-600 dark:text-primary-400">
+            {{ activeListCount }}
+          </p>
         </div>
       </BaseCard>
       <BaseCard>
         <div class="p-5">
           <p class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Items to Buy</p>
-          <p class="mt-2 text-4xl font-bold text-primary-600 dark:text-primary-400">{{ itemsToBuyCount }}</p>
+          <p class="mt-2 text-4xl font-bold text-primary-600 dark:text-primary-400">
+            {{ itemsToBuyCount }}
+          </p>
         </div>
       </BaseCard>
       <BaseCard>
         <div class="p-5">
-          <p class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Reserved Wishlist Items</p>
-          <p class="mt-2 text-4xl font-bold text-primary-600 dark:text-primary-400">{{ reservedItemsCount }}</p>
+          <p class="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+            Reserved Wishlist Items
+          </p>
+          <p class="mt-2 text-4xl font-bold text-primary-600 dark:text-primary-400">
+            {{ reservedItemsCount }}
+          </p>
         </div>
       </BaseCard>
     </div>
@@ -39,7 +47,9 @@
       <BaseCard :padding="false">
         <div class="p-5">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">My Families</h3>
+            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+              My Families
+            </h3>
             <RouterLink to="/families" class="btn-ghost text-sm">View All</RouterLink>
           </div>
           <div v-if="familyStore.families.length" class="mt-3 space-y-2">
@@ -61,7 +71,9 @@
       <BaseCard :padding="false">
         <div class="p-5">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Active Shopping Lists</h3>
+            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+              Active Shopping Lists
+            </h3>
             <span class="text-sm text-neutral-600 dark:text-neutral-400"
               >{{ activeListCount }} lists · {{ itemsToBuyCount }} items to buy</span
             >
@@ -75,14 +87,18 @@
             >
               <div>
                 <p class="font-medium text-neutral-800 dark:text-neutral-200">{{ list.title }}</p>
-                <p v-if="list.description" class="text-xs text-neutral-500 dark:text-neutral-400">{{ list.description }}</p>
+                <p v-if="list.description" class="text-xs text-neutral-500 dark:text-neutral-400">
+                  {{ list.description }}
+                </p>
               </div>
               <BaseBadge :variant="list.status === 'active' ? 'success' : 'neutral'">
                 {{ list.status }}
               </BaseBadge>
             </RouterLink>
           </div>
-          <p v-else class="mt-3 text-sm text-neutral-500 dark:text-neutral-400">No active shopping lists.</p>
+          <p v-else class="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
+            No active shopping lists.
+          </p>
         </div>
       </BaseCard>
 
@@ -90,7 +106,9 @@
       <BaseCard :padding="false">
         <div class="p-5">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">My Wishlists</h3>
+            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+              My Wishlists
+            </h3>
             <RouterLink to="/wishlists" class="btn-ghost text-sm">View All</RouterLink>
           </div>
           <div v-if="wishlistStore.wishlists.length" class="mt-3 space-y-2">
@@ -106,7 +124,9 @@
               </BaseBadge>
             </RouterLink>
           </div>
-          <p v-else class="mt-3 text-sm text-neutral-500 dark:text-neutral-400">No wishlists yet.</p>
+          <p v-else class="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
+            No wishlists yet.
+          </p>
         </div>
       </BaseCard>
     </template>
