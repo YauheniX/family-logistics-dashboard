@@ -40,11 +40,8 @@ jobs:
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: false
-          VALIDATE_JAVASCRIPT_ES: false
-          VALIDATE_TYPESCRIPT_ES: false
           VALIDATE_VUE: true
           VALIDATE_JSON: true
           VALIDATE_YAML: true
-          VALIDATE_CSS: true
           VALIDATE_HTML: true
           FILTER_REGEX_EXCLUDE: .*node_modules/.*|.*dist/.*|.*\.git/.*

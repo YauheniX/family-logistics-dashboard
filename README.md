@@ -248,7 +248,96 @@ npm run dev
 
 ---
 
-## 🔒 Code Quality & Security (GitHub Actions)
+## 🧪 Testing
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests with coverage report
+npm run test:coverage
+```
+
+### Coverage Requirements
+
+Coverage thresholds are enforced at **70%** for lines, branches, functions, and statements.
+
+- Coverage is reported in **text** (terminal) and **lcov** (CI/artifact) formats
+- Tests use **jsdom** environment with **Vitest** as the test runner
+- All Supabase calls are mocked — tests are fully isolated
+
+### Test Structure
+
+```
+src/__tests__/
+  trips-store.test.ts       # Trip CRUD operations
+  packing-logic.test.ts     # Packing toggle and progress
+  budget-calculations.test.ts  # Budget totals and category breakdown
+  auth-guard.test.ts         # Router redirect logic
+  auth-store.test.ts         # Authentication state management
+```
+
+---
+
+## ⚙️ CI/CD Pipeline
+
+### CI (Continuous Integration)
+
+**File:** `.github/workflows/ci.yml`
+
+Runs on every **push to main** and **pull request** targeting main.
+
+Steps:
+
+1. Checkout repository
+2. Setup Node.js (LTS)
+3. Install dependencies (`npm ci`)
+4. Run linter (`npm run lint`)
+5. Run tests with coverage (`npm run test:coverage`)
+6. Upload coverage report as artifact
+
+The pipeline **fails** if:
+
+- Lint errors are found
+- Any test fails
+- Coverage drops below 70%
+
+### CD (Continuous Deployment)
+
+**File:** `.github/workflows/deploy.yml`
+
+Runs on **push to main** only after CI passes.
+
+Steps:
+
+1. Runs CI workflow first
+2. Builds the project
+3. Deploys to **Vercel** using the Vercel CLI
+
+### Configuring Vercel Secrets
+
+To enable deployment, add these **repository secrets** in GitHub:
+
+1. Go to **Settings → Secrets and variables → Actions**
+2. Add:
+   - `VERCEL_TOKEN` — from [Vercel Account Settings → Tokens](https://vercel.com/account/tokens)
+   - `VERCEL_ORG_ID` — from `.vercel/project.json` after running `vercel link`
+   - `VERCEL_PROJECT_ID` — from `.vercel/project.json` after running `vercel link`
+
+### How Deployment Works
+
+```
+Push to main
+  → CI runs (lint + test + coverage)
+  → If CI passes → Deploy job runs
+  → npm ci → npm run build → vercel deploy --prod
+```
+
+Deployment is **production-safe**: it only deploys after all quality checks pass, never exposes secrets, and fails fast on build errors.
+
+---
 
 This repository uses **100% free GitHub-native solutions** for code quality and security checks. No API keys, no costs, no rate limits.
 
@@ -530,11 +619,11 @@ using (auth.uid() = created_by);
 - Document upload
 - Budget tracking
 - Timeline/itinerary
+- Comprehensive test suite with CI/CD pipeline
 
 **In Progress 🚧**
 
 - Migrate UI components to feature folders
-- Comprehensive test suite
 - API documentation with TypeDoc
 
 **Planned 📋**

@@ -52,9 +52,11 @@
           <div class="flex items-center gap-2">
             <span
               class="rounded-full px-2 py-0.5 text-xs font-semibold capitalize"
-              :class="member.role === 'editor'
-                ? 'bg-amber-50 text-amber-700'
-                : 'bg-slate-100 text-slate-600'"
+              :class="
+                member.role === 'editor'
+                  ? 'bg-amber-50 text-amber-700'
+                  : 'bg-slate-100 text-slate-600'
+              "
             >
               {{ member.role }}
             </span>
@@ -70,9 +72,7 @@
           </div>
         </div>
 
-        <p v-if="!members.length" class="mt-2 text-sm text-slate-500">
-          No shared members yet.
-        </p>
+        <p v-if="!members.length" class="mt-2 text-sm text-slate-500">No shared members yet.</p>
       </div>
     </div>
   </ModalDialog>
@@ -130,7 +130,12 @@ const handleInvite = async () => {
   inviteError.value = '';
   inviteSuccess.value = '';
   try {
-    await tripStore.inviteMember(props.tripId, inviteEmail.value.trim(), inviteRole.value, authStore.user?.id);
+    await tripStore.inviteMember(
+      props.tripId,
+      inviteEmail.value.trim(),
+      inviteRole.value,
+      authStore.user?.id,
+    );
     inviteSuccess.value = `Invited ${inviteEmail.value} as ${inviteRole.value}.`;
     inviteEmail.value = '';
   } catch (err: any) {

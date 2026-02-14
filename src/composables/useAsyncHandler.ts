@@ -26,23 +26,19 @@ export interface UseAsyncHandlerReturn<T> {
 
 /**
  * Composable for handling async operations with loading states and error handling
- * 
+ *
  * @example
  * const { loading, error, execute } = useAsyncHandler({
  *   successMessage: 'Trip created successfully!',
  * });
- * 
+ *
  * const result = await execute(() => tripService.createTrip(payload));
  */
 export function useAsyncHandler<T = unknown>(
-  options: UseAsyncHandlerOptions = {}
+  options: UseAsyncHandlerOptions = {},
 ): UseAsyncHandlerReturn<T> {
-  const { 
-    successMessage, 
-    showErrorToast = true, 
-    errorPrefix = 'Error'
-  } = options;
-  
+  const { successMessage, showErrorToast = true, errorPrefix = 'Error' } = options;
+
   const loading = ref(false);
   const error = ref<ApiError | null>(null);
   const toastStore = useToastStore();
@@ -50,9 +46,7 @@ export function useAsyncHandler<T = unknown>(
   /**
    * Execute an async operation that returns ApiResponse
    */
-  const execute = async (
-    fn: () => Promise<ApiResponse<T>>
-  ): Promise<T | null> => {
+  const execute = async (fn: () => Promise<ApiResponse<T>>): Promise<T | null> => {
     loading.value = true;
     error.value = null;
 
@@ -78,11 +72,11 @@ export function useAsyncHandler<T = unknown>(
         details: err,
       };
       error.value = apiError;
-      
+
       if (showErrorToast) {
         toastStore.error(`${errorPrefix}: ${apiError.message}`);
       }
-      
+
       return null;
     } finally {
       loading.value = false;
@@ -98,11 +92,11 @@ export function useAsyncHandler<T = unknown>(
 
     try {
       const result = await fn();
-      
+
       if (successMessage) {
         toastStore.success(successMessage);
       }
-      
+
       return result;
     } catch (err) {
       const apiError: ApiError = {
@@ -110,11 +104,11 @@ export function useAsyncHandler<T = unknown>(
         details: err,
       };
       error.value = apiError;
-      
+
       if (showErrorToast) {
         toastStore.error(`${errorPrefix}: ${apiError.message}`);
       }
-      
+
       return null;
     } finally {
       loading.value = false;

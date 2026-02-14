@@ -1,11 +1,11 @@
 import { BaseRepository } from '../../shared/infrastructure/base.repository';
 import { supabase } from '../../shared/infrastructure/supabase.client';
-import type { 
-  PackingTemplate, 
-  CreatePackingTemplateDto, 
+import type {
+  PackingTemplate,
+  CreatePackingTemplateDto,
   UpdatePackingTemplateDto,
   PackingTemplateItem,
-  CreatePackingTemplateItemDto
+  CreatePackingTemplateItemDto,
 } from '../../shared/domain/entities';
 import type { ApiResponse } from '../../shared/domain/repository.interface';
 
@@ -22,9 +22,7 @@ export class PackingTemplateRepository extends BaseRepository<
   }
 
   async findByUserId(userId: string): Promise<ApiResponse<PackingTemplate[]>> {
-    return this.findAll((builder) =>
-      builder.eq('created_by', userId).order('name')
-    );
+    return this.findAll((builder) => builder.eq('created_by', userId).order('name'));
   }
 }
 
@@ -40,9 +38,7 @@ export class PackingTemplateItemRepository extends BaseRepository<
   }
 
   async findByTemplateId(templateId: string): Promise<ApiResponse<PackingTemplateItem[]>> {
-    return this.findAll((builder) =>
-      builder.eq('template_id', templateId).order('title')
-    );
+    return this.findAll((builder) => builder.eq('template_id', templateId).order('title'));
   }
 
   async deleteByTemplateId(templateId: string): Promise<ApiResponse<void>> {

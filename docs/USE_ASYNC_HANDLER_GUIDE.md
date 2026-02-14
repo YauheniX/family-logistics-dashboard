@@ -3,6 +3,7 @@
 ## Overview
 
 `useAsyncHandler` is a Vue 3 composable that simplifies async operation handling by providing:
+
 - ✅ Automatic loading state management
 - ✅ Automatic error handling with toast notifications
 - ✅ Optional success messages
@@ -55,12 +56,14 @@ const { loading, error, execute } = useAsyncHandler({
 });
 
 const handleCreate = async () => {
-  const result = await execute(() => createTrip({
-    name: tripName.value,
-    status: 'planning',
-    created_by: userId.value,
-  }));
-  
+  const result = await execute(() =>
+    createTrip({
+      name: tripName.value,
+      status: 'planning',
+      created_by: userId.value,
+    }),
+  );
+
   if (result) {
     // Success - navigate or update UI
     router.push({ name: 'trip-detail', params: { id: result.id } });
@@ -75,9 +78,9 @@ const handleCreate = async () => {
 
 ```typescript
 interface UseAsyncHandlerOptions {
-  successMessage?: string;      // Show success toast with this message
-  showErrorToast?: boolean;      // Show error toast (default: true)
-  errorPrefix?: string;          // Prefix for error messages (default: "Error")
+  successMessage?: string; // Show success toast with this message
+  showErrorToast?: boolean; // Show error toast (default: true)
+  errorPrefix?: string; // Prefix for error messages (default: "Error")
 }
 ```
 
@@ -85,8 +88,8 @@ interface UseAsyncHandlerOptions {
 
 ```typescript
 interface UseAsyncHandlerReturn<T> {
-  loading: Readonly<Ref<boolean>>;    // Loading state (readonly)
-  error: Readonly<Ref<ApiError | null>>;  // Error object (readonly)
+  loading: Readonly<Ref<boolean>>; // Loading state (readonly)
+  error: Readonly<Ref<ApiError | null>>; // Error object (readonly)
   execute: (fn: () => Promise<ApiResponse<T>>) => Promise<T | null>;
   executeRaw: (fn: () => Promise<T>) => Promise<T | null>;
 }
@@ -133,7 +136,7 @@ await execute(() => tripService.deleteTrip(id));
 
 ```typescript
 const { error, execute } = useAsyncHandler({
-  showErrorToast: false,  // Don't show toast
+  showErrorToast: false, // Don't show toast
 });
 
 const result = await execute(() => loadData());
@@ -215,7 +218,7 @@ const handleSubmit = async () => {
     useToastStore().error('Please fill all required fields');
     return;
   }
-  
+
   // Then execute async operation
   const result = await execute(() => submitForm(formData));
   if (result) {
@@ -233,14 +236,14 @@ const handleComplexOperation = async () => {
   // Step 1
   const trip = await execute(() => createTrip(tripData));
   if (!trip) return; // Error handled automatically
-  
+
   // Step 2
   const member = await execute(() => addMember(trip.id, memberData));
   if (!member) return;
-  
+
   // Step 3
   await execute(() => sendNotification(trip.id));
-  
+
   useToastStore().success('All done!');
 };
 ```
@@ -263,11 +266,9 @@ const handleUpload = async () => {
     useToastStore().warning('Please select a file');
     return;
   }
-  
-  const url = await execute(() => 
-    uploadDocument(selectedFile.value!, userId.value)
-  );
-  
+
+  const url = await execute(() => uploadDocument(selectedFile.value!, userId.value));
+
   if (url) {
     selectedFile.value = null;
     // Maybe add to documents list
@@ -277,7 +278,7 @@ const handleUpload = async () => {
 
 <template>
   <div>
-    <input type="file" @change="e => selectedFile = e.target.files[0]" />
+    <input type="file" @change="(e) => (selectedFile = e.target.files[0])" />
     <button @click="handleUpload" :disabled="loading">
       {{ loading ? 'Uploading...' : 'Upload' }}
     </button>
@@ -327,14 +328,16 @@ const formData = ref({
 });
 
 const handleSubmit = async () => {
-  const result = await execute(() => createTrip({
-    name: formData.value.name,
-    start_date: formData.value.startDate,
-    end_date: formData.value.endDate,
-    status: 'planning',
-    created_by: userId.value,
-  }));
-  
+  const result = await execute(() =>
+    createTrip({
+      name: formData.value.name,
+      start_date: formData.value.startDate,
+      end_date: formData.value.endDate,
+      status: 'planning',
+      created_by: userId.value,
+    }),
+  );
+
   if (result) {
     // Navigate to new trip
     router.push({ name: 'trip-detail', params: { id: result.id } });
@@ -357,6 +360,7 @@ const handleSubmit = async () => {
 ## Best Practices
 
 ### ✅ DO
+
 - Use `execute()` for `ApiResponse<T>` functions
 - Use `executeRaw()` only for legacy code
 - Show loading states in UI
@@ -364,6 +368,7 @@ const handleSubmit = async () => {
 - Use descriptive error prefixes
 
 ### ❌ DON'T
+
 - Don't mutate `loading` or `error` directly (they're readonly)
 - Don't forget to handle the null case when result fails
 - Don't use for synchronous operations
@@ -396,22 +401,20 @@ describe('useAsyncHandler', () => {
     const { loading, execute } = useAsyncHandler({
       successMessage: 'Success!',
     });
-    
-    const result = await execute(() => 
-      Promise.resolve({ data: 'test', error: null })
-    );
-    
+
+    const result = await execute(() => Promise.resolve({ data: 'test', error: null }));
+
     expect(result).toBe('test');
     expect(loading.value).toBe(false);
   });
-  
+
   it('handles errors', async () => {
     const { error, execute } = useAsyncHandler();
-    
-    const result = await execute(() => 
-      Promise.resolve({ data: null, error: { message: 'Failed' } })
+
+    const result = await execute(() =>
+      Promise.resolve({ data: null, error: { message: 'Failed' } }),
     );
-    
+
     expect(result).toBeNull();
     expect(error.value?.message).toBe('Failed');
   });
@@ -428,6 +431,7 @@ describe('useAsyncHandler', () => {
 ## Migration from Manual Handling
 
 ### Before (Manual)
+
 ```typescript
 const loading = ref(false);
 const error = ref<string | null>(null);
@@ -454,6 +458,7 @@ const handleSave = async () => {
 ```
 
 ### After (with useAsyncHandler)
+
 ```typescript
 const { loading, execute } = useAsyncHandler({
   successMessage: 'Saved!',

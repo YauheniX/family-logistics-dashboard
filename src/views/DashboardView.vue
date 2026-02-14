@@ -87,7 +87,9 @@ const toastTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 
 const totalPlanned = computed(() => tripStore.totalPlanned.toFixed(2));
 const totalSpent = computed(() => tripStore.totalSpent.toFixed(2));
-const currencyHint = computed(() => (tripStore.budget[0]?.currency ? tripStore.budget[0].currency : ''));
+const currencyHint = computed(() =>
+  tripStore.budget[0]?.currency ? tripStore.budget[0].currency : '',
+);
 const packingCount = computed(() => tripStore.packing.length);
 
 watch(

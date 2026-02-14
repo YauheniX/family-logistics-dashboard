@@ -1,9 +1,6 @@
 import { defineStore } from 'pinia';
 import { useToastStore } from '@/stores/toast';
-import {
-  packingTemplateRepository,
-  packingTemplateItemRepository,
-} from '@/features/templates';
+import { packingTemplateRepository, packingTemplateItemRepository } from '@/features/templates';
 import type {
   PackingTemplate,
   CreatePackingTemplateDto,

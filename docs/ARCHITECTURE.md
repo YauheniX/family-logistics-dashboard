@@ -37,41 +37,51 @@ src/
 ## Architecture Layers
 
 ### 1. Domain Layer (`domain/`)
+
 Contains pure business logic, entities, and service interfaces.
+
 - **Entities**: Domain models (e.g., `Trip`, `PackingItem`)
 - **Services**: Business logic (e.g., `TripService`)
 - **Validation**: Zod schemas for runtime validation
 - **Interfaces**: Repository contracts
 
 **Key files:**
+
 - `entities.ts` - Domain entities and DTOs
 - `validation.schemas.ts` - Zod validation schemas
 - `repository.interface.ts` - Repository contracts
 - `*.service.ts` - Business logic services
 
 ### 2. Infrastructure Layer (`infrastructure/`)
+
 Handles data access and external dependencies.
+
 - **Repositories**: Data access implementations using repository pattern
 - **Database**: Typed Supabase client and database types
 - **External services**: Third-party integrations
 
 **Key files:**
+
 - `database.types.ts` - Auto-generated types from database schema
 - `supabase.client.ts` - Typed Supabase client
 - `base.repository.ts` - Base repository with common CRUD operations
 - `*.repository.ts` - Feature-specific repositories
 
 ### 3. Presentation Layer (`presentation/`)
+
 UI components and state management.
+
 - **Stores**: Pinia stores for state management
 - **Components**: Vue components (to be added)
 
 **Key files:**
+
 - `*.store.ts` - Pinia stores
 
 ## Key Design Patterns
 
 ### Repository Pattern
+
 Abstracts data access logic and provides a clean interface for the domain layer.
 
 ```typescript
@@ -89,7 +99,7 @@ class TripRepository extends BaseRepository<Trip> {
   constructor() {
     super(supabase, 'trips');
   }
-  
+
   // Add custom methods
   async findByUserId(userId: string): Promise<ApiResponse<Trip[]>> {
     return this.findAll((builder) => builder.eq('created_by', userId));
@@ -98,6 +108,7 @@ class TripRepository extends BaseRepository<Trip> {
 ```
 
 ### Service Layer
+
 Encapsulates business logic and orchestrates repositories.
 
 ```typescript
@@ -113,6 +124,7 @@ class TripService {
 ```
 
 ### Dependency Injection via Singletons
+
 Each repository and service is exported as a singleton for easy consumption.
 
 ```typescript
@@ -126,6 +138,7 @@ import { tripRepository } from '@/features/trips';
 ## Type Safety
 
 ### Database Types
+
 Generated from Supabase schema to ensure type safety at the database level.
 
 ```typescript
@@ -144,6 +157,7 @@ export interface Database {
 ```
 
 ### Domain Entities
+
 Clean domain models separate from database types.
 
 ```typescript
@@ -160,6 +174,7 @@ export type UpdateTripDto = Partial<CreateTripDto>;
 ```
 
 ### Validation with Zod
+
 Runtime validation for user inputs.
 
 ```typescript
@@ -182,6 +197,7 @@ if (!result.success) {
 ### For existing code using old services:
 
 **Before:**
+
 ```typescript
 import { fetchTrips, createTrip } from '@/services/tripService';
 
@@ -189,6 +205,7 @@ const response = await fetchTrips(userId);
 ```
 
 **After:**
+
 ```typescript
 import { tripService } from '@/features/trips';
 
@@ -200,11 +217,13 @@ const response = await tripService.getUserTrips(userId);
 Stores are backward compatible through compatibility layer in `src/stores/`.
 
 **Current (works):**
+
 ```typescript
 import { useTripStore } from '@/stores/trips';
 ```
 
 **New (recommended):**
+
 ```typescript
 import { useTripStore } from '@/features/trips/presentation/trips.store';
 ```
@@ -220,15 +239,18 @@ import { useTripStore } from '@/features/trips/presentation/trips.store';
 ## Testing Strategy
 
 ### Unit Tests (To be added)
+
 - Test domain services in isolation
 - Mock repositories
 - Test validation schemas
 
 ### Integration Tests (To be added)
+
 - Test repositories against test database
 - Test complete user flows
 
 ### E2E Tests (To be added)
+
 - Test critical user journeys
 - Test with real Supabase instance
 

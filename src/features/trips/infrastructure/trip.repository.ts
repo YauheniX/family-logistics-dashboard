@@ -17,7 +17,7 @@ export class TripRepository extends BaseRepository<Trip, CreateTripDto, UpdateTr
   async findByUserId(userId: string): Promise<ApiResponse<Trip[]>> {
     // Fetch trips owned by the user
     const ownTripsResponse = await this.findAll((builder) =>
-      builder.eq('created_by', userId).order('start_date', { ascending: true })
+      builder.eq('created_by', userId).order('start_date', { ascending: true }),
     );
 
     if (ownTripsResponse.error) {
@@ -26,10 +26,7 @@ export class TripRepository extends BaseRepository<Trip, CreateTripDto, UpdateTr
 
     // Fetch trips shared with the user via trip_members
     const membershipsResponse = await this.execute<{ trip_id: string }[]>(async () => {
-      return await supabase
-        .from('trip_members')
-        .select('trip_id')
-        .eq('user_id', userId);
+      return await supabase.from('trip_members').select('trip_id').eq('user_id', userId);
     });
 
     if (membershipsResponse.error) {
@@ -43,7 +40,7 @@ export class TripRepository extends BaseRepository<Trip, CreateTripDto, UpdateTr
     let sharedTrips: Trip[] = [];
     if (sharedTripIds.length) {
       const sharedResponse = await this.findAll((builder) =>
-        builder.in('id', sharedTripIds).order('start_date', { ascending: true })
+        builder.in('id', sharedTripIds).order('start_date', { ascending: true }),
       );
 
       if (!sharedResponse.error) {

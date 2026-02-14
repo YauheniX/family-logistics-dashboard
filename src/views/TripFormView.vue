@@ -10,7 +10,13 @@
     <form class="glass-card space-y-4 p-6" @submit.prevent="handleSubmit">
       <div>
         <label class="label" for="name">Trip name</label>
-        <input id="name" v-model="form.name" class="input" required placeholder="Spain family adventure" />
+        <input
+          id="name"
+          v-model="form.name"
+          class="input"
+          required
+          placeholder="Spain family adventure"
+        />
       </div>
 
       <div class="grid gap-4 md:grid-cols-2">

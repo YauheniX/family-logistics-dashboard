@@ -30,11 +30,13 @@ interface ApiError {
 ### 2. Supabase Service Wrapper (`src/services/supabaseService.ts`)
 
 A centralized wrapper around Supabase operations that:
+
 - Converts all Supabase errors to our `ApiError` format
 - Provides consistent method signatures
 - Eliminates try/catch boilerplate
 
 **Key Methods:**
+
 - `select<T>()` - Fetch multiple records
 - `selectSingle<T>()` - Fetch one record
 - `insert<T>()` - Create a record
@@ -43,6 +45,7 @@ A centralized wrapper around Supabase operations that:
 - `execute<T>()` - Custom operations
 
 **Example:**
+
 ```typescript
 // Old way (throws errors)
 const { data, error } = await supabase.from('trips').select('*');
@@ -60,6 +63,7 @@ if (response.error) {
 #### Toast Store (`src/stores/toast.ts`)
 
 Manages global toast notifications with methods:
+
 - `success(message)` - Green success toast
 - `error(message)` - Red error toast
 - `warning(message)` - Yellow warning toast
@@ -68,6 +72,7 @@ Manages global toast notifications with methods:
 #### Toast Container (`src/components/shared/ToastContainer.vue`)
 
 Visual component that displays toasts with:
+
 - Auto-dismiss after configurable duration
 - Manual close button
 - Smooth animations
@@ -76,12 +81,14 @@ Visual component that displays toasts with:
 ### 4. useAsyncHandler Composable (`src/composables/useAsyncHandler.ts`)
 
 A Vue composable for handling async operations with:
+
 - Automatic loading state management
 - Automatic error handling with toast notifications
 - Success message support
 - Type-safe responses
 
 **Usage:**
+
 ```typescript
 const { loading, error, execute } = useAsyncHandler({
   successMessage: 'Operation completed!',
@@ -102,6 +109,7 @@ const result = await executeRaw(() => someAsyncFunction());
 All service functions now return `ApiResponse<T>` instead of throwing errors:
 
 **Before:**
+
 ```typescript
 export async function fetchTrips(userId: string): Promise<Trip[]> {
   const { data, error } = await supabase.from('trips').select('*');
@@ -111,11 +119,10 @@ export async function fetchTrips(userId: string): Promise<Trip[]> {
 ```
 
 **After:**
+
 ```typescript
 export async function fetchTrips(userId: string): Promise<ApiResponse<Trip[]>> {
-  return SupabaseService.select<Trip>('trips', (builder) =>
-    builder.eq('created_by', userId)
-  );
+  return SupabaseService.select<Trip>('trips', (builder) => builder.eq('created_by', userId));
 }
 ```
 
@@ -124,6 +131,7 @@ export async function fetchTrips(userId: string): Promise<ApiResponse<Trip[]>> {
 Pinia stores handle errors and show toast notifications:
 
 **Before:**
+
 ```typescript
 async loadTrips(userId: string) {
   try {
@@ -135,6 +143,7 @@ async loadTrips(userId: string) {
 ```
 
 **After:**
+
 ```typescript
 async loadTrips(userId: string) {
   const response = await fetchTrips(userId);
@@ -152,6 +161,7 @@ async loadTrips(userId: string) {
 Components can use stores (which handle errors) or useAsyncHandler:
 
 **Option 1 - Using Store:**
+
 ```vue
 <script setup>
 const tripStore = useTripStore();
@@ -162,6 +172,7 @@ await tripStore.createTrip(payload);
 ```
 
 **Option 2 - Using useAsyncHandler:**
+
 ```vue
 <script setup>
 const { loading, execute } = useAsyncHandler({

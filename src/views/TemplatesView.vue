@@ -4,9 +4,7 @@
       <div>
         <p class="text-sm text-slate-500">Packing Templates</p>
         <h2 class="text-2xl font-semibold text-slate-900">Reusable packing lists</h2>
-        <p class="mt-1 text-sm text-slate-600">
-          Create templates and apply them to any trip.
-        </p>
+        <p class="mt-1 text-sm text-slate-600">Create templates and apply them to any trip.</p>
       </div>
       <RouterLink to="/" class="btn-ghost">← Back to Dashboard</RouterLink>
     </div>
@@ -47,7 +45,9 @@
         <button
           class="btn-primary"
           type="submit"
-          :disabled="!templateName.trim() || !templateItems.filter(Boolean).length || templateStore.loading"
+          :disabled="
+            !templateName.trim() || !templateItems.filter(Boolean).length || templateStore.loading
+          "
         >
           Create Template
         </button>

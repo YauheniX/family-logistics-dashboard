@@ -5,7 +5,7 @@ import type { ApiResponse } from '@/types/api';
 
 export async function fetchTripMembers(tripId: string): Promise<ApiResponse<TripMember[]>> {
   const membersResponse = await SupabaseService.select<TripMember>('trip_members', (builder) =>
-    builder.eq('trip_id', tripId).order('created_at')
+    builder.eq('trip_id', tripId).order('created_at'),
   );
 
   if (membersResponse.error || !membersResponse.data) {
@@ -38,8 +38,9 @@ export async function inviteMemberByEmail(
   currentUserId?: string,
 ): Promise<ApiResponse<TripMember>> {
   // Get user ID by email via RPC
-  const { data: userData, error: userError } = await supabase
-    .rpc('get_user_id_by_email', { lookup_email: email });
+  const { data: userData, error: userError } = await supabase.rpc('get_user_id_by_email', {
+    lookup_email: email,
+  });
 
   if (userError) {
     return {
