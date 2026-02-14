@@ -9,6 +9,7 @@ Continuous Integration and Deployment setup for the Family Logistics Dashboard.
 The project uses **GitHub Actions** for automated testing, linting, security scanning, and deployment.
 
 **Key Workflows:**
+
 1. **CI (Continuous Integration)** - Tests and linting on every push/PR
 2. **Deploy** - Automatic deployment to production after CI passes
 3. **CodeQL** - Security vulnerability scanning
@@ -23,10 +24,12 @@ The project uses **GitHub Actions** for automated testing, linting, security sca
 **File:** `.github/workflows/ci.yml`
 
 **Trigger:**
+
 - Push to `main` branch
 - Pull requests targeting `main`
 
 **Steps:**
+
 1. Checkout repository
 2. Setup Node.js (LTS version)
 3. Install dependencies (`npm ci`)
@@ -35,6 +38,7 @@ The project uses **GitHub Actions** for automated testing, linting, security sca
 6. Upload coverage report as artifact
 
 **Coverage Requirements:**
+
 - Minimum **70%** coverage for:
   - Lines
   - Branches
@@ -42,19 +46,21 @@ The project uses **GitHub Actions** for automated testing, linting, security sca
   - Statements
 
 **Failure Conditions:**
+
 - ❌ Lint errors found
 - ❌ Any test fails
 - ❌ Coverage below 70%
 
 **Example:**
+
 ```yaml
 name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
@@ -80,15 +86,18 @@ jobs:
 **File:** `.github/workflows/deploy.yml`
 
 **Trigger:**
+
 - Push to `main` branch (only after CI passes)
 
 **Steps:**
+
 1. Wait for CI workflow to complete
 2. Install dependencies
 3. Build production bundle (`npm run build`)
 4. Deploy to Vercel using Vercel CLI
 
 **Environment Variables Required:**
+
 - `VERCEL_TOKEN` - Vercel authentication token
 - `VERCEL_ORG_ID` - Your Vercel organization ID
 - `VERCEL_PROJECT_ID` - Your Vercel project ID
@@ -101,10 +110,12 @@ jobs:
    - Copy the token
 
 2. **Link Vercel Project:**
+
    ```bash
    npm i -g vercel
    vercel link
    ```
+
    This creates `.vercel/project.json` with `orgId` and `projectId`
 
 3. **Add GitHub Secrets:**
@@ -116,6 +127,7 @@ jobs:
      - `VERCEL_PROJECT_ID` = from `.vercel/project.json`
 
 **Deployment Flow:**
+
 ```
 Push to main
   ↓
@@ -139,27 +151,32 @@ Production live! 🎉
 **File:** `.github/workflows/codeql.yml`
 
 **Trigger:**
+
 - Push to `main` branch
 - Pull requests targeting `main`
 - Scheduled: Weekly on Sundays at 00:00 UTC
 
 **What it does:**
+
 - Scans code for security vulnerabilities
 - Analyzes TypeScript/JavaScript codebase
 - Detects SQL injection, XSS, path traversal, etc.
 - Uses GitHub's official CodeQL action
 
 **Languages Analyzed:**
+
 - TypeScript
 - JavaScript
 
 **Benefits:**
+
 - ✅ Free for public and private repos
 - ✅ Deep static analysis (not just pattern matching)
 - ✅ No external API dependencies
 - ✅ Results visible in **Security** tab
 
 **Example Issues Detected:**
+
 - SQL injection vulnerabilities
 - Cross-site scripting (XSS)
 - Path traversal
@@ -167,6 +184,7 @@ Production live! 🎉
 - Hardcoded credentials
 
 **View Results:**
+
 1. Go to repository **Security** tab
 2. Click **Code scanning alerts**
 3. Review and fix issues
@@ -178,15 +196,18 @@ Production live! 🎉
 **File:** `.github/workflows/super-linter.yml`
 
 **Trigger:**
+
 - Pull requests targeting `main`
 
 **What it does:**
+
 - Enforces ESLint rules on TypeScript/Vue files
 - Validates code formatting with Prettier
 - Checks YAML, JSON, CSS, HTML syntax
 - Fails PR if quality standards not met
 
 **Linters Enabled:**
+
 - **ESLint** - TypeScript/JavaScript/Vue
 - **Prettier** - Code formatting
 - **YAML Lint** - Workflow files
@@ -195,6 +216,7 @@ Production live! 🎉
 - **HTML Lint** - Templates
 
 **Benefits:**
+
 - ✅ Consistent code style
 - ✅ Catches common mistakes early
 - ✅ Prevents broken code from merging
@@ -202,6 +224,7 @@ Production live! 🎉
 
 **Configuration:**
 Uses existing config files:
+
 - `.eslintrc.cjs` - ESLint rules
 - `.prettierrc` - Prettier formatting
 - `.eslintignore` - Files to ignore
@@ -248,6 +271,7 @@ VITE_SUPABASE_ANON_KEY=your-production-anon-key
 ```
 
 **Important:**
+
 - Use **different Supabase projects** for dev/staging/production
 - Never commit `.env` file to Git
 - Keep `.env.example` updated
@@ -259,6 +283,7 @@ VITE_SUPABASE_ANON_KEY=your-production-anon-key
 ### Vercel (Current)
 
 **Pros:**
+
 - ✅ Zero-config deployment
 - ✅ Automatic HTTPS
 - ✅ Global CDN
@@ -266,22 +291,26 @@ VITE_SUPABASE_ANON_KEY=your-production-anon-key
 - ✅ Free tier available
 
 **Configuration:**
+
 - Handled via `vercel.json` (optional)
 - Environment variables in Vercel dashboard
 
 ### Alternative Platforms
 
 **Netlify:**
+
 - Similar to Vercel
 - Good for static sites
 - Serverless functions
 
 **AWS Amplify:**
+
 - Full AWS integration
 - More control
 - Higher complexity
 
 **Cloudflare Pages:**
+
 - Fast global CDN
 - Free tier
 - Workers for serverless
@@ -293,11 +322,13 @@ VITE_SUPABASE_ANON_KEY=your-production-anon-key
 ### Build Logs
 
 **View in GitHub:**
+
 1. Go to **Actions** tab
 2. Select workflow run
 3. Click on job to see logs
 
 **View in Vercel:**
+
 1. Go to Vercel dashboard
 2. Select project
 3. Click **Deployments**
@@ -306,23 +337,22 @@ VITE_SUPABASE_ANON_KEY=your-production-anon-key
 ### Error Tracking
 
 **Recommended Tools:**
+
 - **Sentry** - Error tracking and monitoring
 - **LogRocket** - Session replay
 - **Datadog** - Full observability
 
 **Setup Sentry (Example):**
+
 ```typescript
-import * as Sentry from '@sentry/vue'
+import * as Sentry from '@sentry/vue';
 
 Sentry.init({
   app,
   dsn: import.meta.env.VITE_SENTRY_DSN,
   environment: import.meta.env.MODE,
-  integrations: [
-    new Sentry.BrowserTracing(),
-    new Sentry.Replay()
-  ]
-})
+  integrations: [new Sentry.BrowserTracing(), new Sentry.Replay()],
+});
 ```
 
 ---
@@ -332,6 +362,7 @@ Sentry.init({
 ### Build Optimization
 
 **Vite Configuration:**
+
 ```typescript
 // vite.config.ts
 export default defineConfig({
@@ -339,16 +370,17 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor': ['vue', 'vue-router', 'pinia'],
-          'supabase': ['@supabase/supabase-js']
-        }
-      }
-    }
-  }
-})
+          vendor: ['vue', 'vue-router', 'pinia'],
+          supabase: ['@supabase/supabase-js'],
+        },
+      },
+    },
+  },
+});
 ```
 
 **Benefits:**
+
 - Smaller bundle sizes
 - Better caching
 - Faster page loads
@@ -368,6 +400,7 @@ export default defineConfig({
 **Cause:** ESLint errors in code
 
 **Solution:**
+
 ```bash
 npm run lint         # See errors
 npm run lint -- --fix  # Auto-fix (if possible)
@@ -378,6 +411,7 @@ npm run lint -- --fix  # Auto-fix (if possible)
 **Cause:** Test failures or low coverage
 
 **Solution:**
+
 ```bash
 npm test             # Run tests
 npm run test:coverage  # Check coverage
@@ -390,6 +424,7 @@ Add tests or fix failing ones.
 **Cause:** Build errors or missing env vars
 
 **Solution:**
+
 1. Check Vercel logs for errors
 2. Verify environment variables are set
 3. Test build locally: `npm run build`
@@ -399,6 +434,7 @@ Add tests or fix failing ones.
 **Cause:** CodeQL may flag non-issues
 
 **Solution:**
+
 1. Review the alert carefully
 2. If it's a false positive, dismiss it with a reason
 3. Add a comment explaining why it's safe
@@ -410,6 +446,7 @@ Add tests or fix failing ones.
 ### 1. Test Before Push
 
 Always run locally before pushing:
+
 ```bash
 npm run lint
 npm test
@@ -445,6 +482,7 @@ npm audit fix       # Fix security issues
 ### 5. Monitor Build Times
 
 Keep CI fast:
+
 - Use `npm ci` instead of `npm install`
 - Cache dependencies
 - Parallelize jobs when possible
@@ -456,11 +494,13 @@ Keep CI fast:
 ### GitHub Security Features
 
 **Enabled:**
+
 - ✅ **Dependabot** - Automated dependency updates
 - ✅ **CodeQL** - Vulnerability scanning
 - ✅ **Secret scanning** - Detects leaked secrets
 
 **View Alerts:**
+
 1. Go to **Security** tab
 2. Review alerts
 3. Create issues for fixes
@@ -479,6 +519,7 @@ npm audit fix --force  # Force fix (breaking changes)
 ## Future Improvements
 
 **Planned:**
+
 - [ ] Add E2E tests with Playwright
 - [ ] Set up staging environment
 - [ ] Implement blue-green deployments
@@ -486,6 +527,7 @@ npm audit fix --force  # Force fix (breaking changes)
 - [ ] Setup Lighthouse CI
 
 **Considering:**
+
 - Docker containerization
 - Kubernetes orchestration
 - Multi-region deployments
@@ -503,6 +545,7 @@ npm audit fix --force  # Force fix (breaking changes)
 ---
 
 **Next Steps:**
+
 - [Testing Guide](Testing.md) - Learn about test structure
 - [Deployment Guide](Deployment.md) - Deploy to production
 - [Architecture](Architecture.md) - Understand the codebase

@@ -37,6 +37,7 @@ Feature-based • Repository pattern • Clean architecture • Type-safe end-to
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js 18+ (LTS recommended)
 - Supabase account ([free tier](https://supabase.com))
 - Google Cloud Console account (for OAuth)
@@ -70,6 +71,7 @@ cp env.example .env
 See detailed guide in [📚 Wiki → Authentication](wiki/Authentication.md)
 
 Quick steps:
+
 1. Create OAuth credentials in Google Cloud Console
 2. Configure authorized redirect URI:
    ```
@@ -106,6 +108,7 @@ npm run build
 **Coverage Requirements:** 70% minimum (lines, branches, functions, statements)
 
 **CI Pipeline:**
+
 - ✅ Automated testing on every push/PR
 - ✅ ESLint + Prettier validation
 - ✅ CodeQL security scanning
@@ -131,6 +134,7 @@ npm run build
 - **[FAQ](wiki/FAQ.md)** - Troubleshooting and common questions
 
 **Additional Technical Docs:**
+
 - [Architecture Guide](docs/ARCHITECTURE.md)
 - [Migration Guide](docs/MIGRATION_GUIDE.md)
 - [Error Handling](docs/ERROR_HANDLING.md)
@@ -153,6 +157,7 @@ src/
 ```
 
 **Architecture Layers:**
+
 ```
 Presentation (UI, Stores) → Domain (Services, Logic) → Infrastructure (Repositories, DB)
 ```
@@ -174,6 +179,7 @@ We welcome contributions! Please:
 7. Submit a pull request
 
 **Development Workflow:**
+
 ```bash
 git checkout -b feature/my-feature
 # Make changes
@@ -189,6 +195,7 @@ git push origin feature/my-feature
 ## 📱 Roadmap
 
 **Completed ✅**
+
 - Clean architecture with feature-based structure
 - Repository pattern and type-safe database client
 - Comprehensive test suite (70%+ coverage)
@@ -196,10 +203,12 @@ git push origin feature/my-feature
 - Trip sharing with role-based access
 
 **In Progress 🚧**
+
 - Multi-language support (i18n)
 - Dark mode
 
 **Planned 📋**
+
 - Google Calendar sync
 - Offline mode (PWA)
 - Expense charts and analytics
@@ -219,6 +228,7 @@ Private project for personal use.
 ## 🙏 Acknowledgments
 
 Built with:
+
 - [Vue 3](https://vuejs.org/)
 - [Supabase](https://supabase.com/)
 - [TailwindCSS](https://tailwindcss.com/)

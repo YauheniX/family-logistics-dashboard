@@ -7,6 +7,7 @@ Complete database schema documentation for the Family Logistics Dashboard.
 ## Overview
 
 The application uses **PostgreSQL** (via Supabase) with the following characteristics:
+
 - UUID primary keys
 - Row Level Security (RLS) enabled on all tables
 - Foreign key relationships with CASCADE deletes
@@ -34,6 +35,7 @@ create table if not exists public.trips (
 ```
 
 **Fields:**
+
 - `id` - Unique trip identifier
 - `name` - Trip name/title
 - `start_date` - Trip start date (optional)
@@ -43,6 +45,7 @@ create table if not exists public.trips (
 - `created_at` - Creation timestamp
 
 **Status Flow:**
+
 1. `planning` - Initial state, gathering ideas
 2. `booked` - Accommodations/flights booked
 3. `ready` - Packed and ready to go
@@ -65,6 +68,7 @@ create table if not exists public.packing_items (
 ```
 
 **Fields:**
+
 - `id` - Unique item identifier
 - `trip_id` - Associated trip (CASCADE delete when trip is deleted)
 - `title` - Item name/description
@@ -72,6 +76,7 @@ create table if not exists public.packing_items (
 - `is_packed` - Whether the item is packed (for progress tracking)
 
 **Categories:**
+
 - `adult` - Adult-specific items
 - `kid` - Children's items
 - `baby` - Baby/infant items
@@ -96,6 +101,7 @@ create table if not exists public.documents (
 ```
 
 **Fields:**
+
 - `id` - Unique document identifier
 - `trip_id` - Associated trip (CASCADE delete)
 - `title` - Document title/name
@@ -104,6 +110,7 @@ create table if not exists public.documents (
 - `created_at` - Upload timestamp
 
 **Use Cases:**
+
 - Booking confirmations
 - Travel insurance documents
 - Tickets and reservations
@@ -129,6 +136,7 @@ create table if not exists public.budget_entries (
 ```
 
 **Fields:**
+
 - `id` - Unique entry identifier
 - `trip_id` - Associated trip (CASCADE delete)
 - `category` - Expense category (e.g., "Accommodation", "Food", "Transport")
@@ -138,6 +146,7 @@ create table if not exists public.budget_entries (
 - `created_at` - Entry timestamp
 
 **Budget Categories (Examples):**
+
 - Accommodation
 - Transportation
 - Food & Dining
@@ -162,6 +171,7 @@ create table if not exists public.timeline_events (
 ```
 
 **Fields:**
+
 - `id` - Unique event identifier
 - `trip_id` - Associated trip (CASCADE delete)
 - `title` - Event title/name
@@ -169,6 +179,7 @@ create table if not exists public.timeline_events (
 - `notes` - Additional notes/details
 
 **Event Types (Examples):**
+
 - Flight departure/arrival
 - Hotel check-in/check-out
 - Restaurant reservations
@@ -192,6 +203,7 @@ create table if not exists public.packing_templates (
 ```
 
 **Fields:**
+
 - `id` - Unique template identifier
 - `name` - Template name
 - `category` - Template category (same as packing items)
@@ -213,6 +225,7 @@ create table if not exists public.packing_template_items (
 ```
 
 **Fields:**
+
 - `id` - Unique item identifier
 - `template_id` - Associated template (CASCADE delete)
 - `title` - Item name
@@ -235,6 +248,7 @@ create table if not exists public.trip_members (
 ```
 
 **Fields:**
+
 - `id` - Unique membership identifier
 - `trip_id` - Associated trip (CASCADE delete)
 - `user_id` - User being granted access (CASCADE delete)
@@ -243,6 +257,7 @@ create table if not exists public.trip_members (
 - **Constraint:** `unique (trip_id, user_id)` - Prevents duplicate memberships
 
 **Roles:**
+
 - `owner` - Full control (set automatically for trip creator)
 - `editor` - Can modify trip data
 - `viewer` - Read-only access
@@ -270,6 +285,7 @@ $$;
 ```
 
 **Security:**
+
 - `SECURITY DEFINER` - Runs with elevated privileges
 - Restricted to authenticated users only (via RLS)
 - Allows email → user ID lookup without exposing auth.users table
@@ -328,6 +344,7 @@ $$;
 #### Trips Table
 
 **SELECT Policy** - Read own trips + trips you're a member of
+
 ```sql
 CREATE POLICY trips_select_own
   ON public.trips
@@ -342,6 +359,7 @@ CREATE POLICY trips_select_own
 ```
 
 **INSERT Policy** - Create trips only with yourself as creator
+
 ```sql
 CREATE POLICY trips_modify_own
   ON public.trips
@@ -350,6 +368,7 @@ CREATE POLICY trips_modify_own
 ```
 
 **UPDATE Policy** - Update if owner or editor member
+
 ```sql
 CREATE POLICY trips_update_own
   ON public.trips
@@ -359,6 +378,7 @@ CREATE POLICY trips_update_own
 ```
 
 **DELETE Policy** - Delete only if owner
+
 ```sql
 CREATE POLICY trips_delete_own
   ON public.trips
@@ -371,6 +391,7 @@ CREATE POLICY trips_delete_own
 All child tables follow the same pattern:
 
 **SELECT** - Access if you have trip access
+
 ```sql
 CREATE POLICY <table>_select
   ON public.<table>
@@ -379,6 +400,7 @@ CREATE POLICY <table>_select
 ```
 
 **INSERT/UPDATE** - Modify if you can edit the trip
+
 ```sql
 CREATE POLICY <table>_modify
   ON public.<table>
@@ -387,6 +409,7 @@ CREATE POLICY <table>_modify
 ```
 
 **DELETE** - Delete if you can edit the trip
+
 ```sql
 CREATE POLICY <table>_delete
   ON public.<table>
@@ -397,6 +420,7 @@ CREATE POLICY <table>_delete
 #### Trip Members Table
 
 **SELECT** - Read memberships for trips you have access to
+
 ```sql
 CREATE POLICY trip_members_select
   ON public.trip_members
@@ -405,6 +429,7 @@ CREATE POLICY trip_members_select
 ```
 
 **INSERT/DELETE** - Manage memberships only if you're the trip owner
+
 ```sql
 CREATE POLICY trip_members_modify
   ON public.trip_members
@@ -420,6 +445,7 @@ CREATE POLICY trip_members_modify
 #### Packing Templates
 
 **SELECT** - Read your own templates
+
 ```sql
 CREATE POLICY templates_select_own
   ON public.packing_templates
@@ -428,6 +454,7 @@ CREATE POLICY templates_select_own
 ```
 
 **INSERT/UPDATE/DELETE** - Manage your own templates
+
 ```sql
 CREATE POLICY templates_modify_own
   ON public.packing_templates
@@ -474,19 +501,19 @@ Supabase Storage bucket for trip documents:
 **Bucket Name:** `documents`
 
 **RLS Policies:**
+
 - Users can upload to their own folder: `{user_id}/*`
 - Users can read from their own folder: `{user_id}/*`
 - Documents are private by default
 
 **Configuration:**
+
 ```javascript
 // Storage path format
-const path = `${userId}/${tripId}/${fileName}`
+const path = `${userId}/${tripId}/${fileName}`;
 
 // Upload example
-await supabase.storage
-  .from('documents')
-  .upload(path, file)
+await supabase.storage.from('documents').upload(path, file);
 ```
 
 ---
@@ -496,6 +523,7 @@ await supabase.storage
 ### 1. Apply Schema
 
 Run in Supabase SQL Editor:
+
 ```bash
 supabase/schema.sql
 ```
@@ -503,6 +531,7 @@ supabase/schema.sql
 ### 2. Apply RLS Policies
 
 Run in Supabase SQL Editor:
+
 ```bash
 supabase/rls.sql
 ```
@@ -510,6 +539,7 @@ supabase/rls.sql
 ### 3. Apply Migrations
 
 Run in Supabase SQL Editor:
+
 ```bash
 supabase/migrations/002_architecture_refactoring.sql
 ```
@@ -517,6 +547,7 @@ supabase/migrations/002_architecture_refactoring.sql
 ### 4. Verify
 
 Check that:
+
 - ✅ All tables exist
 - ✅ RLS is enabled on all tables
 - ✅ Policies are created
@@ -538,15 +569,13 @@ npx supabase gen types typescript --project-id <your-project-ref> > src/features
 ### Usage
 
 ```typescript
-import type { Database } from '@/features/shared/infrastructure/database.types'
+import type { Database } from '@/features/shared/infrastructure/database.types';
 
 // Typed Supabase client
-const supabase = createClient<Database>(url, key)
+const supabase = createClient<Database>(url, key);
 
 // Type-safe queries
-const { data } = await supabase
-  .from('trips')
-  .select('*')
+const { data } = await supabase.from('trips').select('*');
 // data is typed as Database['public']['Tables']['trips']['Row'][]
 ```
 

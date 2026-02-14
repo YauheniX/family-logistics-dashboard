@@ -7,21 +7,25 @@ This wiki contains comprehensive guides for developers and contributors working 
 ## 📖 Quick Navigation
 
 ### Getting Started
+
 - **[Quick Start](Home.md#quick-start)** - Get up and running in minutes
 - **[Authentication Setup](Authentication.md)** - Configure Google OAuth and email/password auth
 
 ### Architecture & Development
+
 - **[Architecture Overview](Architecture.md)** - System design, patterns, and best practices
 - **[Database Schema](Database-Schema.md)** - Tables, relationships, and RLS policies
 - **[Features Guide](Features.md)** - Detailed documentation for all features
 - **[Developer Guides](Developer-Guides.md)** - Error handling, toast notifications, async patterns, migration guide
 
 ### Quality & Deployment
+
 - **[Testing](Testing.md)** - Test structure, coverage, and best practices
 - **[CI/CD](CI-CD.md)** - Continuous integration and deployment workflows
 - **[Deployment](Deployment.md)** - How to deploy to production
 
 ### Additional Topics
+
 - **[Multi-Language & Dark Mode](Multi-Language-and-Dark-Mode.md)** - Internationalization and theming
 - **[FAQ](FAQ.md)** - Common questions and troubleshooting
 
@@ -30,6 +34,7 @@ This wiki contains comprehensive guides for developers and contributors working 
 ## Quick Start
 
 ### Prerequisites
+
 - Node.js 18+ (LTS recommended)
 - npm or yarn
 - Supabase account (free tier available)
@@ -85,6 +90,7 @@ Visit `http://localhost:5173` 🎉
 ### What It Does
 
 Family Logistics Dashboard helps families plan and manage trips with:
+
 - 🧳 **Trip Management** - Create, edit, track trip status
 - 🎒 **Packing Lists** - Categorized packing items with progress tracking
 - 💰 **Budget Tracking** - Expense management with categories
@@ -95,6 +101,7 @@ Family Logistics Dashboard helps families plan and manage trips with:
 ### Tech Stack
 
 **Frontend**
+
 - Vue 3 (Composition API) + TypeScript
 - Pinia (state management)
 - Vue Router
@@ -103,10 +110,12 @@ Family Logistics Dashboard helps families plan and manage trips with:
 - Zod (validation)
 
 **Backend**
+
 - Supabase (PostgreSQL + Auth + Storage)
 - Row Level Security (RLS)
 
 **Architecture**
+
 - Feature-based structure
 - Repository pattern
 - Clean architecture layers
@@ -132,6 +141,7 @@ This project follows **clean architecture** principles:
 ```
 
 **Key Benefits:**
+
 - ✅ Clear separation of concerns
 - ✅ Testable business logic
 - ✅ Independent features
@@ -159,6 +169,7 @@ Learn more in the [Architecture Guide](Architecture.md).
 5. Submit a pull request
 
 All PRs must pass:
+
 - ✅ ESLint checks
 - ✅ Tests with 70% coverage
 - ✅ CodeQL security analysis

@@ -7,6 +7,7 @@ Complete deployment instructions for the Family Logistics Dashboard.
 ## Overview
 
 The application can be deployed to various platforms. This guide covers:
+
 - Vercel (recommended)
 - Netlify
 - AWS Amplify
@@ -18,6 +19,7 @@ The application can be deployed to various platforms. This guide covers:
 ## Prerequisites
 
 Before deploying:
+
 - ✅ Code pushed to GitHub repository
 - ✅ Supabase production project created
 - ✅ All tests passing
@@ -51,32 +53,38 @@ vercel link
 ```
 
 Follow prompts:
+
 - Select your Vercel account/organization
 - Link to existing project or create new one
 
 This creates `.vercel/` folder with:
+
 - `project.json` - Contains `orgId` and `projectId`
 - `.gitignore` entry
 
 #### 3. Configure Environment Variables
 
 In Vercel dashboard:
+
 1. Go to **Project Settings → Environment Variables**
 2. Add variables for all environments:
 
 **Production:**
+
 ```
 VITE_SUPABASE_URL=https://your-prod-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-prod-anon-key
 ```
 
 **Preview:**
+
 ```
 VITE_SUPABASE_URL=https://your-staging-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-staging-anon-key
 ```
 
 **Development:**
+
 ```
 VITE_SUPABASE_URL=https://your-dev-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-dev-anon-key
@@ -105,6 +113,7 @@ vercel
 Go to **GitHub Repository → Settings → Secrets and variables → Actions**
 
 Add:
+
 - `VERCEL_TOKEN` - Your Vercel token
 - `VERCEL_ORG_ID` - From `.vercel/project.json`
 - `VERCEL_PROJECT_ID` - From `.vercel/project.json`
@@ -112,6 +121,7 @@ Add:
 #### 3. Push to Main
 
 GitHub Actions will automatically:
+
 1. Run tests
 2. Build project
 3. Deploy to Vercel
@@ -277,14 +287,14 @@ CMD ["nginx", "-g", "daemon off;"]
 server {
   listen 80;
   server_name _;
-  
+
   root /usr/share/nginx/html;
   index index.html;
-  
+
   location / {
     try_files $uri $uri/ /index.html;
   }
-  
+
   gzip on;
   gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript;
 }
@@ -311,7 +321,7 @@ services:
   app:
     build: .
     ports:
-      - "80:80"
+      - '80:80'
     environment:
       - NODE_ENV=production
     restart: unless-stopped
@@ -332,12 +342,14 @@ services:
 ### 2. Configure Custom Domain
 
 **Vercel:**
+
 1. Go to **Project Settings → Domains**
 2. Add custom domain
 3. Update DNS records as instructed
 4. Wait for SSL certificate
 
 **Netlify:**
+
 1. Go to **Site settings → Domain management**
 2. Add custom domain
 3. Configure DNS
@@ -346,6 +358,7 @@ services:
 ### 3. Update Google OAuth
 
 Add production URL to authorized redirect URIs:
+
 ```
 https://your-domain.com/auth/callback
 https://<your-ref>.supabase.co/auth/v1/callback
@@ -354,6 +367,7 @@ https://<your-ref>.supabase.co/auth/v1/callback
 ### 4. Set Up Monitoring
 
 **Recommended Tools:**
+
 - **Sentry** - Error tracking
 - **Google Analytics** - User analytics
 - **LogRocket** - Session replay
@@ -374,10 +388,12 @@ All platforms automatically provide SSL certificates.
 ### 7. Set Up Backups
 
 **Supabase:**
+
 - Automatic daily backups on paid plans
 - Manual backups via dashboard
 
 **Storage:**
+
 - Regular backups of document bucket
 - Version control for configuration
 
@@ -396,14 +412,14 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor': ['vue', 'vue-router', 'pinia'],
-          'supabase': ['@supabase/supabase-js'],
-          'charts': ['chart.js', 'vue-chartjs']
-        }
-      }
-    }
-  }
-})
+          vendor: ['vue', 'vue-router', 'pinia'],
+          supabase: ['@supabase/supabase-js'],
+          charts: ['chart.js', 'vue-chartjs'],
+        },
+      },
+    },
+  },
+});
 ```
 
 **2. Lazy Loading**
@@ -413,9 +429,9 @@ export default defineConfig({
 const routes = [
   {
     path: '/trips',
-    component: () => import('@/views/TripsView.vue')
-  }
-]
+    component: () => import('@/views/TripsView.vue'),
+  },
+];
 ```
 
 **3. Asset Optimization**
@@ -439,19 +455,17 @@ const routes = [
 // Use getters for computed values
 const getters = {
   packedPercentage: (state) => {
-    const packed = state.items.filter(i => i.isPacked).length
-    return (packed / state.items.length) * 100
-  }
-}
+    const packed = state.items.filter((i) => i.isPacked).length;
+    return (packed / state.items.length) * 100;
+  },
+};
 ```
 
 **3. Supabase Optimization**
 
 ```typescript
 // Only select needed columns
-const { data } = await supabase
-  .from('trips')
-  .select('id, name, status')  // Not 'select('*')'
+const { data } = await supabase.from('trips').select('id, name, status'); // Not 'select('*')'
 ```
 
 ---
@@ -484,11 +498,13 @@ git push origin main
 ### Health Checks
 
 **Uptime Monitoring:**
+
 - [UptimeRobot](https://uptimerobot.com/) (free)
 - [Pingdom](https://www.pingdom.com/)
 - [StatusCake](https://www.statuscake.com/)
 
 **Set up alerts for:**
+
 - Site down
 - Response time > 3s
 - Error rate > 1%
@@ -499,7 +515,7 @@ git push origin main
 
 ```typescript
 // main.ts
-import * as Sentry from '@sentry/vue'
+import * as Sentry from '@sentry/vue';
 
 Sentry.init({
   app,
@@ -507,14 +523,14 @@ Sentry.init({
   environment: import.meta.env.MODE,
   integrations: [
     new Sentry.BrowserTracing({
-      routingInstrumentation: Sentry.vueRouterInstrumentation(router)
+      routingInstrumentation: Sentry.vueRouterInstrumentation(router),
     }),
-    new Sentry.Replay()
+    new Sentry.Replay(),
   ],
   tracesSampleRate: 1.0,
   replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0
-})
+  replaysOnErrorSampleRate: 1.0,
+});
 ```
 
 ---
@@ -524,6 +540,7 @@ Sentry.init({
 ### Build Fails
 
 **Check:**
+
 1. Dependencies installed: `npm ci`
 2. Tests passing: `npm test`
 3. Build works locally: `npm run build`
@@ -532,6 +549,7 @@ Sentry.init({
 ### Authentication Not Working
 
 **Check:**
+
 1. Supabase URL and keys correct
 2. Google OAuth redirect URIs updated
 3. CORS settings in Supabase
@@ -541,6 +559,7 @@ Sentry.init({
 **Cause:** SPA routing not configured
 
 **Solution:**
+
 - Vercel: Automatic
 - Netlify: Add redirects in `netlify.toml`
 - Others: Configure web server
@@ -548,6 +567,7 @@ Sentry.init({
 ### Slow Load Times
 
 **Solutions:**
+
 1. Enable code splitting
 2. Lazy load routes
 3. Optimize images
@@ -579,6 +599,7 @@ Sentry.init({
 ---
 
 **Next Steps:**
+
 - [CI/CD Guide](CI-CD.md) - Automated deployment
 - [Testing](Testing.md) - Pre-deployment testing
 - [FAQ](FAQ.md) - Common issues

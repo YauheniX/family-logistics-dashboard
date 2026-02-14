@@ -90,11 +90,11 @@ src/
 
 ```typescript
 // src/locales/index.ts
-import { createI18n } from 'vue-i18n'
-import en from './en.json'
-import es from './es.json'
-import fr from './fr.json'
-import de from './de.json'
+import { createI18n } from 'vue-i18n';
+import en from './en.json';
+import es from './es.json';
+import fr from './fr.json';
+import de from './de.json';
 
 export const i18n = createI18n({
   legacy: false,
@@ -104,27 +104,28 @@ export const i18n = createI18n({
     en,
     es,
     fr,
-    de
-  }
-})
+    de,
+  },
+});
 ```
 
 **4. Install in App**
 
 ```typescript
 // main.ts
-import { createApp } from 'vue'
-import { i18n } from './locales'
-import App from './App.vue'
+import { createApp } from 'vue';
+import { i18n } from './locales';
+import App from './App.vue';
 
-const app = createApp(App)
-app.use(i18n)
-app.mount('#app')
+const app = createApp(App);
+app.use(i18n);
+app.mount('#app');
 ```
 
 #### Usage in Components
 
 **Template:**
+
 ```vue
 <template>
   <div>
@@ -136,14 +137,15 @@ app.mount('#app')
 ```
 
 **Script:**
+
 ```vue
 <script setup>
-import { useI18n } from 'vue-i18n'
+import { useI18n } from 'vue-i18n';
 
-const { t, locale } = useI18n()
+const { t, locale } = useI18n();
 
 function changeLanguage(lang) {
-  locale.value = lang
+  locale.value = lang;
 }
 </script>
 
@@ -174,24 +176,24 @@ Store user preference in localStorage:
 
 ```typescript
 // composables/useLocale.ts
-import { ref, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 export function useLocale() {
-  const { locale } = useI18n()
-  
+  const { locale } = useI18n();
+
   // Load from localStorage
-  const savedLocale = localStorage.getItem('user-locale')
+  const savedLocale = localStorage.getItem('user-locale');
   if (savedLocale) {
-    locale.value = savedLocale
+    locale.value = savedLocale;
   }
-  
+
   // Save when changed
   watch(locale, (newLocale) => {
-    localStorage.setItem('user-locale', newLocale)
-  })
-  
-  return { locale }
+    localStorage.setItem('user-locale', newLocale);
+  });
+
+  return { locale };
 }
 ```
 
@@ -201,12 +203,12 @@ Use locale-aware formatting:
 
 ```typescript
 // Date formatting
-const { d } = useI18n()
-const formattedDate = d(new Date(), 'short') // Respects locale
+const { d } = useI18n();
+const formattedDate = d(new Date(), 'short'); // Respects locale
 
 // Number formatting
-const { n } = useI18n()
-const formattedPrice = n(1234.56, 'currency') // Respects locale
+const { n } = useI18n();
+const formattedPrice = n(1234.56, 'currency'); // Respects locale
 ```
 
 ### RTL Support
@@ -215,12 +217,12 @@ For right-to-left languages (Arabic, Hebrew):
 
 ```typescript
 // Detect RTL
-const isRTL = computed(() => ['ar', 'he'].includes(locale.value))
+const isRTL = computed(() => ['ar', 'he'].includes(locale.value));
 
 // Apply to HTML
 watch(isRTL, (rtl) => {
-  document.documentElement.dir = rtl ? 'rtl' : 'ltr'
-})
+  document.documentElement.dir = rtl ? 'rtl' : 'ltr';
+});
 ```
 
 ---
@@ -250,62 +252,62 @@ module.exports = {
         background: '#FFFFFF',
         surface: '#F9FAFB',
         text: '#111827',
-        
+
         // Dark mode colors (optional custom)
         'dark-primary': '#60A5FA',
         'dark-secondary': '#A78BFA',
         'dark-background': '#1F2937',
         'dark-surface': '#111827',
-        'dark-text': '#F9FAFB'
-      }
-    }
-  }
-}
+        'dark-text': '#F9FAFB',
+      },
+    },
+  },
+};
 ```
 
 #### 2. Dark Mode Composable
 
 ```typescript
 // composables/useDarkMode.ts
-import { ref, watch } from 'vue'
+import { ref, watch } from 'vue';
 
 export function useDarkMode() {
-  const isDark = ref(false)
-  
+  const isDark = ref(false);
+
   // Load from localStorage
-  const savedTheme = localStorage.getItem('theme')
+  const savedTheme = localStorage.getItem('theme');
   if (savedTheme === 'dark') {
-    isDark.value = true
+    isDark.value = true;
   } else if (!savedTheme) {
     // Check system preference
-    isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+    isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
   }
-  
+
   // Apply theme
   const applyTheme = (dark: boolean) => {
     if (dark) {
-      document.documentElement.classList.add('dark')
+      document.documentElement.classList.add('dark');
     } else {
-      document.documentElement.classList.remove('dark')
+      document.documentElement.classList.remove('dark');
     }
-  }
-  
-  applyTheme(isDark.value)
-  
+  };
+
+  applyTheme(isDark.value);
+
   // Watch for changes
   watch(isDark, (dark) => {
-    applyTheme(dark)
-    localStorage.setItem('theme', dark ? 'dark' : 'light')
-  })
-  
+    applyTheme(dark);
+    localStorage.setItem('theme', dark ? 'dark' : 'light');
+  });
+
   const toggleDarkMode = () => {
-    isDark.value = !isDark.value
-  }
-  
+    isDark.value = !isDark.value;
+  };
+
   return {
     isDark,
-    toggleDarkMode
-  }
+    toggleDarkMode,
+  };
 }
 ```
 
@@ -313,23 +315,24 @@ export function useDarkMode() {
 
 ```vue
 <script setup>
-import { useDarkMode } from '@/composables/useDarkMode'
+import { useDarkMode } from '@/composables/useDarkMode';
 
-const { isDark, toggleDarkMode } = useDarkMode()
+const { isDark, toggleDarkMode } = useDarkMode();
 </script>
 
 <template>
-  <button
-    @click="toggleDarkMode"
-    class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-  >
+  <button @click="toggleDarkMode" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
     <svg v-if="isDark" class="w-6 h-6" fill="currentColor">
       <!-- Sun icon -->
-      <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+      <path
+        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+      />
     </svg>
     <svg v-else class="w-6 h-6" fill="currentColor">
       <!-- Moon icon -->
-      <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+      <path
+        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+      />
     </svg>
   </button>
 </template>
@@ -346,11 +349,13 @@ const { isDark, toggleDarkMode } = useDarkMode()
     <p class="text-gray-600 dark:text-gray-400">
       {{ trip.description }}
     </p>
-    <button class="
+    <button
+      class="
       bg-blue-500 hover:bg-blue-600
       dark:bg-blue-600 dark:hover:bg-blue-700
       text-white
-    ">
+    "
+    >
       Save
     </button>
   </div>
@@ -360,6 +365,7 @@ const { isDark, toggleDarkMode } = useDarkMode()
 ### Color Palette
 
 **Light Mode:**
+
 - Background: `#FFFFFF`
 - Surface: `#F9FAFB`
 - Primary: `#3B82F6` (Blue)
@@ -368,6 +374,7 @@ const { isDark, toggleDarkMode } = useDarkMode()
 - Text Muted: `#6B7280`
 
 **Dark Mode:**
+
 - Background: `#111827`
 - Surface: `#1F2937`
 - Primary: `#60A5FA` (Lighter Blue)
@@ -396,13 +403,13 @@ Ensure proper contrast ratios:
 Auto-detect user's system theme:
 
 ```typescript
-const prefersDark = window.matchMedia('(prefers-color-scheme: dark)')
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
 
 prefersDark.addEventListener('change', (e) => {
   if (!localStorage.getItem('theme')) {
-    isDark.value = e.matches
+    isDark.value = e.matches;
   }
-})
+});
 ```
 
 ---
@@ -443,11 +450,13 @@ prefersDark.addEventListener('change', (e) => {
 ### Translation Keys
 
 **Structure:**
+
 ```
 feature.component.element
 ```
 
 **Examples:**
+
 ```
 trips.card.title
 trips.form.submit
@@ -466,9 +475,9 @@ budget.summary.total
 ```
 
 ```typescript
-$t('items.packed', 0) // "No items packed"
-$t('items.packed', 1) // "1 item packed"
-$t('items.packed', 5) // "5 items packed"
+$t('items.packed', 0); // "No items packed"
+$t('items.packed', 1); // "1 item packed"
+$t('items.packed', 5); // "5 items packed"
 ```
 
 ### Dynamic Values
@@ -480,17 +489,19 @@ $t('items.packed', 5) // "5 items packed"
 ```
 
 ```typescript
-$t('welcome', { name: user.name })
+$t('welcome', { name: user.name });
 ```
 
 ### Avoid Concatenation
 
 ❌ **Bad:**
+
 ```typescript
-const message = $t('hello') + ' ' + $t('world')
+const message = $t('hello') + ' ' + $t('world');
 ```
 
 ✅ **Good:**
+
 ```json
 {
   "greeting": "Hello, world!"
@@ -504,35 +515,33 @@ const message = $t('hello') + ' ' + $t('world')
 ### Test Translations
 
 ```typescript
-import { i18n } from '@/locales'
+import { i18n } from '@/locales';
 
 describe('Translations', () => {
   it('should have English translations', () => {
-    expect(i18n.global.t('trips.title', {}, { locale: 'en' }))
-      .toBe('Trips')
-  })
+    expect(i18n.global.t('trips.title', {}, { locale: 'en' })).toBe('Trips');
+  });
 
   it('should have Spanish translations', () => {
-    expect(i18n.global.t('trips.title', {}, { locale: 'es' }))
-      .toBe('Viajes')
-  })
-})
+    expect(i18n.global.t('trips.title', {}, { locale: 'es' })).toBe('Viajes');
+  });
+});
 ```
 
 ### Test Dark Mode
 
 ```typescript
-import { useDarkMode } from '@/composables/useDarkMode'
+import { useDarkMode } from '@/composables/useDarkMode';
 
 describe('Dark Mode', () => {
   it('should toggle dark mode', () => {
-    const { isDark, toggleDarkMode } = useDarkMode()
-    
-    const initialState = isDark.value
-    toggleDarkMode()
-    expect(isDark.value).toBe(!initialState)
-  })
-})
+    const { isDark, toggleDarkMode } = useDarkMode();
+
+    const initialState = isDark.value;
+    toggleDarkMode();
+    expect(isDark.value).toBe(!initialState);
+  });
+});
 ```
 
 ---
@@ -547,6 +556,7 @@ describe('Dark Mode', () => {
 ---
 
 **Next Steps:**
+
 - [Features Guide](Features.md) - UI features to translate
 - [Architecture](Architecture.md) - Where to integrate i18n
 - [Testing](Testing.md) - Test translations

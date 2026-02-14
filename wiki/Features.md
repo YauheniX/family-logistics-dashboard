@@ -38,6 +38,7 @@ Planning ──→ Booked ──→ Ready ──→ Done
 ```
 
 **Status Definitions:**
+
 - **Planning** - Researching and brainstorming
 - **Booked** - Flights/hotels reserved
 - **Ready** - Packed and prepared
@@ -46,6 +47,7 @@ Planning ──→ Booked ──→ Ready ──→ Done
 ### Usage
 
 **Create a Trip:**
+
 1. Navigate to Dashboard
 2. Click "New Trip" button
 3. Fill in trip details:
@@ -56,11 +58,13 @@ Planning ──→ Booked ──→ Ready ──→ Done
 4. Click "Create"
 
 **Edit a Trip:**
+
 1. Click on trip card
 2. Update fields
 3. Click "Save"
 
 **Duplicate a Trip:**
+
 1. Click "Duplicate" on trip card
 2. System copies:
    - Trip details
@@ -70,6 +74,7 @@ Planning ──→ Booked ──→ Ready ──→ Done
 3. New trip created with "(Copy)" suffix
 
 **Delete a Trip:**
+
 1. Click "Delete" on trip card
 2. Confirm deletion
 3. All related data deleted (CASCADE)
@@ -79,6 +84,7 @@ Planning ──→ Booked ──→ Ready ──→ Done
 **Database Table:** `trips`
 
 **Fields:**
+
 - `id` (UUID) - Primary key
 - `name` (text) - Trip name
 - `start_date` (date) - Start date
@@ -115,6 +121,7 @@ Planning ──→ Booked ──→ Ready ──→ Done
 ### Usage
 
 **Add Packing Item:**
+
 1. Open trip details
 2. Navigate to "Packing" tab
 3. Click "Add Item"
@@ -124,11 +131,13 @@ Planning ──→ Booked ──→ Ready ──→ Done
 5. Click "Add"
 
 **Mark as Packed:**
+
 1. Click checkbox next to item
 2. Item marked as packed
 3. Progress bar updates
 
 **Progress Tracking:**
+
 - Shows "X of Y items packed"
 - Progress bar visualization
 - Percentage complete
@@ -138,6 +147,7 @@ Planning ──→ Booked ──→ Ready ──→ Done
 **Database Table:** `packing_items`
 
 **Fields:**
+
 - `id` (UUID) - Primary key
 - `trip_id` (UUID) - Foreign key to trips
 - `title` (text) - Item name
@@ -148,10 +158,11 @@ Planning ──→ Booked ──→ Ready ──→ Done
 **Composable:** `usePackingProgress`
 
 **Progress Calculation:**
+
 ```typescript
-const packedCount = items.filter(i => i.isPacked).length
-const totalCount = items.length
-const percentage = (packedCount / totalCount) * 100
+const packedCount = items.filter((i) => i.isPacked).length;
+const totalCount = items.length;
+const percentage = (packedCount / totalCount) * 100;
 ```
 
 ---
@@ -170,6 +181,7 @@ const percentage = (packedCount / totalCount) * 100
 ### Expense Categories
 
 Common categories:
+
 - Accommodation
 - Transportation
 - Food & Dining
@@ -181,6 +193,7 @@ Common categories:
 ### Usage
 
 **Add Budget Entry:**
+
 1. Open trip details
 2. Navigate to "Budget" tab
 3. Click "Add Entry"
@@ -192,6 +205,7 @@ Common categories:
 5. Click "Save"
 
 **View Budget Summary:**
+
 - Total spent
 - Total planned
 - Breakdown by category
@@ -202,6 +216,7 @@ Common categories:
 **Database Table:** `budget_entries`
 
 **Fields:**
+
 - `id` (UUID) - Primary key
 - `trip_id` (UUID) - Foreign key to trips
 - `category` (text) - Expense category
@@ -211,19 +226,20 @@ Common categories:
 - `created_at` (timestamp) - Entry time
 
 **Calculations:**
+
 ```typescript
 // Total budget
-const total = entries.reduce((sum, e) => sum + e.amount, 0)
+const total = entries.reduce((sum, e) => sum + e.amount, 0);
 
 // By category
 const byCategory = entries.reduce((acc, e) => {
-  acc[e.category] = (acc[e.category] || 0) + e.amount
-  return acc
-}, {})
+  acc[e.category] = (acc[e.category] || 0) + e.amount;
+  return acc;
+}, {});
 
 // Planned vs. actual
-const planned = entries.filter(e => e.isPlanned).reduce((sum, e) => sum + e.amount, 0)
-const actual = entries.filter(e => !e.isPlanned).reduce((sum, e) => sum + e.amount, 0)
+const planned = entries.filter((e) => e.isPlanned).reduce((sum, e) => sum + e.amount, 0);
+const actual = entries.filter((e) => !e.isPlanned).reduce((sum, e) => sum + e.amount, 0);
 ```
 
 ---
@@ -249,6 +265,7 @@ const actual = entries.filter(e => !e.isPlanned).reduce((sum, e) => sum + e.amou
 ### Usage
 
 **Upload Document:**
+
 1. Open trip details
 2. Navigate to "Documents" tab
 3. Click "Upload"
@@ -259,10 +276,12 @@ const actual = entries.filter(e => !e.isPlanned).reduce((sum, e) => sum + e.amou
 6. Click "Upload"
 
 **View Document:**
+
 1. Click on document card
 2. Opens in new tab
 
 **Delete Document:**
+
 1. Click "Delete" on document card
 2. Confirm deletion
 3. File removed from storage
@@ -272,6 +291,7 @@ const actual = entries.filter(e => !e.isPlanned).reduce((sum, e) => sum + e.amou
 **Database Table:** `documents`
 
 **Fields:**
+
 - `id` (UUID) - Primary key
 - `trip_id` (UUID) - Foreign key to trips
 - `title` (text) - Document title
@@ -282,28 +302,28 @@ const actual = entries.filter(e => !e.isPlanned).reduce((sum, e) => sum + e.amou
 **Storage Bucket:** `documents`
 
 **Storage Path:**
+
 ```
 {user_id}/{trip_id}/{file_name}
 ```
 
 **Upload Process:**
+
 ```typescript
 // 1. Upload to storage
-const path = `${userId}/${tripId}/${fileName}`
-const { data, error } = await supabase.storage
-  .from('documents')
-  .upload(path, file)
+const path = `${userId}/${tripId}/${fileName}`;
+const { data, error } = await supabase.storage.from('documents').upload(path, file);
 
 // 2. Get public URL
-const url = supabase.storage.from('documents').getPublicUrl(path)
+const url = supabase.storage.from('documents').getPublicUrl(path);
 
 // 3. Save metadata to database
 await documentRepository.create({
   tripId,
   title,
   description,
-  fileUrl: url
-})
+  fileUrl: url,
+});
 ```
 
 ---
@@ -331,6 +351,7 @@ await documentRepository.create({
 ### Usage
 
 **Add Timeline Event:**
+
 1. Open trip details
 2. Navigate to "Timeline" tab
 3. Click "Add Event"
@@ -341,6 +362,7 @@ await documentRepository.create({
 5. Click "Save"
 
 **View Timeline:**
+
 - Events sorted chronologically
 - Shows date, time, title
 - Click to expand notes
@@ -350,6 +372,7 @@ await documentRepository.create({
 **Database Table:** `timeline_events`
 
 **Fields:**
+
 - `id` (UUID) - Primary key
 - `trip_id` (UUID) - Foreign key to trips
 - `title` (text) - Event name
@@ -357,10 +380,11 @@ await documentRepository.create({
 - `notes` (text) - Additional details
 
 **Sorting:**
+
 ```typescript
-const sortedEvents = events.sort((a, b) => 
-  new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime()
-)
+const sortedEvents = events.sort(
+  (a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime(),
+);
 ```
 
 ---
@@ -378,18 +402,21 @@ const sortedEvents = events.sort((a, b) =>
 ### Roles
 
 **Owner:**
+
 - Full control over trip
 - Can delete trip
 - Can manage members
 - Automatically assigned to creator
 
 **Editor:**
+
 - Can modify trip data
 - Can add/edit packing items, budget, documents, timeline
 - Cannot delete trip
 - Cannot manage members
 
 **Viewer:**
+
 - Read-only access
 - Can view all trip data
 - Cannot modify anything
@@ -397,6 +424,7 @@ const sortedEvents = events.sort((a, b) =>
 ### Usage
 
 **Invite Member:**
+
 1. Open trip details
 2. Navigate to "Members" tab
 3. Click "Invite"
@@ -406,6 +434,7 @@ const sortedEvents = events.sort((a, b) =>
 5. Click "Send Invite"
 
 **Remove Member:**
+
 1. Find member in list
 2. Click "Remove"
 3. Confirm removal
@@ -415,6 +444,7 @@ const sortedEvents = events.sort((a, b) =>
 **Database Table:** `trip_members`
 
 **Fields:**
+
 - `id` (UUID) - Primary key
 - `trip_id` (UUID) - Foreign key to trips
 - `user_id` (UUID) - Foreign key to auth.users
@@ -423,6 +453,7 @@ const sortedEvents = events.sort((a, b) =>
 - **Constraint:** `unique (trip_id, user_id)` - No duplicates
 
 **User Lookup Function:**
+
 ```sql
 CREATE FUNCTION get_user_id_by_email(lookup_email text)
 RETURNS uuid
@@ -436,6 +467,7 @@ $$;
 ```
 
 **Access Control:**
+
 - Enforced via Row Level Security (RLS)
 - Helper functions: `user_has_trip_access()`, `user_can_edit_trip()`
 - Policies check ownership and membership
@@ -455,6 +487,7 @@ $$;
 ### Usage
 
 **Create Template:**
+
 1. Navigate to "Templates" page
 2. Click "New Template"
 3. Enter:
@@ -464,6 +497,7 @@ $$;
 5. Click "Save"
 
 **Apply Template to Trip:**
+
 1. Open trip packing list
 2. Click "Apply Template"
 3. Select template
@@ -472,23 +506,25 @@ $$;
 ### Technical Details
 
 **Database Tables:**
+
 - `packing_templates` - Template metadata
 - `packing_template_items` - Items in template
 
 **Template Application:**
+
 ```typescript
 async function applyTemplate(tripId: string, templateId: string) {
   // 1. Get template items
-  const items = await templateItemRepository.findByTemplateId(templateId)
-  
+  const items = await templateItemRepository.findByTemplateId(templateId);
+
   // 2. Copy to trip packing list
   for (const item of items) {
     await packingItemRepository.create({
       tripId,
       title: item.title,
       category: item.category,
-      isPacked: false
-    })
+      isPacked: false,
+    });
   }
 }
 ```
@@ -498,6 +534,7 @@ async function applyTemplate(tripId: string, templateId: string) {
 ## Feature Roadmap
 
 ### Completed ✅
+
 - ✅ Trip CRUD operations
 - ✅ Packing lists with categories
 - ✅ Budget tracking
@@ -507,11 +544,13 @@ async function applyTemplate(tripId: string, templateId: string) {
 - ✅ Packing templates
 
 ### In Progress 🚧
+
 - 🚧 Multi-language support
 - 🚧 Dark mode
 - 🚧 Mobile responsive design
 
 ### Planned 📋
+
 - 📋 Google Calendar sync
 - 📋 Offline mode (PWA)
 - 📋 Expense charts and analytics
@@ -530,46 +569,46 @@ async function applyTemplate(tripId: string, templateId: string) {
 ```typescript
 // Duplicates trip with ALL related data
 async function duplicateTrip(tripId: string) {
-  const trip = await tripRepository.findById(tripId)
-  
+  const trip = await tripRepository.findById(tripId);
+
   // 1. Duplicate trip
-  const newTrip = await tripRepository.duplicate(trip)
-  
+  const newTrip = await tripRepository.duplicate(trip);
+
   // 2. Copy packing items
-  const packingItems = await packingItemRepository.findByTripId(tripId)
+  const packingItems = await packingItemRepository.findByTripId(tripId);
   for (const item of packingItems) {
     await packingItemRepository.create({
       tripId: newTrip.id,
       title: item.title,
       category: item.category,
-      isPacked: false
-    })
+      isPacked: false,
+    });
   }
-  
+
   // 3. Copy budget entries
-  const budgetEntries = await budgetRepository.findByTripId(tripId)
+  const budgetEntries = await budgetRepository.findByTripId(tripId);
   for (const entry of budgetEntries) {
     await budgetRepository.create({
       tripId: newTrip.id,
       category: entry.category,
       amount: entry.amount,
       currency: entry.currency,
-      isPlanned: entry.isPlanned
-    })
+      isPlanned: entry.isPlanned,
+    });
   }
-  
+
   // 4. Copy timeline events
-  const events = await timelineRepository.findByTripId(tripId)
+  const events = await timelineRepository.findByTripId(tripId);
   for (const event of events) {
     await timelineRepository.create({
       tripId: newTrip.id,
       title: event.title,
       dateTime: event.dateTime,
-      notes: event.notes
-    })
+      notes: event.notes,
+    });
   }
-  
-  return newTrip
+
+  return newTrip;
 }
 ```
 

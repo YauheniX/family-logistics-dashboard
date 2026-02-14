@@ -7,6 +7,7 @@ This guide covers setting up authentication for the Family Logistics Dashboard u
 ## Overview
 
 The application uses **Supabase Auth** which provides:
+
 - Google OAuth (primary method)
 - Email/password authentication (fallback)
 - Persistent sessions
@@ -43,12 +44,13 @@ The application uses **Supabase Auth** which provides:
    - Set a name (e.g., "Family Logistics Web Client")
 
 5. **Add Authorized Redirect URIs**
-   
+
    Add your Supabase callback URL:
+
    ```
    https://<your-supabase-project-ref>.supabase.co/auth/v1/callback
    ```
-   
+
    **How to find your project ref:**
    - Go to your Supabase dashboard
    - Your project URL looks like: `https://abcdefgh.supabase.co`
@@ -112,13 +114,13 @@ The app uses the Supabase client to handle authentication.
 Location: `src/features/shared/infrastructure/supabase.client.ts`
 
 ```typescript
-import { createClient } from '@supabase/supabase-js'
-import type { Database } from './database.types'
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from './database.types';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 ```
 
 ### Auth Store
@@ -126,6 +128,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
 Location: `src/stores/authStore.ts`
 
 Handles:
+
 - User session state
 - Sign in with Google
 - Sign in with email/password
@@ -140,17 +143,17 @@ Uses **beforeEach** navigation guard to protect routes:
 
 ```typescript
 router.beforeEach(async (to, from, next) => {
-  const authStore = useAuthStore()
-  await authStore.initializeAuth()
+  const authStore = useAuthStore();
+  await authStore.initializeAuth();
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    next('/login')
+    next('/login');
   } else if (to.path === '/login' && authStore.isAuthenticated) {
-    next('/dashboard')
+    next('/dashboard');
   } else {
-    next()
+    next();
   }
-})
+});
 ```
 
 ---
@@ -190,6 +193,7 @@ Navigate to `http://localhost:5173`
 **Cause:** The callback URL in Google Cloud Console doesn't match Supabase.
 
 **Solution:**
+
 - Double-check your Supabase project ref
 - Ensure the callback URL format is correct:
   ```
@@ -202,6 +206,7 @@ Navigate to `http://localhost:5173`
 **Cause:** Client ID in Supabase doesn't match Google Cloud Console.
 
 **Solution:**
+
 - Re-copy the Client ID from Google Cloud Console
 - Paste it exactly in Supabase (no extra spaces)
 - Save and retry
@@ -211,6 +216,7 @@ Navigate to `http://localhost:5173`
 **Cause:** OAuth consent screen not configured properly.
 
 **Solution:**
+
 - Complete all required fields in OAuth consent screen
 - Add your email to test users (if app is in testing mode)
 - Publish the app or add yourself as a test user
@@ -220,6 +226,7 @@ Navigate to `http://localhost:5173`
 **Cause:** SMTP not configured or email templates broken.
 
 **Solution:**
+
 - Check **Authentication → Settings → SMTP Settings**
 - Use Supabase's default email service for testing
 - Verify email templates are correct
@@ -229,22 +236,26 @@ Navigate to `http://localhost:5173`
 ## Security Best Practices
 
 ### 1. Environment Variables
+
 - **Never commit** `.env` file to Git
 - Use `.env.example` as a template
 - Keep `VITE_SUPABASE_ANON_KEY` public-safe (it's designed to be exposed)
 - Store secrets (like service role keys) server-side only
 
 ### 2. OAuth Credentials
+
 - Keep **Client Secret** secure (never expose in frontend)
 - Rotate credentials periodically
 - Use different OAuth clients for dev/staging/production
 
 ### 3. Row Level Security (RLS)
+
 - Always enable RLS on all tables
 - Test policies thoroughly
 - Use `auth.uid()` to restrict access to user's own data
 
 ### 4. Session Management
+
 - Sessions auto-refresh with Supabase
 - Set appropriate session timeouts
 - Implement proper sign-out logic
@@ -282,6 +293,7 @@ https://your-production-domain.com/auth/callback
 ---
 
 **Next Steps:**
+
 - Set up [Database Schema](Database-Schema.md)
 - Configure [Row Level Security](Database-Schema.md#row-level-security)
 - Explore [Features](Features.md)

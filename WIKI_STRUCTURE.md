@@ -142,18 +142,21 @@ The refactored README is concise and developer-friendly:
 ## Benefits
 
 ### For New Contributors
+
 - ✅ Quick overview in README (under 250 lines)
 - ✅ Clear navigation to detailed topics
 - ✅ Self-serve answers in FAQ
 - ✅ Step-by-step guides in Wiki
 
 ### For Documentation Maintenance
+
 - ✅ Modular structure - easy to update
 - ✅ Separation of concerns (architecture vs. deployment vs. features)
 - ✅ Comprehensive coverage (5,053 total Wiki lines)
 - ✅ Searchable and linkable sections
 
 ### For Project Quality
+
 - ✅ Professional documentation structure
 - ✅ Production-ready appearance
 - ✅ Easy onboarding for new developers
@@ -184,6 +187,7 @@ Alternatively, you can keep the Wiki in the repository (as `wiki/` folder) for v
 The new **Developer-Guides.md** consolidates key technical information from the `docs/` folder:
 
 **Content Integrated:**
+
 - **docs/ERROR_HANDLING.md** → Developer-Guides.md (Error Handling section)
 - **docs/TOAST_GUIDE.md** → Developer-Guides.md (Toast Notifications section)
 - **docs/USE_ASYNC_HANDLER_GUIDE.md** → Developer-Guides.md (Async Handler section)
@@ -193,11 +197,13 @@ The new **Developer-Guides.md** consolidates key technical information from the 
 
 **Preserved in docs/ folder:**
 The original detailed documentation files are preserved in the `docs/` folder for:
+
 - Developers who need the full detailed guides
 - Reference for advanced use cases
 - Historical documentation
 
 **Best Practice:**
+
 - Quick start: Use Wiki pages
 - Deep dive: Reference original docs/ files (linked from Wiki)
 - Both are version-controlled and maintained

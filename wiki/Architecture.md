@@ -7,6 +7,7 @@ Complete architecture guide for the Family Logistics Dashboard.
 ## Overview
 
 This project follows **clean architecture** principles with a **feature-based structure**, providing:
+
 - Clear separation of concerns
 - Testable business logic
 - Independent features
@@ -46,64 +47,70 @@ The application is organized into three main layers:
 ### 1. Presentation Layer
 
 **Responsibilities:**
+
 - User interface (Vue components)
 - State management (Pinia stores)
 - User interactions
 - Data presentation
 
 **Key Files:**
+
 - `*.vue` - Vue components
 - `*.store.ts` - Pinia stores
 - `use*.ts` - Vue composables
 
 **Example:**
+
 ```typescript
 // TripStore uses services from domain layer
-import { tripService } from '@/features/trips'
+import { tripService } from '@/features/trips';
 
 export const useTripStore = defineStore('trips', () => {
-  const trips = ref<Trip[]>([])
+  const trips = ref<Trip[]>([]);
 
   async function loadTrips() {
-    const response = await tripService.getAllTrips()
+    const response = await tripService.getAllTrips();
     if (response.data) {
-      trips.value = response.data
+      trips.value = response.data;
     }
   }
 
-  return { trips, loadTrips }
-})
+  return { trips, loadTrips };
+});
 ```
 
 ### 2. Domain Layer
 
 **Responsibilities:**
+
 - Business logic
 - Data validation
 - Service orchestration
 - Domain entities
 
 **Key Files:**
+
 - `entities.ts` - Type definitions
 - `validation.schemas.ts` - Zod schemas
 - `*.service.ts` - Business logic
 - `repository.interface.ts` - Repository contracts
 
 **Example:**
+
 ```typescript
 // TripService orchestrates business logic
 export class TripService {
   async duplicateTrip(trip: Trip): Promise<ApiResponse<Trip>> {
     // 1. Duplicate trip
-    const duplicated = await tripRepository.duplicate(trip)
-    
+    const duplicated = await tripRepository.duplicate(trip);
+
     // 2. Copy packing items
-    await this.copyPackingItems(trip.id, duplicated.id)
-    
+    await this.copyPackingItems(trip.id, duplicated.id);
+
     // 3. Copy budget entries
-    await this.copyBudgetEntries(trip.id, duplicated.id)
-    
-    return duplicated
+    await this.copyBudgetEntries(trip.id, duplicated.id);
+
+    return duplicated;
   }
 }
 ```
@@ -111,27 +118,30 @@ export class TripService {
 ### 3. Infrastructure Layer
 
 **Responsibilities:**
+
 - Data access
 - External services
 - Database operations
 - API calls
 
 **Key Files:**
+
 - `database.types.ts` - Generated database types
 - `supabase.client.ts` - Supabase client
 - `base.repository.ts` - Base repository
 - `*.repository.ts` - Feature repositories
 
 **Example:**
+
 ```typescript
 // TripRepository handles data access
 export class TripRepository extends BaseRepository<Trip> {
   constructor() {
-    super(supabase, 'trips')
+    super(supabase, 'trips');
   }
 
   async findByUserId(userId: string): Promise<ApiResponse<Trip[]>> {
-    return this.findAll((builder) => builder.eq('created_by', userId))
+    return this.findAll((builder) => builder.eq('created_by', userId));
   }
 }
 ```
@@ -188,38 +198,41 @@ src/features/
 Abstracts data access logic.
 
 **Interface:**
+
 ```typescript
 interface IRepository<T> {
-  findAll(filter?: FilterFn): Promise<ApiResponse<T[]>>
-  findById(id: string): Promise<ApiResponse<T>>
-  create(dto: CreateDto): Promise<ApiResponse<T>>
-  update(id: string, dto: UpdateDto): Promise<ApiResponse<T>>
-  delete(id: string): Promise<ApiResponse<void>>
+  findAll(filter?: FilterFn): Promise<ApiResponse<T[]>>;
+  findById(id: string): Promise<ApiResponse<T>>;
+  create(dto: CreateDto): Promise<ApiResponse<T>>;
+  update(id: string, dto: UpdateDto): Promise<ApiResponse<T>>;
+  delete(id: string): Promise<ApiResponse<void>>;
 }
 ```
 
 **Implementation:**
+
 ```typescript
 export class TripRepository extends BaseRepository<Trip> {
   constructor() {
-    super(supabase, 'trips')
+    super(supabase, 'trips');
   }
 
   // Base methods inherited: findAll, findById, create, update, delete
 
   // Custom methods
   async findByUserId(userId: string): Promise<ApiResponse<Trip[]>> {
-    return this.findAll((builder) => builder.eq('created_by', userId))
+    return this.findAll((builder) => builder.eq('created_by', userId));
   }
 
   async duplicate(trip: Trip): Promise<ApiResponse<Trip>> {
-    const { id, created_at, ...rest } = trip
-    return this.create(rest)
+    const { id, created_at, ...rest } = trip;
+    return this.create(rest);
   }
 }
 ```
 
 **Benefits:**
+
 - ✅ Decouples business logic from data access
 - ✅ Easy to mock for testing
 - ✅ Consistent error handling
@@ -233,28 +246,26 @@ Encapsulates complex business logic.
 export class TripService {
   async duplicateTrip(trip: Trip): Promise<ApiResponse<Trip>> {
     // Step 1: Duplicate trip
-    const response = await tripRepository.duplicate(trip)
-    if (response.error) return response
+    const response = await tripRepository.duplicate(trip);
+    if (response.error) return response;
 
     // Step 2: Copy related data
-    const newTripId = response.data!.id
-    await this.copyPackingItems(trip.id, newTripId)
-    await this.copyBudgetEntries(trip.id, newTripId)
-    await this.copyTimelineEvents(trip.id, newTripId)
+    const newTripId = response.data!.id;
+    await this.copyPackingItems(trip.id, newTripId);
+    await this.copyBudgetEntries(trip.id, newTripId);
+    await this.copyTimelineEvents(trip.id, newTripId);
 
-    return response
+    return response;
   }
 
-  private async copyPackingItems(
-    sourceId: string,
-    targetId: string
-  ): Promise<void> {
+  private async copyPackingItems(sourceId: string, targetId: string): Promise<void> {
     // Implementation...
   }
 }
 ```
 
 **Benefits:**
+
 - ✅ Complex operations in one place
 - ✅ Orchestrates multiple repositories
 - ✅ Reusable business logic
@@ -266,14 +277,15 @@ Export instances for easy consumption.
 
 ```typescript
 // Export singleton
-export const tripRepository = new TripRepository()
-export const tripService = new TripService()
+export const tripRepository = new TripRepository();
+export const tripService = new TripService();
 
 // Usage
-import { tripRepository, tripService } from '@/features/trips'
+import { tripRepository, tripService } from '@/features/trips';
 ```
 
 **Benefits:**
+
 - ✅ Single source of truth
 - ✅ No "new" keyword in consumers
 - ✅ Easy to mock in tests
@@ -294,23 +306,28 @@ export interface Database {
     Tables: {
       trips: {
         Row: {
-          id: string
-          name: string
-          start_date: string | null
-          end_date: string | null
-          status: 'planning' | 'booked' | 'ready' | 'done'
-          created_by: string
-          created_at: string
-        }
-        Insert: { /* ... */ }
-        Update: { /* ... */ }
-      }
-    }
-  }
+          id: string;
+          name: string;
+          start_date: string | null;
+          end_date: string | null;
+          status: 'planning' | 'booked' | 'ready' | 'done';
+          created_by: string;
+          created_at: string;
+        };
+        Insert: {
+          /* ... */
+        };
+        Update: {
+          /* ... */
+        };
+      };
+    };
+  };
 }
 ```
 
 **Generate Command:**
+
 ```bash
 npx supabase gen types typescript --project-id <ref> > src/features/shared/infrastructure/database.types.ts
 ```
@@ -322,19 +339,19 @@ Clean types for business logic:
 ```typescript
 // entities.ts
 export interface Trip {
-  id: string
-  name: string
-  startDate: Date | null
-  endDate: Date | null
-  status: TripStatus
-  createdBy: string
-  createdAt: Date
+  id: string;
+  name: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  status: TripStatus;
+  createdBy: string;
+  createdAt: Date;
 }
 
-export type TripStatus = 'planning' | 'booked' | 'ready' | 'done'
+export type TripStatus = 'planning' | 'booked' | 'ready' | 'done';
 
-export type CreateTripDto = Omit<Trip, 'id' | 'createdAt'>
-export type UpdateTripDto = Partial<CreateTripDto>
+export type CreateTripDto = Omit<Trip, 'id' | 'createdAt'>;
+export type UpdateTripDto = Partial<CreateTripDto>;
 ```
 
 ### Validation with Zod
@@ -343,21 +360,21 @@ Runtime validation for user inputs:
 
 ```typescript
 // validation.schemas.ts
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const TripFormSchema = z.object({
   name: z.string().min(1, 'Name is required').max(200),
   startDate: z.string().nullable().optional(),
   endDate: z.string().nullable().optional(),
-  status: z.enum(['planning', 'booked', 'ready', 'done'])
-})
+  status: z.enum(['planning', 'booked', 'ready', 'done']),
+});
 
-export type TripFormData = z.infer<typeof TripFormSchema>
+export type TripFormData = z.infer<typeof TripFormSchema>;
 
 // Usage in component
-const result = TripFormSchema.safeParse(formData)
+const result = TripFormSchema.safeParse(formData);
 if (!result.success) {
-  console.error(result.error.flatten())
+  console.error(result.error.flatten());
 }
 ```
 
@@ -371,13 +388,13 @@ Consistent error handling across all layers.
 
 ```typescript
 interface ApiResponse<T> {
-  data: T | null
-  error: ApiError | null
+  data: T | null;
+  error: ApiError | null;
 }
 
 interface ApiError {
-  message: string
-  code?: string
+  message: string;
+  code?: string;
 }
 ```
 
@@ -408,7 +425,7 @@ async findById(id: string): Promise<ApiResponse<Trip>> {
 ```typescript
 async duplicateTrip(trip: Trip): Promise<ApiResponse<Trip>> {
   const response = await tripRepository.duplicate(trip)
-  
+
   if (response.error) {
     // Log error, show toast, etc.
     return response
@@ -423,15 +440,15 @@ async duplicateTrip(trip: Trip): Promise<ApiResponse<Trip>> {
 
 ```typescript
 async function duplicateTrip(trip: Trip) {
-  loading.value = true
-  const response = await tripService.duplicateTrip(trip)
-  loading.value = false
+  loading.value = true;
+  const response = await tripService.duplicateTrip(trip);
+  loading.value = false;
 
   if (response.error) {
-    showErrorToast(response.error.message)
+    showErrorToast(response.error.message);
   } else {
-    showSuccessToast('Trip duplicated!')
-    trips.value.push(response.data!)
+    showSuccessToast('Trip duplicated!');
+    trips.value.push(response.data!);
   }
 }
 ```
@@ -498,16 +515,16 @@ describe('TripService', () => {
   it('should duplicate trip with related data', async () => {
     // Mock repository
     const mockRepo = {
-      duplicate: vi.fn().mockResolvedValue({ data: newTrip, error: null })
-    }
+      duplicate: vi.fn().mockResolvedValue({ data: newTrip, error: null }),
+    };
 
-    const service = new TripService(mockRepo)
-    const result = await service.duplicateTrip(originalTrip)
+    const service = new TripService(mockRepo);
+    const result = await service.duplicateTrip(originalTrip);
 
-    expect(result.data).toEqual(newTrip)
-    expect(mockRepo.duplicate).toHaveBeenCalledWith(originalTrip)
-  })
-})
+    expect(result.data).toEqual(newTrip);
+    expect(mockRepo.duplicate).toHaveBeenCalledWith(originalTrip);
+  });
+});
 ```
 
 ### Integration Tests
@@ -518,13 +535,13 @@ Test with real Supabase client (or mock at network level):
 // trip.repository.test.ts
 describe('TripRepository', () => {
   it('should create trip in database', async () => {
-    const repo = new TripRepository()
-    const result = await repo.create(tripDto)
+    const repo = new TripRepository();
+    const result = await repo.create(tripDto);
 
-    expect(result.error).toBeNull()
-    expect(result.data?.name).toBe(tripDto.name)
-  })
-})
+    expect(result.error).toBeNull();
+    expect(result.data?.name).toBe(tripDto.name);
+  });
+});
 ```
 
 ---
@@ -534,20 +551,23 @@ describe('TripRepository', () => {
 ### 1. Feature Independence
 
 ❌ **Don't:**
+
 ```typescript
 // Don't import from internal folders
-import { TripRepository } from '@/features/trips/infrastructure/trip.repository'
+import { TripRepository } from '@/features/trips/infrastructure/trip.repository';
 ```
 
 ✅ **Do:**
+
 ```typescript
 // Import from public API (index.ts)
-import { tripRepository } from '@/features/trips'
+import { tripRepository } from '@/features/trips';
 ```
 
 ### 2. Single Responsibility
 
 Each layer has one job:
+
 - **Presentation** - Display data
 - **Domain** - Business logic
 - **Infrastructure** - Data access
@@ -555,6 +575,7 @@ Each layer has one job:
 ### 3. Dependency Direction
 
 Dependencies flow inward:
+
 ```
 Presentation → Domain → Infrastructure
 ```
@@ -564,6 +585,7 @@ Never the reverse!
 ### 4. Type Safety
 
 Always use types:
+
 - Database types from Supabase
 - Domain entities for business logic
 - Zod schemas for validation
@@ -571,12 +593,13 @@ Always use types:
 ### 5. Error Handling
 
 Return `ApiResponse<T>` for all async operations:
+
 ```typescript
 // ✅ Good
-async function getTrip(id: string): Promise<ApiResponse<Trip>>
+async function getTrip(id: string): Promise<ApiResponse<Trip>>;
 
 // ❌ Bad
-async function getTrip(id: string): Promise<Trip | null>
+async function getTrip(id: string): Promise<Trip | null>;
 ```
 
 ---
@@ -588,6 +611,7 @@ async function getTrip(id: string): Promise<Trip | null>
 The codebase is in transition:
 
 **Old Structure:**
+
 ```
 src/
 ├── services/         # Legacy services
@@ -596,6 +620,7 @@ src/
 ```
 
 **New Structure:**
+
 ```
 src/
 ├── features/         # New feature-based modules
@@ -617,11 +642,13 @@ See [MIGRATION_GUIDE.md](../docs/MIGRATION_GUIDE.md) for detailed examples.
 ## Documentation
 
 **Essential Reading:**
+
 - [Database Schema](Database-Schema.md) - Tables and RLS
 - [Features Guide](Features.md) - Feature documentation
 - [Testing](Testing.md) - Test strategies
 
 **Additional Resources:**
+
 - [docs/ERROR_HANDLING.md](../docs/ERROR_HANDLING.md)
 - [docs/TOAST_GUIDE.md](../docs/TOAST_GUIDE.md)
 - [docs/MIGRATION_GUIDE.md](../docs/MIGRATION_GUIDE.md)
@@ -631,6 +658,7 @@ See [MIGRATION_GUIDE.md](../docs/MIGRATION_GUIDE.md) for detailed examples.
 ## Future Improvements
 
 **Planned:**
+
 - [ ] Move UI components to feature folders
 - [ ] Add API documentation with TypeDoc
 - [ ] Implement event sourcing for audit trail
@@ -638,6 +666,7 @@ See [MIGRATION_GUIDE.md](../docs/MIGRATION_GUIDE.md) for detailed examples.
 - [ ] Create CLI for generating features
 
 **Considering:**
+
 - GraphQL layer for complex queries
 - WebSocket for real-time updates
 - Offline-first with IndexedDB

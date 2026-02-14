@@ -34,6 +34,7 @@ interface ApiError {
 ```
 
 **Benefits:**
+
 - ✅ Type-safe responses with compile-time checks
 - ✅ Consistent error format across the app
 - ✅ Prevents runtime errors from unexpected data structures
@@ -43,11 +44,13 @@ interface ApiError {
 **Location:** `src/services/supabaseService.ts`
 
 A centralized wrapper around Supabase operations that:
+
 - Converts all Supabase errors to `ApiError` format
 - Provides consistent method signatures
 - Eliminates try/catch boilerplate
 
 **Key Methods:**
+
 - `select<T>()` - Fetch multiple records
 - `selectSingle<T>()` - Fetch one record
 - `insert<T>()` - Create a record
@@ -60,11 +63,8 @@ A centralized wrapper around Supabase operations that:
 ```typescript
 // Old way (throws errors)
 try {
-  const { data, error } = await supabase
-    .from('trips')
-    .select('*')
-    .eq('created_by', userId);
-  
+  const { data, error } = await supabase.from('trips').select('*').eq('created_by', userId);
+
   if (error) throw error;
   return data;
 } catch (err) {
@@ -74,7 +74,7 @@ try {
 
 // New way (returns ApiResponse)
 const response = await supabaseService.select('trips', (builder) =>
-  builder.eq('created_by', userId)
+  builder.eq('created_by', userId),
 );
 
 if (response.error) {
@@ -129,15 +129,17 @@ export class TripService {
 #### Best Practices
 
 1. **Always return ApiResponse<T>**
+
    ```typescript
    // ✅ Good
-   async function getTrip(id: string): Promise<ApiResponse<Trip>>
+   async function getTrip(id: string): Promise<ApiResponse<Trip>>;
 
    // ❌ Bad
-   async function getTrip(id: string): Promise<Trip | null>
+   async function getTrip(id: string): Promise<Trip | null>;
    ```
 
 2. **Check for errors before using data**
+
    ```typescript
    const response = await tripRepository.findById(id);
    if (response.error) {
@@ -167,6 +169,7 @@ The application uses a centralized toast notification system via Pinia store.
 #### Usage
 
 **Import:**
+
 ```typescript
 import { useToastStore } from '@/stores/toastStore';
 ```
@@ -174,36 +177,44 @@ import { useToastStore } from '@/stores/toastStore';
 #### Toast Types
 
 **1. Success Toast (Green)**
+
 ```typescript
 useToastStore().success('Trip created successfully!');
 ```
+
 - Color: Green background with green border
 - Icon: ✓ (checkmark)
 - Default Duration: 3 seconds
 - Use Cases: Successful operations (create, update, delete)
 
 **2. Error Toast (Red)**
+
 ```typescript
 useToastStore().error('Failed to load trips: Connection timeout');
 ```
+
 - Color: Red background with red border
 - Icon: ✕ (cross)
 - Default Duration: 5 seconds
 - Use Cases: Failed operations, validation errors
 
 **3. Warning Toast (Yellow)**
+
 ```typescript
 useToastStore().warning('Some items were skipped');
 ```
+
 - Color: Yellow/amber background with amber border
 - Icon: ⚠ (warning symbol)
 - Default Duration: 4 seconds
 - Use Cases: Partial success, warnings, deprecation notices
 
 **4. Info Toast (Blue)**
+
 ```typescript
 useToastStore().info('Loading trip data...');
 ```
+
 - Color: Blue background with blue border
 - Icon: ℹ (information symbol)
 - Default Duration: 3 seconds
@@ -219,12 +230,12 @@ const toastStore = useToastStore();
 
 async function saveTrip() {
   const response = await tripRepository.create(tripData);
-  
+
   if (response.error) {
     toastStore.error(`Failed to save trip: ${response.error.message}`);
     return;
   }
-  
+
   toastStore.success('Trip saved successfully!');
   router.push({ name: 'trips' });
 }
@@ -324,20 +335,22 @@ const handleCreate = async () => {
 #### API Reference
 
 **Options:**
+
 ```typescript
 interface UseAsyncHandlerOptions {
-  successMessage?: string;      // Toast message on success
-  errorPrefix?: string;         // Prefix for error messages
-  showErrorToast?: boolean;     // Show error toast (default: true)
-  showSuccessToast?: boolean;   // Show success toast (default: true)
+  successMessage?: string; // Toast message on success
+  errorPrefix?: string; // Prefix for error messages
+  showErrorToast?: boolean; // Show error toast (default: true)
+  showSuccessToast?: boolean; // Show success toast (default: true)
 }
 ```
 
 **Returns:**
+
 ```typescript
 {
-  loading: Ref<boolean>;        // Loading state
-  error: Ref<ApiError | null>;  // Error state
+  loading: Ref<boolean>; // Loading state
+  error: Ref<ApiError | null>; // Error state
   execute: <T>(fn: () => Promise<ApiResponse<T> | T>) => Promise<T | null>;
 }
 ```
@@ -345,6 +358,7 @@ interface UseAsyncHandlerOptions {
 #### Advanced Usage
 
 **With Custom Error Handling:**
+
 ```typescript
 const { loading, error, execute } = useAsyncHandler({
   showErrorToast: false, // Don't show automatic toast
@@ -352,7 +366,7 @@ const { loading, error, execute } = useAsyncHandler({
 
 const handleDelete = async () => {
   const result = await execute(() => tripRepository.delete(tripId));
-  
+
   if (error.value) {
     // Custom error handling
     if (error.value.code === 'FOREIGN_KEY_VIOLATION') {
@@ -365,6 +379,7 @@ const handleDelete = async () => {
 ```
 
 **Multiple Operations:**
+
 ```typescript
 const { loading, execute } = useAsyncHandler();
 
@@ -372,10 +387,10 @@ async function saveAll() {
   const tripResult = await execute(() => tripRepository.create(tripData));
   if (!tripResult) return;
 
-  const packingResult = await execute(() => 
-    packingRepository.create({ tripId: tripResult.id, ...packingData })
+  const packingResult = await execute(() =>
+    packingRepository.create({ tripId: tripResult.id, ...packingData }),
   );
-  
+
   if (packingResult) {
     useToastStore().success('Trip and packing list created!');
   }
@@ -393,6 +408,7 @@ Step-by-step guide for migrating code to the feature-based architecture.
 #### 1. Using Repositories
 
 **Before (Old Service Layer):**
+
 ```typescript
 import { fetchTrips, createTrip, updateTrip } from '@/services/tripService';
 
@@ -405,6 +421,7 @@ if (response.error) {
 ```
 
 **After (Repository Pattern):**
+
 ```typescript
 import { tripRepository } from '@/features/trips';
 
@@ -419,24 +436,26 @@ if (response.error) {
 #### 2. Using Services
 
 **Before:**
+
 ```typescript
 // Manual duplication logic scattered across components
 async function duplicateTrip(tripId: string) {
   const trip = await fetchTripById(tripId);
   const newTrip = await createTrip({ ...trip, name: `${trip.name} (Copy)` });
-  
+
   // Copy packing items manually
   const packingItems = await fetchPackingItems(tripId);
   for (const item of packingItems) {
     await createPackingItem({ ...item, tripId: newTrip.id });
   }
-  
+
   // Copy budget entries manually...
   // Copy timeline events manually...
 }
 ```
 
 **After:**
+
 ```typescript
 import { tripService } from '@/features/trips';
 
@@ -452,22 +471,24 @@ if (response.error) {
 #### 3. Form Validation with Zod
 
 **Before:**
+
 ```typescript
 function validateTripForm(data: any) {
   const errors: Record<string, string> = {};
-  
+
   if (!data.name || data.name.trim() === '') {
     errors.name = 'Name is required';
   }
   if (data.name && data.name.length > 200) {
     errors.name = 'Name must be less than 200 characters';
   }
-  
+
   return { valid: Object.keys(errors).length === 0, errors };
 }
 ```
 
 **After:**
+
 ```typescript
 import { TripFormSchema } from '@/features/shared/domain/validation.schemas';
 
@@ -484,12 +505,14 @@ if (!result.success) {
 #### 4. Type Safety
 
 **Before:**
+
 ```typescript
 const { data } = await supabase.from('trips').select('*');
 // data is 'any' - no type safety!
 ```
 
 **After:**
+
 ```typescript
 import { tripRepository } from '@/features/trips';
 
