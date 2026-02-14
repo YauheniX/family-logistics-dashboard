@@ -9,8 +9,8 @@
           class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white/90 px-6 py-4 backdrop-blur"
         >
           <div>
-            <p class="text-sm text-slate-500">Family Logistics Dashboard</p>
-            <h1 class="text-xl font-semibold text-slate-900">Plan and track your trips</h1>
+            <p class="text-sm text-slate-500">Family Shopping & Wishlist Planner</p>
+            <h1 class="text-xl font-semibold text-slate-900">Plan, shop, and share wishlists</h1>
           </div>
           <div class="flex items-center gap-3">
             <div class="text-right">

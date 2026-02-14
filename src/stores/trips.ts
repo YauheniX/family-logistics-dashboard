@@ -1,7 +1,6 @@
 /**
- * Legacy trips store - redirects to new feature-based trips store
- * This file maintains backward compatibility while using the new architecture
- * @deprecated Import from @/features/trips/presentation/trips.store instead
+ * Legacy trips store - domain replaced by shopping lists
+ * @deprecated Use @/features/shopping/presentation/shopping.store instead
  */
 
-export { useTripStore } from '@/features/trips/presentation/trips.store';
+export { useShoppingStore as useTripStore } from '@/features/shopping/presentation/shopping.store';
