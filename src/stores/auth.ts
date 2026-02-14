@@ -45,6 +45,10 @@ export const useAuthStore = defineStore('auth', {
       this.error = null;
       this.loading = true;
       try {
+        // OAuth redirects the browser to Google's consent screen.
+        // After the user approves, Supabase redirects back and the
+        // onAuthStateChange listener (set up in initialize()) updates
+        // session/user automatically.
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
         });
