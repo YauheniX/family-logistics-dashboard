@@ -94,10 +94,28 @@
             <h3 class="text-lg font-semibold text-slate-900">Budget</h3>
             <span class="text-sm text-slate-600">Track trip spend</span>
           </div>
+
+          <div v-if="tripStore.budget.length" class="mt-3 flex gap-4 text-sm">
+            <span class="text-slate-600">
+              Planned: <strong class="text-slate-900">{{ tripStore.totalPlanned.toFixed(2) }}</strong>
+            </span>
+            <span class="text-slate-600">
+              Spent: <strong class="text-slate-900">{{ tripStore.totalSpent.toFixed(2) }}</strong>
+            </span>
+          </div>
+
           <ul class="mt-3 space-y-2">
             <li v-for="entry in tripStore.budget" :key="entry.id" class="flex items-center justify-between text-sm">
               <div>
-                <p class="font-medium text-slate-800">{{ entry.category }}</p>
+                <p class="font-medium text-slate-800">
+                  {{ entry.category }}
+                  <span
+                    class="ml-1 rounded-full px-2 py-0.5 text-xs"
+                    :class="entry.is_planned ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'"
+                  >
+                    {{ entry.is_planned ? 'Planned' : 'Spent' }}
+                  </span>
+                </p>
                 <p class="text-xs text-slate-500">{{ entry.created_at?.slice(0, 10) }}</p>
               </div>
               <span class="font-semibold text-slate-900">
@@ -111,6 +129,10 @@
             <input v-model="budgetCategory" class="input" placeholder="Category" />
             <input v-model.number="budgetAmount" type="number" min="0" step="0.01" class="input" placeholder="Amount" />
             <input v-model="budgetCurrency" class="input" placeholder="Currency" />
+            <label class="flex items-center gap-2 text-sm text-slate-700 md:col-span-3">
+              <input v-model="budgetIsPlanned" type="checkbox" class="h-4 w-4" />
+              Mark as planned (not yet spent)
+            </label>
             <button class="btn-primary md:col-span-3" type="submit">Add entry</button>
           </form>
         </div>
@@ -180,6 +202,7 @@ const selectedFile = ref<File | null>(null);
 const budgetCategory = ref('');
 const budgetAmount = ref<number | null>(null);
 const budgetCurrency = ref('USD');
+const budgetIsPlanned = ref(false);
 const timelineTitle = ref('');
 const timelineDateTime = ref('');
 const timelineNotes = ref('');
@@ -241,9 +264,11 @@ const addBudget = async () => {
     category: budgetCategory.value || 'General',
     amount: Number(budgetAmount.value),
     currency: budgetCurrency.value || 'USD',
+    is_planned: budgetIsPlanned.value,
   });
   budgetCategory.value = '';
   budgetAmount.value = null;
+  budgetIsPlanned.value = false;
 };
 
 const addTimeline = async () => {

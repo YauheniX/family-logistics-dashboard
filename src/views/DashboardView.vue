@@ -11,20 +11,32 @@
       <RouterLink to="/trips/new" class="btn-primary">➕ New Trip</RouterLink>
     </div>
 
-    <div class="grid gap-4 md:grid-cols-3">
+    <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
       <div class="glass-card p-4">
         <p class="text-sm text-slate-500">Trips</p>
         <p class="text-2xl font-bold text-slate-900">{{ tripStore.trips.length }}</p>
       </div>
       <div class="glass-card p-4">
-        <p class="text-sm text-slate-500">Budget total</p>
-        <p class="text-2xl font-bold text-slate-900">{{ budgetTotal }} {{ currencyHint }}</p>
+        <p class="text-sm text-slate-500">Planned</p>
+        <p class="text-2xl font-bold text-slate-900">{{ totalPlanned }} {{ currencyHint }}</p>
+      </div>
+      <div class="glass-card p-4">
+        <p class="text-sm text-slate-500">Spent</p>
+        <p class="text-2xl font-bold text-slate-900">{{ totalSpent }} {{ currencyHint }}</p>
       </div>
       <div class="glass-card p-4">
         <p class="text-sm text-slate-500">Packing items</p>
         <p class="text-2xl font-bold text-slate-900">{{ packingCount }}</p>
       </div>
     </div>
+
+    <BudgetChart
+      v-if="tripStore.categoryBreakdown.length"
+      :categories="tripStore.categoryBreakdown"
+      :planned="tripStore.totalPlanned"
+      :spent="tripStore.totalSpent"
+      :currency="currencyHint"
+    />
 
     <LoadingState v-if="tripStore.loading" message="Loading your trips..." />
 
@@ -60,6 +72,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import TripCard from '@/components/trips/TripCard.vue';
+import BudgetChart from '@/components/trips/BudgetChart.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import { useAuthStore } from '@/stores/auth';
@@ -72,8 +85,9 @@ const duplicatingTripId = ref<string | null>(null);
 const toast = ref<{ message: string; type: 'success' | 'error' }>({ message: '', type: 'success' });
 const toastTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 
-const budgetTotal = computed(() => tripStore.totalBudget.toFixed(2));
-const currencyHint = computed(() => (tripStore.budget[0]?.currency ? tripStore.budget[0].currency : '')); // simple hint
+const totalPlanned = computed(() => tripStore.totalPlanned.toFixed(2));
+const totalSpent = computed(() => tripStore.totalSpent.toFixed(2));
+const currencyHint = computed(() => (tripStore.budget[0]?.currency ? tripStore.budget[0].currency : ''));
 const packingCount = computed(() => tripStore.packing.length);
 
 watch(
