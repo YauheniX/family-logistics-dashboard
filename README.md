@@ -174,6 +174,28 @@ npm run dev
 
 ---
 
+## 🤖 AI Pull Request Review (GitHub Actions)
+
+This repository includes `.github/workflows/ai-review.yml` to run automated OpenAI-based PR reviews.
+
+- **Trigger:** `pull_request` on `opened` and `synchronize`
+- **Action used:** `aider-ai/pr-reviewer`
+- **Behavior:** posts AI review comments directly on the PR
+- **Graceful handling:** if OpenAI rate limits or a temporary API error occurs, the workflow adds a PR comment and exits without failing the pipeline
+
+### Add `OPENAI_API_KEY` repository secret
+
+1. Open your GitHub repository.
+2. Go to **Settings → Secrets and variables → Actions**.
+3. Click **New repository secret**.
+4. Name: `OPENAI_API_KEY`
+5. Value: your OpenAI API key
+6. Save the secret.
+
+> 🔒 **Security note:** Never commit or print `OPENAI_API_KEY` in code, logs, or documentation. Store it only in GitHub Secrets.
+
+---
+
 ## 🏗️ Architecture & Error Handling
 
 This project uses a **clean, layered architecture** with centralized error handling:
