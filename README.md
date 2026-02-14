@@ -244,11 +244,11 @@ Your app will be available at: `https://yourusername.github.io/family-logistics-
 
 Set the following environment variables in **Vercel → Project Settings → Environment Variables**:
 
-| Variable                  | Required | Description                                     |
-| ------------------------- | -------- | ----------------------------------------------- |
-| `VITE_SUPABASE_URL`       | Yes      | Your Supabase project URL (e.g., `https://xyz.supabase.co`) |
-| `VITE_SUPABASE_ANON_KEY`  | Yes      | Your Supabase anonymous/public API key          |
-| `VITE_USE_MOCK_BACKEND`   | No       | Set to `true` to use mock mode without Supabase |
+| Variable                 | Required | Description                                                 |
+| ------------------------ | -------- | ----------------------------------------------------------- |
+| `VITE_SUPABASE_URL`      | Yes      | Your Supabase project URL (e.g., `https://xyz.supabase.co`) |
+| `VITE_SUPABASE_ANON_KEY` | Yes      | Your Supabase anonymous/public API key                      |
+| `VITE_USE_MOCK_BACKEND`  | No       | Set to `true` to use mock mode without Supabase             |
 
 ### How to Configure
 
