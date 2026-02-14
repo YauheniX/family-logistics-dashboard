@@ -370,4 +370,219 @@ describe('ReportProblemModal', () => {
 
     expect(wrapper.emitted('close')).toBeTruthy();
   });
+
+  it('handles valid image file upload successfully', async () => {
+    const wrapper = mount(ReportProblemModal, {
+      props: {
+        open: true,
+      },
+      global: {
+        stubs: {
+          ModalDialog: {
+            template: '<div><slot /></div>',
+          },
+          BaseButton: {
+            template: '<button><slot /></button>',
+          },
+          BaseInput: {
+            template: '<input />',
+          },
+        },
+      },
+    });
+
+    const fileInput = wrapper.find('#problem-screenshot');
+
+    // Create a valid image file
+    const imageContent = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const blob = await (await fetch(imageContent)).blob();
+    const file = new File([blob], 'test-image.png', { type: 'image/png' });
+    
+    Object.defineProperty(fileInput.element, 'files', {
+      value: [file],
+      writable: false,
+    });
+
+    await fileInput.trigger('change');
+    await wrapper.vm.$nextTick();
+
+    // Should not show any error
+    expect(wrapper.text()).not.toContain('Please choose an image file.');
+    expect(wrapper.text()).not.toContain('Screenshot is too large');
+  });
+
+  it('handles file selection cancellation', async () => {
+    const wrapper = mount(ReportProblemModal, {
+      props: {
+        open: true,
+      },
+      global: {
+        stubs: {
+          ModalDialog: {
+            template: '<div><slot /></div>',
+          },
+          BaseButton: {
+            template: '<button><slot /></button>',
+          },
+          BaseInput: {
+            template: '<input />',
+          },
+        },
+      },
+    });
+
+    const fileInput = wrapper.find('#problem-screenshot');
+    const inputElement = fileInput.element as HTMLInputElement;
+
+    // Simulate file selection cancellation (no files)
+    Object.defineProperty(inputElement, 'files', {
+      value: null,
+      writable: false,
+    });
+
+    await fileInput.trigger('change');
+    await wrapper.vm.$nextTick();
+
+    // Should not show any error
+    const vm = wrapper.vm as unknown as { screenshot: ScreenshotPayload | null };
+    expect(vm.screenshot).toBe(null);
+  });
+
+  it('submits form with valid image screenshot', async () => {
+    vi.mocked(issueReporter.reportProblem).mockResolvedValue({
+      issueUrl: 'https://github.com/test/repo/issues/2',
+    });
+
+    const authStore = useAuthStore();
+    authStore.user = { id: 'user-456', email: 'user@example.com' };
+
+    const wrapper = mount(ReportProblemModal, {
+      props: {
+        open: true,
+      },
+      global: {
+        stubs: {
+          ModalDialog: {
+            template: '<div><slot /></div>',
+          },
+          BaseButton: {
+            template: '<button type="button" @click="$attrs.onClick"><slot /></button>',
+            inheritAttrs: false,
+          },
+          BaseInput: {
+            template: '<input v-model="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+            props: ['modelValue'],
+            emits: ['update:modelValue'],
+          },
+        },
+      },
+    });
+
+    // Fill in form fields
+    const vm = wrapper.vm as unknown as {
+      title: string;
+      description: string;
+      screenshot: ScreenshotPayload | null;
+    };
+    vm.title = 'Bug with screenshot';
+    vm.description = 'See attached screenshot';
+    
+    // Add a screenshot
+    const imageContent = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const blob = await (await fetch(imageContent)).blob();
+    const file = new File([blob], 'screenshot.png', { type: 'image/png' });
+    
+    const fileInput = wrapper.find('#problem-screenshot');
+    Object.defineProperty(fileInput.element, 'files', {
+      value: [file],
+      writable: false,
+    });
+
+    await fileInput.trigger('change');
+    await wrapper.vm.$nextTick();
+    
+    // Wait for FileReader to complete
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Submit form
+    const form = wrapper.find('form');
+    await form.trigger('submit.prevent');
+    await wrapper.vm.$nextTick();
+
+    // Wait for async operations
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(issueReporter.reportProblem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Bug with screenshot',
+        description: 'See attached screenshot',
+        userId: 'user-456',
+      })
+    );
+
+    // Check that screenshot was included
+    const callArgs = vi.mocked(issueReporter.reportProblem).mock.calls[0][0];
+    expect(callArgs.screenshot).not.toBeNull();
+    expect(callArgs.screenshot?.name).toBe('screenshot.png');
+    expect(callArgs.screenshot?.type).toBe('image/png');
+  });
+
+  it('opens issue URL in new window on successful submission', async () => {
+    // Mock window.open
+    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+
+    vi.mocked(issueReporter.reportProblem).mockResolvedValue({
+      issueUrl: 'https://github.com/test/repo/issues/3',
+    });
+
+    const authStore = useAuthStore();
+    authStore.user = { id: 'user-789', email: 'test@example.com' };
+
+    const wrapper = mount(ReportProblemModal, {
+      props: {
+        open: true,
+      },
+      global: {
+        stubs: {
+          ModalDialog: {
+            template: '<div><slot /></div>',
+          },
+          BaseButton: {
+            template: '<button type="button" @click="$attrs.onClick"><slot /></button>',
+            inheritAttrs: false,
+          },
+          BaseInput: {
+            template: '<input v-model="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+            props: ['modelValue'],
+            emits: ['update:modelValue'],
+          },
+        },
+      },
+    });
+
+    // Fill in form fields
+    const vm = wrapper.vm as unknown as {
+      title: string;
+      description: string;
+    };
+    vm.title = 'Test Issue with URL';
+    vm.description = 'Test description';
+    await wrapper.vm.$nextTick();
+
+    // Submit form
+    const form = wrapper.find('form');
+    await form.trigger('submit.prevent');
+    await wrapper.vm.$nextTick();
+
+    // Wait for async operations
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(windowOpenSpy).toHaveBeenCalledWith(
+      'https://github.com/test/repo/issues/3',
+      '_blank',
+      'noopener,noreferrer'
+    );
+
+    windowOpenSpy.mockRestore();
+  });
 });
