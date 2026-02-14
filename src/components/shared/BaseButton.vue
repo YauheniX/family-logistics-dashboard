@@ -34,6 +34,7 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   loading: false,
   fullWidth: false,
+  ariaLabel: undefined,
 });
 
 defineEmits<{

@@ -15,6 +15,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   variant: 'neutral',
+  ariaLabel: undefined,
 });
 
 const badgeClasses = computed(() => {

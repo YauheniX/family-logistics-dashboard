@@ -60,6 +60,11 @@ const props = withDefaults(defineProps<Props>(), {
   type: 'text',
   disabled: false,
   required: false,
+  label: undefined,
+  placeholder: undefined,
+  error: undefined,
+  hint: undefined,
+  ariaLabel: undefined,
 });
 
 const emit = defineEmits<{
@@ -67,8 +72,10 @@ const emit = defineEmits<{
   (e: 'blur'): void;
 }>();
 
+// Use a counter to generate unique IDs
+let inputCounter = 0;
 const inputId = computed(() => {
-  return `input-${Math.random().toString(36).substring(7)}`;
+  return `input-${++inputCounter}`;
 });
 
 const inputClasses = computed(() => {
