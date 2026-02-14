@@ -41,32 +41,16 @@ export const useAuthStore = defineStore('auth', {
       });
     },
 
-    async login(email: string, password: string) {
+    async loginWithGoogle() {
       this.error = null;
       this.loading = true;
       try {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+        });
         if (error) throw error;
-        this.session = data.session;
-        this.user = data.user;
-      } catch (err: any) {
-        this.error = err.message ?? 'Unable to login';
-        throw err;
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    async register(email: string, password: string) {
-      this.error = null;
-      this.loading = true;
-      try {
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        this.session = data.session;
-        this.user = data.user;
-      } catch (err: any) {
-        this.error = err.message ?? 'Unable to register';
+      } catch (err: unknown) {
+        this.error = err instanceof Error ? err.message : 'Unable to sign in with Google';
         throw err;
       } finally {
         this.loading = false;

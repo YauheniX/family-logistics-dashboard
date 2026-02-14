@@ -8,8 +8,8 @@ Organize trips, packing lists, documents, budgets, and timelines in one secure p
 ## ✨ Features
 
 ### 🔐 Authentication
-- Email/password authentication (Supabase Auth)
-- Protected routes
+- Google OAuth authentication (Supabase Auth)
+- Protected routes with AuthGuard
 - Persistent sessions
 
 ### 🧳 Trips
@@ -52,7 +52,7 @@ Organize trips, packing lists, documents, budgets, and timelines in one secure p
 
 **Backend**
 - Supabase
-  - Auth
+  - Auth (Google OAuth)
   - Postgres Database
   - Storage
 
@@ -98,7 +98,35 @@ Create a new project and copy:
 
 ---
 
-### 4. Configure environment variables
+### 4. Set up Google OAuth
+
+#### A. Google Cloud Console
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project (or select an existing one)
+3. Navigate to **APIs & Services → Credentials**
+4. Click **Create Credentials → OAuth client ID**
+5. Select **Web application** as application type
+6. Under **Authorized redirect URIs**, add:
+   ```
+   https://<your-supabase-project-ref>.supabase.co/auth/v1/callback
+   ```
+7. Click **Create** and copy the **Client ID** and **Client Secret**
+
+> **Note**: You may also need to configure the **OAuth consent screen** under
+> APIs & Services → OAuth consent screen before creating credentials.
+
+#### B. Supabase Provider Configuration
+
+1. Go to your Supabase project dashboard
+2. Navigate to **Authentication → Providers**
+3. Find **Google** in the list and enable it
+4. Paste the **Client ID** and **Client Secret** from Google Cloud Console
+5. Save the configuration
+
+---
+
+### 5. Configure environment variables
 
 Create a `.env` file in the root:
 
@@ -109,7 +137,16 @@ VITE_SUPABASE_ANON_KEY=your_anon_key
 
 ---
 
-### 5. Run development server
+### 6. Apply database schema
+
+Run the SQL files in your Supabase SQL Editor:
+
+1. `supabase/schema.sql` — creates tables and enables RLS
+2. `supabase/rls.sql` — creates row-level security policies
+
+---
+
+### 7. Run development server
 
 ```bash
 npm run dev
