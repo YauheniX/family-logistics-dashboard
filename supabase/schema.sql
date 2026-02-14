@@ -152,6 +152,45 @@ begin
 end;
 $$;
 
+-- Lookup email by user id (for displaying member emails)
+create or replace function get_email_by_user_id(lookup_user_id uuid)
+returns text
+language plpgsql
+security definer
+stable
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Authentication required';
+  end if;
+  return (select email from auth.users where id = lookup_user_id limit 1);
+end;
+$$;
+
+-- ─── Auto-create user profile on signup ─────────────────────
+
+create or replace function handle_new_user()
+returns trigger
+language plpgsql
+security definer
+as $$
+begin
+  insert into user_profiles (id, display_name, avatar_url)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data ->> 'full_name', new.raw_user_meta_data ->> 'name', split_part(new.email, '@', 1)),
+    coalesce(new.raw_user_meta_data ->> 'avatar_url', null)
+  );
+  return new;
+end;
+$$;
+
+-- Trigger on auth.users insert
+create or replace trigger on_auth_user_created
+  after insert on auth.users
+  for each row
+  execute function handle_new_user();
+
 -- ─── Storage ────────────────────────────────────────────────
 
 -- Create wishlist-images bucket (run via Supabase dashboard or API)

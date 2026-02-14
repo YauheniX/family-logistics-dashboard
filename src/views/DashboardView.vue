@@ -142,8 +142,11 @@ async function loadDashboardData(userId: string) {
     wishlistStore.loadWishlists(userId),
   ]);
 
-  // Load shopping lists for all families concurrently
-  await Promise.all(familyStore.families.map((family) => shoppingStore.loadLists(family.id)));
+  // Load shopping lists sequentially to avoid excessive concurrent requests
+  // when the user belongs to many families
+  for (const family of familyStore.families) {
+    await shoppingStore.loadLists(family.id);
+  }
 }
 
 watch(
