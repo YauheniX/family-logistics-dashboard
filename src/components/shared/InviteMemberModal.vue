@@ -1,6 +1,6 @@
 <template>
   <ModalDialog :open="open" title="Invite Family Member" @close="handleClose">
-    <form @submit.prevent="handleSubmit" class="space-y-4">
+    <form class="space-y-4" @submit.prevent="handleSubmit">
       <p class="text-body text-neutral-700 dark:text-neutral-300">
         Enter their email address to send an invitation.
       </p>
@@ -19,8 +19,8 @@
         <BaseButton
           variant="secondary"
           type="button"
-          @click="handleClose"
           :full-width="true"
+          @click="handleClose"
         >
           Cancel
         </BaseButton>

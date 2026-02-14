@@ -71,7 +71,7 @@
         />
 
         <div class="flex justify-end pt-2">
-          <BaseButton variant="primary" @click="handleSaveProfile" :loading="saving">
+          <BaseButton variant="primary" :loading="saving" @click="handleSaveProfile">
             Save Changes
           </BaseButton>
         </div>
@@ -117,11 +117,11 @@
               }"
             >
               <input
+                v-model="selectedTheme"
                 type="radio"
                 :value="option.value"
-                v-model="selectedTheme"
-                @change="handleThemeChange"
                 class="h-4 w-4 text-primary-500 dark:text-primary-400 focus:ring-primary-500 dark:focus:ring-primary-400"
+                @change="handleThemeChange"
               />
               <div>
                 <p class="text-body-semibold text-neutral-900 dark:text-neutral-50">
@@ -147,10 +147,10 @@
           </div>
           <label class="relative inline-flex items-center cursor-pointer">
             <input
-              type="checkbox"
               v-model="preferences.emailNotifications"
-              @change="handleSavePreferences"
+              type="checkbox"
               class="sr-only peer"
+              @change="handleSavePreferences"
             />
             <div
               class="w-11 h-6 bg-neutral-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-500 dark:peer-focus:ring-primary-400 rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-neutral-600 peer-checked:bg-primary-500 dark:peer-checked:bg-primary-400"
@@ -170,10 +170,10 @@
           </div>
           <label class="relative inline-flex items-center cursor-pointer">
             <input
-              type="checkbox"
               v-model="preferences.pushNotifications"
-              @change="handleSavePreferences"
+              type="checkbox"
               class="sr-only peer"
+              @change="handleSavePreferences"
             />
             <div
               class="w-11 h-6 bg-neutral-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-500 dark:peer-focus:ring-primary-400 rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-neutral-600 peer-checked:bg-primary-500 dark:peer-checked:bg-primary-400"

@@ -14,8 +14,8 @@
             <button
               type="button"
               class="rounded-md p-1 text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
-              @click="$emit('close')"
               aria-label="Close modal"
+              @click="$emit('close')"
             >
               ✕
             </button>

@@ -2,8 +2,8 @@
   <button
     type="button"
     class="btn-ghost p-2"
-    @click="toggleTheme"
     aria-label="Toggle theme"
+    @click="toggleTheme"
   >
     <svg
       v-if="currentTheme === 'dark'"
