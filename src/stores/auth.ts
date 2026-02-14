@@ -63,10 +63,14 @@ export const useAuthStore = defineStore('auth', {
       this.error = null;
       this.loading = true;
       try {
-        // Note: Google OAuth not yet implemented in new auth service
-        // This is a placeholder that maintains the old behavior
-        useToastStore().error('Google OAuth not yet implemented in new architecture');
-        throw new Error('Not implemented');
+        const response = await authService.signInWithOAuth('google');
+        if (response.error || !response.data) {
+          this.error = response.error?.message || 'Unable to sign in with Google';
+          useToastStore().error(this.error);
+          throw new Error(this.error);
+        }
+        this.user = { id: response.data.id, email: response.data.email } as User;
+        this.session = {} as Session; // Mock session
       } catch (err: unknown) {
         this.error = err instanceof Error ? err.message : 'Unable to sign in with Google';
         useToastStore().error(this.error);

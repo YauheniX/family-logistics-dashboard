@@ -165,6 +165,42 @@ export class AuthService {
   }
 
   /**
+   * Sign in with OAuth provider (Google, etc.)
+   */
+  async signInWithOAuth(provider: string): Promise<ApiResponse<AuthUser>> {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: provider as any,
+        options: {
+          redirectTo: window.location.origin,
+        },
+      });
+
+      if (error) {
+        return {
+          data: null,
+          error: { message: error.message, details: error },
+        };
+      }
+
+      // OAuth redirects, so we won't get user data immediately
+      // Return null data to indicate redirect in progress
+      return {
+        data: null,
+        error: null,
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error: {
+          message: error instanceof Error ? error.message : 'OAuth sign in failed',
+          details: error,
+        },
+      };
+    }
+  }
+
+  /**
    * Map Supabase User to our AuthUser
    */
   private mapUser(user: User): AuthUser {
