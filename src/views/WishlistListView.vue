@@ -1,43 +1,40 @@
 <template>
   <div class="space-y-6">
-    <div class="glass-card flex flex-wrap items-center justify-between gap-4 p-6">
-      <div>
-        <p class="text-sm text-slate-500">Wishlists</p>
-        <h2 class="text-2xl font-semibold text-slate-900">My Wishlists</h2>
-        <p class="mt-1 text-sm text-slate-600">Create and manage your personal wishlists.</p>
+    <BaseCard>
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p class="text-sm text-neutral-500 dark:text-neutral-400">Wishlists</p>
+          <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-50">My Wishlists</h2>
+          <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Create and manage your personal wishlists.</p>
+        </div>
+        <BaseButton variant="primary" @click="showCreateModal = true">
+          ➕ Create Wishlist
+        </BaseButton>
       </div>
-      <button class="btn-primary" type="button" @click="showCreateModal = true">
-        ➕ Create Wishlist
-      </button>
-    </div>
+    </BaseCard>
 
     <LoadingState v-if="wishlistStore.loading" message="Loading wishlists..." />
 
-    <div v-else-if="wishlistStore.wishlists.length" class="page-grid">
-      <RouterLink
+    <div v-else-if="wishlistStore.wishlists.length" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <BaseCard
         v-for="wishlist in wishlistStore.wishlists"
         :key="wishlist.id"
-        :to="{ name: 'wishlist-edit', params: { id: wishlist.id } }"
-        class="glass-card p-5 transition hover:shadow-md"
+        :hover="true"
+        @click="$router.push({ name: 'wishlist-edit', params: { id: wishlist.id } })"
       >
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-slate-900">{{ wishlist.title }}</h3>
-          <span
-            class="rounded-full px-2 py-0.5 text-xs"
-            :class="
-              wishlist.is_public ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
-            "
-          >
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50">{{ wishlist.title }}</h3>
+          <BaseBadge :variant="wishlist.is_public ? 'primary' : 'neutral'">
             {{ wishlist.is_public ? 'Public' : 'Private' }}
-          </span>
+          </BaseBadge>
         </div>
-        <p v-if="wishlist.description" class="mt-1 text-sm text-slate-500">
+        <p v-if="wishlist.description" class="text-sm text-neutral-600 dark:text-neutral-400">
           {{ wishlist.description }}
         </p>
-        <p class="mt-2 text-xs text-slate-400">
+        <p class="mt-3 text-xs text-neutral-500 dark:text-neutral-500">
           Created {{ new Date(wishlist.created_at).toLocaleDateString() }}
         </p>
-      </RouterLink>
+      </BaseCard>
     </div>
 
     <EmptyState
@@ -50,34 +47,26 @@
 
     <ModalDialog :open="showCreateModal" title="Create Wishlist" @close="showCreateModal = false">
       <form class="space-y-4" @submit.prevent="handleCreate">
-        <div>
-          <label class="label" for="wishlist-title">Title</label>
-          <input
-            id="wishlist-title"
-            v-model="newTitle"
-            class="input"
-            required
-            placeholder="Birthday wishlist"
-          />
-        </div>
-        <div>
-          <label class="label" for="wishlist-description">Description</label>
-          <input
-            id="wishlist-description"
-            v-model="newDescription"
-            class="input"
-            placeholder="Optional description"
-          />
-        </div>
-        <label class="flex items-center gap-2 text-sm text-slate-700">
-          <input v-model="newIsPublic" type="checkbox" class="h-4 w-4" />
+        <BaseInput
+          v-model="newTitle"
+          label="Title"
+          placeholder="Birthday wishlist"
+          required
+        />
+        <BaseInput
+          v-model="newDescription"
+          label="Description"
+          placeholder="Optional description"
+        />
+        <label class="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
+          <input v-model="newIsPublic" type="checkbox" class="checkbox" />
           Make public (shareable link)
         </label>
         <div class="flex gap-3">
-          <button class="btn-primary" type="submit" :disabled="wishlistStore.loading">
+          <BaseButton variant="primary" type="submit" :disabled="wishlistStore.loading">
             Create
-          </button>
-          <button class="btn-ghost" type="button" @click="showCreateModal = false">Cancel</button>
+          </BaseButton>
+          <BaseButton variant="ghost" type="button" @click="showCreateModal = false">Cancel</BaseButton>
         </div>
       </form>
     </ModalDialog>
@@ -86,7 +75,10 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { RouterLink } from 'vue-router';
+import BaseButton from '@/components/shared/BaseButton.vue';
+import BaseCard from '@/components/shared/BaseCard.vue';
+import BaseBadge from '@/components/shared/BaseBadge.vue';
+import BaseInput from '@/components/shared/BaseInput.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import ModalDialog from '@/components/shared/ModalDialog.vue';
