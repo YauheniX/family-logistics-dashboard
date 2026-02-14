@@ -6,7 +6,9 @@
         <h2 class="text-2xl font-semibold text-slate-900">{{ familyStore.currentFamily.name }}</h2>
       </div>
       <div class="flex flex-wrap gap-2">
-        <button class="btn-ghost" type="button" @click="showInviteModal = true">Invite Member</button>
+        <button class="btn-ghost" type="button" @click="showInviteModal = true">
+          Invite Member
+        </button>
         <RouterLink to="/families" class="btn-ghost">← Back</RouterLink>
       </div>
     </div>
@@ -30,7 +32,11 @@
               </p>
               <span
                 class="rounded-full px-2 py-0.5 text-xs"
-                :class="member.role === 'owner' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'"
+                :class="
+                  member.role === 'owner'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-slate-100 text-slate-600'
+                "
               >
                 {{ member.role }}
               </span>
@@ -69,7 +75,11 @@
             </div>
             <span
               class="rounded-full px-2 py-0.5 text-xs"
-              :class="list.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'"
+              :class="
+                list.status === 'active'
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : 'bg-slate-100 text-slate-600'
+              "
             >
               {{ list.status }}
             </span>
@@ -101,7 +111,11 @@
     </ModalDialog>
 
     <!-- Create Shopping List Modal -->
-    <ModalDialog :open="showCreateListModal" title="New Shopping List" @close="showCreateListModal = false">
+    <ModalDialog
+      :open="showCreateListModal"
+      title="New Shopping List"
+      @close="showCreateListModal = false"
+    >
       <form class="space-y-4" @submit.prevent="handleCreateList">
         <div>
           <label class="label" for="list-title">Title</label>
@@ -126,7 +140,9 @@
           <button class="btn-primary" type="submit" :disabled="shoppingStore.loading">
             Create
           </button>
-          <button class="btn-ghost" type="button" @click="showCreateListModal = false">Cancel</button>
+          <button class="btn-ghost" type="button" @click="showCreateListModal = false">
+            Cancel
+          </button>
         </div>
       </form>
     </ModalDialog>
@@ -162,7 +178,11 @@ onMounted(async () => {
 
 const handleInvite = async () => {
   if (!inviteEmail.value.trim()) return;
-  const result = await familyStore.inviteMember(props.id, inviteEmail.value.trim(), authStore.user?.id);
+  const result = await familyStore.inviteMember(
+    props.id,
+    inviteEmail.value.trim(),
+    authStore.user?.id,
+  );
   if (result) {
     inviteEmail.value = '';
     showInviteModal.value = false;

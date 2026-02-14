@@ -12,11 +12,7 @@
       </div>
 
       <div v-if="wishlistStore.items.length" class="space-y-3">
-        <div
-          v-for="item in wishlistStore.items"
-          :key="item.id"
-          class="glass-card p-5"
-        >
+        <div v-for="item in wishlistStore.items" :key="item.id" class="glass-card p-5">
           <div class="flex items-start justify-between gap-4">
             <div class="flex-1">
               <div class="flex items-center gap-2">
@@ -80,9 +76,7 @@
 
     <div v-else-if="wishlistStore.error" class="glass-card p-6 text-center">
       <h2 class="text-2xl font-semibold text-slate-900">Wishlist not found</h2>
-      <p class="mt-1 text-sm text-slate-600">
-        This wishlist may not exist or is not public.
-      </p>
+      <p class="mt-1 text-sm text-slate-600">This wishlist may not exist or is not public.</p>
     </div>
 
     <LoadingState v-else message="Loading wishlist..." />

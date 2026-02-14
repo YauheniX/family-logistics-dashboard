@@ -69,8 +69,13 @@ export interface ShoppingItem {
   created_at: string;
 }
 
-export type CreateShoppingItemDto = Pick<ShoppingItem, 'list_id' | 'title' | 'quantity' | 'category'>;
-export type UpdateShoppingItemDto = Partial<Pick<ShoppingItem, 'title' | 'quantity' | 'category' | 'is_purchased' | 'purchased_by'>>;
+export type CreateShoppingItemDto = Pick<
+  ShoppingItem,
+  'list_id' | 'title' | 'quantity' | 'category'
+>;
+export type UpdateShoppingItemDto = Partial<
+  Pick<ShoppingItem, 'title' | 'quantity' | 'category' | 'is_purchased' | 'purchased_by'>
+>;
 
 // ─── Wishlist ────────────────────────────────────────────
 export interface Wishlist {
@@ -102,8 +107,16 @@ export interface WishlistItem {
   created_at: string;
 }
 
-export type CreateWishlistItemDto = Pick<WishlistItem, 'wishlist_id' | 'title' | 'description' | 'link' | 'price' | 'currency' | 'image_url' | 'priority'>;
-export type UpdateWishlistItemDto = Partial<Pick<WishlistItem, 'title' | 'description' | 'link' | 'price' | 'currency' | 'image_url' | 'priority'>>;
+export type CreateWishlistItemDto = Pick<
+  WishlistItem,
+  'wishlist_id' | 'title' | 'description' | 'link' | 'price' | 'currency' | 'image_url' | 'priority'
+>;
+export type UpdateWishlistItemDto = Partial<
+  Pick<
+    WishlistItem,
+    'title' | 'description' | 'link' | 'price' | 'currency' | 'image_url' | 'priority'
+  >
+>;
 export type ReserveWishlistItemDto = Pick<WishlistItem, 'is_reserved' | 'reserved_by_email'>;
 
 // ─── Dashboard Stats ─────────────────────────────────────

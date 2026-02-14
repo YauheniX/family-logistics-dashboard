@@ -24,14 +24,14 @@
     </div>
 
     <!-- Items by Category -->
-    <div v-for="(categoryItems, category) in filteredByCategory" :key="category" class="glass-card p-5">
+    <div
+      v-for="(categoryItems, category) in filteredByCategory"
+      :key="category"
+      class="glass-card p-5"
+    >
       <h3 class="text-lg font-semibold text-slate-900">{{ category }}</h3>
       <div class="mt-3 space-y-2">
-        <div
-          v-for="item in categoryItems"
-          :key="item.id"
-          class="flex items-center gap-3"
-        >
+        <div v-for="item in categoryItems" :key="item.id" class="flex items-center gap-3">
           <input
             :id="item.id"
             type="checkbox"
@@ -39,9 +39,15 @@
             :checked="item.is_purchased"
             @change="handleTogglePurchased(item.id)"
           />
-          <label :for="item.id" class="flex-1 text-sm" :class="item.is_purchased ? 'text-slate-400 line-through' : 'text-slate-800'">
+          <label
+            :for="item.id"
+            class="flex-1 text-sm"
+            :class="item.is_purchased ? 'text-slate-400 line-through' : 'text-slate-800'"
+          >
             {{ item.title }}
-            <span v-if="item.quantity > 1" class="ml-1 text-xs text-slate-500">×{{ item.quantity }}</span>
+            <span v-if="item.quantity > 1" class="ml-1 text-xs text-slate-500"
+              >×{{ item.quantity }}</span
+            >
           </label>
           <button
             type="button"
@@ -65,11 +71,7 @@
     <div class="glass-card p-5">
       <h3 class="text-lg font-semibold text-slate-900">Add Item</h3>
       <form class="mt-4 grid gap-2 md:grid-cols-3" @submit.prevent="handleAddItem">
-        <input
-          v-model="newItemTitle"
-          class="input md:col-span-2"
-          placeholder="Item name"
-        />
+        <input v-model="newItemTitle" class="input md:col-span-2" placeholder="Item name" />
         <input
           v-model.number="newItemQuantity"
           type="number"

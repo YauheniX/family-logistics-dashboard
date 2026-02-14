@@ -3,7 +3,9 @@
     <div class="glass-card flex flex-wrap items-center justify-between gap-4 p-6">
       <div>
         <p class="text-sm text-slate-500">Wishlist</p>
-        <h2 class="text-2xl font-semibold text-slate-900">{{ wishlistStore.currentWishlist.title }}</h2>
+        <h2 class="text-2xl font-semibold text-slate-900">
+          {{ wishlistStore.currentWishlist.title }}
+        </h2>
         <p v-if="wishlistStore.currentWishlist.description" class="mt-1 text-sm text-slate-600">
           {{ wishlistStore.currentWishlist.description }}
         </p>
@@ -31,7 +33,12 @@
         </div>
         <div>
           <label class="label" for="edit-description">Description</label>
-          <input id="edit-description" v-model="editDescription" class="input" placeholder="Optional" />
+          <input
+            id="edit-description"
+            v-model="editDescription"
+            class="input"
+            placeholder="Optional"
+          />
         </div>
         <label class="flex items-center gap-2 text-sm text-slate-700">
           <input v-model="editIsPublic" type="checkbox" class="h-4 w-4" />
@@ -59,10 +66,7 @@
           <div class="flex-1">
             <div class="flex items-center gap-2">
               <p class="font-medium text-slate-800">{{ item.title }}</p>
-              <span
-                class="rounded-full px-2 py-0.5 text-xs"
-                :class="priorityClass(item.priority)"
-              >
+              <span class="rounded-full px-2 py-0.5 text-xs" :class="priorityClass(item.priority)">
                 {{ item.priority }}
               </span>
               <span
@@ -72,7 +76,9 @@
                 Reserved
               </span>
             </div>
-            <p v-if="item.description" class="mt-1 text-sm text-slate-500">{{ item.description }}</p>
+            <p v-if="item.description" class="mt-1 text-sm text-slate-500">
+              {{ item.description }}
+            </p>
             <div class="mt-1 flex flex-wrap gap-3 text-xs text-slate-400">
               <span v-if="item.price !== null">{{ item.price }} {{ item.currency }}</span>
               <a
@@ -93,11 +99,7 @@
             />
           </div>
           <div class="flex gap-1">
-            <button
-              type="button"
-              class="btn-ghost text-sm"
-              @click="startEditItem(item)"
-            >
+            <button type="button" class="btn-ghost text-sm" @click="startEditItem(item)">
               Edit
             </button>
             <button
@@ -122,7 +124,13 @@
         <div class="grid gap-3 md:grid-cols-2">
           <div>
             <label class="label" for="item-title">Title</label>
-            <input id="item-title" v-model="itemForm.title" class="input" required placeholder="Item name" />
+            <input
+              id="item-title"
+              v-model="itemForm.title"
+              class="input"
+              required
+              placeholder="Item name"
+            />
           </div>
           <div>
             <label class="label" for="item-priority">Priority</label>
@@ -135,22 +143,47 @@
         </div>
         <div>
           <label class="label" for="item-description">Description</label>
-          <input id="item-description" v-model="itemForm.description" class="input" placeholder="Optional" />
+          <input
+            id="item-description"
+            v-model="itemForm.description"
+            class="input"
+            placeholder="Optional"
+          />
         </div>
         <div class="grid gap-3 md:grid-cols-2">
           <div>
             <label class="label" for="item-link">Link</label>
-            <input id="item-link" v-model="itemForm.link" type="url" class="input" placeholder="https://..." />
+            <input
+              id="item-link"
+              v-model="itemForm.link"
+              type="url"
+              class="input"
+              placeholder="https://..."
+            />
           </div>
           <div>
             <label class="label" for="item-image">Image URL</label>
-            <input id="item-image" v-model="itemForm.image_url" type="url" class="input" placeholder="https://..." />
+            <input
+              id="item-image"
+              v-model="itemForm.image_url"
+              type="url"
+              class="input"
+              placeholder="https://..."
+            />
           </div>
         </div>
         <div class="grid gap-3 md:grid-cols-2">
           <div>
             <label class="label" for="item-price">Price</label>
-            <input id="item-price" v-model.number="itemForm.price" type="number" min="0" step="0.01" class="input" placeholder="0.00" />
+            <input
+              id="item-price"
+              v-model.number="itemForm.price"
+              type="number"
+              min="0"
+              step="0.01"
+              class="input"
+              placeholder="0.00"
+            />
           </div>
           <div>
             <label class="label" for="item-currency">Currency</label>

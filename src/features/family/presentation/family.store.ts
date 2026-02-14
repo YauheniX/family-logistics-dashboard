@@ -2,11 +2,7 @@ import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { useToastStore } from '@/stores/toast';
 import { familyService } from '@/features/family/domain/family.service';
-import type {
-  Family,
-  UpdateFamilyDto,
-  FamilyMember,
-} from '@/features/shared/domain/entities';
+import type { Family, UpdateFamilyDto, FamilyMember } from '@/features/shared/domain/entities';
 
 export const useFamilyStore = defineStore('family', () => {
   // ─── State ───────────────────────────────────────────────

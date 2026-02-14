@@ -4,9 +4,7 @@
       <div>
         <p class="text-sm text-slate-500">Wishlists</p>
         <h2 class="text-2xl font-semibold text-slate-900">My Wishlists</h2>
-        <p class="mt-1 text-sm text-slate-600">
-          Create and manage your personal wishlists.
-        </p>
+        <p class="mt-1 text-sm text-slate-600">Create and manage your personal wishlists.</p>
       </div>
       <button class="btn-primary" type="button" @click="showCreateModal = true">
         ➕ Create Wishlist
@@ -26,7 +24,9 @@
           <h3 class="text-lg font-semibold text-slate-900">{{ wishlist.title }}</h3>
           <span
             class="rounded-full px-2 py-0.5 text-xs"
-            :class="wishlist.is_public ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'"
+            :class="
+              wishlist.is_public ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
+            "
           >
             {{ wishlist.is_public ? 'Public' : 'Private' }}
           </span>

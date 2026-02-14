@@ -52,7 +52,9 @@
       <div class="glass-card p-5">
         <div class="flex items-center justify-between">
           <h3 class="text-lg font-semibold text-slate-900">Active Shopping Lists</h3>
-          <span class="text-sm text-slate-600">{{ activeListCount }} lists · {{ itemsToBuyCount }} items to buy</span>
+          <span class="text-sm text-slate-600"
+            >{{ activeListCount }} lists · {{ itemsToBuyCount }} items to buy</span
+          >
         </div>
         <div v-if="allActiveLists.length" class="mt-3 space-y-2">
           <RouterLink
@@ -67,7 +69,11 @@
             </div>
             <span
               class="rounded-full px-2 py-0.5 text-xs"
-              :class="list.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'"
+              :class="
+                list.status === 'active'
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : 'bg-slate-100 text-slate-600'
+              "
             >
               {{ list.status }}
             </span>
@@ -92,7 +98,9 @@
             <p class="font-medium text-slate-800">{{ wishlist.title }}</p>
             <span
               class="rounded-full px-2 py-0.5 text-xs"
-              :class="wishlist.is_public ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'"
+              :class="
+                wishlist.is_public ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
+              "
             >
               {{ wishlist.is_public ? 'Public' : 'Private' }}
             </span>
@@ -128,19 +136,14 @@ const shoppingStore = useShoppingStore();
 const wishlistStore = useWishlistStore();
 const router = useRouter();
 
-const allActiveLists = computed(() =>
-  shoppingStore.lists.filter((l) => l.status === 'active'),
-);
+const allActiveLists = computed(() => shoppingStore.lists.filter((l) => l.status === 'active'));
 
 const activeListCount = computed(() => allActiveLists.value.length);
 const itemsToBuyCount = computed(() => shoppingStore.unpurchasedItems.length);
 const reservedItemsCount = computed(() => wishlistStore.reservedItems.length);
 
 async function loadDashboardData(userId: string) {
-  await Promise.all([
-    familyStore.loadFamilies(userId),
-    wishlistStore.loadWishlists(userId),
-  ]);
+  await Promise.all([familyStore.loadFamilies(userId), wishlistStore.loadWishlists(userId)]);
 
   // Load shopping lists sequentially to avoid excessive concurrent requests
   // when the user belongs to many families

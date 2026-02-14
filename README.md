@@ -38,7 +38,7 @@ A **Family Planner** system with:
 | -------------- | ------------------------------------------------------- |
 | **Frontend**   | Vue 3 (Composition API) • TypeScript • Pinia • Tailwind |
 | **Backend**    | Supabase (PostgreSQL + Auth + Storage + RLS)            |
-| **Validation** | Zod                                                    |
+| **Validation** | Zod                                                     |
 | **Build**      | Vite                                                    |
 | **Deployment** | Vercel / GitHub Pages / Any static host                 |
 
@@ -76,15 +76,15 @@ See [`supabase/schema.sql`](supabase/schema.sql) for the full schema.
 
 All tables have RLS enabled. Key policies:
 
-| Table            | Rule                                                               |
-| ---------------- | ------------------------------------------------------------------ |
-| **user_profiles** | Anyone can read; only own profile can be updated                  |
-| **families**      | Visible only to members; only owner can update/delete             |
-| **family_members**| Visible to family members; only owner can add/remove              |
-| **shopping_lists**| Accessible only if user is a family member                        |
-| **shopping_items**| Accessible only if parent list belongs to user's family           |
-| **wishlists**     | Owner has full access; public read if `is_public = true`          |
-| **wishlist_items**| Owner full access; public reservation via security-definer function|
+| Table              | Rule                                                                |
+| ------------------ | ------------------------------------------------------------------- |
+| **user_profiles**  | Anyone can read; only own profile can be updated                    |
+| **families**       | Visible only to members; only owner can update/delete               |
+| **family_members** | Visible to family members; only owner can add/remove                |
+| **shopping_lists** | Accessible only if user is a family member                          |
+| **shopping_items** | Accessible only if parent list belongs to user's family             |
+| **wishlists**      | Owner has full access; public read if `is_public = true`            |
+| **wishlist_items** | Owner full access; public reservation via security-definer function |
 
 Public wishlist reservation uses a `reserve_wishlist_item()` security-definer function that restricts updates to only `is_reserved` and `reserved_by_email` fields.
 
@@ -94,17 +94,17 @@ See [`supabase/rls.sql`](supabase/rls.sql) for all policies.
 
 ## 🗺️ Routing Structure
 
-| Path                          | View                | Auth Required |
-| ----------------------------- | ------------------- | ------------- |
-| `/login`                      | Login               | No (guests)   |
-| `/register`                   | Register            | No (guests)   |
-| `/`                           | Dashboard           | Yes           |
-| `/families`                   | Family List         | Yes           |
-| `/families/:id`               | Family Detail       | Yes           |
-| `/shopping/:listId`           | Shopping List       | Yes           |
-| `/wishlists`                  | Wishlist List       | Yes           |
-| `/wishlists/:id`              | Wishlist Edit       | Yes           |
-| `/wishlist/:shareSlug`        | Public Wishlist     | **No**        |
+| Path                   | View            | Auth Required |
+| ---------------------- | --------------- | ------------- |
+| `/login`               | Login           | No (guests)   |
+| `/register`            | Register        | No (guests)   |
+| `/`                    | Dashboard       | Yes           |
+| `/families`            | Family List     | Yes           |
+| `/families/:id`        | Family Detail   | Yes           |
+| `/shopping/:listId`    | Shopping List   | Yes           |
+| `/wishlists`           | Wishlist List   | Yes           |
+| `/wishlists/:id`       | Wishlist Edit   | Yes           |
+| `/wishlist/:shareSlug` | Public Wishlist | **No**        |
 
 ---
 
@@ -176,6 +176,7 @@ https://your-app.com/#/wishlist/<share_slug>
 ```
 
 **How it works:**
+
 - Wishlist owner sets `is_public = true` and copies the share link
 - Anyone with the link can view the wishlist items
 - Visitors can **reserve items** by clicking "Reserve" (optionally providing their email)
@@ -216,6 +217,7 @@ src/
 ```
 
 Each feature follows:
+
 ```
 feature/
 ├── domain/          # Service with business logic

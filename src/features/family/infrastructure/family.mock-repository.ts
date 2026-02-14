@@ -26,8 +26,9 @@ export class MockFamilyRepository extends MockRepository<Family, CreateFamilyDto
       const ownFamilies = families.filter((f) => f.created_by === userId);
 
       // Also check family_members table
-      const members =
-        await this.storage.get<{ family_id: string; user_id: string }[]>('table:mock_family_members');
+      const members = await this.storage.get<{ family_id: string; user_id: string }[]>(
+        'table:mock_family_members',
+      );
       const memberFamilyIds =
         members
           ?.filter((m) => m.user_id === userId)

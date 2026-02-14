@@ -50,9 +50,7 @@
           />
         </div>
         <div class="flex gap-3">
-          <button class="btn-primary" type="submit" :disabled="familyStore.loading">
-            Create
-          </button>
+          <button class="btn-primary" type="submit" :disabled="familyStore.loading">Create</button>
           <button class="btn-ghost" type="button" @click="showCreateModal = false">Cancel</button>
         </div>
       </form>

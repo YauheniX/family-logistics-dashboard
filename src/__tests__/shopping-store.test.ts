@@ -125,6 +125,106 @@ describe('Shopping Store', () => {
     expect(store.lists).toEqual([]);
   });
 
+  // ─── loadList ──────────────────────────────────────────────
+
+  it('loads a single list successfully', async () => {
+    const { shoppingService } = await import('@/features/shopping/domain/shopping.service');
+    vi.mocked(shoppingService.getList).mockResolvedValue({
+      data: mockList,
+      error: null,
+    });
+    vi.mocked(shoppingService.getListItems).mockResolvedValue({
+      data: [mockItem],
+      error: null,
+    });
+
+    const store = useShoppingStore();
+    await store.loadList('l1');
+
+    expect(store.currentList).toEqual(mockList);
+    expect(store.items).toEqual([mockItem]);
+    expect(store.loading).toBe(false);
+  });
+
+  it('handles loadList error', async () => {
+    const { shoppingService } = await import('@/features/shopping/domain/shopping.service');
+    vi.mocked(shoppingService.getList).mockResolvedValue({
+      data: null,
+      error: { message: 'Not found' },
+    });
+
+    const store = useShoppingStore();
+    await store.loadList('l1');
+
+    expect(store.currentList).toBeNull();
+    expect(store.error).toBe('Not found');
+    expect(store.loading).toBe(false);
+  });
+
+  // ─── updateList ───────────────────────────────────────────
+
+  it('updates a list successfully', async () => {
+    const { shoppingService } = await import('@/features/shopping/domain/shopping.service');
+    const updated = { ...mockList, title: 'Updated List' };
+    vi.mocked(shoppingService.updateList).mockResolvedValue({
+      data: updated,
+      error: null,
+    });
+
+    const store = useShoppingStore();
+    store.lists = [mockList];
+    const result = await store.updateList('l1', { title: 'Updated List' });
+
+    expect(result).toEqual(updated);
+    expect(store.lists[0].title).toBe('Updated List');
+    expect(store.currentList).toEqual(updated);
+  });
+
+  it('handles updateList error', async () => {
+    const { shoppingService } = await import('@/features/shopping/domain/shopping.service');
+    vi.mocked(shoppingService.updateList).mockResolvedValue({
+      data: null,
+      error: { message: 'Update failed' },
+    });
+
+    const store = useShoppingStore();
+    store.lists = [mockList];
+    const result = await store.updateList('l1', { title: 'Updated List' });
+
+    expect(result).toBeNull();
+    expect(store.lists[0].title).toBe('Groceries');
+  });
+
+  // ─── removeList ───────────────────────────────────────────
+
+  it('removes a list successfully', async () => {
+    const { shoppingService } = await import('@/features/shopping/domain/shopping.service');
+    vi.mocked(shoppingService.deleteList).mockResolvedValue({
+      data: undefined,
+      error: null,
+    });
+
+    const store = useShoppingStore();
+    store.lists = [mockList];
+    await store.removeList('l1');
+
+    expect(store.lists).toEqual([]);
+  });
+
+  it('handles removeList error', async () => {
+    const { shoppingService } = await import('@/features/shopping/domain/shopping.service');
+    vi.mocked(shoppingService.deleteList).mockResolvedValue({
+      data: null,
+      error: { message: 'Delete failed' },
+    });
+
+    const store = useShoppingStore();
+    store.lists = [mockList];
+    await store.removeList('l1');
+
+    expect(store.lists).toContainEqual(mockList);
+  });
+
   // ─── loadItems ────────────────────────────────────────────
 
   it('loads items successfully', async () => {
@@ -191,6 +291,69 @@ describe('Shopping Store', () => {
 
     expect(result).toBeNull();
     expect(store.items).toEqual([]);
+  });
+
+  // ─── updateItem ─────────────────────────────────────────────
+
+  it('updates an item successfully', async () => {
+    const { shoppingService } = await import('@/features/shopping/domain/shopping.service');
+    const updated = { ...mockItem, title: 'Updated Milk', quantity: 3 };
+    vi.mocked(shoppingService.updateItem).mockResolvedValue({
+      data: updated,
+      error: null,
+    });
+
+    const store = useShoppingStore();
+    store.items = [mockItem];
+    const result = await store.updateItem('i1', { title: 'Updated Milk', quantity: 3 });
+
+    expect(result).toEqual(updated);
+    expect(store.items[0].title).toBe('Updated Milk');
+  });
+
+  it('handles updateItem error', async () => {
+    const { shoppingService } = await import('@/features/shopping/domain/shopping.service');
+    vi.mocked(shoppingService.updateItem).mockResolvedValue({
+      data: null,
+      error: { message: 'Update failed' },
+    });
+
+    const store = useShoppingStore();
+    store.items = [mockItem];
+    const result = await store.updateItem('i1', { title: 'Updated Milk' });
+
+    expect(result).toBeNull();
+    expect(store.items[0].title).toBe('Milk');
+  });
+
+  // ─── removeItem ───────────────────────────────────────────
+
+  it('removes an item successfully', async () => {
+    const { shoppingService } = await import('@/features/shopping/domain/shopping.service');
+    vi.mocked(shoppingService.deleteItem).mockResolvedValue({
+      data: undefined,
+      error: null,
+    });
+
+    const store = useShoppingStore();
+    store.items = [mockItem];
+    await store.removeItem('i1');
+
+    expect(store.items).toEqual([]);
+  });
+
+  it('handles removeItem error', async () => {
+    const { shoppingService } = await import('@/features/shopping/domain/shopping.service');
+    vi.mocked(shoppingService.deleteItem).mockResolvedValue({
+      data: null,
+      error: { message: 'Delete failed' },
+    });
+
+    const store = useShoppingStore();
+    store.items = [mockItem];
+    await store.removeItem('i1');
+
+    expect(store.items).toContainEqual(mockItem);
   });
 
   // ─── togglePurchased ──────────────────────────────────────

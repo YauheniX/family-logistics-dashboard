@@ -83,7 +83,10 @@ export class ShoppingService {
   /**
    * Toggle the purchased status of an item
    */
-  async togglePurchased(id: string, purchasedBy: string | null): Promise<ApiResponse<ShoppingItem>> {
+  async togglePurchased(
+    id: string,
+    purchasedBy: string | null,
+  ): Promise<ApiResponse<ShoppingItem>> {
     const itemResponse = await shoppingItemRepository.findById(id);
     if (itemResponse.error || !itemResponse.data) {
       return itemResponse;

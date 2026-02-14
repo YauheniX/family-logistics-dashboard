@@ -52,7 +52,11 @@ export type ShoppingListFormData = z.infer<typeof ShoppingListFormSchema>;
 export const ShoppingItemFormSchema = z.object({
   title: z.string().min(1, 'Item title is required').max(200, 'Title is too long'),
   quantity: z.number().int().min(1, 'Quantity must be at least 1').default(1),
-  category: z.string().min(1, 'Category is required').max(100, 'Category is too long').default('General'),
+  category: z
+    .string()
+    .min(1, 'Category is required')
+    .max(100, 'Category is too long')
+    .default('General'),
 });
 export type ShoppingItemFormData = z.infer<typeof ShoppingItemFormSchema>;
 

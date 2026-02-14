@@ -112,6 +112,109 @@ describe('Family Store', () => {
     expect(store.families).toEqual([]);
   });
 
+  // ─── loadFamily ────────────────────────────────────────────
+
+  it('loads a single family successfully', async () => {
+    const { familyService } = await import('@/features/family/domain/family.service');
+    vi.mocked(familyService.getFamily).mockResolvedValue({
+      data: mockFamily,
+      error: null,
+    });
+    vi.mocked(familyService.getFamilyMembers).mockResolvedValue({
+      data: [mockMember],
+      error: null,
+    });
+
+    const store = useFamilyStore();
+    await store.loadFamily('f1');
+
+    expect(store.currentFamily).toEqual(mockFamily);
+    expect(store.members).toEqual([mockMember]);
+    expect(store.loading).toBe(false);
+    expect(store.error).toBeNull();
+  });
+
+  it('handles loadFamily error', async () => {
+    const { familyService } = await import('@/features/family/domain/family.service');
+    vi.mocked(familyService.getFamily).mockResolvedValue({
+      data: null,
+      error: { message: 'Not found' },
+    });
+
+    const store = useFamilyStore();
+    await store.loadFamily('f1');
+
+    expect(store.currentFamily).toBeNull();
+    expect(store.error).toBe('Not found');
+    expect(store.loading).toBe(false);
+  });
+
+  // ─── updateFamily ────────────────────────────────────────
+
+  it('updates a family successfully', async () => {
+    const { familyService } = await import('@/features/family/domain/family.service');
+    const updated = { ...mockFamily, name: 'Updated Family' };
+    vi.mocked(familyService.updateFamily).mockResolvedValue({
+      data: updated,
+      error: null,
+    });
+
+    const store = useFamilyStore();
+    store.families = [mockFamily];
+    const result = await store.updateFamily('f1', { name: 'Updated Family' });
+
+    expect(result).toEqual(updated);
+    expect(store.families[0].name).toBe('Updated Family');
+    expect(store.currentFamily).toEqual(updated);
+    expect(store.loading).toBe(false);
+  });
+
+  it('handles updateFamily error', async () => {
+    const { familyService } = await import('@/features/family/domain/family.service');
+    vi.mocked(familyService.updateFamily).mockResolvedValue({
+      data: null,
+      error: { message: 'Update failed' },
+    });
+
+    const store = useFamilyStore();
+    store.families = [mockFamily];
+    const result = await store.updateFamily('f1', { name: 'Updated Family' });
+
+    expect(result).toBeNull();
+    expect(store.families[0].name).toBe('Test Family');
+  });
+
+  // ─── removeFamily ────────────────────────────────────────
+
+  it('removes a family successfully', async () => {
+    const { familyService } = await import('@/features/family/domain/family.service');
+    vi.mocked(familyService.deleteFamily).mockResolvedValue({
+      data: undefined,
+      error: null,
+    });
+
+    const store = useFamilyStore();
+    store.families = [mockFamily];
+    await store.removeFamily('f1');
+
+    expect(store.families).toEqual([]);
+    expect(store.loading).toBe(false);
+  });
+
+  it('handles removeFamily error', async () => {
+    const { familyService } = await import('@/features/family/domain/family.service');
+    vi.mocked(familyService.deleteFamily).mockResolvedValue({
+      data: null,
+      error: { message: 'Delete failed' },
+    });
+
+    const store = useFamilyStore();
+    store.families = [mockFamily];
+    await store.removeFamily('f1');
+
+    expect(store.families).toContainEqual(mockFamily);
+  });
+
   // ─── loadMembers ──────────────────────────────────────────
 
   it('loads family members successfully', async () => {

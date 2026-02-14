@@ -89,6 +89,197 @@ describe('Wishlist Store', () => {
     expect(store.error).toBe('Network error');
   });
 
+  // ─── loadWishlist ──────────────────────────────────────────
+
+  it('loads a single wishlist successfully', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.getWishlist).mockResolvedValue({
+      data: mockWishlist,
+      error: null,
+    });
+    vi.mocked(wishlistService.getWishlistItems).mockResolvedValue({
+      data: [mockItem],
+      error: null,
+    });
+
+    const store = useWishlistStore();
+    await store.loadWishlist('w1');
+
+    expect(store.currentWishlist).toEqual(mockWishlist);
+    expect(store.items).toEqual([mockItem]);
+    expect(store.loading).toBe(false);
+  });
+
+  it('handles loadWishlist error', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.getWishlist).mockResolvedValue({
+      data: null,
+      error: { message: 'Not found' },
+    });
+
+    const store = useWishlistStore();
+    await store.loadWishlist('w1');
+
+    expect(store.currentWishlist).toBeNull();
+    expect(store.error).toBe('Not found');
+    expect(store.loading).toBe(false);
+  });
+
+  // ─── updateWishlist ───────────────────────────────────────
+
+  it('updates a wishlist successfully', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    const updated = { ...mockWishlist, title: 'Updated Wishes' };
+    vi.mocked(wishlistService.updateWishlist).mockResolvedValue({
+      data: updated,
+      error: null,
+    });
+
+    const store = useWishlistStore();
+    store.wishlists = [mockWishlist];
+    const result = await store.updateWishlist('w1', { title: 'Updated Wishes' });
+
+    expect(result).toEqual(updated);
+    expect(store.wishlists[0].title).toBe('Updated Wishes');
+    expect(store.currentWishlist).toEqual(updated);
+  });
+
+  it('handles updateWishlist error', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.updateWishlist).mockResolvedValue({
+      data: null,
+      error: { message: 'Update failed' },
+    });
+
+    const store = useWishlistStore();
+    store.wishlists = [mockWishlist];
+    const result = await store.updateWishlist('w1', { title: 'Updated Wishes' });
+
+    expect(result).toBeNull();
+    expect(store.wishlists[0].title).toBe('Birthday Wishes');
+  });
+
+  // ─── removeWishlist ───────────────────────────────────────
+
+  it('removes a wishlist successfully', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.deleteWishlist).mockResolvedValue({
+      data: undefined,
+      error: null,
+    });
+
+    const store = useWishlistStore();
+    store.wishlists = [mockWishlist];
+    await store.removeWishlist('w1');
+
+    expect(store.wishlists).toEqual([]);
+  });
+
+  it('handles removeWishlist error', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.deleteWishlist).mockResolvedValue({
+      data: null,
+      error: { message: 'Delete failed' },
+    });
+
+    const store = useWishlistStore();
+    store.wishlists = [mockWishlist];
+    await store.removeWishlist('w1');
+
+    expect(store.wishlists).toContainEqual(mockWishlist);
+  });
+
+  // ─── loadItems ────────────────────────────────────────────
+
+  it('loads wishlist items successfully', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.getWishlistItems).mockResolvedValue({
+      data: [mockItem],
+      error: null,
+    });
+
+    const store = useWishlistStore();
+    await store.loadItems('w1');
+
+    expect(store.items).toEqual([mockItem]);
+  });
+
+  it('handles loadItems error', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.getWishlistItems).mockResolvedValue({
+      data: null,
+      error: { message: 'Load failed' },
+    });
+
+    const store = useWishlistStore();
+    await store.loadItems('w1');
+
+    expect(store.items).toEqual([]);
+  });
+
+  // ─── updateItem ───────────────────────────────────────────
+
+  it('updates a wishlist item successfully', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    const updated = { ...mockItem, title: 'Updated Headphones' };
+    vi.mocked(wishlistService.updateItem).mockResolvedValue({
+      data: updated,
+      error: null,
+    });
+
+    const store = useWishlistStore();
+    store.items = [mockItem];
+    const result = await store.updateItem('wi1', { title: 'Updated Headphones' });
+
+    expect(result).toEqual(updated);
+    expect(store.items[0].title).toBe('Updated Headphones');
+  });
+
+  it('handles updateItem error', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.updateItem).mockResolvedValue({
+      data: null,
+      error: { message: 'Update failed' },
+    });
+
+    const store = useWishlistStore();
+    store.items = [mockItem];
+    const result = await store.updateItem('wi1', { title: 'Updated Headphones' });
+
+    expect(result).toBeNull();
+    expect(store.items[0].title).toBe('Headphones');
+  });
+
+  // ─── removeItem ───────────────────────────────────────────
+
+  it('removes a wishlist item successfully', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.deleteItem).mockResolvedValue({
+      data: undefined,
+      error: null,
+    });
+
+    const store = useWishlistStore();
+    store.items = [mockItem];
+    await store.removeItem('wi1');
+
+    expect(store.items).toEqual([]);
+  });
+
+  it('handles removeItem error', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.deleteItem).mockResolvedValue({
+      data: null,
+      error: { message: 'Delete failed' },
+    });
+
+    const store = useWishlistStore();
+    store.items = [mockItem];
+    await store.removeItem('wi1');
+
+    expect(store.items).toContainEqual(mockItem);
+  });
+
   // ─── createWishlist ───────────────────────────────────────
 
   it('creates a wishlist successfully', async () => {
