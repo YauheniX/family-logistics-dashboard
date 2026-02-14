@@ -179,7 +179,7 @@ npm run dev
 This repository includes `.github/workflows/ai-review.yml` to run automated OpenAI-based PR reviews.
 
 - **Trigger:** `pull_request` on `opened` and `synchronize`
-- **Action used:** `aider-ai/pr-reviewer`
+- **Action used:** `anc95/ChatGPT-CodeReview@v1.0.23`
 - **Behavior:** posts AI review comments directly on the PR
 - **Graceful handling:** if OpenAI rate limits or a temporary API error occurs, the workflow adds a PR comment and exits without failing the pipeline
 

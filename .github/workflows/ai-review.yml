@@ -15,11 +15,11 @@ jobs:
     steps:
       - name: Review PR with OpenAI
         id: ai_review
-        uses: aider-ai/pr-reviewer@main
+        uses: anc95/ChatGPT-CodeReview@v1.0.23
         continue-on-error: true
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Comment when AI review is skipped
         if: steps.ai_review.outcome == 'failure'
