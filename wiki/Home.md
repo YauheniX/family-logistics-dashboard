@@ -14,6 +14,7 @@ This wiki contains comprehensive guides for developers and contributors working 
 - **[Architecture Overview](Architecture.md)** - System design, patterns, and best practices
 - **[Database Schema](Database-Schema.md)** - Tables, relationships, and RLS policies
 - **[Features Guide](Features.md)** - Detailed documentation for all features
+- **[Developer Guides](Developer-Guides.md)** - Error handling, toast notifications, async patterns, migration guide
 
 ### Quality & Deployment
 - **[Testing](Testing.md)** - Test structure, coverage, and best practices
@@ -182,6 +183,7 @@ wiki/
 ├── Database-Schema.md                   # Database tables and RLS
 ├── Authentication.md                    # Auth setup (Google OAuth)
 ├── Features.md                          # Feature documentation
+├── Developer-Guides.md                  # Error handling, toast, async, migration
 ├── Testing.md                           # Test strategy and coverage
 ├── CI-CD.md                             # CI/CD pipelines
 ├── Deployment.md                        # Deployment guides

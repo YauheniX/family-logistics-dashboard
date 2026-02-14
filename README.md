@@ -123,6 +123,7 @@ npm run build
 - **[Database Schema](wiki/Database-Schema.md)** - Tables, RLS policies, functions
 - **[Authentication](wiki/Authentication.md)** - Google OAuth + email/password setup
 - **[Features](wiki/Features.md)** - Detailed feature documentation
+- **[Developer Guides](wiki/Developer-Guides.md)** - Error handling, async patterns, migration guide
 - **[Testing](wiki/Testing.md)** - Test strategy and coverage
 - **[CI/CD](wiki/CI-CD.md)** - Continuous integration and deployment
 - **[Deployment](wiki/Deployment.md)** - Production deployment guide

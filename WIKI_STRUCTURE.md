@@ -102,7 +102,15 @@ The project documentation has been moved from the lengthy README.md (644 lines) 
    - Implementation roadmap
    - Best practices
 
-10. **[FAQ.md](wiki/FAQ.md)** - 507 lines
+10. **[Developer-Guides.md](wiki/Developer-Guides.md)** - 608 lines
+    - Error handling architecture
+    - Toast notification system
+    - useAsyncHandler composable
+    - Migration guide (old → new architecture)
+    - Code examples and best practices
+    - References to detailed docs in docs/ folder
+
+11. **[FAQ.md](wiki/FAQ.md)** - 507 lines
     - General questions
     - Setup and installation
     - Authentication
@@ -154,9 +162,10 @@ The refactored README is concise and developer-friendly:
 ## Total Line Counts
 
 - **Old README**: 644 lines
-- **New README**: 228 lines (65% reduction)
-- **Wiki Pages**: 5,053 lines (comprehensive)
-- **Total Documentation**: 5,281 lines (with README)
+- **New README**: 229 lines (64% reduction)
+- **Wiki Pages**: 5,661 lines (comprehensive)
+- **Total Documentation**: 5,890 lines (with README)
+- **Original docs/ folder**: 3,483 lines (preserved, key content integrated into wiki)
 
 ## Next Steps for GitHub Wiki
 
@@ -169,6 +178,29 @@ To publish to GitHub Wiki:
 5. Update README links if needed (from `wiki/Page.md` to `wiki/Page`)
 
 Alternatively, you can keep the Wiki in the repository (as `wiki/` folder) for version control and easier maintenance.
+
+## Integration with docs/ Folder
+
+The new **Developer-Guides.md** consolidates key technical information from the `docs/` folder:
+
+**Content Integrated:**
+- **docs/ERROR_HANDLING.md** → Developer-Guides.md (Error Handling section)
+- **docs/TOAST_GUIDE.md** → Developer-Guides.md (Toast Notifications section)
+- **docs/USE_ASYNC_HANDLER_GUIDE.md** → Developer-Guides.md (Async Handler section)
+- **docs/MIGRATION_GUIDE.md** → Developer-Guides.md (Migration Guide section)
+- **docs/ARCHITECTURE.md** → Already covered in wiki/Architecture.md
+- **docs/SETUP.md** → Already covered in wiki/Home.md and wiki/Authentication.md
+
+**Preserved in docs/ folder:**
+The original detailed documentation files are preserved in the `docs/` folder for:
+- Developers who need the full detailed guides
+- Reference for advanced use cases
+- Historical documentation
+
+**Best Practice:**
+- Quick start: Use Wiki pages
+- Deep dive: Reference original docs/ files (linked from Wiki)
+- Both are version-controlled and maintained
 
 ---
 
