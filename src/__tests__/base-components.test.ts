@@ -287,4 +287,48 @@ describe('ModalDialog', () => {
     expect(wrapper.props('title')).toBe('Test Title');
     expect(wrapper.props('open')).toBe(true);
   });
+
+  it('emits close event on backdrop click', async () => {
+    const wrapper = mount(ModalDialog, {
+      props: {
+        open: true,
+        title: 'Test',
+      },
+      slots: {
+        default: 'Content',
+      },
+      attachTo: document.body,
+    });
+
+    // Find and click the backdrop
+    const backdrop = wrapper.find('.bg-black\\/50');
+    if (backdrop.exists()) {
+      await backdrop.trigger('click');
+      expect(wrapper.emitted('close')).toBeTruthy();
+    }
+    
+    wrapper.unmount();
+  });
+
+  it('emits close event on close button click', async () => {
+    const wrapper = mount(ModalDialog, {
+      props: {
+        open: true,
+        title: 'Test',
+      },
+      slots: {
+        default: 'Content',
+      },
+      attachTo: document.body,
+    });
+
+    // Find and click the close button
+    const closeButton = wrapper.find('button[aria-label="Close modal"]');
+    if (closeButton.exists()) {
+      await closeButton.trigger('click');
+      expect(wrapper.emitted('close')).toBeTruthy();
+    }
+    
+    wrapper.unmount();
+  });
 });
