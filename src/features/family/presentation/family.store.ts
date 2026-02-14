@@ -111,6 +111,7 @@ export const useFamilyStore = defineStore('family', () => {
   async function loadMembers(familyId: string) {
     const response = await familyService.getFamilyMembers(familyId);
     if (response.error) {
+      error.value = response.error.message;
       useToastStore().error(`Failed to load members: ${response.error.message}`);
     } else {
       members.value = response.data ?? [];

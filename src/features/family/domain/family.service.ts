@@ -48,7 +48,12 @@ export class FamilyService {
       role: 'owner',
     };
 
-    await familyMemberRepository.create(memberDto);
+    const memberResponse = await familyMemberRepository.create(memberDto);
+    if (memberResponse.error) {
+      // Rollback: delete the family if adding owner membership fails
+      await familyRepository.delete(familyResponse.data.id);
+      return { data: null, error: memberResponse.error };
+    }
 
     return familyResponse;
   }

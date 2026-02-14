@@ -232,6 +232,7 @@ watch(
       editIsPublic.value = wl.is_public;
     }
   },
+  { immediate: true },
 );
 
 onMounted(async () => {

@@ -96,6 +96,16 @@ create table if not exists wishlist_items (
 
 comment on table wishlist_items is 'Items in a wishlist with reservation support';
 
+-- ─── Indexes ────────────────────────────────────────────────
+
+create index if not exists idx_family_members_user_id on family_members (user_id);
+create index if not exists idx_family_members_family_id on family_members (family_id);
+create index if not exists idx_shopping_lists_family_id on shopping_lists (family_id);
+create index if not exists idx_shopping_items_list_id on shopping_items (list_id);
+create index if not exists idx_wishlists_user_id on wishlists (user_id);
+create index if not exists idx_wishlists_share_slug on wishlists (share_slug);
+create index if not exists idx_wishlist_items_wishlist_id on wishlist_items (wishlist_id);
+
 -- ─── Helper Functions ───────────────────────────────────────
 
 -- Check if a user belongs to a specific family

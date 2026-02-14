@@ -60,6 +60,11 @@ function createTestRouter() {
         component: { template: '<div />' },
         meta: { requiresAuth: true },
       },
+      {
+        path: '/wishlist/:shareSlug',
+        name: 'public-wishlist',
+        component: { template: '<div />' },
+      },
     ],
   });
 
@@ -145,5 +150,18 @@ describe('Auth Guard', () => {
     await router.isReady();
 
     expect(router.currentRoute.value.name).toBe('login');
+  });
+
+  it('allows unauthenticated user to access public wishlist page', async () => {
+    const authStore = useAuthStore();
+    authStore.initialized = true;
+    authStore.user = null;
+
+    const router = createTestRouter();
+    router.push('/wishlist/abc123');
+    await router.isReady();
+
+    expect(router.currentRoute.value.name).toBe('public-wishlist');
+    expect(router.currentRoute.value.params.shareSlug).toBe('abc123');
   });
 });

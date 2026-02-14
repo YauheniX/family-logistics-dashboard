@@ -87,10 +87,19 @@ export class MockFamilyMemberRepository extends MockRepository<
   async inviteByEmail(
     familyId: string,
     email: string,
+    currentUserId?: string,
   ): Promise<ApiResponse<FamilyMember>> {
     try {
       // In mock mode, simulate user lookup by generating a mock user ID
       const mockUserId = `user-${email.replace(/[^a-z0-9]/gi, '-')}`;
+
+      // Prevent adding yourself
+      if (currentUserId && mockUserId === currentUserId) {
+        return {
+          data: null,
+          error: { message: 'Cannot add yourself as a member' },
+        };
+      }
 
       const newMember: CreateFamilyMemberDto = {
         family_id: familyId,
