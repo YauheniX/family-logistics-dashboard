@@ -9,3 +9,4 @@ family-logistics-dashboard.code-workspace
 .tools/supabase.exe
 .tools/supabase.tar.gz
 .env
+coverage/
