@@ -76,8 +76,8 @@
             <div class="mt-1 flex flex-wrap gap-3 text-xs text-slate-400">
               <span v-if="item.price !== null">{{ item.price }} {{ item.currency }}</span>
               <a
-                v-if="item.link"
-                :href="item.link"
+                v-if="safeUrl(item.link)"
+                :href="safeUrl(item.link)"
                 target="_blank"
                 rel="noreferrer"
                 class="text-brand-600 hover:underline"
@@ -208,6 +208,19 @@ const priorityClass = (priority: ItemPriority) => {
     case 'low':
       return 'bg-slate-100 text-slate-600';
   }
+};
+
+const safeUrl = (url: string | null): string | undefined => {
+  if (!url) return undefined;
+  try {
+    const parsed = new URL(url);
+    if (['http:', 'https:'].includes(parsed.protocol)) {
+      return parsed.href;
+    }
+  } catch {
+    // invalid URL
+  }
+  return undefined;
 };
 
 watch(
