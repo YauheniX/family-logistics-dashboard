@@ -38,7 +38,7 @@ serve(async (req) => {
   // Consider using Supabase's built-in rate limiting features or
   // implementing custom rate limiting based on user ID.
   // For production, track issue creation timestamps per user.
-  
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }

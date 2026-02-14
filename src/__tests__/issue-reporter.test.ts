@@ -31,7 +31,7 @@ describe('Issue Reporter Service', () => {
     };
 
     await expect(reportProblem(input)).rejects.toThrow(
-      'Issue reporting requires a backend (Supabase) to be enabled.'
+      'Issue reporting requires a backend (Supabase) to be enabled.',
     );
   });
 
