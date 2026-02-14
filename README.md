@@ -1,7 +1,15 @@
 # 🏠 Family Logistics Dashboard
 
-Private family travel planner built with **Vue 3 + Supabase**.  
-Organize trips, packing lists, documents, budgets, and timelines in one secure place.
+Production-grade family travel planner built with **Vue 3 + Supabase**.  
+Organize trips, packing lists, documents, budgets, and timelines with enterprise-level architecture.
+
+**🎯 New in v2.0: Production-Ready Architecture**
+- ✅ Feature-based folder structure
+- ✅ Repository pattern for data access
+- ✅ Typed Supabase client with generated types
+- ✅ Zod validation for forms
+- ✅ Clean separation: Domain → Infrastructure → Presentation
+- ✅ Full backward compatibility
 
 ---
 
@@ -38,11 +46,17 @@ Organize trips, packing lists, documents, budgets, and timelines in one secure p
 - Add trip events (check-in, departure, stops)
 - Date/time-based entries
 
-### 🎯 Centralized Error Handling (NEW)
+### 🎯 Centralized Error Handling
 - Type-safe API responses
 - Global toast notifications
 - Automatic loading states
 - Consistent error handling across the app
+
+### 🤝 Trip Sharing (NEW)
+- Invite members by email
+- Role-based access (owner, editor, viewer)
+- Secure user lookup functions
+- Real-time collaboration
 
 ---
 
@@ -50,23 +64,27 @@ Organize trips, packing lists, documents, budgets, and timelines in one secure p
 
 **Frontend**
 - Vue 3 (Composition API)
-- Vite
-- TypeScript
-- Pinia
+- TypeScript (strict mode)
+- Pinia (state management)
 - Vue Router
+- Vite (build tool)
 - TailwindCSS
+- Zod (runtime validation)
 
 **Backend**
 - Supabase
   - Auth (Google OAuth)
   - Postgres Database
-  - Storage
+  - Storage (file uploads)
+  - Row Level Security (RLS)
 
 **Architecture**
-- Clean layered architecture (Services → Stores → Components)
-- Type-safe error handling with `ApiResponse<T>`
-- Global toast notification system
-- Reusable `useAsyncHandler` composable
+- **Feature-based structure** (trips, templates, auth, shared)
+- **Repository pattern** for data access
+- **Service layer** for business logic
+- **Typed database client** with generated types
+- **Zod validation** for forms and inputs
+- **Clean architecture** (Domain → Infrastructure → Presentation)
 
 ---
 
@@ -74,22 +92,63 @@ Organize trips, packing lists, documents, budgets, and timelines in one secure p
 
 ```
 src/
-  components/
-    layout/         - Navigation, sidebar
-    shared/         - Reusable components (LoadingState, ToastContainer)
-    trips/          - Trip-specific components
-  views/            - Page components
-  stores/           - Pinia stores (auth, trips, templates, toast)
-  services/         - API layer with Supabase wrapper
-  composables/      - Reusable Vue composables (useAsyncHandler, useAsyncState)
-  router/           - Vue Router configuration
-  types/            - TypeScript type definitions
+  features/              # Feature-based architecture (NEW!)
+    trips/
+      domain/           # Business logic & services
+      infrastructure/   # Repositories & data access
+      presentation/     # Stores & UI (to be added)
+      index.ts          # Public API
+    templates/
+      domain/
+      infrastructure/
+      presentation/
+      index.ts
+    auth/
+      domain/
+      infrastructure/
+      presentation/
+      index.ts
+    shared/             # Common code
+      domain/           # Entities, validation, interfaces
+      infrastructure/   # Database types, Supabase client, base repository
+      presentation/     # Shared composables
+      index.ts
+  components/           # UI components (being migrated to features)
+    layout/            - Navigation, sidebar
+    shared/            - Reusable components
+    trips/             - Trip-specific components
+  views/               # Page components
+  stores/              # Legacy stores (backward compatibility layer)
+  services/            # Legacy services (being migrated)
+  composables/         # Reusable Vue composables
+  router/              # Vue Router configuration
+  types/               # Legacy type definitions
 docs/
-  ERROR_HANDLING.md           - Error handling architecture guide
-  TOAST_GUIDE.md              - Toast notification usage guide
-  USE_ASYNC_HANDLER_GUIDE.md  - useAsyncHandler composable guide
-  REFACTORING_SUMMARY.md      - Summary of error handling refactoring
+  ARCHITECTURE.md              # Architecture overview and design patterns
+  MIGRATION_GUIDE.md           # Step-by-step migration guide with examples
+  ERROR_HANDLING.md            # Error handling architecture
+  TOAST_GUIDE.md               # Toast notification usage
+  USE_ASYNC_HANDLER_GUIDE.md   # Async handler composable
+supabase/
+  schema.sql                   # Database schema
+  rls.sql                      # Row Level Security policies
+  migrations/
+    002_architecture_refactoring.sql  # Performance indexes
 ```
+
+### 📚 Architecture Documentation
+
+**New developers start here:**
+1. [ARCHITECTURE.md](docs/ARCHITECTURE.md) - Understand the architecture
+2. [MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md) - See code examples
+3. Feature folders - Explore the codebase
+
+**Key concepts:**
+- **Features are independent** - Each feature has its own domain, infrastructure, and presentation
+- **Repository pattern** - Clean data access abstraction
+- **Service layer** - Complex business logic
+- **Type safety** - From database to UI
+- **Validation** - Zod schemas for runtime checking
 
 ---
 
@@ -157,12 +216,13 @@ VITE_SUPABASE_ANON_KEY=your_anon_key
 
 ---
 
-### 6. Apply database schema
+### 6. Apply database schema and migrations
 
-Run the SQL files in your Supabase SQL Editor:
+Run the SQL files in your Supabase SQL Editor in order:
 
 1. `supabase/schema.sql` — creates tables and enables RLS
 2. `supabase/rls.sql` — creates row-level security policies
+3. `supabase/migrations/002_architecture_refactoring.sql` — adds performance indexes
 
 ---
 
@@ -196,70 +256,118 @@ This repository includes `.github/workflows/ai-review.yml` to run automated Open
 
 ---
 
-## 🏗️ Architecture & Error Handling
+## 🏗️ Production-Grade Architecture
 
-This project uses a **clean, layered architecture** with centralized error handling:
+This project follows **clean architecture** principles with a **feature-based structure**.
+
+### Layers
+
+```
+┌─────────────────────────────────────────┐
+│         Presentation Layer              │
+│  (Stores, Components, Composables)      │
+├─────────────────────────────────────────┤
+│           Domain Layer                  │
+│   (Entities, Services, Validation)      │
+├─────────────────────────────────────────┤
+│       Infrastructure Layer              │
+│  (Repositories, Database, External APIs)│
+└─────────────────────────────────────────┘
+```
+
+### Repository Pattern
+
+All data access goes through repositories:
+
+```typescript
+// Clean, consistent API
+import { tripRepository } from '@/features/trips';
+
+// Type-safe queries
+const response = await tripRepository.findByUserId(userId);
+if (response.data) {
+  console.log(response.data); // Trips[]
+}
+```
 
 ### Service Layer
-- All services return `ApiResponse<T>` instead of throwing errors
-- Type-safe responses with `{ data: T | null, error: ApiError | null }`
-- Centralized Supabase wrapper eliminates boilerplate
+
+Business logic lives in services:
 
 ```typescript
-// Example service function
-export async function fetchTrips(userId: string): Promise<ApiResponse<Trip[]>> {
-  return SupabaseService.select<Trip>('trips', builder =>
-    builder.eq('created_by', userId)
-  );
+import { tripService } from '@/features/trips';
+
+// Complex operations handled for you
+const duplicated = await tripService.duplicateTrip(originalTrip);
+// ✅ Copies trip, packing items, budget, timeline
+// ✅ Handles errors and rollback
+// ✅ Returns typed result
+```
+
+### Form Validation
+
+Runtime validation with Zod:
+
+```typescript
+import { useFormValidation } from '@/features/shared/presentation/useFormValidation';
+import { TripFormSchema } from '@/features/shared/domain/validation.schemas';
+
+const { validate, errors } = useFormValidation(TripFormSchema);
+
+const result = validate(formData);
+if (result.success) {
+  // ✅ Data is validated and typed
+  await createTrip(result.data);
+} else {
+  // ❌ Errors available in errors.value
+  console.log(errors.value);
 }
 ```
 
-### Store Layer
-- Stores handle errors and show toast notifications
-- Loading states managed automatically
-- Consistent error messages
+### Type Safety
+
+End-to-end type safety from database to UI:
 
 ```typescript
-// Example store action
-async loadTrips(userId: string) {
-  const response = await fetchTrips(userId);
-  if (response.error) {
-    useToastStore().error(`Failed to load trips: ${response.error.message}`);
-  } else {
-    this.trips = response.data ?? [];
-  }
+// 1. Database types (auto-generated from schema)
+import type { Database } from '@/features/shared/infrastructure/database.types';
+
+// 2. Domain entities (clean business types)
+import type { Trip, CreateTripDto } from '@/features/shared/domain/entities';
+
+// 3. Typed Supabase client
+import { supabase } from '@/features/shared/infrastructure/supabase.client';
+const { data } = await supabase.from('trips').select('*');
+// data is typed as Trip[]
+```
+
+### Error Handling
+
+Consistent error handling across all layers:
+
+```typescript
+// All operations return ApiResponse<T>
+interface ApiResponse<T> {
+  data: T | null;
+  error: ApiError | null;
+}
+
+// Easy to handle
+const response = await tripRepository.findById(id);
+if (response.error) {
+  showError(response.error.message);
+} else {
+  const trip = response.data; // Typed!
 }
 ```
 
-### Component Layer
-- Components use stores or `useAsyncHandler` composable
-- Automatic loading states and error handling
-- Clean, minimal code
+### Documentation
 
-```typescript
-// Example component with useAsyncHandler
-const { loading, execute } = useAsyncHandler({
-  successMessage: 'Trip created!',
-});
-
-const handleCreate = async () => {
-  const result = await execute(() => createTrip(payload));
-  if (result) {
-    router.push({ name: 'trip-detail', params: { id: result.id } });
-  }
-};
-```
-
-### Toast Notifications
-- Global toast system for user feedback
-- Auto-dismiss with configurable duration
-- Four types: success, error, warning, info
-
-**For detailed documentation, see:**
-- [Error Handling Architecture](docs/ERROR_HANDLING.md)
-- [Toast Notification Guide](docs/TOAST_GUIDE.md)
-- [useAsyncHandler Guide](docs/USE_ASYNC_HANDLER_GUIDE.md)
-- [Refactoring Summary](docs/REFACTORING_SUMMARY.md)
+**📚 Essential Reading:**
+- [Architecture Guide](docs/ARCHITECTURE.md) - Design patterns and structure
+- [Migration Guide](docs/MIGRATION_GUIDE.md) - Code examples and how-tos
+- [Error Handling](docs/ERROR_HANDLING.md) - Error handling patterns
+- [Toast Guide](docs/TOAST_GUIDE.md) - User notifications
 
 ---
 
@@ -328,14 +436,31 @@ using (auth.uid() = created_by);
 
 ---
 
-## 📱 Future Improvements
+## 📱 Roadmap
 
-- Trip sharing (multi-user access)
+**Completed ✅**
+- Feature-based architecture
+- Repository pattern
+- Typed Supabase client
+- Zod validation
+- Trip sharing with roles
+- Document upload
+- Budget tracking
+- Timeline/itinerary
+
+**In Progress 🚧**
+- Migrate UI components to feature folders
+- Comprehensive test suite
+- API documentation with TypeDoc
+
+**Planned 📋**
 - Google Calendar sync
-- Offline mode
-- Expense charts
-- Smart packing templates
-- PWA support
+- Offline mode (PWA)
+- Expense charts and analytics
+- Smart packing templates with AI
+- Mobile app (React Native)
+- Multi-currency support
+- Export to PDF
 
 ---
 
