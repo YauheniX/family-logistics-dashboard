@@ -22,5 +22,10 @@ module.exports = {
     'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
     // Allow any types for now (can be tightened later)
     '@typescript-eslint/no-explicit-any': 'warn',
+    // Allow unused vars with underscore prefix
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+    ],
   },
 };

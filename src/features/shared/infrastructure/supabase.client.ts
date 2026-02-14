@@ -1,10 +1,12 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
+import { isMockMode } from '@/config/backend.config';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
-if (!supabaseUrl || !supabaseAnonKey) {
+// Only throw error if not in mock mode
+if (!isMockMode() && (!supabaseUrl || !supabaseAnonKey)) {
   throw new Error(
     'Missing Supabase environment variables. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
   );
@@ -12,11 +14,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 /**
  * Typed Supabase client with database schema
+ * Note: In mock mode, this client won't be used but we still export it for type compatibility
  */
-export const supabase: SupabaseClient<Database> = createClient<Database>(
-  supabaseUrl,
-  supabaseAnonKey,
-);
+export const supabase: SupabaseClient<Database> = isMockMode()
+  ? (createClient<Database>('https://mock.supabase.co', 'mock-key') as SupabaseClient<Database>)
+  : createClient<Database>(supabaseUrl, supabaseAnonKey);
 
 /**
  * Type helper for typed Supabase client

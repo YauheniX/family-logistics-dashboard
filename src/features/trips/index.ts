@@ -6,7 +6,5 @@
 // Domain
 export * from './domain/trip.service';
 
-// Infrastructure (repositories)
-export * from './infrastructure/trip.repository';
-export * from './infrastructure/trip-data.repository';
-export * from './infrastructure/trip-member.repository';
+// Infrastructure (repositories - now via factory)
+export * from './infrastructure/repository.factory';

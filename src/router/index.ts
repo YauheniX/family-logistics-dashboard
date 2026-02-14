@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHashHistory } from 'vue-router';
 import DashboardView from '@/views/DashboardView.vue';
 import TripDetailView from '@/views/TripDetailView.vue';
 import TripFormView from '@/views/TripFormView.vue';
@@ -7,7 +7,7 @@ import LoginView from '@/views/auth/LoginView.vue';
 import { useAuthStore } from '@/stores/auth';
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes: [
     {
       path: '/login',

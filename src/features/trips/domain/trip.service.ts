@@ -1,9 +1,9 @@
-import { tripRepository } from '../infrastructure/trip.repository';
 import {
+  tripRepository,
   packingItemRepository,
   budgetEntryRepository,
   timelineEventRepository,
-} from '../infrastructure/trip-data.repository';
+} from '../infrastructure/repository.factory';
 import type { Trip, CreateTripDto, UpdateTripDto } from '../../shared/domain/entities';
 import type { ApiResponse } from '../../shared/domain/repository.interface';
 

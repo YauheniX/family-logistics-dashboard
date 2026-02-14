@@ -9,6 +9,7 @@ This wiki contains comprehensive guides for developers and contributors working 
 ### Getting Started
 
 - **[Quick Start](Home.md#quick-start)** - Get up and running in minutes
+- **[Frontend-Only Mode](Frontend-Only-Mode.md)** - Run without backend (mock mode)
 - **[Authentication Setup](Authentication.md)** - Configure Google OAuth and email/password auth
 
 ### Architecture & Development
@@ -31,9 +32,46 @@ This wiki contains comprehensive guides for developers and contributors working 
 
 ---
 
+## 🎯 Deployment Modes
+
+This application supports **two modes of operation**:
+
+### 1️⃣ Frontend-Only Mode (Mock Backend)
+
+- **Perfect for:** Local development, demos, static hosting (GitHub Pages)
+- **No backend required** - runs entirely in browser
+- **Data storage:** localStorage
+- **Auth:** Mock authentication
+- **Learn more:** [Frontend-Only Mode Guide](Frontend-Only-Mode.md)
+
+### 2️⃣ Full-Stack Mode (Supabase Backend)
+
+- **Perfect for:** Production deployments, multi-user apps
+- **Backend:** Supabase (PostgreSQL + Auth + Storage)
+- **Data storage:** Cloud database
+- **Auth:** Google OAuth + email/password
+- **Learn more:** [Deployment Guide](Deployment.md)
+
+---
+
 ## Quick Start
 
-### Prerequisites
+### Option A: Frontend-Only Mode (No Backend)
+
+**No Supabase account needed!**
+
+```bash
+git clone https://github.com/YauheniX/family-logistics-dashboard.git
+cd family-logistics-dashboard
+npm install
+npm run dev
+```
+
+Visit `http://localhost:5173` - click "Sign in with Google" to auto-create a demo user.
+
+[→ Full Frontend-Only Guide](Frontend-Only-Mode.md)
+
+### Option B: Full-Stack Mode (Supabase)
 
 - Node.js 18+ (LTS recommended)
 - npm or yarn

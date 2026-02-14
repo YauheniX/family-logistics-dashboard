@@ -63,10 +63,21 @@ export const useAuthStore = defineStore('auth', {
       this.error = null;
       this.loading = true;
       try {
-        // Note: Google OAuth not yet implemented in new auth service
-        // This is a placeholder that maintains the old behavior
-        useToastStore().error('Google OAuth not yet implemented in new architecture');
-        throw new Error('Not implemented');
+        const response = await authService.signInWithOAuth('google');
+        if (response.error) {
+          this.error = response.error.message;
+          useToastStore().error(this.error);
+          throw new Error(this.error);
+        }
+
+        // In real OAuth, data is null (redirect happens)
+        // In mock mode, data contains the user
+        if (response.data) {
+          this.user = { id: response.data.id, email: response.data.email } as User;
+          this.session = {} as Session; // Mock session
+        }
+        // If data is null, OAuth redirect is in progress (real Supabase mode)
+        // User will be set via onAuthStateChange after redirect
       } catch (err: unknown) {
         this.error = err instanceof Error ? err.message : 'Unable to sign in with Google';
         useToastStore().error(this.error);
