@@ -4,6 +4,7 @@ Production-grade family travel planner built with **Vue 3 + Supabase**.
 Organize trips, packing lists, documents, budgets, and timelines with enterprise-level architecture.
 
 **🎯 New in v2.0: Production-Ready Architecture**
+
 - ✅ Feature-based folder structure
 - ✅ Repository pattern for data access
 - ✅ Typed Supabase client with generated types
@@ -16,43 +17,51 @@ Organize trips, packing lists, documents, budgets, and timelines with enterprise
 ## ✨ Features
 
 ### 🔐 Authentication
+
 - Google OAuth authentication (Supabase Auth)
 - Protected routes with AuthGuard
 - Persistent sessions
 
 ### 🧳 Trips
+
 - Create / edit / delete trips
 - Duplicate trips
 - Trip status tracking (`planning | booked | ready | done`)
 - Dashboard with responsive trip cards
 
 ### 🧺 Packing Lists
+
 - Add packing items per trip
 - Categories: `adult | kid | baby | roadtrip | custom`
 - Toggle packed state
 - Progress tracking
 
 ### 📄 Documents
+
 - Upload files to Supabase Storage
 - Store booking references, insurance, tickets
 - Secure per-user access
 
 ### 💰 Budget
+
 - Add expense entries
 - Categorized spending
 - Automatic total calculation
 
 ### 📅 Timeline
+
 - Add trip events (check-in, departure, stops)
 - Date/time-based entries
 
 ### 🎯 Centralized Error Handling
+
 - Type-safe API responses
 - Global toast notifications
 - Automatic loading states
 - Consistent error handling across the app
 
 ### 🤝 Trip Sharing (NEW)
+
 - Invite members by email
 - Role-based access (owner, editor, viewer)
 - Secure user lookup functions
@@ -63,6 +72,7 @@ Organize trips, packing lists, documents, budgets, and timelines with enterprise
 ## 🛠 Tech Stack
 
 **Frontend**
+
 - Vue 3 (Composition API)
 - TypeScript (strict mode)
 - Pinia (state management)
@@ -72,6 +82,7 @@ Organize trips, packing lists, documents, budgets, and timelines with enterprise
 - Zod (runtime validation)
 
 **Backend**
+
 - Supabase
   - Auth (Google OAuth)
   - Postgres Database
@@ -79,6 +90,7 @@ Organize trips, packing lists, documents, budgets, and timelines with enterprise
   - Row Level Security (RLS)
 
 **Architecture**
+
 - **Feature-based structure** (trips, templates, auth, shared)
 - **Repository pattern** for data access
 - **Service layer** for business logic
@@ -139,11 +151,13 @@ supabase/
 ### 📚 Architecture Documentation
 
 **New developers start here:**
+
 1. [ARCHITECTURE.md](docs/ARCHITECTURE.md) - Understand the architecture
 2. [MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md) - See code examples
 3. Feature folders - Explore the codebase
 
 **Key concepts:**
+
 - **Features are independent** - Each feature has its own domain, infrastructure, and presentation
 - **Repository pattern** - Clean data access abstraction
 - **Service layer** - Complex business logic
@@ -234,25 +248,92 @@ npm run dev
 
 ---
 
-## 🤖 AI Pull Request Review (GitHub Actions)
+## 🔒 Code Quality & Security (GitHub Actions)
 
-This repository includes `.github/workflows/ai-review.yml` to run automated OpenAI-based PR reviews.
+This repository uses **100% free GitHub-native solutions** for code quality and security checks. No API keys, no costs, no rate limits.
 
-- **Trigger:** `pull_request` on `opened` and `synchronize`
-- **Action used:** `anc95/ChatGPT-CodeReview@v1.0.23`
-- **Behavior:** posts AI review comments directly on the PR
-- **Graceful handling:** if OpenAI rate limits or a temporary API error occurs, the workflow adds a PR comment and exits without failing the pipeline
+### CodeQL Security Analysis
 
-### Add `OPENAI_API_KEY` repository secret
+**What it does:**
 
-1. Open your GitHub repository.
-2. Go to **Settings → Secrets and variables → Actions**.
-3. Click **New repository secret**.
-4. Name: `OPENAI_API_KEY`
-5. Value: your OpenAI API key
-6. Save the secret.
+- Scans code for security vulnerabilities and coding errors
+- Analyzes TypeScript/JavaScript codebase
+- Runs on every push and pull request
+- Weekly scheduled scans for proactive security
+- Uses GitHub's official CodeQL action
 
-> 🔒 **Security note:** Never commit or print `OPENAI_API_KEY` in code, logs, or documentation. Store it only in GitHub Secrets.
+**File:** `.github/workflows/codeql.yml`
+
+**Key features:**
+
+- ✅ Deep static analysis (not just pattern matching)
+- ✅ Detects SQL injection, XSS, path traversal, etc.
+- ✅ Free for public and private repos
+- ✅ No external API dependencies
+- ✅ Results visible in Security tab
+
+### Super Linter
+
+**What it does:**
+
+- Enforces ESLint rules on TypeScript/Vue files
+- Validates code formatting with Prettier
+- Checks YAML, JSON, CSS, HTML syntax
+- Runs on every pull request
+- Fails PR if quality standards not met
+
+**File:** `.github/workflows/super-linter.yml`
+
+**Key features:**
+
+- ✅ Consistent code style enforcement
+- ✅ Catches common mistakes early
+- ✅ Prevents broken code from merging
+- ✅ 100% free and open source
+- ✅ No setup required beyond config files
+
+### Why This Is Better Than AI Review
+
+**Security & Privacy:**
+
+- ✅ No code sent to external APIs (OpenAI, etc.)
+- ✅ All analysis happens in GitHub's infrastructure
+- ✅ No API keys to manage or secure
+- ✅ No risk of data leaks to third parties
+
+**Reliability:**
+
+- ✅ No rate limits or API quotas
+- ✅ Deterministic results (not probabilistic)
+- ✅ No cost surprises
+- ✅ Always available
+
+**Effectiveness:**
+
+- ✅ CodeQL: Built by GitHub's security experts, trained on millions of vulnerabilities
+- ✅ Super Linter: Runs actual linters, not approximations
+- ✅ Catches real bugs, not just style suggestions
+- ✅ No false positives from AI misunderstanding code
+
+**Maintenance:**
+
+- ✅ No dependencies to update or pay for
+- ✅ Backed by GitHub, always maintained
+- ✅ Transparent operation (open source)
+
+### Branch Protection Requirements
+
+To enforce these checks, configure branch protection rules:
+
+1. Go to **Settings → Branches**
+2. Add rule for `main` branch
+3. Enable:
+   - ✅ Require status checks to pass before merging
+   - ✅ Select: `Analyze Code (analyze)` (CodeQL)
+   - ✅ Select: `Lint Code Base (super-lint)` (Super Linter)
+   - ✅ Require branches to be up to date before merging
+
+Now all PRs must pass security analysis and linting before merge! 🎉
 
 ---
 
@@ -364,6 +445,7 @@ if (response.error) {
 ### Documentation
 
 **📚 Essential Reading:**
+
 - [Architecture Guide](docs/ARCHITECTURE.md) - Design patterns and structure
 - [Migration Guide](docs/MIGRATION_GUIDE.md) - Code examples and how-tos
 - [Error Handling](docs/ERROR_HANDLING.md) - Error handling patterns
@@ -439,6 +521,7 @@ using (auth.uid() = created_by);
 ## 📱 Roadmap
 
 **Completed ✅**
+
 - Feature-based architecture
 - Repository pattern
 - Typed Supabase client
@@ -449,11 +532,13 @@ using (auth.uid() = created_by);
 - Timeline/itinerary
 
 **In Progress 🚧**
+
 - Migrate UI components to feature folders
 - Comprehensive test suite
 - API documentation with TypeDoc
 
 **Planned 📋**
+
 - Google Calendar sync
 - Offline mode (PWA)
 - Expense charts and analytics
