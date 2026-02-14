@@ -117,8 +117,8 @@
           v-model="newItemQuantity"
           type="number"
           placeholder="Qty"
-          :model-value="String(newItemQuantity)"
-          @update:model-value="newItemQuantity = Number($event) || 1"
+          :model-value="newItemQuantity.toString()"
+          @update:model-value="(v) => (newItemQuantity = Number(v) || 1)"
         />
         <BaseInput
           v-model="newItemCategory"
