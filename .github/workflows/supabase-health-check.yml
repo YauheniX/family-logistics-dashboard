@@ -1,0 +1,102 @@
+name: Supabase Health Check
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: read
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check Supabase credentials
+        id: check-creds
+        run: |
+          if [ -z "$VITE_SUPABASE_URL" ]; then
+            echo "status=missing" >> $GITHUB_OUTPUT
+            echo "message=VITE_SUPABASE_URL secret is not set" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          if [ -z "$VITE_SUPABASE_ANON_KEY" ]; then
+            echo "status=missing" >> $GITHUB_OUTPUT
+            echo "message=VITE_SUPABASE_ANON_KEY secret is not set" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          echo "status=ok" >> $GITHUB_OUTPUT
+          echo "✅ Supabase credentials are configured"
+
+      - name: Create .env file for health check
+        run: |
+          cat > .env << EOF
+          VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_STORAGE_BUCKET=wishlist-images
+          VITE_USE_MOCK_BACKEND=false
+          EOF
+
+      - name: Run Supabase verification
+        id: verify
+        continue-on-error: true
+        run: |
+          npm run supabase:verify > health-check-output.txt 2>&1
+          exit_code=$?
+          echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
+          cat health-check-output.txt
+          exit $exit_code
+
+      - name: Upload health check report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-health-check-report
+          path: health-check-output.txt
+
+      - name: Generate health check summary
+        if: always()
+        run: |
+          echo "## Supabase Health Check Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date**: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.verify.outputs.exit_code }}" = "0" ]; then
+            echo "✅ **Status**: All checks passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Status**: Health check failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Detailed Report" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat health-check-output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail workflow if health check failed
+        if: steps.verify.outputs.exit_code != '0'
+        run: |
+          echo "❌ Supabase health check failed"
+          echo "Please review the health check report for details"
+          exit 1

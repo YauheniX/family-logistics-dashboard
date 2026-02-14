@@ -13,6 +13,10 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
+    env:
+      # Force mock mode for tests - no Supabase needed
+      VITE_USE_MOCK_BACKEND: 'true'
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -25,6 +29,16 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Verify mock mode configuration
+        run: |
+          echo "Verifying mock mode is enabled..."
+          if [ "$VITE_USE_MOCK_BACKEND" = "true" ]; then
+            echo "✅ Mock mode is enabled - tests will use localStorage"
+          else
+            echo "❌ Mock mode is NOT enabled - this should not happen"
+            exit 1
+          fi
 
       - name: Run linter
         run: npm run lint

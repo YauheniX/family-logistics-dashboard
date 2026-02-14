@@ -10,7 +10,10 @@
     "lint": "eslint . --ext .ts,.vue",
     "format": "prettier --write .",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "setup:supabase": "node scripts/verify-supabase-setup.js",
+    "supabase:verify": "node scripts/verify-supabase-setup.js",
+    "supabase:init": "bash scripts/setup-supabase.sh"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
