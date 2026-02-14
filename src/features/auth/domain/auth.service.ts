@@ -154,12 +154,12 @@ export class AuthService {
   /**
    * Subscribe to auth state changes
    */
-  onAuthStateChange(callback: (user: AuthUser | null) => void) {
+  onAuthStateChange(callback: (user: AuthUser | null, session: unknown) => void) {
     return supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
-        callback(this.mapUser(session.user));
+        callback(this.mapUser(session.user), session);
       } else {
-        callback(null);
+        callback(null, null);
       }
     });
   }

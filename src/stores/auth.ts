@@ -41,14 +41,14 @@ export const useAuthStore = defineStore('auth', {
         const response = await authService.getCurrentUser();
         if (!response.error && response.data) {
           this.user = { id: response.data.id, email: response.data.email } as User;
-          this.session = {} as Session; // Set session when user exists
+          // Session will be set via onAuthStateChange callback
         }
 
         // Set up auth state change listener
-        authService.onAuthStateChange((user) => {
-          if (user) {
+        authService.onAuthStateChange((user, session) => {
+          if (user && session) {
             this.user = { id: user.id, email: user.email } as User;
-            this.session = {} as Session;
+            this.session = session as Session;
           } else {
             this.user = null;
             this.session = null;
@@ -73,13 +73,7 @@ export const useAuthStore = defineStore('auth', {
         }
 
         // In real OAuth, data is null (redirect happens)
-        // In mock mode, data contains the user
-        if (response.data) {
-          this.user = { id: response.data.id, email: response.data.email } as User;
-          this.session = {} as Session; // Mock session
-        }
-        // If data is null, OAuth redirect is in progress (real Supabase mode)
-        // User will be set via onAuthStateChange after redirect
+        // User and session will be set via onAuthStateChange after redirect
       } catch (err: unknown) {
         this.error = err instanceof Error ? err.message : 'Unable to sign in with Google';
         useToastStore().error(this.error);

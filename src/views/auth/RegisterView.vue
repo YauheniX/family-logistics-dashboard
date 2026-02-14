@@ -127,6 +127,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { authService } from '@/features/auth';
 import { useToastStore } from '@/stores/toast';
+import { isValidEmail, isValidPassword, MIN_PASSWORD_LENGTH } from '@/utils/validation';
 
 const router = useRouter();
 const toastStore = useToastStore();
@@ -148,11 +149,10 @@ const validateForm = (): boolean => {
   let isValid = true;
 
   // Email validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!email.value) {
     validationErrors.value.email = 'Email is required';
     isValid = false;
-  } else if (!emailRegex.test(email.value)) {
+  } else if (!isValidEmail(email.value)) {
     validationErrors.value.email = 'Please enter a valid email address';
     isValid = false;
   }
@@ -161,8 +161,8 @@ const validateForm = (): boolean => {
   if (!password.value) {
     validationErrors.value.password = 'Password is required';
     isValid = false;
-  } else if (password.value.length < 6) {
-    validationErrors.value.password = 'Password must be at least 6 characters';
+  } else if (!isValidPassword(password.value)) {
+    validationErrors.value.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters`;
     isValid = false;
   }
 
