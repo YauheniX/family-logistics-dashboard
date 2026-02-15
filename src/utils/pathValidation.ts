@@ -42,7 +42,7 @@ export function normalizeHashPath(path: string): string {
  */
 export function normalizeRedirectParam(
   param: string | string[] | undefined,
-  defaultPath = '/'
+  defaultPath = '/',
 ): string {
   let redirect = defaultPath;
 

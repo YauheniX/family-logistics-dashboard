@@ -37,8 +37,6 @@ function getAndClearPostAuthRedirect(): string | null {
   return null;
 }
 
-
-
 function cleanToRedirectHash(targetHashPath: string): void {
   const safe = normalizeHashPath(targetHashPath);
   const next = `${window.location.pathname}${window.location.search}#${safe.startsWith('/') ? '/' : ''}${safe}`;
@@ -66,7 +64,10 @@ export async function handleSupabaseAuthRedirect(): Promise<void> {
       url.searchParams.delete('code');
       const postAuth = getAndClearPostAuthRedirect();
       if (postAuth && isSafeInternalPath(postAuth)) {
-        const next = `${url.pathname}${url.search}#${normalizeHashPath(postAuth)}`.replace(/#\/+/, '#/');
+        const next = `${url.pathname}${url.search}#${normalizeHashPath(postAuth)}`.replace(
+          /#\/+/,
+          '#/',
+        );
         window.history.replaceState({}, document.title, next);
       } else {
         const next = `${url.pathname}${url.search}#/`;
