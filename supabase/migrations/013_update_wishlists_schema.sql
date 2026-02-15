@@ -90,27 +90,45 @@ begin
       returning id into v_user_household_id;
       
       -- Create owner member
-      insert into members (household_id, user_id, role, display_name)
-      select v_user_household_id, v_wishlist.user_id, 'owner', 
-        coalesce(up.display_name, 'Me')
-      from user_profiles up
-      where up.id = v_wishlist.user_id
-      returning id into v_member_id;
+      declare
+        v_display_name text;
+      begin
+        -- Get display name from user_profiles, use default if not found
+        select display_name into v_display_name
+        from user_profiles
+        where id = v_wishlist.user_id;
+        
+        insert into members (household_id, user_id, role, display_name)
+        values (
+          v_user_household_id,
+          v_wishlist.user_id,
+          'owner',
+          coalesce(v_display_name, 'Me')
+        )
+        returning id into v_member_id;
+      end;
       
       v_personal_households_created := v_personal_households_created + 1;
     end if;
     
     -- Update wishlists for this user
-    with updates as (
-      update wishlists
-      set household_id = v_user_household_id,
-          member_id = v_member_id,
-          updated_at = now()
-      where user_id = v_wishlist.user_id
-        and (household_id is null or member_id is null)
-      returning id
-    )
-    select count(*) into v_wishlists_migrated from updates;
+    declare
+      v_updated_count integer;
+    begin
+      with updates as (
+        update wishlists
+        set household_id = v_user_household_id,
+            member_id = v_member_id,
+            updated_at = now()
+        where user_id = v_wishlist.user_id
+          and (household_id is null or member_id is null)
+        returning id
+      )
+      select count(*) into v_updated_count from updates;
+      
+      -- Accumulate counter across iterations
+      v_wishlists_migrated := coalesce(v_wishlists_migrated, 0) + v_updated_count;
+    end;
     
   end loop;
   
@@ -137,6 +155,17 @@ begin
 end $$;
 
 -- ─── 4. Create Triggers ──────────────────────────────────────
+
+-- Ensure update_updated_at_column function exists (from migration 010)
+create or replace function update_updated_at_column()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
 
 -- Update updated_at on wishlists
 create trigger update_wishlists_updated_at
@@ -421,6 +450,31 @@ language plpgsql
 security definer
 as $$
 begin
+  -- Input validation
+  if p_email is not null then
+    -- Basic email format validation
+    if not (p_email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$') then
+      raise exception 'Invalid email format';
+    end if;
+    
+    -- Limit email length to prevent abuse
+    if char_length(p_email) > 255 then
+      raise exception 'Email too long (max 255 characters)';
+    end if;
+  end if;
+  
+  if p_name is not null then
+    -- Sanitize name - remove potentially harmful characters
+    if p_name ~ '[<>"\\/]' then
+      raise exception 'Name contains invalid characters';
+    end if;
+    
+    -- Limit name length
+    if char_length(p_name) > 100 then
+      raise exception 'Name too long (max 100 characters)';
+    end if;
+  end if;
+
   -- Verify the item belongs to a public wishlist
   if not exists (
     select 1

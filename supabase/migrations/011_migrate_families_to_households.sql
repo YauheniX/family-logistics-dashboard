@@ -37,29 +37,42 @@ begin
     raise notice 'Migrating family: % (ID: %)', v_family.name, v_family.id;
     
     -- Insert household with same ID for easier migration
-    insert into households (
-      id,
-      name,
-      slug,
-      created_by,
-      created_at,
-      updated_at,
-      is_active,
-      migrated_from_family_id
-    ) values (
-      v_family.id,
-      v_family.name,
-      generate_household_slug(v_family.name),
-      v_family.created_by,
-      v_family.created_at,
-      now(),
-      true,
-      v_family.id
-    )
-    on conflict (id) do nothing;
+    -- Only increment counter if actually inserted (not on conflict)
+    declare
+      v_inserted_count integer;
+    begin
+      with inserted as (
+        insert into households (
+          id,
+          name,
+          slug,
+          created_by,
+          created_at,
+          updated_at,
+          is_active,
+          migrated_from_family_id
+        ) values (
+          v_family.id,
+          v_family.name,
+          generate_household_slug(v_family.name),
+          v_family.created_by,
+          v_family.created_at,
+          now(),
+          true,
+          v_family.id
+        )
+        on conflict (id) do nothing
+        returning id
+      )
+      select count(*) into v_inserted_count from inserted;
+      
+      -- Increment counter only if inserted
+      if v_inserted_count > 0 then
+        v_families_migrated := v_families_migrated + 1;
+      end if;
+    end;
     
     v_household_id := v_family.id;
-    v_families_migrated := v_families_migrated + 1;
     
     -- ─── Step 2: Migrate Family Members → Members ─────────
     
@@ -82,32 +95,44 @@ begin
         v_family_member.role;
       
       -- Insert member with same ID
-      insert into members (
-        id,
-        household_id,
-        user_id,
-        role,
-        display_name,
-        date_of_birth,
-        avatar_url,
-        is_active,
-        joined_at,
-        migrated_from_family_member_id
-      ) values (
-        v_family_member.id,
-        v_household_id,
-        v_family_member.user_id,
-        v_family_member.role,  -- owner or member (no new roles yet)
-        coalesce(v_user_profile.display_name, 'Member'),
-        null,  -- No DOB in old schema
-        v_user_profile.avatar_url,
-        true,
-        v_family_member.joined_at,
-        v_family_member.id
-      )
-      on conflict (id) do nothing;
-      
-      v_members_migrated := v_members_migrated + 1;
+      -- Only increment counter if actually inserted (not on conflict)
+      declare
+        v_inserted_member_count integer;
+      begin
+        with inserted as (
+          insert into members (
+            id,
+            household_id,
+            user_id,
+            role,
+            display_name,
+            date_of_birth,
+            avatar_url,
+            is_active,
+            joined_at,
+            migrated_from_family_member_id
+          ) values (
+            v_family_member.id,
+            v_household_id,
+            v_family_member.user_id,
+            v_family_member.role,  -- owner or member (no new roles yet)
+            coalesce(v_user_profile.display_name, 'Member'),
+            null,  -- No DOB in old schema
+            v_user_profile.avatar_url,
+            true,
+            v_family_member.joined_at,
+            v_family_member.id
+          )
+          on conflict (id) do nothing
+          returning id
+        )
+        select count(*) into v_inserted_member_count from inserted;
+        
+        -- Increment counter only if inserted
+        if v_inserted_member_count > 0 then
+          v_members_migrated := v_members_migrated + 1;
+        end if;
+      end;
       
     end loop;
     

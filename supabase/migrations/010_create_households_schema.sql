@@ -324,6 +324,13 @@ language plpgsql
 security definer
 as $$
 begin
+  -- Validate that household_id is not null (required field)
+  if p_household_id is null then
+    raise exception 'household_id cannot be null in activity logs';
+  end if;
+
+  -- Note: p_member_id can be null for system actions or external reservations
+  
   insert into activity_logs (
     household_id,
     member_id,
@@ -343,6 +350,48 @@ end;
 $$;
 
 comment on function log_activity(uuid, uuid, text, text, uuid, jsonb) is 'Log an activity to the activity feed';
+
+-- Helper function: Enforce single active owner per household
+create or replace function enforce_single_owner()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  -- Only enforce when inserting an owner
+  if new.role = 'owner' and new.is_active = true then
+    -- Serialize concurrent owner creations for the same household
+    perform 1
+      from households
+     where id = new.household_id
+     for update;
+
+    -- Check if an active owner already exists for this household
+    if exists (
+      select 1
+        from members
+       where household_id = new.household_id
+         and role = 'owner'
+         and is_active = true
+         and id != new.id  -- Exclude the current row for updates
+    ) then
+      raise exception 'Household already has an active owner'
+        using errcode = 'P0001',
+              hint = 'Each household can only have one active owner';
+    end if;
+  end if;
+
+  return new;
+end;
+$$;
+
+comment on function enforce_single_owner() is 'Prevent multiple active owners per household with transaction-level locking';
+
+create trigger trg_enforce_single_owner
+  before insert or update on members
+  for each row
+  execute function enforce_single_owner();
 
 -- ─── 7. RLS Policies ─────────────────────────────────────────
 

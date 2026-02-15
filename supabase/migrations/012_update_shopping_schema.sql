@@ -93,8 +93,7 @@ begin
   
   -- Map shopping_items.purchased_by → purchased_by_member_id
   update shopping_items si
-  set purchased_by_member_id = m.id,
-      purchased_at = coalesce(si.purchased_at, now())
+  set purchased_by_member_id = m.id
   from members m
   join shopping_lists sl on sl.id = si.list_id
   where m.user_id = si.purchased_by
@@ -110,12 +109,17 @@ begin
   
   declare
     v_unmigrated_lists integer;
+    v_unmigrated_lists_creator integer;
     v_unmigrated_items_added integer;
     v_unmigrated_items_purchased integer;
   begin
     select count(*) into v_unmigrated_lists 
     from shopping_lists 
     where household_id is null;
+    
+    select count(*) into v_unmigrated_lists_creator
+    from shopping_lists
+    where created_by_member_id is null;
     
     select count(*) into v_unmigrated_items_added
     from shopping_items
@@ -130,6 +134,12 @@ begin
       raise warning '⚠️  % shopping lists not migrated to households', v_unmigrated_lists;
     else
       raise notice '✅ All shopping lists migrated to households';
+    end if;
+    
+    if v_unmigrated_lists_creator > 0 then
+      raise warning '⚠️  % shopping lists missing created_by_member_id (orphaned or creator left household)', v_unmigrated_lists_creator;
+    else
+      raise notice '✅ All shopping lists have created_by_member_id';
     end if;
     
     if v_unmigrated_items_added > 0 then
@@ -150,6 +160,17 @@ end $$;
 
 -- ─── 4. Create Triggers ──────────────────────────────────────
 
+-- Ensure update_updated_at_column function exists (from migration 010)
+create or replace function update_updated_at_column()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
 -- Update updated_at on shopping_lists
 create trigger update_shopping_lists_updated_at
   before update on shopping_lists
@@ -164,23 +185,29 @@ security definer
 as $$
 begin
   if (TG_OP = 'INSERT') then
-    perform log_activity(
-      new.household_id,
-      new.created_by_member_id,
-      'created',
-      'shopping_list',
-      new.id,
-      jsonb_build_object('title', new.title)
-    );
+    -- Only log if migrated fields are populated
+    if new.household_id is not null and new.created_by_member_id is not null then
+      perform log_activity(
+        new.household_id,
+        new.created_by_member_id,
+        'created',
+        'shopping_list',
+        new.id,
+        jsonb_build_object('title', new.title)
+      );
+    end if;
   elsif (TG_OP = 'UPDATE' and old.status IS DISTINCT FROM new.status) then
-    perform log_activity(
-      new.household_id,
-      get_member_id(new.household_id, auth.uid()),
-      case when new.status = 'archived' then 'archived' else 'unarchived' end,
-      'shopping_list',
-      new.id,
-      jsonb_build_object('title', new.title, 'status', new.status)
-    );
+    -- Only log if migrated fields are populated
+    if new.household_id is not null then
+      perform log_activity(
+        new.household_id,
+        get_member_id(new.household_id, auth.uid()),
+        case when new.status = 'archived' then 'archived' else 'unarchived' end,
+        'shopping_list',
+        new.id,
+        jsonb_build_object('title', new.title, 'status', new.status)
+      );
+    end if;
   end if;
   return new;
 end;
@@ -207,23 +234,29 @@ begin
   where id = new.list_id;
   
   if (TG_OP = 'INSERT') then
-    perform log_activity(
-      v_household_id,
-      new.added_by_member_id,
-      'added',
-      'shopping_item',
-      new.id,
-      jsonb_build_object('title', new.title, 'quantity', new.quantity)
-    );
+    -- Only log if migrated fields are populated
+    if v_household_id is not null and new.added_by_member_id is not null then
+      perform log_activity(
+        v_household_id,
+        new.added_by_member_id,
+        'added',
+        'shopping_item',
+        new.id,
+        jsonb_build_object('title', new.title, 'quantity', new.quantity)
+      );
+    end if;
   elsif (TG_OP = 'UPDATE' and not old.is_purchased and new.is_purchased) then
-    perform log_activity(
-      v_household_id,
-      new.purchased_by_member_id,
-      'purchased',
-      'shopping_item',
-      new.id,
-      jsonb_build_object('title', new.title)
-    );
+    -- Only log if migrated fields are populated
+    if v_household_id is not null and new.purchased_by_member_id is not null then
+      perform log_activity(
+        v_household_id,
+        new.purchased_by_member_id,
+        'purchased',
+        'shopping_item',
+        new.id,
+        jsonb_build_object('title', new.title)
+      );
+    end if;
   end if;
   return new;
 end;
