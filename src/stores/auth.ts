@@ -30,7 +30,7 @@ export const useAuthStore = defineStore('auth', {
   }),
 
   getters: {
-    isAuthenticated: (state) => Boolean(state.user && state.session),
+    isAuthenticated: (state) => Boolean(state.user),
   },
 
   actions: {
