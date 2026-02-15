@@ -104,7 +104,7 @@ export const useHouseholdStore = defineStore('household', () => {
       }
 
       const mapped: Household[] = (data ?? [])
-        .map((row: any) => {
+        .map((row: { role: HouseholdRole | null; households: { id: unknown; name: unknown; slug: unknown } | null }) => {
           const household = row.households;
           if (!household?.id) return null;
           return {
