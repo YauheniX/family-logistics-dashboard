@@ -92,6 +92,53 @@ See [`supabase/rls.sql`](supabase/rls.sql) for all policies.
 
 ---
 
+## 🚀 Multi-Tenant SaaS Redesign
+
+This repository includes a **complete redesign** to transform the app into a scalable multi-tenant SaaS platform:
+
+### 🎯 New Features
+
+- **Household-Based Multi-Tenancy**: Users can belong to multiple households (families, friend groups, etc.)
+- **Flexible Member Model**: Support for members without user accounts (children, etc.)
+- **6-Tier Role System**: owner, admin, member, child, viewer, public guest
+- **Enhanced Wishlist Privacy**: Private, household-visible, or public sharing
+- **Complete Audit Trail**: Activity logs for all household actions
+- **Professional Invitation System**: Email-based member invitations
+
+### 📚 Documentation
+
+The redesign is fully documented:
+
+| Document | Description |
+|----------|-------------|
+| **[REDESIGN_SUMMARY.md](docs/REDESIGN_SUMMARY.md)** | 📋 Complete overview and getting started guide |
+| **[MULTI_TENANT_ARCHITECTURE.md](docs/MULTI_TENANT_ARCHITECTURE.md)** | 🏗️ Architecture design, ERD, and table schemas |
+| **[PERMISSION_MATRIX.md](docs/PERMISSION_MATRIX.md)** | 🔐 Complete role-based access control matrix |
+| **[NAVIGATION_STRUCTURE.md](docs/NAVIGATION_STRUCTURE.md)** | 🎨 UX design and navigation patterns |
+| **[SCALABILITY_NOTES.md](docs/SCALABILITY_NOTES.md)** | 📊 Performance optimization and scaling strategy |
+| **[MIGRATION_STRATEGY.md](docs/MIGRATION_STRATEGY.md)** | 🔄 Zero-downtime migration from current schema |
+| **[IMPLEMENTATION_GUIDE.md](docs/IMPLEMENTATION_GUIDE.md)** | 💻 Step-by-step implementation instructions |
+
+### 🗄️ Migration Scripts
+
+Ready-to-use SQL migration scripts are in `supabase/migrations/`:
+
+- `010_create_households_schema.sql` - Create new multi-tenant tables
+- `011_migrate_families_to_households.sql` - Migrate existing data safely
+- `012_update_shopping_schema.sql` - Update shopping lists for households
+- `013_update_wishlists_schema.sql` - Add visibility controls to wishlists
+
+### 🎯 Migration Benefits
+
+- ✅ **Zero Downtime**: Backward-compatible migration
+- ✅ **Zero Data Loss**: All existing data preserved
+- ✅ **Production Safe**: Idempotent scripts with rollback support
+- ✅ **Future-Proof**: Ready for billing, mobile apps, and enterprise features
+
+**Start with**: [REDESIGN_SUMMARY.md](docs/REDESIGN_SUMMARY.md) for the complete overview.
+
+---
+
 ## 🗺️ Routing Structure
 
 | Path                   | View            | Auth Required |
