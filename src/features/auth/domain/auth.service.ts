@@ -197,7 +197,10 @@ export class AuthService {
   /**
    * Sign in with OAuth provider (Google, etc.)
    */
-  async signInWithOAuth(provider: string, postAuthRedirect?: string): Promise<ApiResponse<AuthUser>> {
+  async signInWithOAuth(
+    provider: string,
+    postAuthRedirect?: string,
+  ): Promise<ApiResponse<AuthUser>> {
     try {
       // Persist intended in-app route across full-page OAuth redirects.
       // Must be a hash-router path like '/families/123' (no origin).
