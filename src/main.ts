@@ -5,6 +5,7 @@ import router from './router';
 import './styles/main.css';
 import { useAuthStore } from '@/stores/auth';
 import { handleSupabaseAuthRedirect } from '@/utils/supabaseAuthRedirect';
+import { isSafeInternalPath, normalizeHashPath } from '@/utils/pathValidation';
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -42,10 +43,22 @@ app.use(pinia);
         const redirectFromQuery = Array.isArray(redirectQuery) ? redirectQuery[0] : redirectQuery;
         const redirectFromStorage = window.sessionStorage.getItem('postAuthRedirect');
 
-        const target =
-          (typeof redirectFromQuery === 'string' && redirectFromQuery) ||
-          (typeof redirectFromStorage === 'string' && redirectFromStorage) ||
-          '/';
+        let target = '/';
+
+        // Validate and normalize redirect from query
+        if (typeof redirectFromQuery === 'string' && redirectFromQuery) {
+          const normalized = normalizeHashPath(redirectFromQuery);
+          if (isSafeInternalPath(normalized)) {
+            target = normalized;
+          }
+        }
+        // Fall back to redirect from storage if query was invalid/empty
+        else if (typeof redirectFromStorage === 'string' && redirectFromStorage) {
+          const normalized = normalizeHashPath(redirectFromStorage);
+          if (isSafeInternalPath(normalized)) {
+            target = normalized;
+          }
+        }
 
         window.sessionStorage.removeItem('postAuthRedirect');
         await router.replace(target);

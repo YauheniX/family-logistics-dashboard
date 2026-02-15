@@ -219,7 +219,10 @@ async function getVerifiedUserId(req: Request): Promise<string | null> {
   const url = Deno.env.get('SUPABASE_URL');
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
   if (!url || !anonKey) {
-    throw new Error('Missing SUPABASE_URL or SUPABASE_ANON_KEY in Edge Function environment.');
+    console.error(
+      'Missing SUPABASE_URL or SUPABASE_ANON_KEY in Edge Function environment; unable to verify user.'
+    );
+    return null;
   }
 
   try {

@@ -24,9 +24,15 @@ export async function reportProblem(input: ReportProblemInput): Promise<ReportPr
     throw new Error('Issue reporting requires a backend (Supabase) to be enabled.');
   }
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const { data, error: sessionError } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    // Surface the underlying auth/storage problem instead of misreporting it as "not signed in".
+    const message = sessionError.message || 'Failed to retrieve authentication session.';
+    throw new Error(message);
+  }
+
+  const { session } = data ?? {};
 
   if (!session?.access_token) {
     throw new Error('You must be signed in to report a problem.');
@@ -41,7 +47,7 @@ export async function reportProblem(input: ReportProblemInput): Promise<ReportPr
     userId: input.userId,
   };
 
-  const { data, error } = await supabase.functions.invoke('report-issue', {
+  const { data: responseData, error } = await supabase.functions.invoke('report-issue', {
     body: payload,
     headers: {
       Authorization: `Bearer ${session.access_token}`,
@@ -73,5 +79,5 @@ export async function reportProblem(input: ReportProblemInput): Promise<ReportPr
     throw new Error(`${status ? `[${status}] ` : ''}${message}${details}`);
   }
 
-  return (data ?? {}) as ReportProblemResult;
+  return (responseData ?? {}) as ReportProblemResult;
 }

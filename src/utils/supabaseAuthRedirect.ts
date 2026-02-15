@@ -1,5 +1,6 @@
 import { supabase } from '@/features/shared/infrastructure/supabase.client';
 import { isMockMode } from '@/config/backend.config';
+import { isSafeInternalPath, normalizeHashPath } from './pathValidation';
 
 function parseHashParams(hash: string): URLSearchParams {
   // Supports both '#access_token=...' and '#/access_token=...'
@@ -36,25 +37,7 @@ function getAndClearPostAuthRedirect(): string | null {
   return null;
 }
 
-function isSafeInternalPath(path: string): boolean {
-  const trimmed = path.trim();
-  if (!trimmed) return false;
-  if (/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(trimmed)) return false;
-  if (trimmed.startsWith('//')) return false;
-  if (trimmed.toLowerCase().startsWith('javascript:')) return false;
-  if (trimmed.toLowerCase().startsWith('data:')) return false;
-  return true;
-}
 
-function normalizeHashPath(path: string): string {
-  const trimmed = path.trim();
-  if (!trimmed) return '/';
-  if (trimmed.startsWith('#')) {
-    const withoutHash = trimmed.replace(/^#\/?/, '/');
-    return withoutHash.startsWith('/') ? withoutHash : `/${withoutHash}`;
-  }
-  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
-}
 
 function cleanToRedirectHash(targetHashPath: string): void {
   const safe = normalizeHashPath(targetHashPath);

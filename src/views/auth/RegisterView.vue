@@ -126,6 +126,7 @@ import BaseButton from '@/components/shared/BaseButton.vue';
 import { authService } from '@/features/auth';
 import { useToastStore } from '@/stores/toast';
 import { isValidEmail, isValidPassword, MIN_PASSWORD_LENGTH } from '@/utils/validation';
+import { normalizeRedirectParam } from '@/utils/pathValidation';
 
 const router = useRouter();
 const route = useRoute();
@@ -229,7 +230,7 @@ const handleGoogleRegister = async () => {
   error.value = '';
 
   try {
-    const redirect = (route.query.redirect as string) || '/';
+    const redirect = normalizeRedirectParam(route.query.redirect);
     const response = await authService.signInWithOAuth('google', redirect);
 
     if (response.error) {
