@@ -215,4 +215,324 @@ describe('Issue Reporter Service', () => {
     const result = await reportProblem(input);
     expect(result).toEqual({});
   });
+
+  describe('JWT validation', () => {
+    it('throws error when JWT payload parsing fails', async () => {
+      vi.mocked(backendConfig.isMockMode).mockReturnValue(false);
+
+      // Invalid JWT with only 2 parts instead of 3
+      const invalidJwt = 'header.payload';
+      vi.mocked(supabase.auth.getSession).mockResolvedValue({
+        data: {
+          session: {
+            access_token: invalidJwt,
+          },
+        },
+        error: null,
+      } as unknown as Awaited<ReturnType<typeof supabase.auth.getSession>>);
+
+      const signOutMock = vi.fn().mockResolvedValue({ error: null });
+      vi.mocked(supabase.auth).signOut = signOutMock;
+
+      const input: ReportProblemInput = {
+        title: 'Test Issue',
+        description: 'Test description',
+        screenshot: null,
+        userId: 'user-123',
+      };
+
+      await expect(reportProblem(input)).rejects.toThrow(
+        'Your authentication session is invalid. Please sign out and sign back in.',
+      );
+      expect(signOutMock).toHaveBeenCalledWith({ scope: 'local' });
+    });
+
+    it('throws error when JWT payload has invalid base64', async () => {
+      vi.mocked(backendConfig.isMockMode).mockReturnValue(false);
+
+      // Invalid JWT with malformed base64 payload
+      const invalidJwt = 'header.!!!invalid!!!.signature';
+      vi.mocked(supabase.auth.getSession).mockResolvedValue({
+        data: {
+          session: {
+            access_token: invalidJwt,
+          },
+        },
+        error: null,
+      } as unknown as Awaited<ReturnType<typeof supabase.auth.getSession>>);
+
+      const signOutMock = vi.fn().mockResolvedValue({ error: null });
+      vi.mocked(supabase.auth).signOut = signOutMock;
+
+      const input: ReportProblemInput = {
+        title: 'Test Issue',
+        description: 'Test description',
+        screenshot: null,
+        userId: 'user-123',
+      };
+
+      await expect(reportProblem(input)).rejects.toThrow(
+        'Your authentication session is invalid. Please sign out and sign back in.',
+      );
+      expect(signOutMock).toHaveBeenCalledWith({ scope: 'local' });
+    });
+
+    it('throws error when JWT issuer is for different project', async () => {
+      vi.mocked(backendConfig.isMockMode).mockReturnValue(false);
+
+      // JWT with wrong issuer
+      const wrongIssuerJwt = makeTestJwt({
+        iss: 'https://wrongproject.supabase.co/auth/v1',
+      });
+
+      vi.mocked(supabase.auth.getSession).mockResolvedValue({
+        data: {
+          session: {
+            access_token: wrongIssuerJwt,
+          },
+        },
+        error: null,
+      } as unknown as Awaited<ReturnType<typeof supabase.auth.getSession>>);
+
+      const signOutMock = vi.fn().mockResolvedValue({ error: null });
+      vi.mocked(supabase.auth).signOut = signOutMock;
+
+      const input: ReportProblemInput = {
+        title: 'Test Issue',
+        description: 'Test description',
+        screenshot: null,
+        userId: 'user-123',
+      };
+
+      await expect(reportProblem(input)).rejects.toThrow(
+        'Your session appears to be for a different Supabase project. Please sign out and sign back in.',
+      );
+      expect(signOutMock).toHaveBeenCalledWith({ scope: 'local' });
+    });
+
+    it('refreshes session when token is expired', async () => {
+      vi.mocked(backendConfig.isMockMode).mockReturnValue(false);
+
+      // JWT that expired 1 hour ago
+      const expiredJwt = makeTestJwt({
+        exp: Math.floor(Date.now() / 1000) - 3600,
+      });
+
+      const refreshedJwt = makeTestJwt({
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      });
+
+      vi.mocked(supabase.auth.getSession)
+        .mockResolvedValueOnce({
+          data: {
+            session: {
+              access_token: expiredJwt,
+              expires_at: Math.floor(Date.now() / 1000) - 3600,
+            },
+          },
+          error: null,
+        } as unknown as Awaited<ReturnType<typeof supabase.auth.getSession>>)
+        .mockResolvedValueOnce({
+          data: {
+            session: {
+              access_token: refreshedJwt,
+            },
+          },
+          error: null,
+        } as unknown as Awaited<ReturnType<typeof supabase.auth.getSession>>);
+
+      const refreshMock = vi.fn().mockResolvedValue({
+        data: null,
+        error: null,
+      });
+      vi.mocked(supabase.auth).refreshSession = refreshMock;
+
+      const input: ReportProblemInput = {
+        title: 'Test Issue',
+        description: 'Test description',
+        screenshot: null,
+        userId: 'user-123',
+      };
+
+      await reportProblem(input);
+
+      expect(refreshMock).toHaveBeenCalled();
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: `Bearer ${refreshedJwt}`,
+          }),
+        }),
+      );
+    });
+
+    it('throws error when refresh fails', async () => {
+      vi.mocked(backendConfig.isMockMode).mockReturnValue(false);
+
+      // JWT that expired
+      const expiredJwt = makeTestJwt({
+        exp: Math.floor(Date.now() / 1000) - 3600,
+      });
+
+      vi.mocked(supabase.auth.getSession).mockResolvedValue({
+        data: {
+          session: {
+            access_token: expiredJwt,
+            expires_at: Math.floor(Date.now() / 1000) - 3600,
+          },
+        },
+        error: null,
+      } as unknown as Awaited<ReturnType<typeof supabase.auth.getSession>>);
+
+      const refreshMock = vi.fn().mockResolvedValue({
+        data: null,
+        error: { message: 'Refresh failed' },
+      });
+      vi.mocked(supabase.auth).refreshSession = refreshMock;
+
+      const input: ReportProblemInput = {
+        title: 'Test Issue',
+        description: 'Test description',
+        screenshot: null,
+        userId: 'user-123',
+      };
+
+      await expect(reportProblem(input)).rejects.toThrow('Refresh failed');
+      expect(refreshMock).toHaveBeenCalled();
+    });
+
+    it('throws error when refreshed session is invalid', async () => {
+      vi.mocked(backendConfig.isMockMode).mockReturnValue(false);
+
+      const expiredJwt = makeTestJwt({
+        exp: Math.floor(Date.now() / 1000) - 3600,
+      });
+
+      const invalidRefreshedJwt = 'invalid.jwt.token';
+
+      vi.mocked(supabase.auth.getSession)
+        .mockResolvedValueOnce({
+          data: {
+            session: {
+              access_token: expiredJwt,
+              expires_at: Math.floor(Date.now() / 1000) - 3600,
+            },
+          },
+          error: null,
+        } as unknown as Awaited<ReturnType<typeof supabase.auth.getSession>>)
+        .mockResolvedValueOnce({
+          data: {
+            session: {
+              access_token: invalidRefreshedJwt,
+            },
+          },
+          error: null,
+        } as unknown as Awaited<ReturnType<typeof supabase.auth.getSession>>);
+
+      const refreshMock = vi.fn().mockResolvedValue({
+        data: null,
+        error: null,
+      });
+      vi.mocked(supabase.auth).refreshSession = refreshMock;
+
+      const input: ReportProblemInput = {
+        title: 'Test Issue',
+        description: 'Test description',
+        screenshot: null,
+        userId: 'user-123',
+      };
+
+      await expect(reportProblem(input)).rejects.toThrow(
+        'Your authentication session is invalid. Please sign out and sign back in.',
+      );
+    });
+
+    it('throws error when getSession fails after refresh', async () => {
+      vi.mocked(backendConfig.isMockMode).mockReturnValue(false);
+
+      const expiredJwt = makeTestJwt({
+        exp: Math.floor(Date.now() / 1000) - 3600,
+      });
+
+      vi.mocked(supabase.auth.getSession)
+        .mockResolvedValueOnce({
+          data: {
+            session: {
+              access_token: expiredJwt,
+              expires_at: Math.floor(Date.now() / 1000) - 3600,
+            },
+          },
+          error: null,
+        } as unknown as Awaited<ReturnType<typeof supabase.auth.getSession>>)
+        .mockResolvedValueOnce({
+          data: null,
+          error: { message: 'Failed to get session after refresh' },
+        } as unknown as Awaited<ReturnType<typeof supabase.auth.getSession>>);
+
+      const refreshMock = vi.fn().mockResolvedValue({
+        data: null,
+        error: null,
+      });
+      vi.mocked(supabase.auth).refreshSession = refreshMock;
+
+      const input: ReportProblemInput = {
+        title: 'Test Issue',
+        description: 'Test description',
+        screenshot: null,
+        userId: 'user-123',
+      };
+
+      await expect(reportProblem(input)).rejects.toThrow('Failed to get session after refresh');
+    });
+
+    it('handles token near expiry (within 30 seconds)', async () => {
+      vi.mocked(backendConfig.isMockMode).mockReturnValue(false);
+
+      // JWT expiring in 20 seconds
+      const nearExpiryJwt = makeTestJwt({
+        exp: Math.floor(Date.now() / 1000) + 20,
+      });
+
+      const refreshedJwt = makeTestJwt({
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      });
+
+      vi.mocked(supabase.auth.getSession)
+        .mockResolvedValueOnce({
+          data: {
+            session: {
+              access_token: nearExpiryJwt,
+              expires_at: Math.floor(Date.now() / 1000) + 20,
+            },
+          },
+          error: null,
+        } as unknown as Awaited<ReturnType<typeof supabase.auth.getSession>>)
+        .mockResolvedValueOnce({
+          data: {
+            session: {
+              access_token: refreshedJwt,
+            },
+          },
+          error: null,
+        } as unknown as Awaited<ReturnType<typeof supabase.auth.getSession>>);
+
+      const refreshMock = vi.fn().mockResolvedValue({
+        data: null,
+        error: null,
+      });
+      vi.mocked(supabase.auth).refreshSession = refreshMock;
+
+      const input: ReportProblemInput = {
+        title: 'Test Issue',
+        description: 'Test description',
+        screenshot: null,
+        userId: 'user-123',
+      };
+
+      await reportProblem(input);
+
+      expect(refreshMock).toHaveBeenCalled();
+    });
+  });
 });

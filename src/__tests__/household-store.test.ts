@@ -1,11 +1,24 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useHouseholdStore, type Household } from '@/stores/household';
+import * as backendConfig from '@/config/backend.config';
+import { supabase } from '@/features/shared/infrastructure/supabase.client';
+
+vi.mock('@/config/backend.config', () => ({
+  isMockMode: vi.fn(),
+}));
+
+vi.mock('@/features/shared/infrastructure/supabase.client', () => ({
+  supabase: {
+    from: vi.fn(),
+  },
+}));
 
 describe('Household Store', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     localStorage.clear();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -258,6 +271,230 @@ describe('Household Store', () => {
       expect(store.currentHousehold?.id).toBe('1');
       expect(store.currentHousehold?.name).toBe('Smith Family');
       expect(localStorage.getItem('current_household_id')).toBe('1');
+    });
+  });
+
+  describe('initializeForUser', () => {
+    it('should clear households when userId is empty', async () => {
+      const store = useHouseholdStore();
+
+      // Set up some initial households
+      const mockHouseholds: Household[] = [
+        { id: '1', name: 'House 1', slug: 'house-1', role: 'owner' },
+      ];
+      store.loadHouseholds(mockHouseholds);
+      expect(store.households).toHaveLength(1);
+
+      await store.initializeForUser('');
+
+      expect(store.households).toEqual([]);
+      expect(store.currentHousehold).toBeNull();
+    });
+
+    it('should use mock mode when isMockMode returns true', async () => {
+      vi.mocked(backendConfig.isMockMode).mockReturnValue(true);
+      const store = useHouseholdStore();
+
+      await store.initializeForUser('test-user-id');
+
+      expect(store.households).toHaveLength(3);
+      expect(store.households[0].name).toBe('Smith Family');
+    });
+
+    it('should load households from Supabase successfully', async () => {
+      vi.mocked(backendConfig.isMockMode).mockReturnValue(false);
+      const store = useHouseholdStore();
+
+      const mockData = [
+        {
+          role: 'owner',
+          households: { id: 'h1', name: 'Test Household', slug: 'test-household' },
+        },
+        {
+          role: 'member',
+          households: { id: 'h2', name: 'Second Household', slug: 'second-household' },
+        },
+      ];
+
+      const mockChain = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+      };
+
+      // The final eq() call returns the result
+      mockChain.eq
+        .mockReturnValueOnce(mockChain) // First eq call returns chain
+        .mockResolvedValueOnce({
+          // Second eq call returns result
+          data: mockData,
+          error: null,
+        });
+
+      vi.mocked(supabase.from).mockReturnValue(mockChain as never);
+
+      await store.initializeForUser('test-user-id');
+
+      expect(supabase.from).toHaveBeenCalledWith('members');
+      expect(mockChain.select).toHaveBeenCalledWith('role, households:household_id(id, name, slug)');
+      expect(mockChain.eq).toHaveBeenCalledWith('user_id', 'test-user-id');
+      expect(mockChain.eq).toHaveBeenCalledWith('is_active', true);
+
+      expect(store.households).toHaveLength(2);
+      expect(store.households[0]).toEqual({
+        id: 'h1',
+        name: 'Test Household',
+        slug: 'test-household',
+        role: 'owner',
+      });
+      expect(store.households[1]).toEqual({
+        id: 'h2',
+        name: 'Second Household',
+        slug: 'second-household',
+        role: 'member',
+      });
+    });
+
+    it('should handle Supabase errors gracefully', async () => {
+      vi.mocked(backendConfig.isMockMode).mockReturnValue(false);
+      const store = useHouseholdStore();
+
+      const mockChain = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+      };
+
+      mockChain.eq
+        .mockReturnValueOnce(mockChain)
+        .mockResolvedValueOnce({
+          data: null,
+          error: { message: 'Database error' },
+        });
+
+      vi.mocked(supabase.from).mockReturnValue(mockChain as never);
+
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await store.initializeForUser('test-user-id');
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Failed to load households:',
+        expect.objectContaining({ message: 'Database error' }),
+      );
+      expect(store.households).toEqual([]);
+      expect(store.currentHousehold).toBeNull();
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should filter out null households from response', async () => {
+      vi.mocked(backendConfig.isMockMode).mockReturnValue(false);
+      const store = useHouseholdStore();
+
+      const mockData = [
+        {
+          role: 'owner',
+          households: { id: 'h1', name: 'Test Household', slug: 'test-household' },
+        },
+        {
+          role: 'member',
+          households: null, // This should be filtered out
+        },
+        {
+          role: 'admin',
+          households: { id: null, name: 'Invalid', slug: 'invalid' }, // This should be filtered out
+        },
+      ];
+
+      const mockChain = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+      };
+
+      mockChain.eq
+        .mockReturnValueOnce(mockChain)
+        .mockResolvedValueOnce({
+          data: mockData,
+          error: null,
+        });
+
+      vi.mocked(supabase.from).mockReturnValue(mockChain as never);
+
+      await store.initializeForUser('test-user-id');
+
+      expect(store.households).toHaveLength(1);
+      expect(store.households[0].id).toBe('h1');
+    });
+
+    it('should set loading state during async operation', async () => {
+      vi.mocked(backendConfig.isMockMode).mockReturnValue(false);
+      const store = useHouseholdStore();
+
+      const mockChain = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+      };
+
+      let resolvePromise: (value: never) => void;
+      const promise = new Promise<never>((resolve) => {
+        resolvePromise = resolve;
+      });
+
+      mockChain.eq.mockReturnValueOnce(mockChain).mockReturnValueOnce(promise);
+      vi.mocked(supabase.from).mockReturnValue(mockChain as never);
+
+      const initPromise = store.initializeForUser('test-user-id');
+
+      // Wait a tick for the async function to start
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Check loading state is true while async operation is in progress
+      expect(store.loading).toBe(true);
+
+      resolvePromise!({
+        data: [],
+        error: null,
+      } as never);
+
+      await initPromise;
+
+      // Check loading state is false after async operation completes
+      expect(store.loading).toBe(false);
+    });
+
+    it('should handle missing household data fields gracefully', async () => {
+      vi.mocked(backendConfig.isMockMode).mockReturnValue(false);
+      const store = useHouseholdStore();
+
+      const mockData = [
+        {
+          role: null, // Missing role should default to 'member'
+          households: { id: 'h1', name: null, slug: null }, // Missing name/slug should have defaults
+        },
+      ];
+
+      const mockChain = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+      };
+
+      mockChain.eq
+        .mockReturnValueOnce(mockChain)
+        .mockResolvedValueOnce({
+          data: mockData,
+          error: null,
+        });
+
+      vi.mocked(supabase.from).mockReturnValue(mockChain as never);
+
+      await store.initializeForUser('test-user-id');
+
+      expect(store.households).toHaveLength(1);
+      expect(store.households[0]).toEqual({
+        id: 'h1',
+        name: 'Household',
+        slug: '',
+        role: 'member',
+      });
     });
   });
 });
