@@ -394,10 +394,11 @@ describe('ReportProblemModal', () => {
     const fileInput = wrapper.find('#problem-screenshot');
 
     // Create a valid image file
-    const imageContent = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const imageContent =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
     const blob = await (await fetch(imageContent)).blob();
     const file = new File([blob], 'test-image.png', { type: 'image/png' });
-    
+
     Object.defineProperty(fileInput.element, 'files', {
       value: [file],
       writable: false,
@@ -470,7 +471,8 @@ describe('ReportProblemModal', () => {
             inheritAttrs: false,
           },
           BaseInput: {
-            template: '<input v-model="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+            template:
+              '<input v-model="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
             props: ['modelValue'],
             emits: ['update:modelValue'],
           },
@@ -486,12 +488,13 @@ describe('ReportProblemModal', () => {
     };
     vm.title = 'Bug with screenshot';
     vm.description = 'See attached screenshot';
-    
+
     // Add a screenshot
-    const imageContent = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const imageContent =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
     const blob = await (await fetch(imageContent)).blob();
     const file = new File([blob], 'screenshot.png', { type: 'image/png' });
-    
+
     const fileInput = wrapper.find('#problem-screenshot');
     Object.defineProperty(fileInput.element, 'files', {
       value: [file],
@@ -500,9 +503,9 @@ describe('ReportProblemModal', () => {
 
     await fileInput.trigger('change');
     await wrapper.vm.$nextTick();
-    
+
     // Wait for FileReader to complete
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Submit form
     const form = wrapper.find('form');
@@ -510,14 +513,14 @@ describe('ReportProblemModal', () => {
     await wrapper.vm.$nextTick();
 
     // Wait for async operations
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(issueReporter.reportProblem).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'Bug with screenshot',
         description: 'See attached screenshot',
         userId: 'user-456',
-      })
+      }),
     );
 
     // Check that screenshot was included
@@ -552,7 +555,8 @@ describe('ReportProblemModal', () => {
             inheritAttrs: false,
           },
           BaseInput: {
-            template: '<input v-model="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+            template:
+              '<input v-model="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
             props: ['modelValue'],
             emits: ['update:modelValue'],
           },
@@ -575,12 +579,12 @@ describe('ReportProblemModal', () => {
     await wrapper.vm.$nextTick();
 
     // Wait for async operations
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(windowOpenSpy).toHaveBeenCalledWith(
       'https://github.com/test/repo/issues/3',
       '_blank',
-      'noopener,noreferrer'
+      'noopener,noreferrer',
     );
 
     windowOpenSpy.mockRestore();

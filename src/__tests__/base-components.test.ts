@@ -181,7 +181,7 @@ describe('BaseInput', () => {
 
     const input = wrapper.find('input');
     await input.setValue('John Doe');
-    
+
     expect(wrapper.emitted('update:modelValue')).toBeTruthy();
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual(['John Doe']);
   });
@@ -306,7 +306,7 @@ describe('ModalDialog', () => {
       await backdrop.trigger('click');
       expect(wrapper.emitted('close')).toBeTruthy();
     }
-    
+
     wrapper.unmount();
   });
 
@@ -328,7 +328,7 @@ describe('ModalDialog', () => {
       await closeButton.trigger('click');
       expect(wrapper.emitted('close')).toBeTruthy();
     }
-    
+
     wrapper.unmount();
   });
 });

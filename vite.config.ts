@@ -11,7 +11,9 @@ try {
   const packageJsonContent = readFileSync(resolve(__dirname, 'package.json'), 'utf-8');
   packageJson = JSON.parse(packageJsonContent);
 } catch (error) {
-  throw new Error(`Failed to read or parse package.json while determining app version: ${error instanceof Error ? error.message : String(error)}`);
+  throw new Error(
+    `Failed to read or parse package.json while determining app version: ${error instanceof Error ? error.message : String(error)}`,
+  );
 }
 const appVersion = packageJson.version ?? '0.0.0';
 

@@ -22,16 +22,16 @@ type ReportIssueRequest = {
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 if (!supabaseUrl) {
-  throw new Error('SUPABASE_URL environment variable is not set. Please configure SUPABASE_URL for the report-issue function.');
+  throw new Error(
+    'SUPABASE_URL environment variable is not set. Please configure SUPABASE_URL for the report-issue function.',
+  );
 }
 
 let allowedCorsOrigin: string;
 try {
   allowedCorsOrigin = new URL(supabaseUrl).origin;
 } catch (error) {
-  throw new Error(
-    `SUPABASE_URL environment variable is malformed: ${(error as Error).message}`,
-  );
+  throw new Error(`SUPABASE_URL environment variable is malformed: ${(error as Error).message}`);
 }
 
 const corsHeaders = {
