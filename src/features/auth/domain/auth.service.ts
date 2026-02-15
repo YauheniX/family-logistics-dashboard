@@ -133,14 +133,14 @@ export class AuthService {
     try {
       // First check for session in local storage (no network call)
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      
+
       if (sessionError) {
         return {
           data: null,
           error: { message: sessionError.message, details: sessionError },
         };
       }
-      
+
       if (!sessionData.session) {
         return {
           data: null,

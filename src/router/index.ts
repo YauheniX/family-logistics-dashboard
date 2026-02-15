@@ -82,7 +82,7 @@ const router = createRouter({
 
 router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore();
-  
+
   // Ensure auth is initialized (should already be done in main.ts, but defensive)
   if (!authStore.initialized) {
     await authStore.initialize();
