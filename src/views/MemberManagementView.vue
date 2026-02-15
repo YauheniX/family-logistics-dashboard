@@ -11,17 +11,17 @@
             Family Members
           </h2>
         </div>
-        <div v-if="membersComposable.isOwnerOrAdmin.value" class="flex flex-wrap gap-2">
-          <BaseButton variant="primary" :disabled="membersComposable.loading.value" @click="showAddChildModal = true">
+        <div v-if="isOwnerOrAdmin" class="flex flex-wrap gap-2">
+          <BaseButton variant="primary" :disabled="membersLoading" @click="showAddChildModal = true">
             👶 Add Child
           </BaseButton>
-          <BaseButton :disabled="membersComposable.loading.value" @click="showInviteMemberModal = true"> ➕ Invite Member </BaseButton>
+          <BaseButton :disabled="membersLoading" @click="showInviteMemberModal = true"> ➕ Invite Member </BaseButton>
         </div>
       </div>
     </BaseCard>
 
     <!-- Loading State -->
-    <div v-if="membersComposable.loading.value" class="flex justify-center py-8">
+    <div v-if="membersLoading" class="flex justify-center py-8">
       <p class="text-neutral-500 dark:text-neutral-400">Loading members...</p>
     </div>
 
@@ -80,7 +80,7 @@
           </select>
         </div>
         <div class="flex gap-3">
-          <BaseButton type="submit" :loading="membersComposable.loading.value">Send Invitation</BaseButton>
+          <BaseButton type="submit" :loading="membersLoading">Send Invitation</BaseButton>
           <BaseButton variant="ghost" type="button" @click="showInviteMemberModal = false">
             Cancel
           </BaseButton>
@@ -95,7 +95,7 @@
           Are you sure you want to remove this member? This action cannot be undone.
         </p>
         <div class="flex gap-3">
-          <BaseButton variant="danger" :loading="membersComposable.loading.value" @click="confirmRemove"> Remove </BaseButton>
+          <BaseButton variant="danger" :loading="membersLoading" @click="confirmRemove"> Remove </BaseButton>
           <BaseButton variant="ghost" @click="showRemoveModal = false"> Cancel </BaseButton>
         </div>
       </div>
@@ -143,7 +143,15 @@ import type { Member } from '@/features/shared/domain/entities';
 const route = useRoute();
 const familyStore = useFamilyStore();
 const householdStore = useHouseholdStore();
-const membersComposable = useMembers();
+const {
+  members: householdMembers,
+  loading: membersLoading,
+  isOwnerOrAdmin,
+  fetchMembers,
+  createChild,
+  inviteMember: sendInvitation,
+  removeMember: deleteHouseholdMember,
+} = useMembers();
 
 const showAddChildModal = ref(false);
 const showInviteMemberModal = ref(false);
@@ -162,8 +170,8 @@ const familyId = computed(() => {
 // Sort members: owner first, then adults, then children, then viewers
 const displayMembers = computed(() => {
   // Use composable members if available, fallback to familyStore
-  const memberList = membersComposable.members.value.length > 0
-    ? [...membersComposable.members.value]
+  const memberList = householdMembers.value.length > 0
+    ? [...householdMembers.value]
     : [...familyStore.members];
 
   const roleOrder: Record<string, number> = {
@@ -183,10 +191,10 @@ const displayMembers = computed(() => {
 
 onMounted(async () => {
   // Load members via composable (uses householdStore.currentHousehold)
-  await membersComposable.fetchMembers();
+  await fetchMembers();
 
   // Fallback: load via familyStore if no household members found
-  if (membersComposable.members.value.length === 0 && familyId.value) {
+  if (householdMembers.value.length === 0 && familyId.value) {
     await familyStore.loadFamily(familyId.value);
   }
 });
@@ -194,18 +202,18 @@ onMounted(async () => {
 const handleAddChild = async (childData: { name: string; birthday: string; avatar: string }) => {
   showAddChildModal.value = false;
 
-  const result = await membersComposable.createChild(childData);
+  const result = await createChild(childData);
 
   if (result) {
     // Refresh member list after successful creation
-    await membersComposable.fetchMembers();
+    await fetchMembers();
   }
 };
 
 const handleInviteMember = async () => {
   if (!inviteEmail.value.trim()) return;
 
-  const result = await membersComposable.inviteMember(
+  const result = await sendInvitation(
     inviteEmail.value.trim(),
     inviteRole.value,
   );
@@ -224,7 +232,7 @@ const handleRemoveMember = (memberId: string) => {
 
 const confirmRemove = async () => {
   if (memberToRemove.value) {
-    const success = await membersComposable.removeMember(memberToRemove.value);
+    const success = await deleteHouseholdMember(memberToRemove.value);
     if (success) {
       memberToRemove.value = null;
       showRemoveModal.value = false;

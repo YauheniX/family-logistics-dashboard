@@ -265,7 +265,7 @@ $$;
 comment on function activate_child_account(uuid, uuid) is
   'Link a user account to an existing child member and upgrade role to member';
 
--- ─── 4. Enhanced RLS: Restrict child from seeing other members ──
+-- ─── 4. Enhanced RLS: Child members can only see themselves and other children ──
 
 -- Drop the existing members_select policy and replace with enhanced version
 drop policy if exists "members_select" on members;
