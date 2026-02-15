@@ -86,9 +86,9 @@ serve(async (req) => {
     }
   }
 
-    const verified = await getVerifiedUser(req);
-    if (!verified.userId) {
-      return json({ error: 'Unauthorized', reason: verified.reason }, 401);
+  const verified = await getVerifiedUser(req);
+  if (!verified.userId) {
+    return json({ error: 'Unauthorized', reason: verified.reason }, 401);
   }
 
   const issueBody = buildIssueBody({
