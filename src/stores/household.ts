@@ -69,7 +69,7 @@ export const useHouseholdStore = defineStore('household', () => {
   }
 
   // For demo/mock mode - populate with sample households
-  function initializeMockHouseholds(userId: string) {
+  function initializeMockHouseholds(_userId: string) {
     const mockHouseholds: Household[] = [
       {
         id: '1',

@@ -22,13 +22,13 @@
 
       <!-- More Menu -->
       <button
-        @click="toggleMoreMenu"
         class="flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-colors"
         :class="showMoreMenu 
           ? 'text-primary-600 dark:text-primary-400' 
           : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-50'"
         :aria-expanded="showMoreMenu"
         aria-label="More options"
+        @click="toggleMoreMenu"
       >
         <span class="text-xl" aria-hidden="true">⋯</span>
         <span class="text-xs font-medium">More</span>
@@ -45,11 +45,11 @@
           v-for="item in moreItems"
           :key="item.to"
           :to="item.to"
-          @click="closeMoreMenu"
           class="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700"
           :class="isActive(item.name) 
             ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400' 
             : 'text-neutral-700 dark:text-neutral-300'"
+          @click="closeMoreMenu"
         >
           <span class="text-lg" aria-hidden="true">{{ item.emoji }}</span>
           <span class="text-sm font-medium">{{ item.label }}</span>
@@ -60,15 +60,15 @@
     <!-- Overlay to close more menu -->
     <div
       v-if="showMoreMenu"
-      @click="closeMoreMenu"
       class="fixed inset-0 z-[-1] bg-black/20"
       aria-hidden="true"
+      @click="closeMoreMenu"
     ></div>
   </nav>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
 const route = useRoute();

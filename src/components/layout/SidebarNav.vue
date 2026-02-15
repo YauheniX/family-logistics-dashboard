@@ -135,6 +135,5 @@ const items = [
   { name: 'settings', label: 'Settings', to: '/settings', emoji: '⚙️' },
 ];
 
-const userEmail = props.userEmail;
 const mobileOpen = computed(() => props.mobileOpen ?? false);
 </script>

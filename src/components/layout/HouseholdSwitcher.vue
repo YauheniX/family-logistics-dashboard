@@ -1,11 +1,11 @@
 <template>
-  <div class="relative" ref="dropdownRef">
+  <div ref="dropdownRef" class="relative">
     <!-- Trigger Button -->
     <button
-      @click="toggleDropdown"
       :aria-expanded="isOpen"
       aria-haspopup="true"
       class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
+      @click="toggleDropdown"
     >
       <span class="text-lg" aria-hidden="true">{{ currentHousehold?.emoji || '🏠' }}</span>
       <span class="hidden md:inline max-w-[150px] truncate">
@@ -34,12 +34,12 @@
         <div
           v-for="household in households"
           :key="household.id"
-          @click="selectHousehold(household.id)"
           class="flex items-center gap-3 px-4 py-2 cursor-pointer transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700"
           :class="{
             'bg-primary-50 dark:bg-primary-900/30': household.id === currentHousehold?.id,
           }"
           role="menuitem"
+          @click="selectHousehold(household.id)"
         >
           <span class="text-lg" aria-hidden="true">{{ household.emoji || '🏠' }}</span>
           <div class="flex-1 min-w-0">
@@ -71,9 +71,9 @@
       <!-- Create New Household -->
       <div class="py-2">
         <button
-          @click="createNewHousehold"
           class="flex items-center gap-3 px-4 py-2 w-full text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700"
           role="menuitem"
+          @click="createNewHousehold"
         >
           <span class="text-lg" aria-hidden="true">➕</span>
           <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">
