@@ -239,9 +239,10 @@ begin
   update members
   set user_id = p_user_id,
       role = 'member',
-      metadata = metadata || jsonb_build_object(
+      metadata = coalesce(metadata, '{}'::jsonb) || jsonb_build_object(
         'activated_at', now()::text,
-        'previous_role', 'child'
+        'previous_role', 'child',
+        'original_invited_by', invited_by
       )
   where id = p_member_id;
 
@@ -286,9 +287,8 @@ create policy "members_select"
       )
     )
     or (
-      -- Child members can still see themselves (handled above) and
-      -- household members with child role can see other children in same household
-      -- for parent views
+      -- Child members can see other children in the same household
+      -- (but not adult members — those are filtered out by the clause above)
       household_id in (
         select m.household_id from members m
         where m.user_id = auth.uid()

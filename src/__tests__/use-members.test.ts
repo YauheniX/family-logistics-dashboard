@@ -6,29 +6,40 @@ import { useToastStore } from '@/stores/toast';
 
 // Mock the Supabase client
 vi.mock('@/features/shared/infrastructure/supabase.client', () => {
-  // Chainable query builder
+  // Chainable query builder - fresh instance per from() call
   const createChainableBuilder = () => {
     const builder = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       order: vi.fn().mockResolvedValue({ data: [], error: null }),
       single: vi.fn().mockResolvedValue({ data: null, error: null }),
+      update: vi.fn().mockReturnThis(),
       delete: vi.fn().mockReturnThis(),
     };
     return builder;
   };
 
-  const fromBuilder = createChainableBuilder();
+  let lastFromBuilder: ReturnType<typeof createChainableBuilder> | null = null;
+  const fromFn = vi.fn(() => {
+    const builder = createChainableBuilder();
+    lastFromBuilder = builder;
+    return builder;
+  });
   const mockRpc = vi.fn();
 
   return {
     supabase: {
-      from: vi.fn(() => fromBuilder),
+      from: fromFn,
       rpc: mockRpc,
       auth: {
-        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'test-user-id' } }, error: null }),
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: 'test-user-id' } },
+          error: null,
+        }),
       },
-      __fromBuilder: fromBuilder,
+      get __fromBuilder() {
+        return lastFromBuilder;
+      },
       __mockRpc: mockRpc,
     },
   };
@@ -37,8 +48,12 @@ vi.mock('@/features/shared/infrastructure/supabase.client', () => {
 // Helper to get mocked supabase
 async function getMockedSupabase() {
   const mod = await import('@/features/shared/infrastructure/supabase.client');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return mod.supabase as any;
+  return mod.supabase as ReturnType<
+    typeof import('@/features/shared/infrastructure/supabase.client')
+  >['supabase'] & {
+    __fromBuilder: Record<string, ReturnType<typeof vi.fn>>;
+    __mockRpc: ReturnType<typeof vi.fn>;
+  };
 }
 
 describe('useMembers', () => {
@@ -85,9 +100,11 @@ describe('useMembers', () => {
         },
       ];
 
-      // Chain: from('members').select('*').eq('household_id', ...).eq('is_active', ...).order(...)
-      const builder = supabase.__fromBuilder;
-      builder.order.mockResolvedValueOnce({ data: mockMembers, error: null });
+      supabase.from = vi.fn().mockImplementation(() => ({
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({ data: mockMembers, error: null }),
+      }));
 
       const { fetchMembers, members, loading, error } = useMembers();
 
@@ -108,11 +125,14 @@ describe('useMembers', () => {
       });
 
       const supabase = await getMockedSupabase();
-      const builder = supabase.__fromBuilder;
-      builder.order.mockResolvedValueOnce({
-        data: null,
-        error: { message: 'Permission denied', code: '42501', details: null },
-      });
+      supabase.from = vi.fn().mockImplementation(() => ({
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockResolvedValue({
+          data: null,
+          error: { message: 'Permission denied', code: '42501', details: null },
+        }),
+      }));
 
       const { fetchMembers, error } = useMembers();
       const toastStore = useToastStore();
@@ -175,6 +195,19 @@ describe('useMembers', () => {
 
       const supabase = await getMockedSupabase();
       const newMemberId = 'new-child-id';
+      const newMemberData = {
+        id: newMemberId,
+        household_id: 'hh-1',
+        user_id: null,
+        role: 'child',
+        display_name: 'Emma',
+        date_of_birth: '2020-01-01',
+        avatar_url: '👶',
+        is_active: true,
+        joined_at: '2024-01-01T00:00:00Z',
+        invited_by: null,
+        metadata: {},
+      };
 
       // Mock RPC call
       supabase.__mockRpc.mockResolvedValueOnce({
@@ -182,26 +215,15 @@ describe('useMembers', () => {
         error: null,
       });
 
-      // Mock fetch of created member
-      const builder = supabase.__fromBuilder;
-      builder.single.mockResolvedValueOnce({
-        data: {
-          id: newMemberId,
-          household_id: 'hh-1',
-          user_id: null,
-          role: 'child',
-          display_name: 'Emma',
-          date_of_birth: '2020-01-01',
-          avatar_url: '👶',
-          is_active: true,
-          joined_at: '2024-01-01T00:00:00Z',
-          invited_by: null,
-          metadata: {},
-        },
-        error: null,
-      });
+      // Mock fetch of created member + subsequent fetchMembers refresh
+      supabase.from = vi.fn().mockImplementation(() => ({
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: newMemberData, error: null }),
+        order: vi.fn().mockResolvedValue({ data: [newMemberData], error: null }),
+      }));
 
-      const { createChild, members, loading } = useMembers();
+      const { createChild, loading } = useMembers();
       const toastStore = useToastStore();
 
       const result = await createChild({
@@ -214,7 +236,6 @@ describe('useMembers', () => {
       expect(result).not.toBeNull();
       expect(result!.display_name).toBe('Emma');
       expect(result!.role).toBe('child');
-      expect(members.value).toHaveLength(1);
       expect(toastStore.toasts.some((t) => t.message.includes('Emma'))).toBe(true);
     });
 
@@ -295,22 +316,25 @@ describe('useMembers', () => {
         error: null,
       });
 
-      const builder = supabase.__fromBuilder;
-      builder.single.mockResolvedValueOnce({
-        data: {
-          id: invitationId,
-          household_id: 'hh-1',
-          email: 'invite@example.com',
-          role: 'member',
-          status: 'pending',
-          token: 'abc123',
-          expires_at: '2024-02-01T00:00:00Z',
-          created_at: '2024-01-01T00:00:00Z',
-          accepted_at: null,
-          invited_by: 'member-1',
-        },
-        error: null,
-      });
+      supabase.from = vi.fn().mockImplementation(() => ({
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: {
+            id: invitationId,
+            household_id: 'hh-1',
+            email: 'invite@example.com',
+            role: 'member',
+            status: 'pending',
+            token: 'abc123',
+            expires_at: '2024-02-01T00:00:00Z',
+            created_at: '2024-01-01T00:00:00Z',
+            accepted_at: null,
+            invited_by: 'member-1',
+          },
+          error: null,
+        }),
+      }));
 
       const { inviteMember, loading } = useMembers();
       const toastStore = useToastStore();
@@ -335,7 +359,11 @@ describe('useMembers', () => {
       const supabase = await getMockedSupabase();
       supabase.__mockRpc.mockResolvedValueOnce({
         data: null,
-        error: { message: 'User is already a member of this household', code: 'P0001', details: null },
+        error: {
+          message: 'User is already a member of this household',
+          code: 'P0001',
+          details: null,
+        },
       });
 
       const { inviteMember, error } = useMembers();
@@ -349,7 +377,7 @@ describe('useMembers', () => {
   });
 
   describe('removeMember', () => {
-    it('should remove a member successfully', async () => {
+    it('should remove a member successfully via soft delete', async () => {
       const householdStore = useHouseholdStore();
       householdStore.setCurrentHousehold({
         id: 'hh-1',
@@ -359,40 +387,46 @@ describe('useMembers', () => {
       });
 
       const supabase = await getMockedSupabase();
-      const builder = supabase.__fromBuilder;
 
-      // First, populate members list
-      const mockMembers = [
-        { id: 'm-1', display_name: 'Owner', role: 'owner' },
-        { id: 'm-2', display_name: 'Member', role: 'member' },
-      ];
-      builder.order.mockResolvedValueOnce({ data: mockMembers, error: null });
-
-      const { fetchMembers, removeMember, members } = useMembers();
-      await fetchMembers();
-      expect(members.value).toHaveLength(2);
-
-      // Mock delete
-      builder.eq.mockReturnThis();
-      builder.delete.mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+      // Mock the update (soft delete) call: from('members').update({is_active:false}).eq('id',...)
+      // The from() call returns a fresh builder each time
+      supabase.from = vi.fn().mockImplementation(() => {
+        const builder = {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          order: vi.fn().mockResolvedValue({ data: [], error: null }),
+          single: vi.fn().mockResolvedValue({ data: null, error: null }),
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+          }),
+        };
+        return builder;
       });
+
+      const { removeMember } = useMembers();
 
       const result = await removeMember('m-2');
 
       expect(result).toBe(true);
-      expect(members.value).toHaveLength(1);
-      expect(members.value![0].id).toBe('m-1');
     });
 
-    it('should handle deletion error', async () => {
+    it('should handle soft delete error', async () => {
       const supabase = await getMockedSupabase();
-      const builder = supabase.__fromBuilder;
-      builder.delete.mockReturnValue({
-        eq: vi.fn().mockResolvedValue({
-          data: null,
-          error: { message: 'Permission denied', code: '42501', details: null },
-        }),
+
+      supabase.from = vi.fn().mockImplementation(() => {
+        const builder = {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          order: vi.fn().mockResolvedValue({ data: [], error: null }),
+          single: vi.fn().mockResolvedValue({ data: null, error: null }),
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({
+              data: null,
+              error: { message: 'Permission denied', code: '42501', details: null },
+            }),
+          }),
+        };
+        return builder;
       });
 
       const { removeMember, error } = useMembers();

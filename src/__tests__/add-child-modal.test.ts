@@ -126,9 +126,7 @@ describe('AddChildModal', () => {
 
   it('calculates and displays age from birthday', async () => {
     const now = new Date();
-    const threeYearsAgo = new Date(
-      Date.UTC(now.getFullYear() - 3, now.getMonth(), now.getDate()),
-    );
+    const threeYearsAgo = new Date(Date.UTC(now.getFullYear() - 3, now.getMonth(), now.getDate()));
     const birthday = threeYearsAgo.toISOString().split('T')[0];
 
     const birthdayInput = wrapper.find('#child-birthday');

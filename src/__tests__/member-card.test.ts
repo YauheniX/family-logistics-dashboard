@@ -114,9 +114,7 @@ describe('MemberCard', () => {
   it('shows age for child members with date_of_birth', () => {
     // Set birthday to 5 years ago
     const now = new Date();
-    const fiveYearsAgo = new Date(
-      Date.UTC(now.getFullYear() - 5, now.getMonth(), now.getDate()),
-    );
+    const fiveYearsAgo = new Date(Date.UTC(now.getFullYear() - 5, now.getMonth(), now.getDate()));
     const birthday = fiveYearsAgo.toISOString().split('T')[0];
 
     const member = createMember({

@@ -11,11 +11,7 @@ export interface UseMembersReturn {
   error: ReturnType<typeof ref<ApiError | null>>;
   isOwnerOrAdmin: ReturnType<typeof computed<boolean>>;
   fetchMembers: () => Promise<void>;
-  createChild: (data: {
-    name: string;
-    birthday: string;
-    avatar: string;
-  }) => Promise<Member | null>;
+  createChild: (data: { name: string; birthday: string; avatar: string }) => Promise<Member | null>;
   inviteMember: (email: string, role?: string) => Promise<Invitation | null>;
   removeMember: (memberId: string) => Promise<boolean>;
 }
@@ -103,7 +99,7 @@ export function useMembers(): UseMembersReturn {
         p_household_id: householdId,
         p_name: data.name,
         p_date_of_birth: data.birthday,
-        p_avatar_url: data.avatar || null,
+        p_avatar_url: data.avatar ?? null,
       });
 
       if (rpcError) {
@@ -124,16 +120,16 @@ export function useMembers(): UseMembersReturn {
         .single();
 
       if (fetchError || !newMember) {
-        // Member was created, just refresh the list
+        // Member was created but couldn't be fetched directly; refresh the full list
         await fetchMembers();
         toastStore.success(`${data.name} has been added to the family! 👶`);
         return null;
       }
 
-      const member = newMember as unknown as Member;
-      members.value.push(member);
+      // Refresh the full list to avoid race conditions with concurrent operations
+      await fetchMembers();
       toastStore.success(`${data.name} has been added to the family! 👶`);
-      return member;
+      return newMember as unknown as Member;
     } catch (err) {
       error.value = {
         message: err instanceof Error ? err.message : 'Failed to add child',
@@ -148,10 +144,7 @@ export function useMembers(): UseMembersReturn {
   /**
    * Invite a member to the current household by email
    */
-  async function inviteMember(
-    email: string,
-    role: string = 'member',
-  ): Promise<Invitation | null> {
+  async function inviteMember(email: string, role: string = 'member'): Promise<Invitation | null> {
     const householdId = householdStore.currentHousehold?.id;
     if (!householdId) {
       toastStore.error('No household selected');
@@ -216,22 +209,23 @@ export function useMembers(): UseMembersReturn {
     error.value = null;
 
     try {
-      const { error: deleteError } = await supabase
+      const { error: updateError } = await supabase
         .from('members')
-        .delete()
+        .update({ is_active: false })
         .eq('id', memberId);
 
-      if (deleteError) {
+      if (updateError) {
         error.value = {
-          message: deleteError.message,
-          code: deleteError.code,
-          details: deleteError.details,
+          message: updateError.message,
+          code: updateError.code,
+          details: updateError.details,
         };
-        toastStore.error(`Failed to remove member: ${deleteError.message}`);
+        toastStore.error(`Failed to remove member: ${updateError.message}`);
         return false;
       }
 
-      members.value = members.value.filter((m) => m.id !== memberId);
+      // Refresh the full list to stay consistent
+      await fetchMembers();
       toastStore.success('Member removed successfully');
       return true;
     } catch (err) {

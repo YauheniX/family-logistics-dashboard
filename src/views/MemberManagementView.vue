@@ -5,17 +5,25 @@
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p class="text-sm text-neutral-500 dark:text-neutral-400">
-            {{ householdStore.currentHousehold?.name || familyStore.currentFamily?.name || 'Family' }}
+            {{
+              householdStore.currentHousehold?.name || familyStore.currentFamily?.name || 'Family'
+            }}
           </p>
           <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
             Family Members
           </h2>
         </div>
         <div v-if="isOwnerOrAdmin" class="flex flex-wrap gap-2">
-          <BaseButton variant="primary" :disabled="membersLoading" @click="showAddChildModal = true">
+          <BaseButton
+            variant="primary"
+            :disabled="membersLoading"
+            @click="showAddChildModal = true"
+          >
             👶 Add Child
           </BaseButton>
-          <BaseButton :disabled="membersLoading" @click="showInviteMemberModal = true"> ➕ Invite Member </BaseButton>
+          <BaseButton :disabled="membersLoading" @click="showInviteMemberModal = true">
+            ➕ Invite Member
+          </BaseButton>
         </div>
       </div>
     </BaseCard>
@@ -95,7 +103,9 @@
           Are you sure you want to remove this member? This action cannot be undone.
         </p>
         <div class="flex gap-3">
-          <BaseButton variant="danger" :loading="membersLoading" @click="confirmRemove"> Remove </BaseButton>
+          <BaseButton variant="danger" :loading="membersLoading" @click="confirmRemove">
+            Remove
+          </BaseButton>
           <BaseButton variant="ghost" @click="showRemoveModal = false"> Cancel </BaseButton>
         </div>
       </div>
@@ -169,8 +179,9 @@ const familyId = computed(() => {
 
 // Sort members: owner first, then adults, then children, then viewers
 const displayMembers = computed(() => {
-  // Use composable members if available, fallback to familyStore
-  const memberList = householdMembers.value.length > 0
+  // If a household is selected, always use its members (even if empty);
+  // otherwise, fall back to the legacy family store members.
+  const memberList = householdStore.currentHousehold
     ? [...householdMembers.value]
     : [...familyStore.members];
 
@@ -190,11 +201,14 @@ const displayMembers = computed(() => {
 });
 
 onMounted(async () => {
-  // Load members via composable (uses householdStore.currentHousehold)
-  await fetchMembers();
+  // Prefer household-based loading when a current household is available
+  if (householdStore.currentHousehold?.id) {
+    await fetchMembers();
+    return;
+  }
 
-  // Fallback: load via familyStore if no household members found
-  if (householdMembers.value.length === 0 && familyId.value) {
+  // Migration fallback: load via familyStore when no household context is present
+  if (familyId.value) {
     await familyStore.loadFamily(familyId.value);
   }
 });
@@ -213,10 +227,7 @@ const handleAddChild = async (childData: { name: string; birthday: string; avata
 const handleInviteMember = async () => {
   if (!inviteEmail.value.trim()) return;
 
-  const result = await sendInvitation(
-    inviteEmail.value.trim(),
-    inviteRole.value,
-  );
+  const result = await sendInvitation(inviteEmail.value.trim(), inviteRole.value);
 
   if (result) {
     inviteEmail.value = '';
