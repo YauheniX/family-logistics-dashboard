@@ -19,6 +19,7 @@ The navigation structure is redesigned to support multi-household workflows, rol
 ```
 
 **Components:**
+
 - **Logo**: Return to dashboard
 - **Household Switcher**: Dropdown to switch between households
 - **Profile**: User settings, preferences
@@ -57,7 +58,6 @@ The navigation structure is redesigned to support multi-household workflows, rol
   - Preserves current page (dashboard, shopping, etc.)
   - Updates URL parameter: `?household={slug}`
   - Stores preference in local storage
-  
 - First-time users:
   - Prompt to create first household
   - Automatic redirect to household setup wizard
@@ -71,6 +71,7 @@ The navigation structure is redesigned to support multi-household workflows, rol
 The dashboard adapts based on user's role in current household:
 
 **Owner/Admin Dashboard:**
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  👋 Welcome back, John!                   🏠 Smith Family   │
@@ -93,6 +94,7 @@ The dashboard adapts based on user's role in current household:
 ```
 
 **Member Dashboard:**
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  👋 Welcome back, Sarah!                  🏠 Smith Family   │
@@ -113,6 +115,7 @@ The dashboard adapts based on user's role in current household:
 ```
 
 **Child Dashboard:**
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  👋 Hi Emma! 🎉                           🏠 Smith Family   │
@@ -181,14 +184,14 @@ The dashboard adapts based on user's role in current household:
 
 ### 5.3 Role-Based UI Elements
 
-| Element | Owner/Admin | Member | Child | Viewer |
-|---------|-------------|--------|-------|--------|
-| Create List | ✅ | ✅ | ❌ | ❌ |
-| Edit Any List | ✅ | ✅ | ❌ | ❌ |
-| Delete List | ✅ (any) | 🔒 (own) | ❌ | ❌ |
-| Add Items | ✅ | ✅ | ✅ | ❌ |
-| Mark Purchased | ✅ | ✅ | ✅ | ❌ |
-| Archive List | ✅ | ✅ | 🔒 (own) | ❌ |
+| Element        | Owner/Admin | Member   | Child    | Viewer |
+| -------------- | ----------- | -------- | -------- | ------ |
+| Create List    | ✅          | ✅       | ❌       | ❌     |
+| Edit Any List  | ✅          | ✅       | ❌       | ❌     |
+| Delete List    | ✅ (any)    | 🔒 (own) | ❌       | ❌     |
+| Add Items      | ✅          | ✅       | ✅       | ❌     |
+| Mark Purchased | ✅          | ✅       | ✅       | ❌     |
+| Archive List   | ✅          | ✅       | 🔒 (own) | ❌     |
 
 ---
 
@@ -217,15 +220,16 @@ The dashboard adapts based on user's role in current household:
 
 Visual indicators for visibility:
 
-| Icon | Visibility | Description |
-|------|------------|-------------|
-| 🔒 Private | Only me (+ admins) | Personal planning, gift ideas |
-| 🏠 Household | All family members | Family can see but not reserve |
-| 🌐 Public | Anyone with link | Share with external friends/family |
+| Icon         | Visibility         | Description                        |
+| ------------ | ------------------ | ---------------------------------- |
+| 🔒 Private   | Only me (+ admins) | Personal planning, gift ideas      |
+| 🏠 Household | All family members | Family can see but not reserve     |
+| 🌐 Public    | Anyone with link   | Share with external friends/family |
 
 ### 6.3 Wishlist Detail View
 
 **Owner View:**
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  ← Wishlists          My Birthday Wishlist        [⋯ More]  │
@@ -243,6 +247,7 @@ Visual indicators for visibility:
 ```
 
 **Family Member View (Household Wishlist):**
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  ← Wishlists          Emma's Birthday                       │
@@ -259,6 +264,7 @@ Visual indicators for visibility:
 ```
 
 **Public Guest View:**
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  🎁 Emma's 10th Birthday Wishlist                           │
@@ -277,6 +283,7 @@ Visual indicators for visibility:
 ### 6.4 Visibility Change Flow
 
 When changing visibility:
+
 ```
 ┌──────────────────────────────────┐
 │  Change Wishlist Visibility      │
@@ -417,6 +424,7 @@ When changing visibility:
 ### 9.2 Mobile Household Switcher
 
 Accessible via hamburger menu or swipe gesture:
+
 ```
 ┌─────────────────────────────────────┐
 │  ≡  Smith Family            👤      │
@@ -439,6 +447,7 @@ Accessible via hamburger menu or swipe gesture:
 ### 10.1 Breadcrumbs
 
 Always show current location:
+
 ```
 Home > Shopping Lists > Grocery List
 Home > Wishlists > Emma's Birthday > Edit
@@ -466,6 +475,7 @@ Home > Members > John Smith > Edit Profile
 ### 11.2 Empty States
 
 **No Shopping Lists:**
+
 ```
 ┌─────────────────────────────────────┐
 │         No shopping lists yet       │
@@ -478,6 +488,7 @@ Home > Members > John Smith > Edit Profile
 ```
 
 **No Wishlists:**
+
 ```
 ┌─────────────────────────────────────┐
 │          No wishlists yet           │

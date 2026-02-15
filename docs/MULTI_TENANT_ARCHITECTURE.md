@@ -12,14 +12,14 @@ This redesign transforms the family planning app into a scalable multi-tenant Sa
 
 ### Key Changes from Current Architecture
 
-| Current | New Multi-Tenant |
-|---------|------------------|
-| `families` table | `households` table (tenant entity) |
-| `family_members` (requires user_id) | `members` (optional user_id for soft accounts) |
-| Simple owner/member roles | 6-role hierarchy (owner, admin, member, child, viewer, public_guest) |
-| User-centric wishlists | Member-centric wishlists (household context) |
-| No invitation system | Full invitation flow with pending states |
-| No activity tracking | Comprehensive activity logs |
+| Current                             | New Multi-Tenant                                                     |
+| ----------------------------------- | -------------------------------------------------------------------- |
+| `families` table                    | `households` table (tenant entity)                                   |
+| `family_members` (requires user_id) | `members` (optional user_id for soft accounts)                       |
+| Simple owner/member roles           | 6-role hierarchy (owner, admin, member, child, viewer, public_guest) |
+| User-centric wishlists              | Member-centric wishlists (household context)                         |
+| No invitation system                | Full invitation flow with pending states                             |
+| No activity tracking                | Comprehensive activity logs                                          |
 
 ---
 
@@ -170,7 +170,7 @@ create table households (
   updated_at       timestamptz not null default now(),
   is_active        boolean not null default true,
   settings         jsonb not null default '{}'::jsonb,
-  
+
   constraint households_name_length check (char_length(name) between 1 and 100),
   constraint households_slug_format check (slug ~ '^[a-z0-9-]+$')
 );
@@ -202,7 +202,7 @@ create table members (
   joined_at        timestamptz not null default now(),
   invited_by       uuid references members(id) on delete set null,
   metadata         jsonb not null default '{}'::jsonb,
-  
+
   constraint members_name_length check (char_length(display_name) between 1 and 100),
   constraint members_unique_user_per_household unique (household_id, user_id),
   constraint members_child_dob check (role != 'child' or date_of_birth is not null)
@@ -220,8 +220,8 @@ create index idx_members_role on members(role);
 create index idx_members_is_active on members(is_active) where is_active = true;
 
 -- Ensure at least one owner per household
-create unique index idx_members_household_owner 
-  on members(household_id) 
+create unique index idx_members_household_owner
+  on members(household_id)
   where role = 'owner' and is_active = true;
 ```
 
@@ -241,9 +241,9 @@ create table invitations (
   expires_at       timestamptz not null,
   created_at       timestamptz not null default now(),
   accepted_at      timestamptz,
-  
+
   constraint invitations_email_format check (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
-  constraint invitations_unique_pending unique (household_id, email, status) 
+  constraint invitations_unique_pending unique (household_id, email, status)
     where status = 'pending'
 );
 
@@ -272,7 +272,7 @@ create table shopping_lists (
   created_at       timestamptz not null default now(),
   updated_at       timestamptz not null default now(),
   status           text not null default 'active' check (status in ('active', 'archived')),
-  
+
   constraint shopping_lists_title_length check (char_length(title) between 1 and 200)
 );
 
@@ -301,7 +301,7 @@ create table shopping_items (
   purchased_by     uuid references members on delete set null,
   created_at       timestamptz not null default now(),
   purchased_at     timestamptz,
-  
+
   constraint shopping_items_title_length check (char_length(title) between 1 and 200)
 );
 
@@ -331,7 +331,7 @@ create table wishlists (
   share_slug       text not null unique,
   created_at       timestamptz not null default now(),
   updated_at       timestamptz not null default now(),
-  
+
   constraint wishlists_title_length check (char_length(title) between 1 and 200)
 );
 
@@ -366,7 +366,7 @@ create table wishlist_items (
   reserved_by_name    text,
   reserved_at         timestamptz,
   created_at          timestamptz not null default now(),
-  
+
   constraint wishlist_items_title_length check (char_length(title) between 1 and 200),
   constraint wishlist_items_price_positive check (price is null or price >= 0)
 );
@@ -393,7 +393,7 @@ create table activity_logs (
   entity_id        uuid,
   metadata         jsonb not null default '{}'::jsonb,
   created_at       timestamptz not null default now(),
-  
+
   constraint activity_logs_action_length check (char_length(action) between 1 and 100)
 );
 
@@ -479,11 +479,11 @@ declare
 begin
   -- Role hierarchy: owner=5, admin=4, member=3, child=2, viewer=1
   v_role := get_member_role(p_household_id, p_user_id);
-  
+
   if v_role is null then
     return false;
   end if;
-  
+
   v_role_hierarchy := case v_role
     when 'owner' then 5
     when 'admin' then 4
@@ -492,7 +492,7 @@ begin
     when 'viewer' then 1
     else 0
   end;
-  
+
   v_required_hierarchy := case p_required_role
     when 'owner' then 5
     when 'admin' then 4
@@ -501,7 +501,7 @@ begin
     when 'viewer' then 1
     else 0
   end;
-  
+
   return v_role_hierarchy >= v_required_hierarchy;
 end;
 $$;
@@ -525,20 +525,20 @@ begin
   v_slug := regexp_replace(v_slug, '\s+', '-', 'g');
   v_slug := regexp_replace(v_slug, '-+', '-', 'g');
   v_slug := trim(both '-' from v_slug);
-  
+
   -- Ensure slug is not empty
   if v_slug = '' then
     v_slug := 'household';
   end if;
-  
+
   -- Check uniqueness and append number if needed
   loop
     select exists(select 1 from households where slug = v_slug) into v_exists;
-    
+
     if not v_exists then
       return v_slug;
     end if;
-    
+
     v_counter := v_counter + 1;
     v_slug := v_slug || '-' || v_counter;
   end loop;
@@ -747,6 +747,7 @@ create trigger shopping_list_activity_log
 The migration is designed to be **zero-downtime** and **backwards-compatible**. See [migration strategy documentation](./MIGRATION_STRATEGY.md) for details.
 
 Key points:
+
 1. Create new tables alongside existing ones
 2. Create views to maintain backward compatibility
 3. Migrate data in batches

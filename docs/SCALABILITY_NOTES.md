@@ -21,12 +21,14 @@ WHERE household_id = 'current-household-id'  -- Enforced by RLS
 ```
 
 **Benefits:**
+
 - ✅ Simple application code (no manual filtering)
 - ✅ Zero risk of cross-tenant data leakage
 - ✅ Consistent security model
 - ✅ Works with ORMs and query builders
 
 **Performance Considerations:**
+
 - All RLS policies use indexed columns (`household_id`, `user_id`)
 - Supabase/PostgreSQL query planner optimizes RLS filters
 - Connection pooling prevents per-request connection overhead
@@ -58,6 +60,7 @@ create index idx_wishlists_share_slug on wishlists(share_slug);
 ```
 
 **Index Maintenance:**
+
 - Monitor slow queries with `pg_stat_statements`
 - Add composite indexes for common multi-column queries
 - Remove unused indexes to reduce write overhead
@@ -65,12 +68,14 @@ create index idx_wishlists_share_slug on wishlists(share_slug);
 ### 2.3 Connection Pooling
 
 **Supabase Built-in Pooling:**
+
 - Supavisor connection pooler (PgBouncer)
 - Default pool size: 15-20 connections
 - Transaction mode for optimal performance
 - Automatic scaling based on load
 
 **Application-Side Pooling:**
+
 ```typescript
 // supabase.client.ts
 const supabase = createClient(url, key, {
@@ -97,20 +102,18 @@ const supabase = createClient(url, key, {
 // ❌ Bad: N+1 queries
 const lists = await supabase.from('shopping_lists').select('*');
 for (const list of lists.data) {
-  const items = await supabase.from('shopping_items')
-    .select('*')
-    .eq('list_id', list.id);
+  const items = await supabase.from('shopping_items').select('*').eq('list_id', list.id);
 }
 
 // ✅ Good: Single query with join
-const lists = await supabase.from('shopping_lists')
-  .select(`
+const lists = await supabase.from('shopping_lists').select(`
     *,
     shopping_items(*)
   `);
 ```
 
 **Pagination:**
+
 ```typescript
 // Always paginate large result sets
 const { data, count } = await supabase
@@ -118,7 +121,7 @@ const { data, count } = await supabase
   .select('*', { count: 'exact' })
   .eq('household_id', householdId)
   .order('created_at', { ascending: false })
-  .range(0, 49)  // First 50 results
+  .range(0, 49) // First 50 results
   .limit(50);
 ```
 
@@ -129,6 +132,7 @@ const { data, count } = await supabase
 ### 3.1 High Read Volume Challenge
 
 Public wishlists receive traffic from unauthenticated users (grandparents, friends):
+
 - No rate limiting by user
 - Potential viral sharing
 - Cache-friendly content
@@ -146,26 +150,29 @@ export async function GET_PublicWishlist(shareSlug: string) {
     .eq('share_slug', shareSlug)
     .eq('visibility', 'public')
     .single();
-  
+
   return new Response(JSON.stringify(data), {
     headers: {
       'Content-Type': 'application/json',
-      'Cache-Control': 'public, max-age=300, s-maxage=600',  // 5min client, 10min CDN
-      'Vary': 'Accept-Encoding',
+      'Cache-Control': 'public, max-age=300, s-maxage=600', // 5min client, 10min CDN
+      Vary: 'Accept-Encoding',
     },
   });
 }
 ```
 
 **Stale-While-Revalidate:**
+
 ```
 Cache-Control: public, max-age=60, stale-while-revalidate=300
 ```
+
 - Serve cached version immediately
 - Fetch fresh data in background
 - Update cache for next request
 
 **Edge Caching (Vercel/Cloudflare):**
+
 - Deploy static assets to CDN
 - Cache API responses at edge
 - Automatic geographic distribution
@@ -173,6 +180,7 @@ Cache-Control: public, max-age=60, stale-while-revalidate=300
 ### 3.3 Read Replicas (Future)
 
 For extreme scale:
+
 - Supabase supports read replicas
 - Route public wishlist reads to replica
 - Keep writes on primary
@@ -185,11 +193,13 @@ For extreme scale:
 ### 4.1 High Write Volume
 
 Activity logs grow continuously:
+
 - Every shopping list action logged
 - Every member change logged
 - Every wishlist update logged
 
 **Projected Growth:**
+
 - 100 households × 20 actions/day = 2,000 rows/day
 - 1,000 households × 20 actions/day = 20,000 rows/day
 - 10,000 households × 20 actions/day = 200,000 rows/day
@@ -225,12 +235,14 @@ create index on activity_logs_2024_01 (created_at desc);
 ```
 
 **Benefits:**
+
 - Faster queries (only scan relevant partition)
 - Easier archival (drop old partitions)
 - Better vacuum performance
 - Index size stays manageable
 
 **Automated Partition Management:**
+
 ```sql
 -- Function to create next month's partition
 create or replace function create_next_activity_partition()
@@ -248,7 +260,7 @@ begin
     next_month,
     following_month
   );
-  
+
   execute format('create index on %I (household_id)', partition_name);
   execute format('create index on %I (created_at desc)', partition_name);
 end;
@@ -261,6 +273,7 @@ select cron.schedule('create-activity-partition', '0 0 25 * *', 'select create_n
 ### 4.3 Archival Strategy
 
 **Archive Old Data:**
+
 ```sql
 -- After 12 months, archive to cold storage
 -- Option 1: Export to S3/GCS
@@ -307,6 +320,7 @@ create policy "shopping_lists_select"
 ```
 
 **Prefer Subqueries Over Functions:**
+
 - Subqueries can be optimized by query planner
 - Functions are black boxes (unless marked STABLE/IMMUTABLE)
 - Supabase caches function results per transaction
@@ -316,6 +330,7 @@ create policy "shopping_lists_select"
 **Service Role Key (Backend Only):**
 
 For admin dashboards or batch operations:
+
 ```typescript
 // Use service role key (bypasses RLS)
 const supabaseAdmin = createClient(url, serviceRoleKey);
@@ -328,6 +343,7 @@ const stats = await supabaseAdmin
 ```
 
 **Security:**
+
 - ⚠️ Service role key NEVER sent to client
 - Only used in server-side code
 - Environment variable protection
@@ -340,6 +356,7 @@ const stats = await supabaseAdmin
 ### 6.1 Strategy: Soft Delete with Hard Delete Option
 
 **Soft Delete (Default):**
+
 ```sql
 -- Add is_active flag to tables
 alter table households add column is_active boolean default true;
@@ -358,17 +375,20 @@ create policy "members_select"
 ```
 
 **Benefits:**
+
 - Easy recovery from accidental deletions
 - Maintain referential integrity
 - Historical data preservation
 - Audit trail intact
 
 **Drawbacks:**
+
 - Disk space grows indefinitely
 - Need cleanup strategy
 - Indexes include inactive records
 
 **Hard Delete (Periodic Cleanup):**
+
 ```sql
 -- After 90 days, hard delete inactive records
 delete from members
@@ -379,30 +399,25 @@ where is_active = false
 ### 6.2 GDPR/Right to be Forgotten
 
 **Immediate Hard Delete:**
+
 ```typescript
 // User requests account deletion
 async function deleteUserAccount(userId: string) {
   // 1. Remove from all households (cascades to shopping items, etc.)
-  await supabase
-    .from('members')
-    .delete()
-    .eq('user_id', userId);
-  
+  await supabase.from('members').delete().eq('user_id', userId);
+
   // 2. Anonymize activity logs
   await supabase
     .from('activity_logs')
-    .update({ 
+    .update({
       member_id: null,
-      metadata: jsonb_set(metadata, '{anonymized}', 'true')
+      metadata: jsonb_set(metadata, '{anonymized}', 'true'),
     })
     .eq('member_id', userId);
-  
+
   // 3. Delete user profile
-  await supabase
-    .from('user_profiles')
-    .delete()
-    .eq('id', userId);
-  
+  await supabase.from('user_profiles').delete().eq('id', userId);
+
   // 4. Delete auth account
   await supabaseAdmin.auth.admin.deleteUser(userId);
 }
@@ -441,6 +456,7 @@ insert into plan_limits values
 ```
 
 **Enforce Limits:**
+
 ```sql
 -- Prevent exceeding member limit
 create or replace function check_member_limit()
@@ -455,16 +471,16 @@ begin
   from members
   where household_id = new.household_id
     and is_active = true;
-  
+
   select max_members into max_allowed
   from plan_limits pl
   join households h on h.subscription_plan = pl.plan
   where h.id = new.household_id;
-  
+
   if current_count >= max_allowed then
     raise exception 'Member limit reached for your plan';
   end if;
-  
+
   return new;
 end;
 $$;
@@ -478,6 +494,7 @@ create trigger enforce_member_limit
 ### 7.2 Usage Tracking
 
 **Track Usage for Billing:**
+
 ```sql
 create table usage_metrics (
   id uuid primary key default uuid_generate_v4(),
@@ -511,6 +528,7 @@ group by household_id;
 ### 8.1 Database Metrics
 
 **Key Metrics to Monitor:**
+
 - Query performance (`pg_stat_statements`)
 - Index usage (`pg_stat_user_indexes`)
 - Table bloat (`pg_stat_user_tables`)
@@ -519,6 +537,7 @@ group by household_id;
 - Replication lag (if using replicas)
 
 **Supabase Dashboard:**
+
 - Built-in query performance monitoring
 - Slow query alerts
 - Connection pool usage
@@ -527,6 +546,7 @@ group by household_id;
 ### 8.2 Application Metrics
 
 **Track in Application:**
+
 ```typescript
 // Performance monitoring
 const startTime = performance.now();
@@ -543,6 +563,7 @@ logger.info('database_query', {
 ```
 
 **Key Application Metrics:**
+
 - Request latency (p50, p95, p99)
 - Error rate by endpoint
 - User session duration
@@ -552,6 +573,7 @@ logger.info('database_query', {
 ### 8.3 Alerting
 
 **Set Up Alerts:**
+
 - High database CPU (> 80%)
 - Slow queries (> 1 second)
 - High error rate (> 1%)
@@ -572,6 +594,7 @@ logger.info('database_query', {
 ```
 
 **Suitable for:**
+
 - 1-10,000 households
 - 10,000-100,000 users
 - Millions of items/wishlists
@@ -593,6 +616,7 @@ logger.info('database_query', {
 ```
 
 **Routing Strategy:**
+
 - Writes → Primary
 - Shopping list reads → Replicas
 - Public wishlist reads → Replicas (with caching)
@@ -601,6 +625,7 @@ logger.info('database_query', {
 ### 9.3 Database Sharding (100K+ Households)
 
 **Shard by Household:**
+
 ```
 ┌──────────┐       ┌──────────────┐
 │  Client  │──────▶│   Router     │
@@ -615,11 +640,13 @@ logger.info('database_query', {
 ```
 
 **Sharding Key:** `household_id`
+
 - Consistent hashing for even distribution
 - Cross-shard queries avoided (household isolation)
 - Tenant co-location (all household data on same shard)
 
 **Challenges:**
+
 - Global queries (admin dashboards)
 - User with multiple households
 - Invitation across shards
@@ -631,6 +658,7 @@ logger.info('database_query', {
 ### 10.1 Database Storage
 
 **Compress Old Data:**
+
 ```sql
 -- Use TOAST compression for JSONB columns
 alter table households alter column settings set storage extended;
@@ -641,20 +669,22 @@ vacuum full activity_logs;
 ```
 
 **Archive Cold Data:**
+
 - Move old activity logs to S3 (10% of database cost)
 - Keep recent 12 months in hot storage
 - On-demand restore for older data
 
 ### 10.2 Supabase Pricing Tiers
 
-| Tier | Database Size | Bandwidth | Suitable For |
-|------|---------------|-----------|--------------|
-| Free | 500 MB | 5 GB/month | Development, hobby projects |
-| Pro | 8 GB | 250 GB/month | 1-1,000 households |
-| Team | 100 GB | 500 GB/month | 1,000-10,000 households |
-| Enterprise | Custom | Custom | 10,000+ households |
+| Tier       | Database Size | Bandwidth    | Suitable For                |
+| ---------- | ------------- | ------------ | --------------------------- |
+| Free       | 500 MB        | 5 GB/month   | Development, hobby projects |
+| Pro        | 8 GB          | 250 GB/month | 1-1,000 households          |
+| Team       | 100 GB        | 500 GB/month | 1,000-10,000 households     |
+| Enterprise | Custom        | Custom       | 10,000+ households          |
 
 **Optimization Tips:**
+
 - Enable connection pooling (included)
 - Use CDN for static assets
 - Compress images before upload
@@ -667,17 +697,19 @@ vacuum full activity_logs;
 ### 11.1 Rate Limiting
 
 **API Rate Limits:**
+
 ```typescript
 // Supabase Edge Functions or API Gateway
 const rateLimiter = new RateLimiter({
-  points: 100,  // 100 requests
-  duration: 60,  // per 60 seconds
+  points: 100, // 100 requests
+  duration: 60, // per 60 seconds
 });
 
 await rateLimiter.consume(userId);
 ```
 
 **Per-Household Limits:**
+
 - 1000 shopping items per household
 - 100 wishlists per member
 - 50 members per household (free tier)
@@ -685,12 +717,14 @@ await rateLimiter.consume(userId);
 ### 11.2 DDoS Protection
 
 **Cloudflare/Vercel Protection:**
+
 - Automatic DDoS mitigation
 - Bot detection
 - Geographic filtering
 - Rate limiting by IP
 
 **Database Protection:**
+
 - Connection limits enforced
 - Query timeout (30 seconds)
 - Statement timeout (10 seconds)
@@ -703,11 +737,13 @@ await rateLimiter.consume(userId);
 ### 12.1 Backup Strategy
 
 **Supabase Automated Backups:**
+
 - Daily full backups (retained 7 days on Pro)
 - Point-in-time recovery (PITR) available
 - Cross-region replication (Enterprise)
 
 **Manual Backup:**
+
 ```bash
 # Export entire database
 pg_dump -h db.supabase.co -U postgres -d postgres > backup.sql
@@ -725,6 +761,7 @@ pg_dump -h db.supabase.co -U postgres -d postgres \
 **Target RTO:** < 1 hour for critical incidents
 
 **Recovery Procedures:**
+
 1. Restore from automated backup (15 minutes)
 2. Verify data integrity (15 minutes)
 3. Update DNS/application config (5 minutes)
@@ -735,24 +772,28 @@ pg_dump -h db.supabase.co -U postgres -d postgres \
 ## 13. Future Scalability Roadmap
 
 ### Phase 1: Current (0-1K households)
+
 - ✅ Single PostgreSQL database
 - ✅ Supabase Pro tier
 - ✅ Row Level Security
 - ✅ Basic indexing
 
 ### Phase 2: Growth (1K-10K households)
+
 - 🔄 Add read replicas
 - 🔄 Implement CDN caching
 - 🔄 Partition activity logs
 - 🔄 Advanced monitoring
 
 ### Phase 3: Scale (10K-100K households)
+
 - ⏳ Database sharding
 - ⏳ Microservices architecture
 - ⏳ Dedicated search (Elasticsearch)
 - ⏳ Message queue (for async operations)
 
 ### Phase 4: Enterprise (100K+ households)
+
 - ⏳ Multi-region deployment
 - ⏳ Active-active replication
 - ⏳ Custom infrastructure
@@ -765,16 +806,18 @@ pg_dump -h db.supabase.co -U postgres -d postgres \
 ### 14.1 Load Testing
 
 **Tools:**
+
 - k6 for API load testing
 - Artillery for stress testing
 - pgbench for database benchmarking
 
 **Test Scenarios:**
+
 ```javascript
 // k6 load test
 import http from 'k6/http';
 
-export default function() {
+export default function () {
   // Simulate 100 concurrent users
   http.get('https://api.example.com/shopping-lists');
   http.post('https://api.example.com/shopping-items', {
@@ -786,18 +829,19 @@ export default function() {
 
 ### 14.2 Performance Targets
 
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| Page Load Time | < 2 seconds | p95 |
-| API Response Time | < 200ms | p95 |
-| Database Query | < 100ms | p95 |
-| Public Wishlist Load | < 1 second | p95 |
+| Metric               | Target      | Measurement |
+| -------------------- | ----------- | ----------- |
+| Page Load Time       | < 2 seconds | p95         |
+| API Response Time    | < 200ms     | p95         |
+| Database Query       | < 100ms     | p95         |
+| Public Wishlist Load | < 1 second  | p95         |
 
 ---
 
 ## Summary
 
 This scalability design ensures the platform can:
+
 - ✅ Handle 10,000+ households on current architecture
 - ✅ Scale to 100,000+ with read replicas
 - ✅ Optimize costs through smart caching and archival

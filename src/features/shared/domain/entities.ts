@@ -76,7 +76,7 @@ export interface Member {
   invited_by: string | null;
   metadata: Record<string, unknown>;
   migrated_from_family_member_id?: string | null;
-  
+
   // Populated fields (not in DB)
   email?: string;
 }
@@ -104,7 +104,7 @@ export interface Invitation {
   expires_at: string;
   created_at: string;
   accepted_at: string | null;
-  
+
   // Populated fields
   invited_by_name?: string;
   household_name?: string;
@@ -123,7 +123,7 @@ export interface ActivityLog {
   entity_id: string | null;
   metadata: Record<string, unknown>;
   created_at: string;
-  
+
   // Populated fields
   member_name?: string;
   member_avatar?: string;
@@ -168,7 +168,7 @@ export interface ShoppingItem {
   purchased_by_member_id?: string | null; // New - references members
   purchased_at?: string | null;
   created_at: string;
-  
+
   // Populated fields
   added_by_name?: string;
   purchased_by_name?: string;
@@ -195,7 +195,7 @@ export interface Wishlist {
   share_slug: string;
   created_at: string;
   updated_at?: string;
-  
+
   // Populated fields
   member_name?: string;
   owner_name?: string;

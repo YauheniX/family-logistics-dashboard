@@ -15,14 +15,14 @@ This redesign transforms the Family Planning app from a simple family-based appl
 
 ## 📁 Documentation Structure
 
-| Document | Purpose | Key Content |
-|----------|---------|-------------|
-| **[MULTI_TENANT_ARCHITECTURE.md](./MULTI_TENANT_ARCHITECTURE.md)** | Architecture design | ERD, table schemas, helper functions, design rationale |
-| **[PERMISSION_MATRIX.md](./PERMISSION_MATRIX.md)** | Access control | Complete permission matrix for all 6 roles across all features |
-| **[NAVIGATION_STRUCTURE.md](./NAVIGATION_STRUCTURE.md)** | UX design | Household switcher, role-aware dashboards, navigation patterns |
-| **[SCALABILITY_NOTES.md](./SCALABILITY_NOTES.md)** | Performance | Database optimization, caching, partitioning, horizontal scaling |
-| **[MIGRATION_STRATEGY.md](./MIGRATION_STRATEGY.md)** | Migration plan | Step-by-step migration, backward compatibility, rollback |
-| **[IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md)** | How-to guide | Practical implementation steps, code examples, troubleshooting |
+| Document                                                           | Purpose             | Key Content                                                      |
+| ------------------------------------------------------------------ | ------------------- | ---------------------------------------------------------------- |
+| **[MULTI_TENANT_ARCHITECTURE.md](./MULTI_TENANT_ARCHITECTURE.md)** | Architecture design | ERD, table schemas, helper functions, design rationale           |
+| **[PERMISSION_MATRIX.md](./PERMISSION_MATRIX.md)**                 | Access control      | Complete permission matrix for all 6 roles across all features   |
+| **[NAVIGATION_STRUCTURE.md](./NAVIGATION_STRUCTURE.md)**           | UX design           | Household switcher, role-aware dashboards, navigation patterns   |
+| **[SCALABILITY_NOTES.md](./SCALABILITY_NOTES.md)**                 | Performance         | Database optimization, caching, partitioning, horizontal scaling |
+| **[MIGRATION_STRATEGY.md](./MIGRATION_STRATEGY.md)**               | Migration plan      | Step-by-step migration, backward compatibility, rollback         |
+| **[IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md)**           | How-to guide        | Practical implementation steps, code examples, troubleshooting   |
 
 ---
 
@@ -49,14 +49,14 @@ wishlists        - Added household context and visibility levels
 
 ### Key Differences from Current Schema
 
-| Current | New | Benefit |
-|---------|-----|---------|
-| `families` table | `households` table | Better multi-tenant abstraction |
+| Current                             | New                              | Benefit                           |
+| ----------------------------------- | -------------------------------- | --------------------------------- |
+| `families` table                    | `households` table               | Better multi-tenant abstraction   |
 | `family_members` requires `user_id` | `members` has nullable `user_id` | Support children without accounts |
-| Simple owner/member roles | 6-tier role hierarchy | Granular permissions |
-| No invitation system | Full invitation workflow | Professional onboarding |
-| No activity tracking | Comprehensive audit logs | Compliance and UX |
-| Binary wishlist privacy | 3 visibility levels | Flexible sharing |
+| Simple owner/member roles           | 6-tier role hierarchy            | Granular permissions              |
+| No invitation system                | Full invitation workflow         | Professional onboarding           |
+| No activity tracking                | Comprehensive audit logs         | Compliance and UX                 |
+| Binary wishlist privacy             | 3 visibility levels              | Flexible sharing                  |
 
 ---
 
@@ -131,6 +131,7 @@ See [PERMISSION_MATRIX.md](./PERMISSION_MATRIX.md) for complete matrix.
 ### 1. TypeScript Entities (✅ Complete)
 
 Updated `src/features/shared/domain/entities.ts` with:
+
 - `Household`, `Member`, `Invitation`, `ActivityLog` interfaces
 - Enhanced `ShoppingList`, `ShoppingItem`, `Wishlist`, `WishlistItem`
 - Backward compatible (old fields retained)
@@ -138,6 +139,7 @@ Updated `src/features/shared/domain/entities.ts` with:
 ### 2. New Repositories (📝 Templates Provided)
 
 Need to create:
+
 - `HouseholdRepository` - CRUD operations for households
 - `MemberRepository` - Member management and invitations
 - `InvitationRepository` - Invitation workflow
@@ -148,12 +150,14 @@ Templates available in [IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md).
 ### 3. New Stores (📝 Templates Provided)
 
 Need to create:
+
 - `useHouseholdStore` - Current household, member management
 - `useActivityStore` - Activity feed
 
 ### 4. New Components (📝 Templates Provided)
 
 Need to create:
+
 - `HouseholdSwitcher.vue` - Switch between households
 - `MemberManagement.vue` - Invite and manage members
 - `ActivityFeed.vue` - Display recent activity
@@ -162,6 +166,7 @@ Need to create:
 ### 5. Update Existing Components
 
 Modify to use household context:
+
 - Shopping list views → filter by household_id
 - Wishlist views → support visibility levels
 - Dashboard → role-aware display
@@ -215,12 +220,12 @@ Users can set wishlist visibility:
 
 ### Performance Targets
 
-| Metric | Target | Notes |
-|--------|--------|-------|
-| Page Load | < 2s | p95 |
-| API Response | < 200ms | p95 |
-| DB Query | < 100ms | p95 |
-| Public Wishlist | < 1s | With CDN caching |
+| Metric          | Target  | Notes            |
+| --------------- | ------- | ---------------- |
+| Page Load       | < 2s    | p95              |
+| API Response    | < 200ms | p95              |
+| DB Query        | < 100ms | p95              |
+| Public Wishlist | < 1s    | With CDN caching |
 
 ### Scaling Path
 
@@ -330,6 +335,7 @@ See [SCALABILITY_NOTES.md](./SCALABILITY_NOTES.md) for details.
 ### Risk 1: Data Loss During Migration
 
 **Mitigation:**
+
 - Full database backup before migration
 - Idempotent migration scripts
 - Automated verification after each step
@@ -338,6 +344,7 @@ See [SCALABILITY_NOTES.md](./SCALABILITY_NOTES.md) for details.
 ### Risk 2: Performance Degradation
 
 **Mitigation:**
+
 - Comprehensive indexing strategy
 - RLS policy optimization
 - Load testing before production
@@ -346,6 +353,7 @@ See [SCALABILITY_NOTES.md](./SCALABILITY_NOTES.md) for details.
 ### Risk 3: User Confusion
 
 **Mitigation:**
+
 - In-app onboarding tour
 - Clear household switcher UI
 - Email communication before rollout

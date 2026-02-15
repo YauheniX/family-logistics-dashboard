@@ -8,13 +8,13 @@ This guide provides step-by-step instructions for implementing the multi-tenant 
 
 ## Quick Reference
 
-| Document | Purpose |
-|----------|---------|
-| [MULTI_TENANT_ARCHITECTURE.md](./MULTI_TENANT_ARCHITECTURE.md) | Complete architecture design and ERD |
-| [PERMISSION_MATRIX.md](./PERMISSION_MATRIX.md) | Role-based access control details |
-| [NAVIGATION_STRUCTURE.md](./NAVIGATION_STRUCTURE.md) | UX and navigation updates |
-| [SCALABILITY_NOTES.md](./SCALABILITY_NOTES.md) | Performance and scaling considerations |
-| [MIGRATION_STRATEGY.md](./MIGRATION_STRATEGY.md) | Database migration approach |
+| Document                                                       | Purpose                                |
+| -------------------------------------------------------------- | -------------------------------------- |
+| [MULTI_TENANT_ARCHITECTURE.md](./MULTI_TENANT_ARCHITECTURE.md) | Complete architecture design and ERD   |
+| [PERMISSION_MATRIX.md](./PERMISSION_MATRIX.md)                 | Role-based access control details      |
+| [NAVIGATION_STRUCTURE.md](./NAVIGATION_STRUCTURE.md)           | UX and navigation updates              |
+| [SCALABILITY_NOTES.md](./SCALABILITY_NOTES.md)                 | Performance and scaling considerations |
+| [MIGRATION_STRATEGY.md](./MIGRATION_STRATEGY.md)               | Database migration approach            |
 
 ---
 
@@ -54,20 +54,20 @@ Run verification queries from each migration file:
 
 ```sql
 -- Check migration completeness
-SELECT 
+SELECT
   (SELECT count(*) FROM families) as families_count,
   (SELECT count(*) FROM households WHERE migrated_from_family_id IS NOT NULL) as migrated_households,
   (SELECT count(*) FROM family_members) as family_members_count,
   (SELECT count(*) FROM members WHERE migrated_from_family_member_id IS NOT NULL) as migrated_members;
 
 -- Verify no data loss
-SELECT 
-  CASE 
+SELECT
+  CASE
     WHEN (SELECT count(*) FROM families) = (SELECT count(*) FROM households WHERE migrated_from_family_id IS NOT NULL)
     THEN 'All families migrated ✓'
     ELSE 'WARNING: Missing families!'
   END as families_status,
-  CASE 
+  CASE
     WHEN (SELECT count(*) FROM family_members) = (SELECT count(*) FROM members WHERE migrated_from_family_member_id IS NOT NULL)
     THEN 'All members migrated ✓'
     ELSE 'WARNING: Missing members!'
@@ -125,10 +125,18 @@ Create `src/features/household/infrastructure/household.repository.ts`:
 ```typescript
 import { BaseRepository } from '../../shared/infrastructure/base.repository';
 import { supabase } from '../../shared/infrastructure/supabase.client';
-import type { Household, CreateHouseholdDto, UpdateHouseholdDto } from '../../shared/domain/entities';
+import type {
+  Household,
+  CreateHouseholdDto,
+  UpdateHouseholdDto,
+} from '../../shared/domain/entities';
 import type { ApiResponse } from '../../shared/domain/repository.interface';
 
-export class HouseholdRepository extends BaseRepository<Household, CreateHouseholdDto, UpdateHouseholdDto> {
+export class HouseholdRepository extends BaseRepository<
+  Household,
+  CreateHouseholdDto,
+  UpdateHouseholdDto
+> {
   constructor() {
     super(supabase, 'households');
   }
@@ -137,10 +145,12 @@ export class HouseholdRepository extends BaseRepository<Household, CreateHouseho
     return this.execute<Household[]>(async () => {
       return await supabase
         .from('households')
-        .select(`
+        .select(
+          `
           *,
           members!inner(user_id)
-        `)
+        `,
+        )
         .eq('members.user_id', userId)
         .eq('members.is_active', true)
         .order('created_at');
@@ -168,27 +178,17 @@ export class MemberRepository extends BaseRepository<Member, CreateMemberDto, Up
 
   async findByHouseholdId(householdId: string): Promise<ApiResponse<Member[]>> {
     return this.findAll((builder) =>
-      builder
-        .eq('household_id', householdId)
-        .eq('is_active', true)
-        .order('joined_at')
+      builder.eq('household_id', householdId).eq('is_active', true).order('joined_at'),
     );
   }
 
   async findByUserId(userId: string): Promise<ApiResponse<Member[]>> {
     return this.findAll((builder) =>
-      builder
-        .eq('user_id', userId)
-        .eq('is_active', true)
-        .order('joined_at')
+      builder.eq('user_id', userId).eq('is_active', true).order('joined_at'),
     );
   }
 
-  async inviteByEmail(
-    householdId: string,
-    email: string,
-    role: string
-  ): Promise<ApiResponse<any>> {
+  async inviteByEmail(householdId: string, email: string, role: string): Promise<ApiResponse<any>> {
     // TODO: Implement invitation logic
     // This will create an invitation record and send email
     throw new Error('Not implemented yet');
@@ -220,14 +220,12 @@ export const useHouseholdStore = defineStore('household', () => {
 
   // Getters
   const isOwner = computed(() => currentUserMember.value?.role === 'owner');
-  const isAdmin = computed(() => 
-    currentUserMember.value?.role === 'owner' || 
-    currentUserMember.value?.role === 'admin'
+  const isAdmin = computed(
+    () => currentUserMember.value?.role === 'owner' || currentUserMember.value?.role === 'admin',
   );
   const canManageMembers = computed(() => isAdmin.value);
-  const canCreateLists = computed(() => 
-    currentUserMember.value?.role !== 'viewer' && 
-    currentUserMember.value?.role !== 'child'
+  const canCreateLists = computed(
+    () => currentUserMember.value?.role !== 'viewer' && currentUserMember.value?.role !== 'child',
   );
 
   // Actions
@@ -244,7 +242,7 @@ export const useHouseholdStore = defineStore('household', () => {
     }
 
     households.value = response.data || [];
-    
+
     // Auto-select first household if none selected
     if (!currentHousehold.value && households.value.length > 0) {
       await selectHousehold(households.value[0].id);
@@ -254,16 +252,16 @@ export const useHouseholdStore = defineStore('household', () => {
   }
 
   async function selectHousehold(householdId: string) {
-    const household = households.value.find(h => h.id === householdId);
+    const household = households.value.find((h) => h.id === householdId);
     if (!household) return;
 
     currentHousehold.value = household;
-    
+
     // Fetch members for this household
     const membersResponse = await memberRepository.findByHouseholdId(householdId);
     if (!membersResponse.error) {
       currentMembers.value = membersResponse.data || [];
-      
+
       // Find current user's member record
       // This would need the current user ID from auth store
       // currentUserMember.value = currentMembers.value.find(m => m.user_id === currentUserId);
@@ -335,8 +333,8 @@ Create `src/features/household/presentation/HouseholdSwitcher.vue`:
     </button>
 
     <div v-if="isOpen" class="dropdown-menu">
-      <div 
-        v-for="household in households" 
+      <div
+        v-for="household in households"
         :key="household.id"
         @click="selectHousehold(household)"
         class="dropdown-item"
@@ -486,6 +484,7 @@ async findHouseholdWishlists(householdId: string): Promise<ApiResponse<Wishlist[
 ### Step 4.1: Member Management
 
 Create member management page with:
+
 - List all household members
 - Invite new members
 - Edit member roles (owner/admin only)
@@ -495,6 +494,7 @@ Create member management page with:
 ### Step 4.2: Activity Feed
 
 Create activity feed component:
+
 - Fetch from `activity_logs` table
 - Group by date
 - Show member avatars
@@ -503,6 +503,7 @@ Create activity feed component:
 ### Step 4.3: Invitation System
 
 Implement invitation workflow:
+
 1. Admin sends invitation (creates record in `invitations` table)
 2. Email sent with magic link
 3. Recipient clicks link, accepts invitation
@@ -528,6 +529,7 @@ describe('HouseholdRepository', () => {
 ### Integration Tests
 
 Test full workflows:
+
 - User creates household → becomes owner
 - Owner invites member → member accepts
 - Member creates shopping list → visible to household
@@ -585,6 +587,7 @@ describe('Household Creation', () => {
 ### Issue: Migration fails partway through
 
 **Solution:**
+
 ```sql
 -- Check which step failed
 SELECT * FROM households WHERE migrated_from_family_id IS NULL;
@@ -597,6 +600,7 @@ SELECT * FROM members WHERE migrated_from_family_member_id IS NULL;
 ### Issue: RLS policies blocking access
 
 **Solution:**
+
 ```sql
 -- Temporarily disable RLS for debugging (dev only!)
 ALTER TABLE households DISABLE ROW LEVEL SECURITY;
@@ -611,19 +615,20 @@ ALTER TABLE households ENABLE ROW LEVEL SECURITY;
 ### Issue: Wishlists not showing after migration
 
 **Solution:**
+
 ```sql
 -- Check if wishlists were assigned households
-SELECT 
-  w.id, 
-  w.title, 
-  w.household_id, 
-  w.member_id 
-FROM wishlists w 
+SELECT
+  w.id,
+  w.title,
+  w.household_id,
+  w.member_id
+FROM wishlists w
 WHERE household_id IS NULL OR member_id IS NULL;
 
 -- Manually assign if needed (replace UUIDs)
-UPDATE wishlists 
-SET household_id = 'household-uuid', 
+UPDATE wishlists
+SET household_id = 'household-uuid',
     member_id = 'member-uuid'
 WHERE id = 'wishlist-uuid';
 ```
@@ -646,8 +651,8 @@ ANALYZE activity_logs;
 VACUUM ANALYZE;
 
 -- Check slow queries
-SELECT * FROM pg_stat_statements 
-ORDER BY total_exec_time DESC 
+SELECT * FROM pg_stat_statements
+ORDER BY total_exec_time DESC
 LIMIT 10;
 ```
 

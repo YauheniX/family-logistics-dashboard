@@ -55,13 +55,13 @@ wishlists
 
 ### 2.2 Migration Challenges
 
-| Challenge | Impact | Solution |
-|-----------|--------|----------|
-| `family_members` requires `user_id` | Can't add children without accounts | New `members` table with nullable `user_id` |
-| Shopping items reference users directly | Need to map to members | Migration script with user→member mapping |
-| Wishlists have no family context | Can't determine household | Infer from user's families or prompt user |
-| No invitation system | Can't track pending invites | New `invitations` table |
-| Simple owner/member roles | Need more granularity | Map owner→owner, member→member, add new roles |
+| Challenge                               | Impact                              | Solution                                      |
+| --------------------------------------- | ----------------------------------- | --------------------------------------------- |
+| `family_members` requires `user_id`     | Can't add children without accounts | New `members` table with nullable `user_id`   |
+| Shopping items reference users directly | Need to map to members              | Migration script with user→member mapping     |
+| Wishlists have no family context        | Can't determine household           | Infer from user's families or prompt user     |
+| No invitation system                    | Can't track pending invites         | New `invitations` table                       |
+| Simple owner/member roles               | Need more granularity               | Map owner→owner, member→member, add new roles |
 
 ---
 
@@ -128,10 +128,10 @@ create table if not exists households (
   updated_at       timestamptz not null default now(),
   is_active        boolean not null default true,
   settings         jsonb not null default '{}'::jsonb,
-  
+
   -- Migration tracking
   migrated_from_family_id uuid,  -- Links to old families table
-  
+
   constraint households_name_length check (char_length(name) between 1 and 100),
   constraint households_slug_format check (slug ~ '^[a-z0-9-]+$')
 );
@@ -145,7 +145,7 @@ create table if not exists members (
   id               uuid primary key default uuid_generate_v4(),
   household_id     uuid not null references households on delete cascade,
   user_id          uuid references auth.users on delete set null,  -- Nullable!
-  role             text not null default 'member' 
+  role             text not null default 'member'
     check (role in ('owner', 'admin', 'member', 'child', 'viewer')),
   display_name     text not null,
   date_of_birth    date,
@@ -154,10 +154,10 @@ create table if not exists members (
   joined_at        timestamptz not null default now(),
   invited_by       uuid references members(id) on delete set null,
   metadata         jsonb not null default '{}'::jsonb,
-  
+
   -- Migration tracking
   migrated_from_family_member_id uuid,  -- Links to old family_members table
-  
+
   constraint members_name_length check (char_length(display_name) between 1 and 100),
   constraint members_unique_user_per_household unique (household_id, user_id),
   constraint members_child_dob check (role != 'child' or date_of_birth is not null)
@@ -172,20 +172,20 @@ create table if not exists invitations (
   id               uuid primary key default uuid_generate_v4(),
   household_id     uuid not null references households on delete cascade,
   email            text not null,
-  role             text not null default 'member' 
+  role             text not null default 'member'
     check (role in ('admin', 'member', 'viewer')),
   invited_by       uuid not null references members(id) on delete cascade,
-  status           text not null default 'pending' 
+  status           text not null default 'pending'
     check (status in ('pending', 'accepted', 'declined', 'expired')),
   token            text not null unique,
   expires_at       timestamptz not null,
   created_at       timestamptz not null default now(),
   accepted_at      timestamptz,
-  
-  constraint invitations_email_format 
+
+  constraint invitations_email_format
     check (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
-  constraint invitations_unique_pending 
-    unique (household_id, email, status) 
+  constraint invitations_unique_pending
+    unique (household_id, email, status)
     where status = 'pending'
 );
 
@@ -200,7 +200,7 @@ create table if not exists activity_logs (
   entity_id        uuid,
   metadata         jsonb not null default '{}'::jsonb,
   created_at       timestamptz not null default now(),
-  
+
   constraint activity_logs_action_length check (char_length(action) between 1 and 100)
 );
 
@@ -210,7 +210,7 @@ create table if not exists activity_logs (
 create index idx_households_created_by on households(created_by);
 create index idx_households_slug on households(slug);
 create index idx_households_is_active on households(is_active) where is_active = true;
-create index idx_households_migrated_from on households(migrated_from_family_id) 
+create index idx_households_migrated_from on households(migrated_from_family_id)
   where migrated_from_family_id is not null;
 
 -- Members
@@ -218,8 +218,8 @@ create index idx_members_household_id on members(household_id);
 create index idx_members_user_id on members(user_id) where user_id is not null;
 create index idx_members_role on members(role);
 create index idx_members_is_active on members(is_active) where is_active = true;
-create unique index idx_members_household_owner 
-  on members(household_id) 
+create unique index idx_members_household_owner
+  on members(household_id)
   where role = 'owner' and is_active = true;
 create index idx_members_migrated_from on members(migrated_from_family_member_id)
   where migrated_from_family_member_id is not null;
@@ -253,11 +253,11 @@ begin
   v_slug := regexp_replace(v_slug, '\s+', '-', 'g');
   v_slug := regexp_replace(v_slug, '-+', '-', 'g');
   v_slug := trim(both '-' from v_slug);
-  
+
   if v_slug = '' then
     v_slug := 'household';
   end if;
-  
+
   loop
     select exists(select 1 from households where slug = v_slug) into v_exists;
     if not v_exists then
@@ -494,16 +494,16 @@ declare
   v_user_profile record;
 begin
   raise notice 'Starting migration from families to households...';
-  
+
   -- ─── Step 1: Migrate Families → Households ────────────────
-  
+
   for v_family in select * from families where id not in (
-    select migrated_from_family_id from households 
+    select migrated_from_family_id from households
     where migrated_from_family_id is not null
   )
   loop
     raise notice 'Migrating family: % (ID: %)', v_family.name, v_family.id;
-    
+
     insert into households (
       id,  -- Reuse same ID for easier migration
       name,
@@ -524,12 +524,12 @@ begin
       v_family.id
     )
     on conflict (id) do nothing;
-    
+
     v_household_id := v_family.id;
-    
+
     -- ─── Step 2: Migrate Family Members → Members ─────────
-    
-    for v_family_member in select * from family_members 
+
+    for v_family_member in select * from family_members
       where family_id = v_family.id
         and id not in (
           select migrated_from_family_member_id from members
@@ -539,7 +539,7 @@ begin
       -- Get user profile for display name
       select * into v_user_profile from user_profiles
       where id = v_family_member.user_id;
-      
+
       insert into members (
         id,  -- Reuse same ID
         household_id,
@@ -564,13 +564,13 @@ begin
         v_family_member.id
       )
       on conflict (id) do nothing;
-      
+
     end loop;
-    
+
   end loop;
-  
+
   raise notice 'Migration completed successfully!';
-  
+
 exception
   when others then
     raise exception 'Migration failed: %', SQLERRM;
@@ -588,20 +588,20 @@ declare
   v_members_count integer;
 begin
   select count(*) into v_families_count from families;
-  select count(*) into v_households_count from households 
+  select count(*) into v_households_count from households
     where migrated_from_family_id is not null;
   select count(*) into v_family_members_count from family_members;
   select count(*) into v_members_count from members
     where migrated_from_family_member_id is not null;
-  
+
   raise notice 'Migration Summary:';
   raise notice '  Families: % → Households: %', v_families_count, v_households_count;
   raise notice '  Family Members: % → Members: %', v_family_members_count, v_members_count;
-  
+
   if v_families_count != v_households_count then
     raise warning 'Not all families migrated! Please investigate.';
   end if;
-  
+
   if v_family_members_count != v_members_count then
     raise warning 'Not all family members migrated! Please investigate.';
   end if;
@@ -625,7 +625,7 @@ File: `supabase/migrations/012_update_shopping_schema.sql`
 -- ─── 1. Add New Columns ──────────────────────────────────────
 
 -- Add household_id to shopping_lists (nullable during migration)
-alter table shopping_lists 
+alter table shopping_lists
   add column if not exists household_id uuid references households on delete cascade;
 
 -- Add member_id columns to shopping_items (nullable during migration)
@@ -666,22 +666,22 @@ declare
   v_unmigrated_lists integer;
   v_unmigrated_items integer;
 begin
-  select count(*) into v_unmigrated_lists 
-  from shopping_lists 
+  select count(*) into v_unmigrated_lists
+  from shopping_lists
   where household_id is null;
-  
+
   select count(*) into v_unmigrated_items
   from shopping_items
   where added_by_member_id is null;
-  
+
   if v_unmigrated_lists > 0 then
     raise warning '% shopping lists not migrated to households', v_unmigrated_lists;
   end if;
-  
+
   if v_unmigrated_items > 0 then
     raise warning '% shopping items not migrated to members', v_unmigrated_items;
   end if;
-  
+
   raise notice 'Shopping schema migration completed';
 end $$;
 
@@ -780,7 +780,7 @@ File: `supabase/migrations/013_update_wishlists_schema.sql`
 alter table wishlists
   add column if not exists member_id uuid references members on delete cascade,
   add column if not exists household_id uuid references households on delete cascade,
-  add column if not exists visibility text 
+  add column if not exists visibility text
     check (visibility in ('private', 'household', 'public'));
 
 -- Migrate existing wishlists to 'public' if is_public=true, else 'private'
@@ -813,7 +813,7 @@ declare
   v_user_household_id uuid;
   v_member_id uuid;
 begin
-  for v_wishlist in select distinct user_id from wishlists 
+  for v_wishlist in select distinct user_id from wishlists
     where member_id is null
   loop
     -- Check if user has any household
@@ -822,13 +822,13 @@ begin
     where m.user_id = v_wishlist.user_id
       and m.is_active = true
     limit 1;
-    
+
     -- If no household, create a personal one
     if v_user_household_id is null then
       insert into households (name, created_by, slug)
       values ('Personal', v_wishlist.user_id, generate_household_slug('personal-' || v_wishlist.user_id::text))
       returning id into v_user_household_id;
-      
+
       insert into members (household_id, user_id, role, display_name)
       values (v_user_household_id, v_wishlist.user_id, 'owner', 'Me')
       returning id into v_member_id;
@@ -839,14 +839,14 @@ begin
         and user_id = v_wishlist.user_id
       limit 1;
     end if;
-    
+
     -- Update wishlists
     update wishlists
     set household_id = v_user_household_id,
         member_id = v_member_id
     where user_id = v_wishlist.user_id
       and household_id is null;
-      
+
   end loop;
 end $$;
 
@@ -950,21 +950,21 @@ File: `supabase/migrations/099_rollback_to_families.sql`
 do $$
 begin
   raise notice 'Starting rollback to families schema...';
-  
+
   -- Drop new tables (in reverse order of creation)
   drop table if exists activity_logs cascade;
   drop table if exists invitations cascade;
   drop table if exists members cascade;
   drop table if exists households cascade;
-  
+
   -- Restore old columns if they were modified
   -- (This assumes you haven't dropped old columns yet)
-  
+
   -- Re-enable old RLS policies
   -- (This assumes you kept old policies with different names)
-  
+
   raise notice 'Rollback completed. Application should work with old schema.';
-  
+
 exception
   when others then
     raise exception 'Rollback failed: %', SQLERRM;
@@ -975,6 +975,7 @@ end $$;
 ### 5.2 Rollback Checklist
 
 Before rolling back:
+
 - [ ] Verify no data was added to new tables that needs preserving
 - [ ] Ensure old tables (`families`, `family_members`) still exist
 - [ ] Check that old RLS policies are still in place
@@ -997,19 +998,21 @@ Before rolling back:
 ### 6.2 Deployment Procedure
 
 **Step 1: Create New Tables (Low Risk)**
+
 ```bash
 # Run migration 010
 psql -h db.supabase.co -U postgres -d postgres -f supabase/migrations/010_create_households_schema.sql
 ```
 
 **Step 2: Migrate Data (Medium Risk)**
+
 ```bash
 # Run migration 011 (idempotent)
 psql -h db.supabase.co -U postgres -d postgres -f supabase/migrations/011_migrate_families_to_households.sql
 
 # Verify migration
 psql -h db.supabase.co -U postgres -d postgres -c "
-  select 
+  select
     (select count(*) from families) as families,
     (select count(*) from households where migrated_from_family_id is not null) as migrated_households,
     (select count(*) from family_members) as family_members,
@@ -1018,18 +1021,21 @@ psql -h db.supabase.co -U postgres -d postgres -c "
 ```
 
 **Step 3: Update Shopping Schema (Medium Risk)**
+
 ```bash
 # Run migration 012
 psql -h db.supabase.co -U postgres -d postgres -f supabase/migrations/012_update_shopping_schema.sql
 ```
 
 **Step 4: Update Wishlists Schema (Medium Risk)**
+
 ```bash
 # Run migration 013
 psql -h db.supabase.co -U postgres -d postgres -f supabase/migrations/013_update_wishlists_schema.sql
 ```
 
 **Step 5: Deploy Application Updates**
+
 ```bash
 # Deploy new Vue.js application with household support
 npm run build
@@ -1037,6 +1043,7 @@ npm run build
 ```
 
 **Step 6: Monitor & Verify**
+
 - Watch error logs for RLS policy violations
 - Check user reports
 - Monitor database performance
@@ -1045,6 +1052,7 @@ npm run build
 ### 6.3 Post-Deployment
 
 **After 30 Days of Stability:**
+
 - [ ] Make new columns NOT NULL
 - [ ] Drop migration tracking columns
 - [ ] Drop old tables (`families`, `family_members`)
@@ -1058,36 +1066,38 @@ npm run build
 ### 7.1 Unit Tests
 
 Test migration functions in isolation:
+
 ```sql
 -- Test slug generation
 select generate_household_slug('The Smiths');  -- Expected: the-smiths
 select generate_household_slug('The Smiths');  -- Expected: the-smiths-1
 
 -- Test household creation
-insert into households (name, created_by) 
+insert into households (name, created_by)
 values ('Test Family', 'user-uuid');
 ```
 
 ### 7.2 Integration Tests
 
 Test full migration workflow:
+
 ```typescript
 describe('Family to Household Migration', () => {
   it('migrates families to households', async () => {
     // Setup: Create a family with members
     const family = await createFamily('Test Family');
     await addFamilyMember(family.id, userId, 'owner');
-    
+
     // Run migration
     await runMigration('011_migrate_families_to_households.sql');
-    
+
     // Verify: Household exists
     const household = await supabase
       .from('households')
       .select('*')
       .eq('migrated_from_family_id', family.id)
       .single();
-    
+
     expect(household.data).toBeTruthy();
     expect(household.data.name).toBe('Test Family');
   });
@@ -1112,16 +1122,19 @@ describe('Family to Household Migration', () => {
 ### 8.1 User Communication
 
 **Before Migration:**
+
 - Email: "We're upgrading to support multiple households!"
 - In-app banner: "New features coming soon"
 - Blog post: Feature announcement
 
 **During Migration:**
+
 - Status page: "Maintenance in progress"
 - Estimated completion time
 - Contact support if issues
 
 **After Migration:**
+
 - Email: "Migration complete! Check out new features"
 - In-app tour: Guide to household switcher
 - Help docs: Updated screenshots and guides
@@ -1138,6 +1151,7 @@ describe('Family to Household Migration', () => {
 ## Summary
 
 This migration strategy provides:
+
 - ✅ **Safe, gradual migration** from families to households
 - ✅ **Zero downtime** with parallel table approach
 - ✅ **Backward compatibility** during transition
