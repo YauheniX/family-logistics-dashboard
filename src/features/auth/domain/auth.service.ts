@@ -127,9 +127,28 @@ export class AuthService {
 
   /**
    * Get current user
+   * Uses getSession() first to check local storage, then validates with getUser()
    */
   async getCurrentUser(): Promise<ApiResponse<AuthUser>> {
     try {
+      // First check for session in local storage (no network call)
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        return {
+          data: null,
+          error: { message: sessionError.message, details: sessionError },
+        };
+      }
+
+      if (!sessionData.session) {
+        return {
+          data: null,
+          error: { message: 'Not authenticated' },
+        };
+      }
+
+      // Session exists, now validate it with getUser()
       const { data, error } = await supabase.auth.getUser();
 
       if (error) {

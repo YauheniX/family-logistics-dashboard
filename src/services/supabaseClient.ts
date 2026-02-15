@@ -19,5 +19,19 @@ if (!isMockMode()) {
 }
 
 export const supabase = isMockMode()
-  ? createClient('https://mock.supabase.co', 'mock-key')
-  : createClient(supabaseUrl, supabaseAnonKey);
+  ? createClient('https://mock.supabase.co', 'mock-key', {
+      auth: {
+        persistSession: true,
+        detectSessionInUrl: true,
+        autoRefreshToken: true,
+        storage: window.localStorage,
+      },
+    })
+  : createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        detectSessionInUrl: true,
+        autoRefreshToken: true,
+        storage: window.localStorage,
+      },
+    });

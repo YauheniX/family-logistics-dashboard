@@ -24,8 +24,22 @@ if (!isMockMode()) {
  * Note: In mock mode, this client won't be used but we still export it for type compatibility
  */
 export const supabase: SupabaseClient<Database> = isMockMode()
-  ? (createClient<Database>('https://mock.supabase.co', 'mock-key') as SupabaseClient<Database>)
-  : createClient<Database>(supabaseUrl, supabaseAnonKey);
+  ? (createClient<Database>('https://mock.supabase.co', 'mock-key', {
+      auth: {
+        persistSession: true,
+        detectSessionInUrl: true,
+        autoRefreshToken: true,
+        storage: window.localStorage,
+      },
+    }) as SupabaseClient<Database>)
+  : createClient<Database>(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        detectSessionInUrl: true,
+        autoRefreshToken: true,
+        storage: window.localStorage,
+      },
+    });
 
 /**
  * Type helper for typed Supabase client
