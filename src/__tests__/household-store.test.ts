@@ -335,7 +335,9 @@ describe('Household Store', () => {
       await store.initializeForUser('test-user-id');
 
       expect(supabase.from).toHaveBeenCalledWith('members');
-      expect(mockChain.select).toHaveBeenCalledWith('role, households:household_id(id, name, slug)');
+      expect(mockChain.select).toHaveBeenCalledWith(
+        'role, households:household_id(id, name, slug)',
+      );
       expect(mockChain.eq).toHaveBeenCalledWith('user_id', 'test-user-id');
       expect(mockChain.eq).toHaveBeenCalledWith('is_active', true);
 
@@ -363,12 +365,10 @@ describe('Household Store', () => {
         eq: vi.fn().mockReturnThis(),
       };
 
-      mockChain.eq
-        .mockReturnValueOnce(mockChain)
-        .mockResolvedValueOnce({
-          data: null,
-          error: { message: 'Database error' },
-        });
+      mockChain.eq.mockReturnValueOnce(mockChain).mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Database error' },
+      });
 
       vi.mocked(supabase.from).mockReturnValue(mockChain as never);
 
@@ -410,12 +410,10 @@ describe('Household Store', () => {
         eq: vi.fn().mockReturnThis(),
       };
 
-      mockChain.eq
-        .mockReturnValueOnce(mockChain)
-        .mockResolvedValueOnce({
-          data: mockData,
-          error: null,
-        });
+      mockChain.eq.mockReturnValueOnce(mockChain).mockResolvedValueOnce({
+        data: mockData,
+        error: null,
+      });
 
       vi.mocked(supabase.from).mockReturnValue(mockChain as never);
 
@@ -477,12 +475,10 @@ describe('Household Store', () => {
         eq: vi.fn().mockReturnThis(),
       };
 
-      mockChain.eq
-        .mockReturnValueOnce(mockChain)
-        .mockResolvedValueOnce({
-          data: mockData,
-          error: null,
-        });
+      mockChain.eq.mockReturnValueOnce(mockChain).mockResolvedValueOnce({
+        data: mockData,
+        error: null,
+      });
 
       vi.mocked(supabase.from).mockReturnValue(mockChain as never);
 

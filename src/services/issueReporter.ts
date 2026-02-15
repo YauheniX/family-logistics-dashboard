@@ -43,7 +43,10 @@ function getJwtExpMs(payload: Record<string, unknown> | null): number | null {
   return typeof exp === 'number' ? exp * 1000 : null;
 }
 
-function isIssuerLikelyForProject(payload: Record<string, unknown> | null, supabaseOrigin: string): boolean {
+function isIssuerLikelyForProject(
+  payload: Record<string, unknown> | null,
+  supabaseOrigin: string,
+): boolean {
   const iss = payload?.iss;
   if (typeof iss !== 'string') return true; // can't verify; don't block
   // Typical: https://<ref>.supabase.co/auth/v1
@@ -58,7 +61,9 @@ export async function reportProblem(input: ReportProblemInput): Promise<ReportPr
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase is not configured (missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).');
+    throw new Error(
+      'Supabase is not configured (missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).',
+    );
   }
 
   const { data, error: sessionError } = await supabase.auth.getSession();
@@ -173,7 +178,10 @@ export async function reportProblem(input: ReportProblemInput): Promise<ReportPr
       }
     }
 
-    const details = body == null ? '' : ` Response: ${typeof body === 'string' ? body.slice(0, 800) : JSON.stringify(body).slice(0, 800)}`;
+    const details =
+      body == null
+        ? ''
+        : ` Response: ${typeof body === 'string' ? body.slice(0, 800) : JSON.stringify(body).slice(0, 800)}`;
     throw new Error(`[${response.status}] Edge Function request failed.${details}`);
   }
 
