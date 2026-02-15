@@ -28,9 +28,6 @@ CREATE TABLE IF NOT EXISTS wishlist_approvals (
   reviewed_at      TIMESTAMPTZ,
   notes            TEXT,
   
-  CONSTRAINT wishlist_approvals_unique_request 
-    UNIQUE (wishlist_id) 
-    WHERE status = 'pending'
 );
 
 COMMENT ON TABLE wishlist_approvals IS 'Approval workflow for child wishlists';
@@ -44,6 +41,11 @@ CREATE INDEX idx_wishlist_approvals_wishlist_id
 
 CREATE INDEX idx_wishlist_approvals_status 
   ON wishlist_approvals(status) 
+  WHERE status = 'pending';
+
+-- Partial unique index for pending approvals (one pending approval per wishlist)
+CREATE UNIQUE INDEX idx_wishlist_approvals_unique_pending
+  ON wishlist_approvals(wishlist_id)
   WHERE status = 'pending';
 
 CREATE INDEX idx_wishlist_approvals_requested_by 
@@ -72,8 +74,8 @@ USING (
     SELECT 1 FROM members m
     JOIN wishlists w ON w.id = wishlist_approvals.wishlist_id
     WHERE m.id = wishlist_approvals.requested_by
-    AND user_is_household_member(auth.uid(), m.household_id)
-    AND get_member_role(auth.uid(), m.household_id) IN ('owner', 'admin')
+    AND user_is_household_member(m.household_id, auth.uid())
+    AND get_member_role(m.household_id, auth.uid()) IN ('owner', 'admin')
   )
 );
 
@@ -96,7 +98,7 @@ USING (
     SELECT 1 FROM members m
     JOIN wishlists w ON w.id = wishlist_approvals.wishlist_id
     WHERE m.id = wishlist_approvals.requested_by
-    AND get_member_role(auth.uid(), m.household_id) IN ('owner', 'admin')
+    AND get_member_role(m.household_id, auth.uid()) IN ('owner', 'admin')
   )
 );
 
@@ -106,7 +108,11 @@ USING (
 CREATE OR REPLACE FUNCTION request_child_wishlist_approval(
   p_wishlist_id UUID
 )
-RETURNS UUID AS $$
+RETURNS UUID 
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 DECLARE
   v_member_id UUID;
   v_approval_id UUID;
@@ -157,14 +163,18 @@ BEGIN
 
   RETURN v_approval_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- Approve child wishlist
 CREATE OR REPLACE FUNCTION approve_child_wishlist(
   p_approval_id UUID,
   p_visibility TEXT DEFAULT 'household'
 )
-RETURNS BOOLEAN AS $$
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 DECLARE
   v_member_id UUID;
   v_wishlist_id UUID;
@@ -187,7 +197,7 @@ BEGIN
   FROM wishlist_approvals wa
   JOIN members m ON m.id = wa.requested_by
   WHERE wa.id = p_approval_id
-  AND get_member_role(auth.uid(), m.household_id) IN ('owner', 'admin');
+  AND get_member_role(m.household_id, auth.uid()) IN ('owner', 'admin');
 
   IF v_wishlist_id IS NULL THEN
     RAISE EXCEPTION 'Approval not found or permission denied';
@@ -228,14 +238,18 @@ BEGIN
 
   RETURN TRUE;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- Deny child wishlist
 CREATE OR REPLACE FUNCTION deny_child_wishlist(
   p_approval_id UUID,
   p_notes TEXT DEFAULT NULL
 )
-RETURNS BOOLEAN AS $$
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 DECLARE
   v_member_id UUID;
   v_wishlist_id UUID;
@@ -254,7 +268,7 @@ BEGIN
   FROM wishlist_approvals wa
   JOIN members m ON m.id = wa.requested_by
   WHERE wa.id = p_approval_id
-  AND get_member_role(auth.uid(), m.household_id) IN ('owner', 'admin');
+  AND get_member_role(m.household_id, auth.uid()) IN ('owner', 'admin');
 
   IF v_wishlist_id IS NULL THEN
     RAISE EXCEPTION 'Approval not found or permission denied';
@@ -291,7 +305,7 @@ BEGIN
 
   RETURN TRUE;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- ═══════════════════════════════════════════════════════════
 ```
@@ -316,44 +330,47 @@ CREATE OR REPLACE FUNCTION user_is_viewer(
   p_user_id UUID,
   p_household_id UUID
 )
-RETURNS BOOLEAN AS $$
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+AS $$
   SELECT EXISTS (
     SELECT 1 FROM members
     WHERE user_id = p_user_id
     AND household_id = p_household_id
     AND role = 'viewer'
   );
-$$ LANGUAGE sql SECURITY DEFINER STABLE;
+$$;
 
 COMMENT ON FUNCTION user_is_viewer IS 'Check if user has viewer role in household';
 
 -- ─── 2. Shopping Lists - Viewer Read-Only ────────────────────
 
 -- Drop existing update policy
-DROP POLICY IF EXISTS "Members can update household shopping lists" ON shopping_lists;
+DROP POLICY IF EXISTS "shopping_lists_update_v2" ON shopping_lists;
 
 -- Recreate with viewer restriction
 CREATE POLICY "Non-viewer members can update shopping lists"
 ON shopping_lists FOR UPDATE
 USING (
-  user_is_household_member(auth.uid(), household_id)
-  AND NOT user_is_viewer(auth.uid(), household_id)
+  user_is_household_member(household_id, auth.uid())
+  AND NOT user_is_viewer(household_id, auth.uid())
 );
 
 -- Drop existing delete policy
-DROP POLICY IF EXISTS "Members can delete household shopping lists" ON shopping_lists;
+DROP POLICY IF EXISTS "shopping_lists_delete_v2" ON shopping_lists;
 
 -- Recreate with viewer restriction
 CREATE POLICY "Non-viewer members can delete shopping lists"
 ON shopping_lists FOR DELETE
 USING (
-  user_is_household_member(auth.uid(), household_id)
-  AND NOT user_is_viewer(auth.uid(), household_id)
+  user_is_household_member(household_id, auth.uid())
+  AND NOT user_is_viewer(household_id, auth.uid())
   AND (
     created_by_member_id IN (
       SELECT id FROM members WHERE user_id = auth.uid()
     )
-    OR user_is_household_owner(auth.uid(), household_id)
+    OR has_min_role(household_id, auth.uid(), 'owner')
   )
 );
 
@@ -362,7 +379,7 @@ USING (
 -- ─── 3. Shopping Items - Viewer Read-Only ────────────────────
 
 -- Drop existing insert policy
-DROP POLICY IF EXISTS "Members can add items to household lists" ON shopping_items;
+DROP POLICY IF EXISTS "shopping_items_insert_v2" ON shopping_items;
 
 -- Recreate with viewer restriction
 CREATE POLICY "Non-viewer members can add items"
@@ -371,13 +388,13 @@ WITH CHECK (
   EXISTS (
     SELECT 1 FROM shopping_lists sl
     WHERE sl.id = shopping_items.list_id
-    AND user_is_household_member(auth.uid(), sl.household_id)
-    AND NOT user_is_viewer(auth.uid(), sl.household_id)
+    AND user_is_household_member(sl.household_id, auth.uid())
+    AND NOT user_is_viewer(sl.household_id, auth.uid())
   )
 );
 
 -- Drop existing update policy
-DROP POLICY IF EXISTS "Members can update items in household lists" ON shopping_items;
+DROP POLICY IF EXISTS "shopping_items_update_v2" ON shopping_items;
 
 -- Recreate with viewer restriction
 CREATE POLICY "Non-viewer members can update items"
@@ -386,13 +403,13 @@ USING (
   EXISTS (
     SELECT 1 FROM shopping_lists sl
     WHERE sl.id = shopping_items.list_id
-    AND user_is_household_member(auth.uid(), sl.household_id)
-    AND NOT user_is_viewer(auth.uid(), sl.household_id)
+    AND user_is_household_member(sl.household_id, auth.uid())
+    AND NOT user_is_viewer(sl.household_id, auth.uid())
   )
 );
 
 -- Drop existing delete policy
-DROP POLICY IF EXISTS "Members can delete items from household lists" ON shopping_items;
+DROP POLICY IF EXISTS "shopping_items_delete_v2" ON shopping_items;
 
 -- Recreate with viewer restriction
 CREATE POLICY "Non-viewer members can delete items"
@@ -401,8 +418,8 @@ USING (
   EXISTS (
     SELECT 1 FROM shopping_lists sl
     WHERE sl.id = shopping_items.list_id
-    AND user_is_household_member(auth.uid(), sl.household_id)
-    AND NOT user_is_viewer(auth.uid(), sl.household_id)
+    AND user_is_household_member(sl.household_id, auth.uid())
+    AND NOT user_is_viewer(sl.household_id, auth.uid())
   )
 );
 
@@ -412,7 +429,7 @@ USING (
 -- Ensure viewers cannot create wishlists
 
 -- Drop existing insert policy
-DROP POLICY IF EXISTS "Members can create wishlists" ON wishlists;
+DROP POLICY IF EXISTS "wishlists_insert_v2" ON wishlists;
 
 -- Recreate with viewer restriction
 CREATE POLICY "Non-viewer members can create wishlists"
@@ -454,7 +471,7 @@ RETURNS TABLE (
 ) AS $$
 BEGIN
   -- Verify viewer permission
-  IF NOT user_is_household_member(auth.uid(), p_household_id) THEN
+  IF NOT user_is_household_member(p_household_id, auth.uid()) THEN
     RAISE EXCEPTION 'Not a household member';
   END IF;
 
@@ -658,7 +675,7 @@ USING (
   EXISTS (
     SELECT 1 FROM members m
     WHERE m.id = member_achievements.member_id
-    AND user_is_household_member(auth.uid(), m.household_id)
+    AND user_is_household_member(m.household_id, auth.uid())
   )
 );
 
@@ -680,8 +697,8 @@ USING (
   EXISTS (
     SELECT 1 FROM members m
     WHERE m.id = points_transactions.member_id
-    AND user_is_household_member(auth.uid(), m.household_id)
-    AND get_member_role(auth.uid(), m.household_id) IN ('owner', 'admin')
+    AND user_is_household_member(m.household_id, auth.uid())
+    AND get_member_role(m.household_id, auth.uid()) IN ('owner', 'admin')
   )
 );
 
@@ -692,15 +709,15 @@ ALTER TABLE rewards ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Members can view household rewards"
 ON rewards FOR SELECT
 USING (
-  user_is_household_member(auth.uid(), household_id)
+  user_is_household_member(household_id, auth.uid())
   AND is_active = TRUE
 );
 
 CREATE POLICY "Admins can manage rewards"
 ON rewards FOR ALL
 USING (
-  user_is_household_owner(auth.uid(), household_id)
-  OR user_is_household_admin(auth.uid(), household_id)
+  has_min_role(household_id, auth.uid(), 'owner')
+  OR has_min_role(household_id, auth.uid(), 'admin')
 );
 
 -- ─── 5. Reward Redemptions RLS ────────────────────────────────
@@ -721,8 +738,8 @@ USING (
   EXISTS (
     SELECT 1 FROM members m
     WHERE m.id = reward_redemptions.member_id
-    AND user_is_household_member(auth.uid(), m.household_id)
-    AND get_member_role(auth.uid(), m.household_id) IN ('owner', 'admin')
+    AND user_is_household_member(m.household_id, auth.uid())
+    AND get_member_role(m.household_id, auth.uid()) IN ('owner', 'admin')
   )
 );
 
@@ -740,7 +757,7 @@ USING (
   EXISTS (
     SELECT 1 FROM members m
     WHERE m.id = reward_redemptions.member_id
-    AND get_member_role(auth.uid(), m.household_id) IN ('owner', 'admin')
+    AND get_member_role(m.household_id, auth.uid()) IN ('owner', 'admin')
   )
 );
 
@@ -757,11 +774,14 @@ USING (
 -- ─── 1. Get Member Points Balance ─────────────────────────────
 
 CREATE OR REPLACE FUNCTION get_member_points(p_member_id UUID)
-RETURNS INTEGER AS $$
+RETURNS INTEGER
+LANGUAGE sql
+STABLE
+AS $$
   SELECT COALESCE(SUM(points), 0)::INTEGER
   FROM points_transactions
   WHERE member_id = p_member_id;
-$$ LANGUAGE sql SECURITY DEFINER STABLE;
+$$;
 
 COMMENT ON FUNCTION get_member_points IS 'Calculate total points balance for member';
 
@@ -771,12 +791,41 @@ CREATE OR REPLACE FUNCTION award_achievement(
   p_member_id UUID,
   p_achievement_id UUID
 )
-RETURNS BOOLEAN AS $$
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 DECLARE
   v_points INTEGER;
   v_household_id UUID;
   v_achievement_name TEXT;
+  v_caller_member_id UUID;
 BEGIN
+  -- Get caller's member ID
+  SELECT id, household_id INTO v_caller_member_id, v_household_id
+  FROM members
+  WHERE user_id = auth.uid();
+
+  IF v_caller_member_id IS NULL THEN
+    RAISE EXCEPTION 'Caller is not a member';
+  END IF;
+
+  -- Verify the target member belongs to the same household
+  IF NOT EXISTS (
+    SELECT 1 FROM members
+    WHERE id = p_member_id
+    AND household_id = v_household_id
+  ) THEN
+    RAISE EXCEPTION 'Target member not in your household';
+  END IF;
+
+  -- Verify caller has permission (owner/admin or awarding to self)
+  IF p_member_id != v_caller_member_id AND
+     get_member_role(v_household_id, auth.uid()) NOT IN ('owner', 'admin') THEN
+    RAISE EXCEPTION 'Insufficient permissions to award achievements';
+  END IF;
+
   -- Check if achievement already earned
   IF EXISTS (
     SELECT 1 FROM member_achievements
@@ -786,19 +835,16 @@ BEGIN
     RETURN FALSE; -- Already earned
   END IF;
 
-  -- Get achievement points and household
+  -- Get achievement points
   SELECT 
     a.points_reward,
-    m.household_id,
     a.name
-  INTO v_points, v_household_id, v_achievement_name
+  INTO v_points, v_achievement_name
   FROM achievements a
-  CROSS JOIN members m
-  WHERE a.id = p_achievement_id
-  AND m.id = p_member_id;
+  WHERE a.id = p_achievement_id;
 
-  IF v_household_id IS NULL THEN
-    RAISE EXCEPTION 'Member or achievement not found';
+  IF v_points IS NULL THEN
+    RAISE EXCEPTION 'Achievement not found';
   END IF;
 
   -- Award achievement
@@ -812,14 +858,16 @@ BEGIN
     points,
     reason,
     entity_type,
-    entity_id
+    entity_id,
+    created_by
   ) VALUES (
     p_member_id,
     v_household_id,
     v_points,
     'Achievement earned: ' || v_achievement_name,
     'achievement',
-    p_achievement_id
+    p_achievement_id,
+    v_caller_member_id
   );
 
   -- Log activity
@@ -844,14 +892,22 @@ BEGIN
 
   RETURN TRUE;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- ─── 3. Redeem Reward ─────────────────────────────────────────
+-- Note: Points are checked at request time but not reserved until approval.
+-- This means multiple pending redemptions can exist even if total cost exceeds balance.
+-- Consider implementing point reservation by creating negative transactions at request time
+-- with status 'reserved', then converting to 'spent' on approval or deleting on denial.
 
 CREATE OR REPLACE FUNCTION redeem_reward(
   p_reward_id UUID
 )
-RETURNS UUID AS $$
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 DECLARE
   v_member_id UUID;
   v_points_cost INTEGER;
@@ -879,11 +935,16 @@ BEGIN
     RAISE EXCEPTION 'Reward not found or inactive';
   END IF;
 
-  -- Check points balance
-  v_points_balance := get_member_points(v_member_id);
+  -- Check points balance (including pending redemptions)
+  SELECT COALESCE(SUM(points), 0)::INTEGER -
+         COALESCE((SELECT SUM(points_spent) FROM reward_redemptions 
+                   WHERE member_id = v_member_id AND status = 'pending'), 0)
+  INTO v_points_balance
+  FROM points_transactions
+  WHERE member_id = v_member_id;
   
   IF v_points_balance < v_points_cost THEN
-    RAISE EXCEPTION 'Insufficient points (have: %, need: %)', v_points_balance, v_points_cost;
+    RAISE EXCEPTION 'Insufficient points (available: %, need: %)', v_points_balance, v_points_cost;
   END IF;
 
   -- Create redemption request
@@ -922,14 +983,18 @@ BEGIN
 
   RETURN v_redemption_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- ─── 4. Approve Redemption ────────────────────────────────────
 
 CREATE OR REPLACE FUNCTION approve_redemption(
   p_redemption_id UUID
 )
-RETURNS BOOLEAN AS $$
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 DECLARE
   v_member_id UUID;
   v_points_cost INTEGER;
@@ -951,7 +1016,7 @@ BEGIN
   JOIN members m ON m.id = rr.member_id
   WHERE rr.id = p_redemption_id
   AND rr.status = 'pending'
-  AND get_member_role(auth.uid(), m.household_id) IN ('owner', 'admin');
+  AND get_member_role(m.household_id, auth.uid()) IN ('owner', 'admin');
 
   IF v_points_cost IS NULL THEN
     RAISE EXCEPTION 'Redemption not found or permission denied';
@@ -1006,7 +1071,7 @@ BEGIN
 
   RETURN TRUE;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- ─── 5. Get Household Leaderboard ─────────────────────────────
 
@@ -1024,7 +1089,7 @@ RETURNS TABLE (
 ) AS $$
 BEGIN
   -- Verify membership
-  IF NOT user_is_household_member(auth.uid(), p_household_id) THEN
+  IF NOT user_is_household_member(p_household_id, auth.uid()) THEN
     RAISE EXCEPTION 'Not a household member';
   END IF;
 
@@ -1188,26 +1253,26 @@ DROP TABLE IF EXISTS points_transactions CASCADE;
 DROP TABLE IF EXISTS member_achievements CASCADE;
 DROP TABLE IF EXISTS achievements CASCADE;
 
-DROP FUNCTION IF EXISTS get_household_leaderboard;
-DROP FUNCTION IF EXISTS approve_redemption;
-DROP FUNCTION IF EXISTS redeem_reward;
-DROP FUNCTION IF EXISTS award_achievement;
-DROP FUNCTION IF EXISTS get_member_points;
+DROP FUNCTION IF EXISTS get_household_leaderboard(uuid, integer);
+DROP FUNCTION IF EXISTS approve_redemption(uuid);
+DROP FUNCTION IF EXISTS redeem_reward(uuid);
+DROP FUNCTION IF EXISTS award_achievement(uuid, uuid);
+DROP FUNCTION IF EXISTS get_member_points(uuid);
 ```
 
 ### Rollback PR #3 (Viewer Role)
 ```sql
 -- Restore original policies (would need original policy definitions)
-DROP FUNCTION IF EXISTS get_viewer_dashboard;
-DROP FUNCTION IF EXISTS user_is_viewer;
+DROP FUNCTION IF EXISTS get_viewer_dashboard(uuid);
+DROP FUNCTION IF EXISTS user_is_viewer(uuid, uuid);
 ```
 
 ### Rollback PR #2 (Wishlist Approvals)
 ```sql
 DROP TABLE IF EXISTS wishlist_approvals CASCADE;
-DROP FUNCTION IF EXISTS deny_child_wishlist;
-DROP FUNCTION IF EXISTS approve_child_wishlist;
-DROP FUNCTION IF EXISTS request_child_wishlist_approval;
+DROP FUNCTION IF EXISTS deny_child_wishlist(uuid, text);
+DROP FUNCTION IF EXISTS approve_child_wishlist(uuid, text);
+DROP FUNCTION IF EXISTS request_child_wishlist_approval(uuid);
 ```
 
 ---

@@ -60,7 +60,7 @@
 │  id (PK)             │         │  id (PK)                │
 │  household_id (FK)   │         │  member_id (FK)         │
 │  title               │         │  household_id (FK)      │
-│  created_by_mem (FK) │         │  title                  │
+│  created_by_member_id (FK) │         │  title                  │
 │  status              │         │  visibility             │
 └──────────┬───────────┘         │  share_slug (unique)    │
            │ 1:N                 └──────────┬──────────────┘
@@ -74,8 +74,8 @@
 │  quantity            │         │  title                  │
 │  category            │         │  link, price, priority  │
 │  is_purchased        │         │  is_reserved            │
-│  added_by_mem (FK)   │         │  reserved_by_email      │
-│  purchased_by_mem    │         │  reserved_by_name       │
+│  added_by_member_id (FK)   │         │  reserved_by_email      │
+│  purchased_by_member_id    │         │  reserved_by_name       │
 └──────────────────────┘         └─────────────────────────┘
 
 
