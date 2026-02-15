@@ -9,6 +9,11 @@
           </h2>
         </div>
         <div class="flex flex-wrap gap-2">
+          <RouterLink
+            :to="{ name: 'member-management', params: { id: props.id } }"
+          >
+            <BaseButton>👥 Manage Members</BaseButton>
+          </RouterLink>
           <BaseButton @click="showInviteModal = true"> ➕ Invite Member </BaseButton>
           <BaseButton v-if="isOwner" variant="danger" @click="showDeleteModal = true">
             Delete Family
