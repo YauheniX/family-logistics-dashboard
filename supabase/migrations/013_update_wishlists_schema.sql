@@ -206,6 +206,7 @@ $$;
 create trigger wishlist_activity_log
   after insert or update on wishlists
   for each row
+  when (TG_OP = 'INSERT' or OLD.visibility IS DISTINCT FROM NEW.visibility)
   execute function log_wishlist_activity();
 
 -- Log wishlist item activity (reservation tracking)
@@ -262,6 +263,7 @@ $$;
 create trigger wishlist_item_activity_log
   after insert or update on wishlist_items
   for each row
+  when (TG_OP = 'INSERT' or OLD.is_reserved IS DISTINCT FROM NEW.is_reserved)
   execute function log_wishlist_item_activity();
 
 -- ─── 5. Update RLS Policies ──────────────────────────────────
