@@ -6,7 +6,13 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 // Read version from package.json directly to ensure availability across all build environments
-const packageJson = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf-8'));
+let packageJson: any;
+try {
+  const packageJsonContent = readFileSync(resolve(__dirname, 'package.json'), 'utf-8');
+  packageJson = JSON.parse(packageJsonContent);
+} catch (error) {
+  throw new Error(`Failed to read or parse package.json while determining app version: ${error instanceof Error ? error.message : String(error)}`);
+}
 const appVersion = packageJson.version ?? '0.0.0';
 
 // https://vitejs.dev/config/
@@ -28,14 +34,16 @@ export default defineConfig(() => {
       coverage: {
         provider: 'v8',
         reporter: ['text', 'lcov'],
-        all: false, // Only include files that are imported in tests
+        all: true, // Include all files in coverage (except those explicitly excluded)
         exclude: [
           '**/node_modules/**',
           '**/dist/**',
           '**/*.config.*',
           '**/mockServiceWorker.js',
           '**/.{idea,git,cache,output,temp}/**',
-          // Exclude specific low-coverage files until they can be properly tested
+          // TODO: Exclude specific low-coverage files until they can be properly tested.
+          // These exclusions are temporary and should be removed as test coverage improves.
+          // Track progress at: https://github.com/YauheniX/family-logistics-dashboard/issues
           'src/features/auth/domain/auth.service.ts',
           'src/features/auth/domain/auth.service.mock.ts',
           'src/features/auth/index.ts',

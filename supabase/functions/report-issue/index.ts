@@ -1,4 +1,7 @@
 /// <reference lib="deno.ns" />
+// NOTE: Deno std and Supabase client versions are intentionally pinned for reproducible builds
+// and to match the known-good Supabase Edge Functions runtime environment.
+// Review and update these versions periodically after verifying compatibility with the runtime.
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
@@ -18,14 +21,18 @@ type ReportIssueRequest = {
 };
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
-const allowedCorsOrigin = (() => {
-  if (!supabaseUrl) return '*';
-  try {
-    return new URL(supabaseUrl).origin;
-  } catch {
-    return '*';
-  }
-})();
+if (!supabaseUrl) {
+  throw new Error('SUPABASE_URL environment variable is not set. Please configure SUPABASE_URL for the report-issue function.');
+}
+
+let allowedCorsOrigin: string;
+try {
+  allowedCorsOrigin = new URL(supabaseUrl).origin;
+} catch (error) {
+  throw new Error(
+    `SUPABASE_URL environment variable is malformed: ${(error as Error).message}`,
+  );
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': allowedCorsOrigin,
@@ -74,7 +81,12 @@ serve(async (req) => {
     if (screenshot.dataBase64.length > 3_000_000) {
       return json({ error: 'Screenshot payload too large.' }, 413);
     }
-    // Validate base64 format (alphanumeric + / + = padding)
+    // Validate base64 format (alphanumeric + / + = padding).
+    // Note: This is a *sanity check* and does not fully validate base64 padding or length.
+    // The resulting string is sent to the GitHub Issues API and used only in markdown content
+    // (e.g. as an image), where GitHub safely handles and stores the data without executing it
+    // as code. This check is therefore sufficient to reject clearly malformed input while
+    // relying on GitHub's handling for safe storage/rendering.
     if (!/^[A-Za-z0-9+/]*={0,2}$/.test(screenshot.dataBase64)) {
       return json({ error: 'Invalid screenshot data format.' }, 400);
     }
@@ -93,37 +105,58 @@ serve(async (req) => {
     userId: verifiedUserId,
   });
 
-  const createIssueResponse = await fetch(
-    `https://api.github.com/repos/${encodeURIComponent(githubOwner)}/${encodeURIComponent(githubRepo)}/issues`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${githubToken}`,
-        Accept: 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28',
-        'Content-Type': 'application/json',
-        'User-Agent': 'family-logistics-dashboard',
+  try {
+    const createIssueResponse = await fetch(
+      `https://api.github.com/repos/${encodeURIComponent(githubOwner)}/${encodeURIComponent(githubRepo)}/issues`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${githubToken}`,
+          Accept: 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
+          'Content-Type': 'application/json',
+          'User-Agent': 'family-logistics-dashboard',
+        },
+        body: JSON.stringify({
+          title: sanitizeInline(title),
+          body: issueBody,
+        }),
       },
-      body: JSON.stringify({
-        title: sanitizeInline(title),
-        body: issueBody,
-      }),
-    },
-  );
+    );
 
-  if (!createIssueResponse.ok) {
-    const text = await createIssueResponse.text();
+    if (!createIssueResponse.ok) {
+      const text = await createIssueResponse.text();
+      return json(
+        {
+          error: 'GitHub issue creation failed.',
+          details: text.slice(0, 2000),
+        },
+        502,
+      );
+    }
+
+    try {
+      const created = (await createIssueResponse.json()) as { html_url?: string };
+      return json({ issueUrl: created.html_url }, 200);
+    } catch (error) {
+      console.error('Failed to parse GitHub issue creation response as JSON', error);
+      return json(
+        {
+          error: 'GitHub issue creation response could not be parsed as JSON.',
+        },
+        502,
+      );
+    }
+  } catch (error) {
+    console.error('Failed to contact GitHub API', error);
     return json(
       {
-        error: 'GitHub issue creation failed.',
-        details: text.slice(0, 2000),
+        error: 'Failed to contact GitHub.',
+        details: error instanceof Error ? error.message : String(error),
       },
       502,
     );
   }
-
-  const created = (await createIssueResponse.json()) as { html_url?: string };
-  return json({ issueUrl: created.html_url }, 200);
 });
 
 function json(payload: unknown, status = 200) {

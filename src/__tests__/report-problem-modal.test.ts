@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import ReportProblemModal from '@/components/shared/ReportProblemModal.vue';
 import { useToastStore } from '@/stores/toast';
-import { useAuthStore } from '@/features/auth/presentation/auth.store';
+import { useAuthStore } from '@/stores/auth';
 import * as issueReporter from '@/services/issueReporter';
 import type { ScreenshotPayload } from '@/services/issueReporter';
 
@@ -584,5 +584,64 @@ describe('ReportProblemModal', () => {
     );
 
     windowOpenSpy.mockRestore();
+  });
+
+  it('handles FileReader errors when reading screenshot', async () => {
+    const originalFileReader = (global as any).FileReader;
+
+    class MockFileReader {
+      public result: string | ArrayBuffer | null = null;
+      public onload: ((this: FileReader, ev: ProgressEvent<FileReader>) => any) | null = null;
+      public onerror: ((this: FileReader, ev: ProgressEvent<FileReader>) => any) | null = null;
+
+      readAsDataURL(_file: Blob) {
+        if (this.onerror) {
+          // Simulate a read error
+          this.onerror(new ProgressEvent('error'));
+        }
+      }
+    }
+
+    // Override global FileReader to simulate an error during file reading
+    (global as any).FileReader = MockFileReader as unknown as typeof FileReader;
+
+    try {
+      const wrapper = mount(ReportProblemModal, {
+        props: {
+          open: true,
+        },
+        global: {
+          stubs: {
+            ModalDialog: {
+              template: '<div><slot /></div>',
+            },
+            BaseButton: {
+              template: '<button><slot /></button>',
+            },
+            BaseInput: {
+              template: '<input />',
+            },
+          },
+        },
+      });
+
+      const fileInput = wrapper.find('#problem-screenshot');
+      const inputElement = fileInput.element as HTMLInputElement;
+
+      const file = new File(['dummy'], 'screenshot.png', { type: 'image/png' });
+      Object.defineProperty(inputElement, 'files', {
+        value: [file],
+        writable: false,
+      });
+
+      await fileInput.trigger('change');
+      await wrapper.vm.$nextTick();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Should show an error message
+      expect(wrapper.text()).toContain('Failed to read the screenshot file');
+    } finally {
+      (global as any).FileReader = originalFileReader;
+    }
   });
 });
