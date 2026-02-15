@@ -160,7 +160,7 @@ begin
       new.id,
       jsonb_build_object('title', new.title, 'visibility', new.visibility)
     );
-  elsif (TG_OP = 'UPDATE' and old.visibility != new.visibility) then
+  elsif (TG_OP = 'UPDATE' and old.visibility IS DISTINCT FROM new.visibility) then
     perform log_activity(
       new.household_id,
       new.member_id,
@@ -177,6 +177,7 @@ $$;
 create trigger wishlist_activity_log
   after insert or update on wishlists
   for each row
+  when (TG_OP = 'INSERT' or OLD.visibility IS DISTINCT FROM NEW.visibility)
   execute function log_wishlist_activity();
 
 -- Log wishlist item activity (reservation tracking)
@@ -202,7 +203,7 @@ begin
       new.id,
       jsonb_build_object('title', new.title, 'priority', new.priority)
     );
-  elsif (TG_OP = 'UPDATE' and old.is_reserved = false and new.is_reserved = true) then
+  elsif (TG_OP = 'UPDATE' and not old.is_reserved and new.is_reserved) then
     -- Item was reserved
     perform log_activity(
       v_wishlist.household_id,
@@ -215,7 +216,7 @@ begin
         'reserved_by', coalesce(new.reserved_by_name, new.reserved_by_email, 'anonymous')
       )
     );
-  elsif (TG_OP = 'UPDATE' and old.is_reserved = true and new.is_reserved = false) then
+  elsif (TG_OP = 'UPDATE' and old.is_reserved and not new.is_reserved) then
     -- Item was unreserved
     perform log_activity(
       v_wishlist.household_id,
@@ -233,6 +234,7 @@ $$;
 create trigger wishlist_item_activity_log
   after insert or update on wishlist_items
   for each row
+  when (TG_OP = 'INSERT' or OLD.is_reserved IS DISTINCT FROM NEW.is_reserved)
   execute function log_wishlist_item_activity();
 
 -- ─── 5. Update RLS Policies ──────────────────────────────────

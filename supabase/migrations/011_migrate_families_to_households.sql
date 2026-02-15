@@ -171,7 +171,6 @@ begin
 exception
   when others then
     raise exception '❌ Migration failed: %', SQLERRM;
-    rollback;
 end $$;
 
 -- ═════════════════════════════════════════════════════════════

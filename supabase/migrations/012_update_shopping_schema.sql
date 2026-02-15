@@ -172,7 +172,7 @@ begin
       new.id,
       jsonb_build_object('title', new.title)
     );
-  elsif (TG_OP = 'UPDATE' and old.status != new.status) then
+  elsif (TG_OP = 'UPDATE' and old.status IS DISTINCT FROM new.status) then
     perform log_activity(
       new.household_id,
       get_member_id(new.household_id, auth.uid()),
@@ -189,6 +189,7 @@ $$;
 create trigger shopping_list_activity_log
   after insert or update on shopping_lists
   for each row
+  when (TG_OP = 'INSERT' or OLD.status IS DISTINCT FROM NEW.status)
   execute function log_shopping_list_activity();
 
 -- Log shopping item activity
@@ -214,7 +215,7 @@ begin
       new.id,
       jsonb_build_object('title', new.title, 'quantity', new.quantity)
     );
-  elsif (TG_OP = 'UPDATE' and old.is_purchased = false and new.is_purchased = true) then
+  elsif (TG_OP = 'UPDATE' and not old.is_purchased and new.is_purchased) then
     perform log_activity(
       v_household_id,
       new.purchased_by_member_id,
@@ -231,6 +232,7 @@ $$;
 create trigger shopping_item_activity_log
   after insert or update on shopping_items
   for each row
+  when (TG_OP = 'INSERT' or (not OLD.is_purchased and NEW.is_purchased))
   execute function log_shopping_item_activity();
 
 -- ─── 5. Update RLS Policies ──────────────────────────────────
