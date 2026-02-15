@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import ReportProblemModal from '@/components/shared/ReportProblemModal.vue';
 import { useToastStore } from '@/stores/toast';
-import { useAuthStore } from '@/features/auth/presentation/auth.store';
+import { useAuthStore } from '@/stores/auth';
 import * as issueReporter from '@/services/issueReporter';
 import type { ScreenshotPayload } from '@/services/issueReporter';
 
@@ -394,10 +394,11 @@ describe('ReportProblemModal', () => {
     const fileInput = wrapper.find('#problem-screenshot');
 
     // Create a valid image file
-    const imageContent = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const imageContent =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
     const blob = await (await fetch(imageContent)).blob();
     const file = new File([blob], 'test-image.png', { type: 'image/png' });
-    
+
     Object.defineProperty(fileInput.element, 'files', {
       value: [file],
       writable: false,
@@ -470,7 +471,8 @@ describe('ReportProblemModal', () => {
             inheritAttrs: false,
           },
           BaseInput: {
-            template: '<input v-model="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+            template:
+              '<input v-model="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
             props: ['modelValue'],
             emits: ['update:modelValue'],
           },
@@ -486,12 +488,13 @@ describe('ReportProblemModal', () => {
     };
     vm.title = 'Bug with screenshot';
     vm.description = 'See attached screenshot';
-    
+
     // Add a screenshot
-    const imageContent = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const imageContent =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
     const blob = await (await fetch(imageContent)).blob();
     const file = new File([blob], 'screenshot.png', { type: 'image/png' });
-    
+
     const fileInput = wrapper.find('#problem-screenshot');
     Object.defineProperty(fileInput.element, 'files', {
       value: [file],
@@ -500,9 +503,9 @@ describe('ReportProblemModal', () => {
 
     await fileInput.trigger('change');
     await wrapper.vm.$nextTick();
-    
+
     // Wait for FileReader to complete
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Submit form
     const form = wrapper.find('form');
@@ -510,14 +513,14 @@ describe('ReportProblemModal', () => {
     await wrapper.vm.$nextTick();
 
     // Wait for async operations
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(issueReporter.reportProblem).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'Bug with screenshot',
         description: 'See attached screenshot',
         userId: 'user-456',
-      })
+      }),
     );
 
     // Check that screenshot was included
@@ -552,7 +555,8 @@ describe('ReportProblemModal', () => {
             inheritAttrs: false,
           },
           BaseInput: {
-            template: '<input v-model="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+            template:
+              '<input v-model="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
             props: ['modelValue'],
             emits: ['update:modelValue'],
           },
@@ -575,14 +579,73 @@ describe('ReportProblemModal', () => {
     await wrapper.vm.$nextTick();
 
     // Wait for async operations
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(windowOpenSpy).toHaveBeenCalledWith(
       'https://github.com/test/repo/issues/3',
       '_blank',
-      'noopener,noreferrer'
+      'noopener,noreferrer',
     );
 
     windowOpenSpy.mockRestore();
+  });
+
+  it('handles FileReader errors when reading screenshot', async () => {
+    const originalFileReader = (global as any).FileReader;
+
+    class MockFileReader {
+      public result: string | ArrayBuffer | null = null;
+      public onload: ((this: FileReader, ev: ProgressEvent<FileReader>) => any) | null = null;
+      public onerror: ((this: FileReader, ev: ProgressEvent<FileReader>) => any) | null = null;
+
+      readAsDataURL(_file: Blob) {
+        if (this.onerror) {
+          // Simulate a read error
+          this.onerror(new ProgressEvent('error'));
+        }
+      }
+    }
+
+    // Override global FileReader to simulate an error during file reading
+    (global as any).FileReader = MockFileReader as unknown as typeof FileReader;
+
+    try {
+      const wrapper = mount(ReportProblemModal, {
+        props: {
+          open: true,
+        },
+        global: {
+          stubs: {
+            ModalDialog: {
+              template: '<div><slot /></div>',
+            },
+            BaseButton: {
+              template: '<button><slot /></button>',
+            },
+            BaseInput: {
+              template: '<input />',
+            },
+          },
+        },
+      });
+
+      const fileInput = wrapper.find('#problem-screenshot');
+      const inputElement = fileInput.element as HTMLInputElement;
+
+      const file = new File(['dummy'], 'screenshot.png', { type: 'image/png' });
+      Object.defineProperty(inputElement, 'files', {
+        value: [file],
+        writable: false,
+      });
+
+      await fileInput.trigger('change');
+      await wrapper.vm.$nextTick();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Should show an error message
+      expect(wrapper.text()).toContain('Failed to read the screenshot file');
+    } finally {
+      (global as any).FileReader = originalFileReader;
+    }
   });
 });

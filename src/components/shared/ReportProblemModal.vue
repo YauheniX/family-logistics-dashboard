@@ -64,7 +64,7 @@ import ModalDialog from '@/components/shared/ModalDialog.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseInput from '@/components/shared/BaseInput.vue';
 import { useToastStore } from '@/stores/toast';
-import { useAuthStore } from '@/features/auth/presentation/auth.store';
+import { useAuthStore } from '@/stores/auth';
 import { reportProblem, type ScreenshotPayload } from '@/services/issueReporter';
 
 defineProps<{ open: boolean }>();
@@ -126,13 +126,19 @@ const handleFileChange = async (event: Event) => {
     return;
   }
 
-  const dataUrl = await readFileAsDataUrl(file);
-  const base64 = dataUrl.split(',')[1] ?? '';
-  screenshot.value = {
-    name: file.name,
-    type: file.type,
-    dataBase64: base64,
-  };
+  try {
+    const dataUrl = await readFileAsDataUrl(file);
+    const base64 = dataUrl.split(',')[1] ?? '';
+    screenshot.value = {
+      name: file.name,
+      type: file.type,
+      dataBase64: base64,
+    };
+  } catch {
+    errors.value.screenshot = 'Failed to read the screenshot file. Please try again.';
+    screenshot.value = null;
+    input.value = ''; // Clear input to allow re-selection after a read error
+  }
 };
 
 const validate = () => {
