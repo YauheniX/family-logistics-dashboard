@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory } from 'vue-router';
 import DashboardView from '@/views/DashboardView.vue';
 import FamilyListView from '@/views/FamilyListView.vue';
 import FamilyDetailView from '@/views/FamilyDetailView.vue';
+import MemberManagementView from '@/views/MemberManagementView.vue';
 import ShoppingListView from '@/views/ShoppingListView.vue';
 import WishlistListView from '@/views/WishlistListView.vue';
 import WishlistEditView from '@/views/WishlistEditView.vue';
@@ -48,6 +49,13 @@ const router = createRouter({
       path: '/families/:id',
       name: 'family-detail',
       component: FamilyDetailView,
+      props: true,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/families/:id/members',
+      name: 'member-management',
+      component: MemberManagementView,
       props: true,
       meta: { requiresAuth: true },
     },
