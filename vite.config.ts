@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 // Read version from package.json directly to ensure availability across all build environments
-let packageJson: any;
+let packageJson: { version?: string };
 try {
   const packageJsonContent = readFileSync(resolve(__dirname, 'package.json'), 'utf-8');
   packageJson = JSON.parse(packageJsonContent);
