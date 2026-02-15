@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS wishlist_approvals (
   requested_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   reviewed_at      TIMESTAMPTZ,
   notes            TEXT,
-  
+
 );
 
 COMMENT ON TABLE wishlist_approvals IS 'Approval workflow for child wishlists';
@@ -36,11 +36,11 @@ COMMENT ON COLUMN wishlist_approvals.notes IS 'Optional parent notes when approv
 
 -- ─── 2. Create Indexes ────────────────────────────────────────
 
-CREATE INDEX idx_wishlist_approvals_wishlist_id 
+CREATE INDEX idx_wishlist_approvals_wishlist_id
   ON wishlist_approvals(wishlist_id);
 
-CREATE INDEX idx_wishlist_approvals_status 
-  ON wishlist_approvals(status) 
+CREATE INDEX idx_wishlist_approvals_status
+  ON wishlist_approvals(status)
   WHERE status = 'pending';
 
 -- Partial unique index for pending approvals (one pending approval per wishlist)
@@ -48,7 +48,7 @@ CREATE UNIQUE INDEX idx_wishlist_approvals_unique_pending
   ON wishlist_approvals(wishlist_id)
   WHERE status = 'pending';
 
-CREATE INDEX idx_wishlist_approvals_requested_by 
+CREATE INDEX idx_wishlist_approvals_requested_by
   ON wishlist_approvals(requested_by);
 
 -- ─── 3. Enable RLS ────────────────────────────────────────────
@@ -84,8 +84,8 @@ CREATE POLICY "Children can request approval"
 ON wishlist_approvals FOR INSERT
 WITH CHECK (
   requested_by IN (
-    SELECT id FROM members 
-    WHERE user_id = auth.uid() 
+    SELECT id FROM members
+    WHERE user_id = auth.uid()
     AND role = 'child'
   )
 );
@@ -108,7 +108,7 @@ USING (
 CREATE OR REPLACE FUNCTION request_child_wishlist_approval(
   p_wishlist_id UUID
 )
-RETURNS UUID 
+RETURNS UUID
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
@@ -148,7 +148,7 @@ BEGIN
     entity_id,
     metadata
   )
-  SELECT 
+  SELECT
     w.household_id,
     v_member_id,
     'wishlist_approval_requested',
@@ -190,7 +190,7 @@ BEGIN
   END IF;
 
   -- Get wishlist details and verify permissions
-  SELECT 
+  SELECT
     wa.wishlist_id,
     m.household_id
   INTO v_wishlist_id, v_household_id
@@ -205,7 +205,7 @@ BEGIN
 
   -- Update approval status
   UPDATE wishlist_approvals
-  SET 
+  SET
     status = 'approved',
     approved_by = v_member_id,
     reviewed_at = NOW()
@@ -261,7 +261,7 @@ BEGIN
   WHERE m.user_id = auth.uid();
 
   -- Get wishlist details and verify permissions
-  SELECT 
+  SELECT
     wa.wishlist_id,
     m.household_id
   INTO v_wishlist_id, v_household_id
@@ -276,7 +276,7 @@ BEGIN
 
   -- Update approval status
   UPDATE wishlist_approvals
-  SET 
+  SET
     status = 'denied',
     approved_by = v_member_id,
     reviewed_at = NOW(),
@@ -436,8 +436,8 @@ CREATE POLICY "Non-viewer members can create wishlists"
 ON wishlists FOR INSERT
 WITH CHECK (
   member_id IN (
-    SELECT id FROM members 
-    WHERE user_id = auth.uid() 
+    SELECT id FROM members
+    WHERE user_id = auth.uid()
     AND role != 'viewer'
   )
 );
@@ -476,7 +476,7 @@ BEGIN
   END IF;
 
   RETURN QUERY
-  SELECT 
+  SELECT
     h.name AS household_name,
     (
       SELECT COUNT(*)::INTEGER
@@ -535,7 +535,7 @@ CREATE TABLE IF NOT EXISTS achievements (
   criteria         JSONB NOT NULL DEFAULT '{}'::jsonb,
   is_active        BOOLEAN NOT NULL DEFAULT TRUE,
   created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  
+
   CONSTRAINT achievements_name_length CHECK (char_length(name) BETWEEN 1 AND 100),
   CONSTRAINT achievements_points_positive CHECK (points_reward >= 0)
 );
@@ -558,7 +558,7 @@ CREATE TABLE IF NOT EXISTS member_achievements (
   achievement_id   UUID NOT NULL REFERENCES achievements ON DELETE CASCADE,
   earned_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   progress         JSONB NOT NULL DEFAULT '{}'::jsonb,
-  
+
   UNIQUE(member_id, achievement_id)
 );
 
@@ -581,7 +581,7 @@ CREATE TABLE IF NOT EXISTS points_transactions (
   entity_id        UUID,
   created_by       UUID REFERENCES members ON DELETE SET NULL,
   created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  
+
   CONSTRAINT points_transactions_reason_length CHECK (char_length(reason) BETWEEN 1 AND 500)
 );
 
@@ -605,7 +605,7 @@ CREATE TABLE IF NOT EXISTS rewards (
   is_active        BOOLEAN NOT NULL DEFAULT TRUE,
   created_by       UUID NOT NULL REFERENCES members ON DELETE CASCADE,
   created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  
+
   CONSTRAINT rewards_name_length CHECK (char_length(name) BETWEEN 1 AND 100)
 );
 
@@ -628,7 +628,7 @@ CREATE TABLE IF NOT EXISTS reward_redemptions (
   approved_at      TIMESTAMPTZ,
   fulfilled_at     TIMESTAMPTZ,
   notes            TEXT,
-  
+
   CONSTRAINT reward_redemptions_points_positive CHECK (points_spent > 0)
 );
 
@@ -836,7 +836,7 @@ BEGIN
   END IF;
 
   -- Get achievement points
-  SELECT 
+  SELECT
     a.points_reward,
     a.name
   INTO v_points, v_achievement_name
@@ -937,12 +937,12 @@ BEGIN
 
   -- Check points balance (including pending redemptions)
   SELECT COALESCE(SUM(points), 0)::INTEGER -
-         COALESCE((SELECT SUM(points_spent) FROM reward_redemptions 
+         COALESCE((SELECT SUM(points_spent) FROM reward_redemptions
                    WHERE member_id = v_member_id AND status = 'pending'), 0)
   INTO v_points_balance
   FROM points_transactions
   WHERE member_id = v_member_id;
-  
+
   IF v_points_balance < v_points_cost THEN
     RAISE EXCEPTION 'Insufficient points (available: %, need: %)', v_points_balance, v_points_cost;
   END IF;
@@ -1007,7 +1007,7 @@ BEGIN
   WHERE user_id = auth.uid();
 
   -- Get redemption details and verify permissions
-  SELECT 
+  SELECT
     rr.points_spent,
     m.household_id,
     rr.member_id
@@ -1024,7 +1024,7 @@ BEGIN
 
   -- Update redemption status
   UPDATE reward_redemptions
-  SET 
+  SET
     status = 'approved',
     approved_by = v_member_id,
     approved_at = NOW()
@@ -1095,7 +1095,7 @@ BEGIN
 
   RETURN QUERY
   WITH member_stats AS (
-    SELECT 
+    SELECT
       m.id AS member_id,
       m.display_name,
       m.avatar_url,
@@ -1112,7 +1112,7 @@ BEGIN
     AND m.role IN ('owner', 'admin', 'member', 'child')
     GROUP BY m.id, m.display_name, m.avatar_url
   )
-  SELECT 
+  SELECT
     ms.*,
     RANK() OVER (ORDER BY ms.total_points DESC, ms.achievements_count DESC)::INTEGER AS rank
   FROM member_stats ms
@@ -1137,45 +1137,45 @@ INSERT INTO achievements (name, description, icon, category, tier, min_age, max_
   -- Shopping Achievements (Bronze)
   ('First Steps', 'Add your first shopping item', '👣', 'shopping', 'bronze', NULL, NULL, 10, '{"type": "count", "entity": "shopping_items_added", "count": 1}'::jsonb),
   ('Shopping Helper', 'Mark 5 items as purchased', '🛒', 'shopping', 'bronze', NULL, NULL, 25, '{"type": "count", "entity": "items_purchased", "count": 5}'::jsonb),
-  
+
   -- Shopping Achievements (Silver)
   ('Shopping Pro', 'Mark 25 items as purchased', '🏆', 'shopping', 'silver', NULL, NULL, 50, '{"type": "count", "entity": "items_purchased", "count": 25}'::jsonb),
   ('List Creator', 'Create 5 shopping lists', '📋', 'shopping', 'silver', NULL, NULL, 50, '{"type": "count", "entity": "shopping_lists_created", "count": 5}'::jsonb),
-  
+
   -- Shopping Achievements (Gold)
   ('Shopping Master', 'Mark 100 items as purchased', '🌟', 'shopping', 'gold', NULL, NULL, 100, '{"type": "count", "entity": "items_purchased", "count": 100}'::jsonb),
   ('Organization Expert', 'Create a shopping list with 30+ items', '📊', 'shopping', 'gold', NULL, NULL, 100, '{"type": "single", "entity": "large_shopping_list", "threshold": 30}'::jsonb),
-  
+
   -- Wishlist Achievements (Bronze)
   ('Wishlist Dreamer', 'Create your first wishlist', '💭', 'wishlist', 'bronze', NULL, NULL, 10, '{"type": "count", "entity": "wishlists_created", "count": 1}'::jsonb),
   ('Dream Big', 'Add 5 items to wishlists', '⭐', 'wishlist', 'bronze', NULL, NULL, 25, '{"type": "count", "entity": "wishlist_items_added", "count": 5}'::jsonb),
-  
+
   -- Wishlist Achievements (Silver)
   ('Birthday Planner', 'Add 10 items to your birthday wishlist', '🎂', 'wishlist', 'silver', 5, 17, 50, '{"type": "count", "entity": "birthday_wishlist_items", "count": 10}'::jsonb),
   ('Wish Maker', 'Add 25 items to wishlists', '🌠', 'wishlist', 'silver', NULL, NULL, 50, '{"type": "count", "entity": "wishlist_items_added", "count": 25}'::jsonb),
-  
+
   -- Wishlist Achievements (Gold)
   ('Grateful Heart', 'Thank someone for reserving a wishlist item', '💝', 'wishlist', 'gold', NULL, NULL, 100, '{"type": "count", "entity": "reservations_thanked", "count": 1}'::jsonb),
   ('Wishlist Expert', 'Have 3 wishlists with 10+ items each', '🎁', 'wishlist', 'gold', NULL, NULL, 100, '{"type": "complex", "entity": "multiple_large_wishlists", "count": 3, "items_per": 10}'::jsonb),
-  
+
   -- Family Achievements (Bronze)
   ('Family Helper', 'Help with 5 household tasks', '👨‍👩‍👧', 'family', 'bronze', NULL, NULL, 25, '{"type": "count", "entity": "household_tasks_completed", "count": 5}'::jsonb),
   ('Team Player', 'Add items to 3 different shopping lists', '🤝', 'family', 'bronze', NULL, NULL, 25, '{"type": "count", "entity": "lists_contributed_to", "count": 3}'::jsonb),
-  
+
   -- Family Achievements (Silver)
   ('Responsible Member', 'Complete 25 household tasks', '⭐', 'family', 'silver', NULL, NULL, 50, '{"type": "count", "entity": "household_tasks_completed", "count": 25}'::jsonb),
-  
+
   -- General Achievements (Bronze)
   ('Early Bird', 'Log in before 8 AM', '🌅', 'general', 'bronze', NULL, NULL, 5, '{"type": "time_based", "entity": "early_login", "time": "08:00"}'::jsonb),
   ('Night Owl', 'Log in after 10 PM', '🦉', 'general', 'bronze', NULL, NULL, 5, '{"type": "time_based", "entity": "late_login", "time": "22:00"}'::jsonb),
-  
+
   -- General Achievements (Silver)
   ('Consistency', 'Log in for 7 days straight', '📅', 'general', 'silver', NULL, NULL, 75, '{"type": "streak", "entity": "daily_login", "days": 7}'::jsonb),
   ('Dedication', 'Log in for 30 days straight', '🔥', 'general', 'silver', NULL, NULL, 150, '{"type": "streak", "entity": "daily_login", "days": 30}'::jsonb),
-  
+
   -- General Achievements (Gold)
   ('Century Club', 'Earn 100 total points', '💯', 'general', 'gold', NULL, NULL, 50, '{"type": "milestone", "entity": "total_points", "threshold": 100}'::jsonb),
-  
+
   -- Platinum Achievements
   ('Legend', 'Earn all achievements in all categories', '👑', 'general', 'platinum', NULL, NULL, 500, '{"type": "meta", "entity": "all_achievements"}'::jsonb),
   ('Point Master', 'Earn 1000 total points', '💎', 'general', 'platinum', NULL, NULL, 200, '{"type": "milestone", "entity": "total_points", "threshold": 1000}'::jsonb)
@@ -1193,9 +1193,9 @@ ON CONFLICT (name) DO NOTHING;
 
 ```sql
 -- Check all tables exist
-SELECT table_name 
-FROM information_schema.tables 
-WHERE table_schema = 'public' 
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
 AND table_name IN (
   'achievements',
   'member_achievements',
@@ -1207,9 +1207,9 @@ AND table_name IN (
 ORDER BY table_name;
 
 -- Check RLS enabled
-SELECT tablename, rowsecurity 
-FROM pg_tables 
-WHERE schemaname = 'public' 
+SELECT tablename, rowsecurity
+FROM pg_tables
+WHERE schemaname = 'public'
 AND tablename IN (
   'achievements',
   'member_achievements',
@@ -1223,9 +1223,9 @@ AND tablename IN (
 SELECT COUNT(*) AS total_achievements FROM achievements;
 
 -- Check functions exist
-SELECT routine_name 
-FROM information_schema.routines 
-WHERE routine_schema = 'public' 
+SELECT routine_name
+FROM information_schema.routines
+WHERE routine_schema = 'public'
 AND routine_name IN (
   'get_member_points',
   'award_achievement',
@@ -1245,6 +1245,7 @@ AND routine_name IN (
 ## Rollback Scripts
 
 ### Rollback PR #4 (Gamification)
+
 ```sql
 -- Drop in reverse order
 DROP TABLE IF EXISTS reward_redemptions CASCADE;
@@ -1261,6 +1262,7 @@ DROP FUNCTION IF EXISTS get_member_points(uuid);
 ```
 
 ### Rollback PR #3 (Viewer Role)
+
 ```sql
 -- Restore original policies (would need original policy definitions)
 DROP FUNCTION IF EXISTS get_viewer_dashboard(uuid);
@@ -1268,6 +1270,7 @@ DROP FUNCTION IF EXISTS user_is_viewer(uuid, uuid);
 ```
 
 ### Rollback PR #2 (Wishlist Approvals)
+
 ```sql
 DROP TABLE IF EXISTS wishlist_approvals CASCADE;
 DROP FUNCTION IF EXISTS deny_child_wishlist(uuid, text);
@@ -1276,4 +1279,3 @@ DROP FUNCTION IF EXISTS request_child_wishlist_approval(uuid);
 ```
 
 ---
-

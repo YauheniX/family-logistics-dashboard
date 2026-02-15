@@ -21,9 +21,11 @@ This analysis provides a complete roadmap to evolve the Family Logistics Dashboa
 Four comprehensive documents totaling **3,527 lines** and **124 KB**:
 
 ### 1. [COMPREHENSIVE_ANALYSIS_AND_4PR_ROADMAP.md](./docs/COMPREHENSIVE_ANALYSIS_AND_4PR_ROADMAP.md)
+
 **Size**: 48 KB | **Lines**: 1,496
 
 Complete analysis including:
+
 - ✅ Current state assessment (9 tables, 15 functions, 7 stores, 50+ components)
 - ✅ Gap analysis (what's missing for each feature)
 - ✅ Detailed 4-PR implementation plan
@@ -31,9 +33,11 @@ Complete analysis including:
 - ✅ UX flows, migration strategy, production checklist
 
 ### 2. [ERD_GAMIFICATION_UPDATE.md](./docs/ERD_GAMIFICATION_UPDATE.md)
+
 **Size**: 24 KB | **Lines**: 442
 
 Entity relationship diagrams including:
+
 - ✅ Updated ERD with gamification tables
 - ✅ Table relationship documentation
 - ✅ JSONB schema examples
@@ -41,9 +45,11 @@ Entity relationship diagrams including:
 - ✅ Index optimization strategy
 
 ### 3. [SQL_MIGRATION_SNIPPETS.md](./docs/SQL_MIGRATION_SNIPPETS.md)
+
 **Size**: 40 KB | **Lines**: 1,214
 
 Production-ready SQL scripts:
+
 - ✅ 6 migration files (ready to run)
 - ✅ 12 new RPC functions
 - ✅ 22 seeded achievements
@@ -51,9 +57,11 @@ Production-ready SQL scripts:
 - ✅ Rollback scripts
 
 ### 4. [ANALYSIS_QUICK_REFERENCE.md](./docs/ANALYSIS_QUICK_REFERENCE.md)
+
 **Size**: 12 KB | **Lines**: 375
 
 Quick reference guide:
+
 - ✅ Executive summary
 - ✅ 4-PR timeline breakdown
 - ✅ Component/database changes
@@ -66,22 +74,22 @@ Quick reference guide:
 
 ### What Exists (Strong Foundation) ✅
 
-| Component | Status | Details |
-|-----------|--------|---------|
-| **Multi-tenant architecture** | ✅ Production-ready | households, members, invitations |
-| **Shopping lists** | ✅ Database complete | Basic frontend working |
-| **Wishlists** | ✅ Database complete | 3-level visibility system |
-| **5-tier role system** | ✅ Schema ready | owner, admin, member, child, viewer |
-| **Helper functions** | ✅ 15 functions | Role checks, activity logging |
+| Component                     | Status               | Details                             |
+| ----------------------------- | -------------------- | ----------------------------------- |
+| **Multi-tenant architecture** | ✅ Production-ready  | households, members, invitations    |
+| **Shopping lists**            | ✅ Database complete | Basic frontend working              |
+| **Wishlists**                 | ✅ Database complete | 3-level visibility system           |
+| **5-tier role system**        | ✅ Schema ready      | owner, admin, member, child, viewer |
+| **Helper functions**          | ✅ 15 functions      | Role checks, activity logging       |
 
 ### What's Missing ❌
 
-| Component | Status | Impact |
-|-----------|--------|--------|
-| **Gamification** | ❌ Not implemented | 5 tables, 15 components needed |
-| **Viewer restrictions** | ⚠️ Partial | RLS policies incomplete, UI missing |
-| **Wishlist UI** | ⚠️ Partial | No visibility toggles, no household view |
-| **Shopping features** | ⚠️ Partial | No categories, bulk ops, history |
+| Component               | Status             | Impact                                   |
+| ----------------------- | ------------------ | ---------------------------------------- |
+| **Gamification**        | ❌ Not implemented | 5 tables, 15 components needed           |
+| **Viewer restrictions** | ⚠️ Partial         | RLS policies incomplete, UI missing      |
+| **Wishlist UI**         | ⚠️ Partial         | No visibility toggles, no household view |
+| **Shopping features**   | ⚠️ Partial         | No categories, bulk ops, history         |
 
 ---
 
@@ -102,6 +110,7 @@ Quick reference guide:
 ```
 
 ### PR #1: Shopping List Integration 🛒
+
 - **Backend**: ✅ Complete
 - **Frontend**: ⚠️ Partial
 - **New Components**: 4
@@ -110,6 +119,7 @@ Quick reference guide:
 **Scope**: Category filtering, bulk operations, shopping history, viewer read-only mode
 
 ### PR #2: Wishlist Integration 🎁
+
 - **Backend**: ✅ Complete
 - **Frontend**: ❌ Missing
 - **New Tables**: 1 (wishlist_approvals)
@@ -119,6 +129,7 @@ Quick reference guide:
 **Scope**: Visibility controls, household aggregation, child approval workflow
 
 ### PR #3: Viewer Role Restrictions 👀
+
 - **Backend**: ⚠️ RLS updates needed
 - **Frontend**: ❌ Missing
 - **New Components**: 2
@@ -127,6 +138,7 @@ Quick reference guide:
 **Scope**: RLS enforcement, viewer dashboard, read-only UI
 
 ### PR #4: Gamified Child System 🎮
+
 - **Backend**: ❌ Complete build
 - **Frontend**: ❌ Complete build
 - **New Tables**: 5
@@ -139,27 +151,29 @@ Quick reference guide:
 
 ## 📊 Implementation Stats
 
-| Metric | Count |
-|--------|-------|
-| **New Database Tables** | 6 |
-| **New RLS Policies** | ~20 |
-| **New RPC Functions** | 12 |
-| **New Vue Components** | 24 |
-| **Seeded Achievements** | 22 |
-| **Lines of SQL** | 1,000+ |
-| **Migration Files** | 6 |
+| Metric                  | Count  |
+| ----------------------- | ------ |
+| **New Database Tables** | 6      |
+| **New RLS Policies**    | ~20    |
+| **New RPC Functions**   | 12     |
+| **New Vue Components**  | 24     |
+| **Seeded Achievements** | 22     |
+| **Lines of SQL**        | 1,000+ |
+| **Migration Files**     | 6      |
 
 ---
 
 ## 🗄️ Database Changes
 
 ### Before (Existing)
+
 - 9 tables
 - ~30 RLS policies
 - 15 RPC functions
 - ~20 indexes
 
 ### After (All 4 PRs)
+
 - **15 tables** (+6)
 - **~50 RLS policies** (+20)
 - **27 RPC functions** (+12)
@@ -168,9 +182,11 @@ Quick reference guide:
 ### New Tables Detail
 
 **PR #2** (Wishlist Integration):
+
 - `wishlist_approvals` - Child wishlist approval workflow
 
 **PR #4** (Gamification):
+
 - `achievements` - Achievement definitions (22 seeded)
 - `member_achievements` - Member achievement tracking
 - `points_transactions` - Points ledger
@@ -183,19 +199,21 @@ Quick reference guide:
 
 ### Component Breakdown
 
-| Feature | New Components | Total Components After |
-|---------|---------------|----------------------|
-| Shopping Lists (PR #1) | +4 | ~54 |
-| Wishlists (PR #2) | +3 | ~57 |
-| Viewer Role (PR #3) | +2 | ~59 |
-| Gamification (PR #4) | +15 | ~74 |
+| Feature                | New Components | Total Components After |
+| ---------------------- | -------------- | ---------------------- |
+| Shopping Lists (PR #1) | +4             | ~54                    |
+| Wishlists (PR #2)      | +3             | ~57                    |
+| Viewer Role (PR #3)    | +2             | ~59                    |
+| Gamification (PR #4)   | +15            | ~74                    |
 
 ### Store Changes
 
 **New Stores**:
+
 - `gamification.store.ts` (PR #4)
 
 **Updated Stores**:
+
 - `shopping.store.ts` (PR #1)
 - `wishlist.store.ts` (PR #2)
 - `household.store.ts` (PR #3)
@@ -204,17 +222,17 @@ Quick reference guide:
 
 ## 🔐 Permission Matrix Summary
 
-| Feature | Owner | Admin | Member | Child | Viewer |
-|---------|-------|-------|--------|-------|--------|
-| **Create shopping list** | ✅ | ✅ | ✅ | ✅ | ❌ |
-| **Edit shopping list** | ✅ | ✅ | Creator | Creator | ❌ |
-| **Mark items purchased** | ✅ | ✅ | ✅ | ✅ | ❌ |
-| **View shopping lists** | ✅ | ✅ | ✅ | ✅ | ✅ Read-only |
-| **Create wishlist** | ✅ | ✅ | ✅ | Needs approval | ❌ |
-| **Set wishlist visibility** | ✅ | ✅ | ✅ | Parent controls | ❌ |
-| **Earn achievements** | ✅ | ✅ | ✅ | ✅ | ❌ |
-| **Award points** | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **Redeem rewards** | ✅ | ✅ | ✅ | Needs approval | ❌ |
+| Feature                     | Owner | Admin | Member  | Child           | Viewer       |
+| --------------------------- | ----- | ----- | ------- | --------------- | ------------ |
+| **Create shopping list**    | ✅    | ✅    | ✅      | ✅              | ❌           |
+| **Edit shopping list**      | ✅    | ✅    | Creator | Creator         | ❌           |
+| **Mark items purchased**    | ✅    | ✅    | ✅      | ✅              | ❌           |
+| **View shopping lists**     | ✅    | ✅    | ✅      | ✅              | ✅ Read-only |
+| **Create wishlist**         | ✅    | ✅    | ✅      | Needs approval  | ❌           |
+| **Set wishlist visibility** | ✅    | ✅    | ✅      | Parent controls | ❌           |
+| **Earn achievements**       | ✅    | ✅    | ✅      | ✅              | ❌           |
+| **Award points**            | ✅    | ✅    | ❌      | ❌              | ❌           |
+| **Redeem rewards**          | ✅    | ✅    | ✅      | Needs approval  | ❌           |
 
 ---
 
@@ -242,16 +260,19 @@ After implementing all 4 PRs:
 ### For Developers
 
 1. **Read the comprehensive roadmap**:
+
    ```bash
    open docs/COMPREHENSIVE_ANALYSIS_AND_4PR_ROADMAP.md
    ```
 
 2. **Review database schema**:
+
    ```bash
    open docs/ERD_GAMIFICATION_UPDATE.md
    ```
 
 3. **Get SQL migrations**:
+
    ```bash
    open docs/SQL_MIGRATION_SNIPPETS.md
    ```
@@ -264,11 +285,13 @@ After implementing all 4 PRs:
 ### Implementation Order
 
 **Recommended**:
+
 1. PR #1 and PR #2 can run in parallel (no dependencies)
 2. PR #3 should wait for PR #1 & #2 (to test restrictions)
 3. PR #4 should wait for PR #1 (shopping triggers achievements)
 
 **Alternative** (sequential):
+
 1. PR #1 → PR #2 → PR #3 → PR #4
 
 ---
@@ -331,7 +354,6 @@ This analysis was performed on a Vue 3 + Supabase + Pinia + TypeScript + Tailwin
 ---
 
 **Analysis Complete** ✅  
-**Ready for Implementation** 🚀  
+**Ready for Implementation** 🚀
 
 All documentation production-ready. SQL scripts verified. Architecture validated. Ready to begin development.
-

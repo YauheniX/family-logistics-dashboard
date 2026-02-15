@@ -221,6 +221,7 @@
 ## Table Relationships Summary
 
 ### Core Tables (Existing)
+
 - `auth.users` 1:1 `user_profiles`
 - `user_profiles` 1:N `members`
 - `households` 1:N `members` (via household_id)
@@ -230,6 +231,7 @@
 - `wishlists` 1:N `wishlist_items`
 
 ### Gamification Tables (New)
+
 - `achievements` 1:N `member_achievements`
 - `members` 1:N `member_achievements`
 - `members` 1:N `points_transactions`
@@ -240,6 +242,7 @@
 - `members` 1:N `reward_redemptions` (approver, via approved_by)
 
 ### Wishlist Approvals (New)
+
 - `wishlists` 1:N `wishlist_approvals`
 - `members` 1:N `wishlist_approvals` (requester)
 - `members` 1:N `wishlist_approvals` (approver)
@@ -248,25 +251,26 @@
 
 ## Cascade Delete Behavior
 
-| Parent Table | Child Table | On Delete Action |
-|--------------|-------------|------------------|
-| auth.users | user_profiles | CASCADE |
-| households | members | CASCADE |
-| households | shopping_lists | CASCADE |
-| households | wishlists | CASCADE |
-| households | invitations | CASCADE |
-| households | activity_logs | CASCADE |
-| households | points_transactions | CASCADE |
-| households | rewards | CASCADE |
-| members | member_achievements | CASCADE |
-| members | points_transactions | CASCADE |
-| members | reward_redemptions | CASCADE |
-| achievements | member_achievements | CASCADE |
-| rewards | reward_redemptions | CASCADE |
-| wishlists | wishlist_items | CASCADE |
-| wishlists | wishlist_approvals | CASCADE |
+| Parent Table | Child Table         | On Delete Action |
+| ------------ | ------------------- | ---------------- |
+| auth.users   | user_profiles       | CASCADE          |
+| households   | members             | CASCADE          |
+| households   | shopping_lists      | CASCADE          |
+| households   | wishlists           | CASCADE          |
+| households   | invitations         | CASCADE          |
+| households   | activity_logs       | CASCADE          |
+| households   | points_transactions | CASCADE          |
+| households   | rewards             | CASCADE          |
+| members      | member_achievements | CASCADE          |
+| members      | points_transactions | CASCADE          |
+| members      | reward_redemptions  | CASCADE          |
+| achievements | member_achievements | CASCADE          |
+| rewards      | reward_redemptions  | CASCADE          |
+| wishlists    | wishlist_items      | CASCADE          |
+| wishlists    | wishlist_approvals  | CASCADE          |
 
-**Key Design Decision**: 
+**Key Design Decision**:
+
 - If a household is deleted → All members, shopping lists, wishlists, points, rewards CASCADE delete
 - If an auth.user is deleted → user_id in members becomes NULL (soft member remains)
 - If a member is deleted → All their achievements, points, redemptions CASCADE delete
@@ -276,6 +280,7 @@
 ## Indexes for Performance
 
 ### Existing Indexes
+
 - `members(household_id)` - Household member lookups
 - `members(user_id)` - User membership lookups
 - `shopping_lists(household_id)` - List queries
@@ -284,6 +289,7 @@
 - `wishlists(share_slug)` - Public wishlist lookups
 
 ### New Indexes (PR #4 - Gamification)
+
 - `member_achievements(member_id)` - Member achievement queries
 - `member_achievements(achievement_id)` - Achievement popularity tracking
 - `points_transactions(member_id)` - Points balance calculation
@@ -294,6 +300,7 @@
 - `reward_redemptions(status)` - Pending approvals
 
 ### New Indexes (PR #2 - Wishlist Approvals)
+
 - `wishlist_approvals(wishlist_id)` - Approval status lookups
 - `wishlist_approvals(status)` - Pending approvals query
 - `wishlist_approvals(requested_by)` - Child's approval requests
@@ -303,6 +310,7 @@
 ## JSONB Schema Examples
 
 ### achievements.criteria (JSONB)
+
 ```json
 {
   "type": "count",
@@ -321,6 +329,7 @@
 ```
 
 ### member_achievements.progress (JSONB)
+
 ```json
 {
   "current": 5,
@@ -330,6 +339,7 @@
 ```
 
 ### members.metadata (JSONB)
+
 ```json
 {
   "onboarding_completed": true,
@@ -345,6 +355,7 @@
 ```
 
 ### households.settings (JSONB)
+
 ```json
 {
   "timezone": "America/New_York",
@@ -358,6 +369,7 @@
 ```
 
 ### activity_logs.metadata (JSONB)
+
 ```json
 {
   "achievement_id": "uuid",
@@ -371,50 +383,50 @@
 
 ## Foreign Key Constraints Summary
 
-| Table | Column | References | Constraint Name |
-|-------|--------|------------|-----------------|
-| members | household_id | households(id) | members_household_id_fkey |
-| members | user_id | auth.users(id) | members_user_id_fkey |
-| member_achievements | member_id | members(id) | member_achievements_member_id_fkey |
+| Table               | Column         | References       | Constraint Name                         |
+| ------------------- | -------------- | ---------------- | --------------------------------------- |
+| members             | household_id   | households(id)   | members_household_id_fkey               |
+| members             | user_id        | auth.users(id)   | members_user_id_fkey                    |
+| member_achievements | member_id      | members(id)      | member_achievements_member_id_fkey      |
 | member_achievements | achievement_id | achievements(id) | member_achievements_achievement_id_fkey |
-| points_transactions | member_id | members(id) | points_transactions_member_id_fkey |
-| points_transactions | household_id | households(id) | points_transactions_household_id_fkey |
-| rewards | household_id | households(id) | rewards_household_id_fkey |
-| rewards | created_by | members(id) | rewards_created_by_fkey |
-| reward_redemptions | member_id | members(id) | reward_redemptions_member_id_fkey |
-| reward_redemptions | reward_id | rewards(id) | reward_redemptions_reward_id_fkey |
-| reward_redemptions | approved_by | members(id) | reward_redemptions_approved_by_fkey |
-| wishlist_approvals | wishlist_id | wishlists(id) | wishlist_approvals_wishlist_id_fkey |
-| wishlist_approvals | requested_by | members(id) | wishlist_approvals_requested_by_fkey |
-| wishlist_approvals | approved_by | members(id) | wishlist_approvals_approved_by_fkey |
+| points_transactions | member_id      | members(id)      | points_transactions_member_id_fkey      |
+| points_transactions | household_id   | households(id)   | points_transactions_household_id_fkey   |
+| rewards             | household_id   | households(id)   | rewards_household_id_fkey               |
+| rewards             | created_by     | members(id)      | rewards_created_by_fkey                 |
+| reward_redemptions  | member_id      | members(id)      | reward_redemptions_member_id_fkey       |
+| reward_redemptions  | reward_id      | rewards(id)      | reward_redemptions_reward_id_fkey       |
+| reward_redemptions  | approved_by    | members(id)      | reward_redemptions_approved_by_fkey     |
+| wishlist_approvals  | wishlist_id    | wishlists(id)    | wishlist_approvals_wishlist_id_fkey     |
+| wishlist_approvals  | requested_by   | members(id)      | wishlist_approvals_requested_by_fkey    |
+| wishlist_approvals  | approved_by    | members(id)      | wishlist_approvals_approved_by_fkey     |
 
 ---
 
 ## Unique Constraints
 
-| Table | Columns | Purpose |
-|-------|---------|---------|
-| households | slug | URL-friendly unique identifier |
-| members | (household_id, user_id) | User can only join household once |
-| member_achievements | (member_id, achievement_id) | Achievement earned once per member |
-| invitations | (household_id, email, status) | One pending invitation per email |
-| wishlists | share_slug | Unique public sharing URL |
-| achievements | name | Prevent duplicate achievement names |
+| Table               | Columns                       | Purpose                             |
+| ------------------- | ----------------------------- | ----------------------------------- |
+| households          | slug                          | URL-friendly unique identifier      |
+| members             | (household_id, user_id)       | User can only join household once   |
+| member_achievements | (member_id, achievement_id)   | Achievement earned once per member  |
+| invitations         | (household_id, email, status) | One pending invitation per email    |
+| wishlists           | share_slug                    | Unique public sharing URL           |
+| achievements        | name                          | Prevent duplicate achievement names |
 
 ---
 
 ## Check Constraints
 
-| Table | Column | Constraint |
-|-------|--------|------------|
-| members | role | IN ('owner', 'admin', 'member', 'child', 'viewer') |
-| members | date_of_birth | role != 'child' OR date_of_birth IS NOT NULL |
-| achievements | category | IN ('shopping', 'wishlist', 'family', 'general') |
-| achievements | tier | IN ('bronze', 'silver', 'gold', 'platinum') |
-| rewards | points_cost | points_cost > 0 |
-| reward_redemptions | status | IN ('pending', 'approved', 'fulfilled', 'denied') |
-| wishlist_approvals | status | IN ('pending', 'approved', 'denied') |
-| invitations | status | IN ('pending', 'accepted', 'declined', 'expired') |
+| Table              | Column        | Constraint                                         |
+| ------------------ | ------------- | -------------------------------------------------- |
+| members            | role          | IN ('owner', 'admin', 'member', 'child', 'viewer') |
+| members            | date_of_birth | role != 'child' OR date_of_birth IS NOT NULL       |
+| achievements       | category      | IN ('shopping', 'wishlist', 'family', 'general')   |
+| achievements       | tier          | IN ('bronze', 'silver', 'gold', 'platinum')        |
+| rewards            | points_cost   | points_cost > 0                                    |
+| reward_redemptions | status        | IN ('pending', 'approved', 'fulfilled', 'denied')  |
+| wishlist_approvals | status        | IN ('pending', 'approved', 'denied')               |
+| invitations        | status        | IN ('pending', 'accepted', 'declined', 'expired')  |
 
 ---
 
@@ -439,4 +451,3 @@
 ```
 
 ---
-

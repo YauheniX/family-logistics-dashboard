@@ -1,9 +1,10 @@
 # 🎯 Comprehensive Analysis & 4-PR Roadmap
+
 # Family Logistics Dashboard - SaaS Evolution Plan
 
 **Date**: February 15, 2026  
 **Version**: 1.0  
-**Status**: Analysis Complete  
+**Status**: Analysis Complete
 
 ---
 
@@ -27,27 +28,27 @@ This document provides a complete analysis of the Family Logistics Dashboard's c
 
 ### ✅ Existing Tables (Production-Ready)
 
-| Table | Purpose | Key Columns | Status |
-|-------|---------|-------------|--------|
-| **households** | Multi-tenant groups | id, name, slug, created_by, settings | ✅ Complete |
-| **members** | Household members with roles | id, household_id, user_id (nullable), role, display_name, date_of_birth | ✅ Complete |
-| **invitations** | Email-based member invites | id, household_id, email, role, token, expires_at | ✅ Complete |
-| **activity_logs** | Audit trail | id, household_id, member_id, action, entity_type, metadata | ✅ Complete |
-| **shopping_lists** | Household shopping lists | id, household_id, title, status, created_by_member_id | ✅ Complete |
-| **shopping_items** | Shopping list items | id, list_id, title, quantity, category, is_purchased, added_by_member_id, purchased_by_member_id | ✅ Complete |
-| **wishlists** | Member wishlists | id, member_id, household_id, title, visibility, share_slug | ✅ Complete |
-| **wishlist_items** | Wishlist items | id, wishlist_id, title, link, price, priority, is_reserved, reserved_by_email, reserved_by_name | ✅ Complete |
-| **user_profiles** | Extended user profiles | id (FK auth.users), display_name, avatar_url | ✅ Complete |
+| Table              | Purpose                      | Key Columns                                                                                      | Status      |
+| ------------------ | ---------------------------- | ------------------------------------------------------------------------------------------------ | ----------- |
+| **households**     | Multi-tenant groups          | id, name, slug, created_by, settings                                                             | ✅ Complete |
+| **members**        | Household members with roles | id, household_id, user_id (nullable), role, display_name, date_of_birth                          | ✅ Complete |
+| **invitations**    | Email-based member invites   | id, household_id, email, role, token, expires_at                                                 | ✅ Complete |
+| **activity_logs**  | Audit trail                  | id, household_id, member_id, action, entity_type, metadata                                       | ✅ Complete |
+| **shopping_lists** | Household shopping lists     | id, household_id, title, status, created_by_member_id                                            | ✅ Complete |
+| **shopping_items** | Shopping list items          | id, list_id, title, quantity, category, is_purchased, added_by_member_id, purchased_by_member_id | ✅ Complete |
+| **wishlists**      | Member wishlists             | id, member_id, household_id, title, visibility, share_slug                                       | ✅ Complete |
+| **wishlist_items** | Wishlist items               | id, wishlist_id, title, link, price, priority, is_reserved, reserved_by_email, reserved_by_name  | ✅ Complete |
+| **user_profiles**  | Extended user profiles       | id (FK auth.users), display_name, avatar_url                                                     | ✅ Complete |
 
 ### ❌ Missing Tables (Gamification)
 
-| Table Needed | Purpose | Priority |
-|--------------|---------|----------|
-| **achievements** | Achievement definitions | HIGH |
-| **member_achievements** | Member achievement tracking | HIGH |
-| **points_transactions** | Points earned/spent history | MEDIUM |
-| **rewards** | Redeemable rewards catalog | MEDIUM |
-| **challenges** | Age-appropriate tasks | LOW |
+| Table Needed            | Purpose                     | Priority |
+| ----------------------- | --------------------------- | -------- |
+| **achievements**        | Achievement definitions     | HIGH     |
+| **member_achievements** | Member achievement tracking | HIGH     |
+| **points_transactions** | Points earned/spent history | MEDIUM   |
+| **rewards**             | Redeemable rewards catalog  | MEDIUM   |
+| **challenges**          | Age-appropriate tasks       | LOW      |
 
 ---
 
@@ -55,13 +56,13 @@ This document provides a complete analysis of the Family Logistics Dashboard's c
 
 ### Implemented Roles (5 Tiers)
 
-| Role | Access Level | Auth Required | Use Case |
-|------|--------------|---------------|----------|
-| **owner** | Full control, cannot be removed | Yes | Household creator |
-| **admin** | Manage members, full content access | Yes | Co-parent, trusted adult |
-| **member** | Create/edit content | Yes | Adult family members |
-| **child** | Limited access, no invitations | Optional | Children (with or without accounts) |
-| **viewer** | Read-only (partially implemented) | Optional | Grandparents, caregivers |
+| Role       | Access Level                        | Auth Required | Use Case                            |
+| ---------- | ----------------------------------- | ------------- | ----------------------------------- |
+| **owner**  | Full control, cannot be removed     | Yes           | Household creator                   |
+| **admin**  | Manage members, full content access | Yes           | Co-parent, trusted adult            |
+| **member** | Create/edit content                 | Yes           | Adult family members                |
+| **child**  | Limited access, no invitations      | Optional      | Children (with or without accounts) |
+| **viewer** | Read-only (partially implemented)   | Optional      | Grandparents, caregivers            |
 
 **Note**: `public_guest` role exists in design docs but not implemented in database.
 
@@ -70,36 +71,44 @@ This document provides a complete analysis of the Family Logistics Dashboard's c
 ## 1.3 Current RLS Policies
 
 ### Households
+
 - ✅ Select: Creator or member
 - ✅ Insert: Any authenticated user
 - ✅ Update: Owner or admin
 - ✅ Delete: Owner only
 
 ### Members
+
 - ✅ Select: Self or household member
 - ✅ Insert: Owner or admin (via RPC)
 - ✅ Update: Self (own profile) or owner/admin (others)
 - ✅ Delete: Owner/admin (or self-removal)
 
 ### Shopping Lists
+
 - ✅ Select: Household member
-- ✅ Insert: Member, child (with household membership)
+- ✅ Insert: Owner, admin, or member only (children excluded by current RLS)
 - ✅ Update: List creator or owner/admin
 - ✅ Delete: List creator or owner
 
+**Note**: Current RLS in `012_update_shopping_schema.sql` excludes children from creating lists. To allow children to create lists, the `shopping_lists_insert_v2` policy needs to be updated to include `role = 'child'`.
+
 ### Shopping Items
+
 - ✅ Select: Household member
 - ✅ Insert: Any household member (including children)
 - ✅ Update: Item creator or owner/admin
 - ✅ Delete: Item creator or owner
 
 ### Wishlists
+
 - ✅ Select: Owner, household members (if visibility='household'), or public (if visibility='public')
 - ✅ Insert: Any household member
 - ✅ Update: Wishlist owner
 - ✅ Delete: Wishlist owner
 
 ### Wishlist Items
+
 - ✅ Select: Based on parent wishlist visibility
 - ✅ Insert: Wishlist owner
 - ✅ Update: Wishlist owner (full) OR anonymous (reservation only via RPC)
@@ -124,41 +133,46 @@ This document provides a complete analysis of the Family Logistics Dashboard's c
 
 ### Store Health Assessment
 
-| Store | Status | Issues |
-|-------|--------|--------|
-| auth.store | ✅ Working | Dual stores (legacy + new) cause confusion |
-| household.store | ✅ Working | Well-structured, role-based getters |
-| shopping.store | ⚠️ Partial | Basic CRUD works, missing multi-household awareness |
-| wishlist.store | ⚠️ Partial | Missing visibility controls in UI |
-| family.store | ⚠️ Outdated | Uses old `families` schema, needs migration to `households` |
+| Store           | Status      | Issues                                                      |
+| --------------- | ----------- | ----------------------------------------------------------- |
+| auth.store      | ✅ Working  | Dual stores (legacy + new) cause confusion                  |
+| household.store | ✅ Working  | Well-structured, role-based getters                         |
+| shopping.store  | ⚠️ Partial  | Basic CRUD works, missing multi-household awareness         |
+| wishlist.store  | ⚠️ Partial  | Missing visibility controls in UI                           |
+| family.store    | ⚠️ Outdated | Uses old `families` schema, needs migration to `households` |
 
 ---
 
 ## 1.5 Current Vue Components
 
 ### Member Management
+
 - ✅ `MemberCard.vue` - Member display with role badges
 - ✅ `AddChildModal.vue` - Child profile creation with emoji avatars
 - ✅ `InviteMemberModal.vue` - Email-based member invitations
 - ✅ `MemberManagementView.vue` - Member grid with role-based actions
 
 ### Shopping Lists
+
 - ✅ `ShoppingListView.vue` - List display with item management
 - ⚠️ Missing: Category filters, bulk operations, household switcher integration
 
 ### Wishlists
+
 - ✅ `WishlistListView.vue` - Wishlist grid
 - ✅ `WishlistEditView.vue` - Wishlist item management
 - ✅ `PublicWishlistView.vue` - Public share page
 - ⚠️ Missing: Visibility toggle UI, household-shared wishlist view
 
 ### Layout
+
 - ✅ `HouseholdSwitcher.vue` - Household context switcher
 - ✅ `SidebarNav.vue` - Mobile navigation
 - ✅ `BottomNav.vue` - Mobile quick access
 - ✅ `Breadcrumbs.vue` - Navigation breadcrumbs
 
 ### Child Features
+
 - ✅ `AddChildModal.vue` - Child creation with age calculation
 - ⚠️ Missing: Child dashboard, achievement display, progress tracking
 
@@ -167,6 +181,7 @@ This document provides a complete analysis of the Family Logistics Dashboard's c
 ## 1.6 Authentication System
 
 ### Current Setup (Supabase Auth)
+
 - ✅ Email/password authentication
 - ✅ Google OAuth
 - ✅ Auto-profile creation trigger (`handle_new_user()`)
@@ -179,6 +194,7 @@ This document provides a complete analysis of the Family Logistics Dashboard's c
 ## 1.7 Helper Functions (RPC)
 
 ### Member Management
+
 1. `create_child_member()` - Create child without auth account
 2. `invite_member()` - Send email invitation
 3. `accept_invitation()` - Accept pending invitation
@@ -187,12 +203,14 @@ This document provides a complete analysis of the Family Logistics Dashboard's c
 6. `remove_member()` - Remove member from household
 
 ### Role Checks
-7. `user_is_household_member()` - Check membership
-8. `user_is_household_owner()` - Check ownership
-9. `user_is_household_admin()` - Check admin role
-10. `get_member_role()` - Get user's role in household
+
+7. `user_is_household_member(p_household_id, p_user_id)` - Check if user is member of household
+8. `get_member_role(p_household_id, p_user_id)` - Get user's role in household
+9. `has_min_role(p_household_id, p_user_id, p_required_role)` - Check if user has minimum required role
+10. `get_member_id(p_household_id, p_user_id)` - Get member ID for user in household
 
 ### Utilities
+
 11. `get_user_id_by_email()` - Email lookup
 12. `get_email_by_user_id()` - Reverse lookup
 13. `log_activity()` - Activity logging
@@ -204,6 +222,7 @@ This document provides a complete analysis of the Family Logistics Dashboard's c
 ## 1.8 Storage Configuration
 
 ### Existing Buckets
+
 - ✅ `wishlist-images` - Public bucket for wishlist item images
 - ⚠️ Missing: `member-avatars` bucket for custom avatars
 - ⚠️ Missing: `achievement-badges` bucket for gamification
@@ -215,12 +234,14 @@ This document provides a complete analysis of the Family Logistics Dashboard's c
 ## 2.1 Shopping List Integration Gaps
 
 ### Backend ✅ Complete
+
 - ✅ Database schema (households, shopping_lists, shopping_items)
 - ✅ RLS policies (household isolation, role-based access)
 - ✅ Activity logging
 - ✅ Member tracking (added_by, purchased_by)
 
 ### Frontend ⚠️ Partial
+
 - ✅ Basic CRUD (ShoppingListView)
 - ⚠️ No household context switching in shopping view
 - ❌ No category-based filtering
@@ -229,6 +250,7 @@ This document provides a complete analysis of the Family Logistics Dashboard's c
 - ❌ No item assignment to specific members
 
 ### Missing Features
+
 1. Category management (predefined + custom)
 2. Bulk add items (paste list, import from template)
 3. Shopping history analytics
@@ -241,12 +263,14 @@ This document provides a complete analysis of the Family Logistics Dashboard's c
 ## 2.2 Wishlist Integration Gaps
 
 ### Backend ✅ Complete
+
 - ✅ Wishlist visibility levels (private/household/public)
 - ✅ Public reservation system
 - ✅ Share slug generation
 - ✅ Member-based wishlists (not user-based)
 
 ### Frontend ⚠️ Partial
+
 - ✅ Public wishlist view with reservations
 - ✅ Basic CRUD
 - ❌ No visibility toggle in UI
@@ -255,6 +279,7 @@ This document provides a complete analysis of the Family Logistics Dashboard's c
 - ❌ No wishlist approval workflow for children
 
 ### Missing Features
+
 1. Visibility control UI (toggle between private/household/public)
 2. Household wishlist aggregation view
 3. Child wishlist moderation (parent approval)
@@ -267,12 +292,14 @@ This document provides a complete analysis of the Family Logistics Dashboard's c
 ## 2.3 Viewer Role Restrictions Gaps
 
 ### Backend ⚠️ Partial
+
 - ✅ Viewer role exists in schema
 - ✅ Basic RLS policies
 - ⚠️ No viewer-specific restrictions in shopping/wishlist policies
 - ❌ No viewer-restricted dashboard queries
 
 ### Frontend ❌ Missing
+
 - ❌ Viewer-specific dashboard layout
 - ❌ Read-only shopping list view for viewers
 - ❌ Read-only wishlist view for viewers
@@ -280,6 +307,7 @@ This document provides a complete analysis of the Family Logistics Dashboard's c
 - ❌ No "You have view-only access" messaging
 
 ### Missing Features
+
 1. Viewer-specific RLS policy updates
 2. Viewer dashboard (curated, read-only)
 3. UI role checks to hide edit/delete buttons
@@ -291,6 +319,7 @@ This document provides a complete analysis of the Family Logistics Dashboard's c
 ## 2.4 Gamified Child System Gaps
 
 ### Backend ❌ Completely Missing
+
 - ❌ No achievements table
 - ❌ No member_achievements table
 - ❌ No points_transactions table
@@ -298,6 +327,7 @@ This document provides a complete analysis of the Family Logistics Dashboard's c
 - ❌ No challenge system
 
 ### Frontend ⚠️ UI Placeholders Only
+
 - ✅ Child role visual differentiation
 - ✅ Age calculation in AddChildModal
 - ⚠️ Placeholder mentions of achievements (no actual integration)
@@ -307,6 +337,7 @@ This document provides a complete analysis of the Family Logistics Dashboard's c
 - ❌ No reward redemption UI
 
 ### Missing Features
+
 1. Achievement system (database + logic)
 2. Point earning rules
 3. Badge display
@@ -320,17 +351,17 @@ This document provides a complete analysis of the Family Logistics Dashboard's c
 
 ## 2.5 Current vs. Desired Feature Matrix
 
-| Feature | Current Status | Desired Status | Gap |
-|---------|---------------|----------------|-----|
-| **Multi-tenant households** | ✅ Production-ready | ✅ Complete | None |
-| **Member roles (5 tiers)** | ✅ Database complete | ✅ Complete | Frontend role enforcement |
-| **Shopping lists** | ⚠️ Basic CRUD | ✅ Advanced features | Categories, bulk ops, history |
-| **Wishlist visibility** | ⚠️ Backend only | ✅ Full UI controls | Frontend toggles, household view |
-| **Viewer restrictions** | ❌ Not enforced | ✅ Full restrictions | RLS policies, UI read-only mode |
-| **Child profiles** | ✅ Basic creation | ✅ Full management | Dashboard, wishlists, activation |
-| **Gamification** | ❌ Not implemented | ✅ Full system | Database, logic, UI |
-| **Invitations** | ✅ Complete | ✅ Complete | None |
-| **Activity logs** | ✅ Complete | ✅ Complete | None |
+| Feature                     | Current Status       | Desired Status       | Gap                              |
+| --------------------------- | -------------------- | -------------------- | -------------------------------- |
+| **Multi-tenant households** | ✅ Production-ready  | ✅ Complete          | None                             |
+| **Member roles (5 tiers)**  | ✅ Database complete | ✅ Complete          | Frontend role enforcement        |
+| **Shopping lists**          | ⚠️ Basic CRUD        | ✅ Advanced features | Categories, bulk ops, history    |
+| **Wishlist visibility**     | ⚠️ Backend only      | ✅ Full UI controls  | Frontend toggles, household view |
+| **Viewer restrictions**     | ❌ Not enforced      | ✅ Full restrictions | RLS policies, UI read-only mode  |
+| **Child profiles**          | ✅ Basic creation    | ✅ Full management   | Dashboard, wishlists, activation |
+| **Gamification**            | ❌ Not implemented   | ✅ Full system       | Database, logic, UI              |
+| **Invitations**             | ✅ Complete          | ✅ Complete          | None                             |
+| **Activity logs**           | ✅ Complete          | ✅ Complete          | None                             |
 
 ---
 
@@ -378,15 +409,16 @@ members ←─┬─────────────────────
          achievement_rewards
               ↓ N:1
          rewards
-    
+
 members ──→ points_transactions
-              ↓ 
+              ↓
          (points balance calculated)
 ```
 
 ## 3.3 New Tables Schema
 
 ### achievements
+
 ```sql
 CREATE TABLE achievements (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -405,6 +437,7 @@ CREATE TABLE achievements (
 ```
 
 ### member_achievements
+
 ```sql
 CREATE TABLE member_achievements (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -417,6 +450,7 @@ CREATE TABLE member_achievements (
 ```
 
 ### points_transactions
+
 ```sql
 CREATE TABLE points_transactions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -431,6 +465,7 @@ CREATE TABLE points_transactions (
 ```
 
 ### rewards
+
 ```sql
 CREATE TABLE rewards (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -446,6 +481,7 @@ CREATE TABLE rewards (
 ```
 
 ### reward_redemptions
+
 ```sql
 CREATE TABLE reward_redemptions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -467,12 +503,13 @@ CREATE TABLE reward_redemptions (
 ## 4.1 Viewer Role RLS Policies
 
 ### shopping_lists (Update)
+
 ```sql
 -- Viewer: Read-only access
 CREATE POLICY "Viewers can view household shopping lists"
 ON shopping_lists FOR SELECT
 USING (
-  user_is_household_member(auth.uid(), household_id) 
+  user_is_household_member(auth.uid(), household_id)
   AND get_member_role(auth.uid(), household_id) IN ('owner', 'admin', 'member', 'child', 'viewer')
 );
 
@@ -483,12 +520,13 @@ USING (
 ALTER POLICY "Members can update household shopping lists"
 ON shopping_lists
 USING (
-  user_is_household_member(auth.uid(), household_id) 
+  user_is_household_member(auth.uid(), household_id)
   AND get_member_role(auth.uid(), household_id) IN ('owner', 'admin', 'member', 'child')
 );
 ```
 
 ### wishlists (Update)
+
 ```sql
 -- Viewer: Can view household-visible wishlists
 CREATE POLICY "Viewers can view household wishlists"
@@ -506,6 +544,7 @@ USING (
 ## 4.2 Gamification RLS Policies
 
 ### achievements (Public Read)
+
 ```sql
 CREATE POLICY "Anyone can view active achievements"
 ON achievements FOR SELECT
@@ -516,6 +555,7 @@ USING (is_active = TRUE);
 ```
 
 ### member_achievements (Member Access)
+
 ```sql
 -- Members can view their own achievements
 CREATE POLICY "Members can view own achievements"
@@ -539,6 +579,7 @@ USING (
 ```
 
 ### points_transactions (Member Access)
+
 ```sql
 -- Members can view their own transactions
 CREATE POLICY "Members can view own points"
@@ -561,6 +602,7 @@ USING (
 ```
 
 ### rewards (Household Context)
+
 ```sql
 -- Household members can view rewards
 CREATE POLICY "Members can view household rewards"
@@ -580,6 +622,7 @@ USING (
 ```
 
 ### reward_redemptions (Member Access)
+
 ```sql
 -- Members can view own redemptions
 CREATE POLICY "Members can view own redemptions"
@@ -609,46 +652,46 @@ USING (
 
 ## 5.1 Shopping Lists
 
-| Action | Owner | Admin | Member | Child | Viewer | Public |
-|--------|-------|-------|--------|-------|--------|--------|
-| View lists | ✅ | ✅ | ✅ | ✅ | ✅ Read-only | ❌ |
-| Create list | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Edit list | ✅ | ✅ | ✅ Creator | ✅ Creator | ❌ | ❌ |
-| Delete list | ✅ | ✅ | ✅ Creator | ✅ Creator | ❌ | ❌ |
-| Archive list | ✅ | ✅ | ✅ Creator | ❌ | ❌ | ❌ |
-| Add item | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Edit item | ✅ | ✅ | ✅ Creator | ✅ Creator | ❌ | ❌ |
-| Delete item | ✅ | ✅ | ✅ Creator | ✅ Creator | ❌ | ❌ |
-| Mark purchased | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| View analytics | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ |
+| Action         | Owner | Admin | Member     | Child      | Viewer       | Public |
+| -------------- | ----- | ----- | ---------- | ---------- | ------------ | ------ |
+| View lists     | ✅    | ✅    | ✅         | ✅         | ✅ Read-only | ❌     |
+| Create list    | ✅    | ✅    | ✅         | ✅         | ❌           | ❌     |
+| Edit list      | ✅    | ✅    | ✅ Creator | ✅ Creator | ❌           | ❌     |
+| Delete list    | ✅    | ✅    | ✅ Creator | ✅ Creator | ❌           | ❌     |
+| Archive list   | ✅    | ✅    | ✅ Creator | ❌         | ❌           | ❌     |
+| Add item       | ✅    | ✅    | ✅         | ✅         | ❌           | ❌     |
+| Edit item      | ✅    | ✅    | ✅ Creator | ✅ Creator | ❌           | ❌     |
+| Delete item    | ✅    | ✅    | ✅ Creator | ✅ Creator | ❌           | ❌     |
+| Mark purchased | ✅    | ✅    | ✅         | ✅         | ❌           | ❌     |
+| View analytics | ✅    | ✅    | ✅         | ❌         | ✅           | ❌     |
 
 ## 5.2 Wishlists
 
-| Action | Owner | Admin | Member | Child | Viewer | Public |
-|--------|-------|-------|--------|-------|--------|--------|
-| View own wishlist | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| View household wishlists | ✅ | ✅ | ✅ | ✅ Approved | ✅ | ❌ |
-| View public wishlists | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ Via link |
-| Create wishlist | ✅ | ✅ | ✅ | ✅ Needs approval | ❌ | ❌ |
-| Edit wishlist | ✅ Owner | ✅ Owner | ✅ Owner | ✅ Owner | ❌ | ❌ |
-| Delete wishlist | ✅ | ✅ Owner | ✅ Owner | ✅ Owner (with approval) | ❌ | ❌ |
-| Set visibility | ✅ | ✅ | ✅ | ❌ Parent-controlled | ❌ | ❌ |
-| Add item | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Reserve item | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ Via link |
-| View reservations | ✅ Owner | ✅ Owner | ✅ Owner | ✅ Owner | ❌ | ❌ |
+| Action                   | Owner    | Admin    | Member   | Child                    | Viewer | Public      |
+| ------------------------ | -------- | -------- | -------- | ------------------------ | ------ | ----------- |
+| View own wishlist        | ✅       | ✅       | ✅       | ✅                       | ✅     | ❌          |
+| View household wishlists | ✅       | ✅       | ✅       | ✅ Approved              | ✅     | ❌          |
+| View public wishlists    | ✅       | ✅       | ✅       | ✅                       | ✅     | ✅ Via link |
+| Create wishlist          | ✅       | ✅       | ✅       | ✅ Needs approval        | ❌     | ❌          |
+| Edit wishlist            | ✅ Owner | ✅ Owner | ✅ Owner | ✅ Owner                 | ❌     | ❌          |
+| Delete wishlist          | ✅       | ✅ Owner | ✅ Owner | ✅ Owner (with approval) | ❌     | ❌          |
+| Set visibility           | ✅       | ✅       | ✅       | ❌ Parent-controlled     | ❌     | ❌          |
+| Add item                 | ✅       | ✅       | ✅       | ✅                       | ❌     | ❌          |
+| Reserve item             | ✅       | ✅       | ✅       | ✅                       | ✅     | ✅ Via link |
+| View reservations        | ✅ Owner | ✅ Owner | ✅ Owner | ✅ Owner                 | ❌     | ❌          |
 
 ## 5.3 Gamification
 
-| Action | Owner | Admin | Member | Child | Viewer | Public |
-|--------|-------|-------|--------|-------|--------|--------|
-| View achievements | ✅ | ✅ | ✅ | ✅ Own | ✅ Household | ❌ |
-| Earn achievements | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| View points | ✅ All | ✅ All | ✅ Own | ✅ Own | ✅ View only | ❌ |
-| Award points (manual) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Create rewards | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Redeem rewards | ✅ | ✅ | ✅ | ✅ Needs approval | ❌ | ❌ |
-| Approve redemptions | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| View leaderboard | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Action                | Owner  | Admin  | Member | Child             | Viewer       | Public |
+| --------------------- | ------ | ------ | ------ | ----------------- | ------------ | ------ |
+| View achievements     | ✅     | ✅     | ✅     | ✅ Own            | ✅ Household | ❌     |
+| Earn achievements     | ✅     | ✅     | ✅     | ✅                | ❌           | ❌     |
+| View points           | ✅ All | ✅ All | ✅ Own | ✅ Own            | ✅ View only | ❌     |
+| Award points (manual) | ✅     | ✅     | ❌     | ❌                | ❌           | ❌     |
+| Create rewards        | ✅     | ✅     | ❌     | ❌                | ❌           | ❌     |
+| Redeem rewards        | ✅     | ✅     | ✅     | ✅ Needs approval | ❌           | ❌     |
+| Approve redemptions   | ✅     | ✅     | ❌     | ❌                | ❌           | ❌     |
+| View leaderboard      | ✅     | ✅     | ✅     | ✅                | ✅           | ❌     |
 
 ---
 
@@ -657,17 +700,20 @@ USING (
 ## PR #1: Shopping List Integration 🛒
 
 ### Goal
+
 Complete shopping list functionality with household context, advanced features, and role-based permissions.
 
 ### Scope
 
 #### Backend (Already Complete ✅)
+
 - ✅ Database schema (shopping_lists, shopping_items)
 - ✅ RLS policies (household isolation)
 - ✅ Activity logging
 - ✅ Helper functions
 
 #### Frontend (To Implement)
+
 1. **Shopping Store Refactor**
    - Update to use household context
    - Add category filtering
@@ -692,6 +738,7 @@ Complete shopping list functionality with household context, advanced features, 
    - Share list to other households (optional)
 
 #### Testing
+
 - [ ] Unit tests for shopping store
 - [ ] Component tests for new modals
 - [ ] E2E tests for shopping flow
@@ -699,6 +746,7 @@ Complete shopping list functionality with household context, advanced features, 
 - [ ] Household context switching tests
 
 #### Acceptance Criteria
+
 - [ ] Shopping lists scoped to household
 - [ ] Category filtering works
 - [ ] Bulk add items functional
@@ -713,18 +761,22 @@ Complete shopping list functionality with household context, advanced features, 
 ## PR #2: Wishlist Integration 🎁
 
 ### Goal
+
 Complete wishlist functionality with visibility controls, household sharing, and child wishlist management.
 
 ### Scope
 
 #### Backend (Mostly Complete ✅)
+
 - ✅ Wishlist visibility levels (private/household/public)
 - ✅ Share slug system
 - ✅ Public reservation
 - ⚠️ Add child wishlist approval flow (RPC)
 
 #### Backend Additions
+
 1. **Child Wishlist Approval**
+
    ```sql
    CREATE TABLE wishlist_approvals (
      id UUID PRIMARY KEY,
@@ -743,6 +795,7 @@ Complete wishlist functionality with visibility controls, household sharing, and
    - `deny_child_wishlist()`
 
 #### Frontend (To Implement)
+
 1. **Wishlist Store Enhancement**
    - Add visibility control methods
    - Implement household wishlist aggregation
@@ -761,6 +814,7 @@ Complete wishlist functionality with visibility controls, household sharing, and
    - Duplicate detection across household
 
 #### Testing
+
 - [ ] Unit tests for wishlist store
 - [ ] Visibility toggle tests
 - [ ] Child approval workflow tests
@@ -768,6 +822,7 @@ Complete wishlist functionality with visibility controls, household sharing, and
 - [ ] Household aggregation tests
 
 #### Acceptance Criteria
+
 - [ ] Visibility toggle works (private/household/public)
 - [ ] Household members can view household wishlists
 - [ ] Child wishlists require approval
@@ -781,11 +836,13 @@ Complete wishlist functionality with visibility controls, household sharing, and
 ## PR #3: Viewer Role Restrictions 👀
 
 ### Goal
+
 Implement complete viewer role restrictions with read-only access across shopping, wishlists, and household features.
 
 ### Scope
 
 #### Backend (To Implement)
+
 1. **RLS Policy Updates**
    - Update shopping_lists policies (viewer read-only)
    - Update shopping_items policies (viewer read-only)
@@ -793,6 +850,7 @@ Implement complete viewer role restrictions with read-only access across shoppin
    - Add viewer-specific helper functions
 
 2. **New Helper Functions**
+
    ```sql
    CREATE FUNCTION user_is_viewer(user_id UUID, household_id UUID)
    RETURNS BOOLEAN AS $$
@@ -809,6 +867,7 @@ Implement complete viewer role restrictions with read-only access across shoppin
    - Focus on read-only stats
 
 #### Frontend (To Implement)
+
 1. **Role-Aware Components**
    - `ViewerDashboard.vue` (new) - Curated read-only view
    - Update `ShoppingListView.vue` - Hide edit buttons for viewers
@@ -825,6 +884,7 @@ Implement complete viewer role restrictions with read-only access across shoppin
    - Highlight what viewers can/cannot do
 
 #### Testing
+
 - [ ] RLS policy tests for viewer role
 - [ ] UI permission check tests
 - [ ] Viewer dashboard tests
@@ -832,6 +892,7 @@ Implement complete viewer role restrictions with read-only access across shoppin
 - [ ] Edge case tests (viewer switches to member role)
 
 #### Acceptance Criteria
+
 - [ ] Viewers can view household content
 - [ ] Viewers cannot create/edit/delete anything
 - [ ] UI clearly indicates read-only mode
@@ -845,11 +906,13 @@ Implement complete viewer role restrictions with read-only access across shoppin
 ## PR #4: Gamified Child System 🎮
 
 ### Goal
+
 Implement complete gamification system with achievements, points, rewards, and child progress dashboard.
 
 ### Scope
 
 #### Backend (To Implement - Complete System)
+
 1. **Database Schema**
    - `achievements` table (see ERD section)
    - `member_achievements` table
@@ -884,6 +947,7 @@ Implement complete gamification system with achievements, points, rewards, and c
    - Age-appropriate achievements
 
 #### Frontend (To Implement - Complete System)
+
 1. **Pinia Stores**
    - `gamification.store.ts` (new) - Achievements, points, rewards state
    - Methods: `loadAchievements()`, `loadMemberPoints()`, `redeemReward()`
@@ -921,6 +985,7 @@ Implement complete gamification system with achievements, points, rewards, and c
    - Reward redemption timeline
 
 #### Testing
+
 - [ ] Achievement RLS policy tests
 - [ ] Points calculation tests
 - [ ] Reward redemption flow tests
@@ -930,6 +995,7 @@ Implement complete gamification system with achievements, points, rewards, and c
 - [ ] E2E gamification flow tests
 
 #### Acceptance Criteria
+
 - [ ] Achievements auto-awarded based on actions
 - [ ] Points balance calculated correctly
 - [ ] Child dashboard displays personalized data
@@ -948,6 +1014,7 @@ Implement complete gamification system with achievements, points, rewards, and c
 ## 7.1 Child User Flows
 
 ### Child Profile Creation (Already Implemented ✅)
+
 ```
 Parent → Add Child → Select Avatar → Enter Name → Enter Birthday → Save
   ↓
@@ -955,6 +1022,7 @@ Child profile created (user_id = null, role = 'child')
 ```
 
 ### Child Wishlist Creation (PR #2)
+
 ```
 Child → Create Wishlist → Add Items → Request Approval
   ↓
@@ -964,6 +1032,7 @@ Wishlist becomes visible based on visibility setting
 ```
 
 ### Child Earns Achievement (PR #4)
+
 ```
 Child → Complete Action (e.g., mark shopping item purchased)
   ↓
@@ -975,6 +1044,7 @@ Points added to balance
 ```
 
 ### Child Redeems Reward (PR #4)
+
 ```
 Child → Browse Rewards → Select → Request Redemption
   ↓
@@ -984,6 +1054,7 @@ If approved: Points deducted, reward marked "fulfilled"
 ```
 
 ### Child Account Activation (Already Implemented ✅)
+
 ```
 Child reaches age 13 (or parent-set age)
   ↓
@@ -995,6 +1066,7 @@ user_id populated, child can login independently
 ## 7.2 Viewer User Flows
 
 ### Viewer Joins Household (Already Implemented ✅)
+
 ```
 Owner/Admin → Invite Member → Set role = 'viewer' → Send invitation
   ↓
@@ -1004,6 +1076,7 @@ Viewer joins household with read-only access
 ```
 
 ### Viewer Views Shopping List (PR #3)
+
 ```
 Viewer → Login → Select Household → Navigate to Shopping
   ↓
@@ -1015,6 +1088,7 @@ Edit/delete buttons hidden
 ```
 
 ### Viewer Views Wishlists (PR #3)
+
 ```
 Viewer → Navigate to Wishlists
   ↓
@@ -1026,6 +1100,7 @@ Can view items, cannot edit/add/delete
 ## 7.3 Parent Control Flows
 
 ### Parent Creates Custom Reward (PR #4)
+
 ```
 Parent → Gamification Settings → Create Reward
   ↓
@@ -1035,6 +1110,7 @@ Save → Reward added to household catalog
 ```
 
 ### Parent Reviews Child Wishlist (PR #2)
+
 ```
 Parent → Notifications → Child wishlist approval pending
   ↓
@@ -1044,6 +1120,7 @@ Child notified of decision
 ```
 
 ### Parent Monitors Child Progress (PR #4)
+
 ```
 Parent → Child Dashboard → Select child
   ↓
@@ -1066,11 +1143,11 @@ PR #1 (Shopping Lists)
 PR #2 (Wishlists)
   ├── No dependencies
   └── Estimated: 3-4 days
-  
+
 PR #3 (Viewer Restrictions)
   ├── Depends on: PR #1, PR #2 (to test restrictions)
   └── Estimated: 2-3 days
-  
+
 PR #4 (Gamification)
   ├── Depends on: PR #1 (shopping triggers achievements)
   └── Estimated: 5-7 days
@@ -1083,6 +1160,7 @@ Total Estimated Time: 12-17 days
 ### PR #1: No migration needed (schema complete)
 
 ### PR #2: Child Wishlist Approval
+
 ```sql
 -- File: 015_wishlist_approvals.sql
 
@@ -1121,6 +1199,7 @@ USING (
 ```
 
 ### PR #3: Viewer Role RLS Updates
+
 ```sql
 -- File: 016_viewer_role_policies.sql
 
@@ -1159,6 +1238,7 @@ $$ LANGUAGE sql SECURITY DEFINER STABLE;
 ```
 
 ### PR #4: Gamification Schema
+
 ```sql
 -- File: 017_gamification_schema.sql
 
@@ -1262,21 +1342,25 @@ INSERT INTO achievements (name, description, icon, category, tier, points_reward
 ## 8.3 Testing Strategy
 
 ### Unit Tests (Each PR)
+
 - Store actions and getters
 - Helper function logic
 - Permission calculations
 
 ### Integration Tests (Each PR)
+
 - RLS policy enforcement
 - Database triggers
 - Cross-table queries
 
 ### E2E Tests (Each PR)
+
 - Complete user flows
 - Role-based access scenarios
 - Edge cases (e.g., viewer tries to edit)
 
 ### Regression Tests (After Each PR)
+
 - Ensure existing features still work
 - No broken navigation
 - No permission escalation bugs
@@ -1315,30 +1399,35 @@ INSERT INTO achievements (name, description, icon, category, tier, points_reward
 # PHASE 10: FUTURE ENHANCEMENTS (Post-4-PR)
 
 ## Phase 5: Analytics & Insights
+
 - Shopping spending analytics
 - Wishlist trends (popular items, price tracking)
 - Achievement completion rates
 - Household engagement metrics
 
 ## Phase 6: Mobile App
+
 - React Native app with same backend
 - Push notifications for achievements
 - Barcode scanning for shopping
 - Offline mode
 
 ## Phase 7: AI Features
+
 - Gift suggestions based on age/interests
 - Auto-categorize shopping items
 - Price comparison across stores
 - Budget recommendations
 
 ## Phase 8: Enterprise Features
+
 - Billing system (Stripe integration)
 - Custom branding per household
 - Advanced permissions (custom roles)
 - White-label option
 
 ## Phase 9: Social Features
+
 - Share achievements with friends
 - Cross-household wishlists (birthdays)
 - Community reward ideas
@@ -1403,55 +1492,62 @@ src/
 ## Appendix B: API Endpoint Summary (RPC Functions)
 
 ### Existing
+
 1. `create_child_member(household_id, display_name, date_of_birth, avatar_url)`
 2. `invite_member(household_id, email, role)`
 3. `accept_invitation(token)`
 4. `activate_child_account(member_id, email, password)`
 5. `promote_member_role(member_id, new_role)`
 6. `remove_member(member_id)`
-7. `user_is_household_member(user_id, household_id)`
-8. `user_is_household_owner(user_id, household_id)`
-9. `get_member_role(user_id, household_id)`
-10. `log_activity(household_id, member_id, action, entity_type, entity_id, metadata)`
-11. `reserve_wishlist_item(item_id, reserved_by_email, reserved_by_name)`
+7. `user_is_household_member(p_household_id, p_user_id)` - Check membership
+8. `get_member_id(p_household_id, p_user_id)` - Get member ID
+9. `get_member_role(p_household_id, p_user_id)` - Get role
+10. `has_min_role(p_household_id, p_user_id, p_required_role)` - Check minimum role
+11. `log_activity(household_id, member_id, action, entity_type, entity_id, metadata)`
+12. `reserve_wishlist_item(item_id, reserved_by_email, reserved_by_name)`
 
 ### New (PR #2)
-12. `request_child_wishlist_approval(wishlist_id)`
-13. `approve_child_wishlist(approval_id, approved_by)`
-14. `deny_child_wishlist(approval_id, approved_by, notes)`
+
+13. `request_child_wishlist_approval(wishlist_id)`
+14. `approve_child_wishlist(approval_id, visibility)`
+15. `deny_child_wishlist(approval_id, notes)`
 
 ### New (PR #3)
-15. `user_is_viewer(user_id, household_id)`
-16. `get_viewer_dashboard(household_id, user_id)`
+
+16. `user_is_viewer(p_household_id, p_user_id)`
+17. `get_viewer_dashboard(household_id)`
 
 ### New (PR #4)
-17. `award_achievement(member_id, achievement_id)`
-18. `get_member_points(member_id)`
-19. `create_reward(household_id, name, description, points_cost)`
-20. `redeem_reward(member_id, reward_id)`
-21. `approve_redemption(redemption_id, approved_by)`
-22. `auto_check_achievements(member_id)` (trigger-based)
-23. `get_household_leaderboard(household_id)`
+
+18. `award_achievement(member_id, achievement_id)`
+19. `get_member_points(member_id)`
+20. `create_reward(household_id, name, description, points_cost)`
+21. `redeem_reward(reward_id)`
+22. `approve_redemption(redemption_id)`
+23. `auto_check_achievements(member_id)` (trigger-based)
+24. `get_household_leaderboard(household_id)`
 
 ## Appendix C: Component Count After 4 PRs
 
-| Feature | Components Before | Components After | New Components |
-|---------|------------------|------------------|----------------|
-| Shopping | 1 | 5 | +4 (PR #1) |
-| Wishlist | 3 | 6 | +3 (PR #2) |
-| Viewer | 0 | 2 | +2 (PR #3) |
-| Gamification | 0 | 15 | +15 (PR #4) |
-| **Total** | **~50** | **~74** | **+24** |
+| Feature      | Components Before | Components After | New Components |
+| ------------ | ----------------- | ---------------- | -------------- |
+| Shopping     | 1                 | 5                | +4 (PR #1)     |
+| Wishlist     | 3                 | 6                | +3 (PR #2)     |
+| Viewer       | 0                 | 2                | +2 (PR #3)     |
+| Gamification | 0                 | 15               | +15 (PR #4)    |
+| **Total**    | **~50**           | **~74**          | **+24**        |
 
 ## Appendix D: Database Size Estimates
 
 ### Before Gamification
+
 - Tables: 9
 - RLS Policies: ~30
 - Indexes: ~20
 - RPC Functions: 11
 
 ### After Gamification (PR #4)
+
 - Tables: 14 (+5)
 - RLS Policies: ~45 (+15)
 - Indexes: ~35 (+15)
@@ -1462,6 +1558,7 @@ src/
 # SUMMARY
 
 ## What We Have Today ✅
+
 - Multi-tenant architecture (production-ready)
 - Shopping lists (database complete, frontend basic)
 - Wishlists (database complete, frontend partial)
@@ -1471,6 +1568,7 @@ src/
 - Activity logging (complete)
 
 ## What We Need (4 PRs) 🚧
+
 1. **PR #1** - Advanced shopping list features (2-3 days)
 2. **PR #2** - Wishlist visibility & child approval (3-4 days)
 3. **PR #3** - Viewer role enforcement (2-3 days)
@@ -1479,6 +1577,7 @@ src/
 ## Total Timeline: 12-17 days
 
 ## Success Metrics
+
 - [ ] 100% RLS policy coverage
 - [ ] All roles properly restricted
 - [ ] Gamification system fully functional
@@ -1493,4 +1592,3 @@ src/
 **Next Review**: After PR #1 completion
 
 ---
-
