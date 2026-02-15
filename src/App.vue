@@ -113,19 +113,18 @@ initTheme();
 
 // Initialize household store (mock mode for now)
 onMounted(() => {
-  if (authStore.isAuthenticated) {
-    householdStore.initializeMockHouseholds();
+  if (authStore.user?.id) {
+    householdStore.initializeForUser(authStore.user.id);
   }
 });
 
 // Watch for auth state changes to initialize households on login
 watch(
-  () => authStore.isAuthenticated,
-  (isAuth, wasAuth) => {
-    if (isAuth && !wasAuth) {
-      // User just logged in - initialize households
-      householdStore.initializeMockHouseholds();
-    } else if (!isAuth && wasAuth) {
+  () => authStore.user?.id,
+  (userId, prevUserId) => {
+    if (userId && !prevUserId) {
+      householdStore.initializeForUser(userId);
+    } else if (!userId && prevUserId) {
       // User just logged out - clear household context
       householdStore.setCurrentHousehold(null);
       householdStore.loadHouseholds([]);

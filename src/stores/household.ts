@@ -1,5 +1,7 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
+import { isMockMode } from '@/config/backend.config';
+import { supabase } from '@/features/shared/infrastructure/supabase.client';
 
 export interface Household {
   id: string;
@@ -8,6 +10,8 @@ export interface Household {
   emoji?: string;
   role: 'owner' | 'admin' | 'member' | 'child' | 'viewer';
 }
+
+type HouseholdRole = Household['role'];
 
 /**
  * Household context store - manages current household selection
@@ -71,6 +75,53 @@ export const useHouseholdStore = defineStore('household', () => {
     }
   }
 
+  async function initializeForUser(userId: string) {
+    if (!userId) {
+      loadHouseholds([]);
+      setCurrentHousehold(null);
+      return;
+    }
+
+    if (isMockMode()) {
+      initializeMockHouseholds();
+      return;
+    }
+
+    loading.value = true;
+    try {
+      // members.household_id -> households.id relationship
+      const { data, error } = await supabase
+        .from('members')
+        .select('role, households:households(id, name, slug)')
+        .eq('user_id', userId)
+        .eq('is_active', true);
+
+      if (error) {
+        console.error('Failed to load households:', error);
+        loadHouseholds([]);
+        setCurrentHousehold(null);
+        return;
+      }
+
+      const mapped: Household[] = (data ?? [])
+        .map((row: any) => {
+          const household = row.households;
+          if (!household?.id) return null;
+          return {
+            id: String(household.id),
+            name: String(household.name ?? 'Household'),
+            slug: String(household.slug ?? ''),
+            role: (row.role as HouseholdRole) ?? 'member',
+          } satisfies Household;
+        })
+        .filter(Boolean) as Household[];
+
+      loadHouseholds(mapped);
+    } finally {
+      loading.value = false;
+    }
+  }
+
   // For demo/mock mode - populate with sample households
   function initializeMockHouseholds() {
     const mockHouseholds: Household[] = [
@@ -115,6 +166,7 @@ export const useHouseholdStore = defineStore('household', () => {
     setCurrentHousehold,
     loadHouseholds,
     switchHousehold,
+    initializeForUser,
     initializeMockHouseholds,
   };
 });

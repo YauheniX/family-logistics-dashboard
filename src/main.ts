@@ -40,14 +40,14 @@ app.use(pinia);
       const current = router.currentRoute.value;
       if (current.meta.guestOnly) {
         const redirectQuery = current.query.redirect;
-        const redirectFromQuery = Array.isArray(redirectQuery) ? redirectQuery[0] : redirectQuery;
+        const redirectParam = Array.isArray(redirectQuery) ? redirectQuery[0] : redirectQuery;
+        const redirectFromQuery = typeof redirectParam === 'string' ? redirectParam : undefined;
         const redirectFromStorage = window.sessionStorage.getItem('postAuthRedirect');
 
+        const fromQuery = normalizeRedirectParam(redirectFromQuery);
+        const fromStorage = normalizeRedirectParam(redirectFromStorage ?? undefined);
         // Try query param first, then storage, then default to '/'
-        const target =
-          normalizeRedirectParam(redirectFromQuery) !== '/'
-            ? normalizeRedirectParam(redirectFromQuery)
-            : normalizeRedirectParam(redirectFromStorage);
+        const target = fromQuery !== '/' ? fromQuery : fromStorage;
 
         window.sessionStorage.removeItem('postAuthRedirect');
         await router.replace(target);

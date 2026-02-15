@@ -5,6 +5,13 @@
 -- Old tables (families, family_members) remain functional.
 -- ════════════════════════════════════════════════════════════
 
+-- Required for uuid_generate_v4()
+create extension if not exists "uuid-ossp";
+
+-- Supabase installs many extension functions under schema "extensions".
+-- Ensure migrations can resolve uuid_generate_v4() without schema-qualifying every call.
+set search_path = public, extensions;
+
 -- ─── 1. Households Table ─────────────────────────────────────
 
 create table if not exists households (
@@ -77,10 +84,7 @@ create table if not exists invitations (
   accepted_at      timestamptz,
   
   constraint invitations_email_format 
-    check (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
-  constraint invitations_unique_pending 
-    unique (household_id, email, status) 
-    where status = 'pending'
+    check (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
 );
 
 comment on table invitations is 'Pending invitations to join households';
@@ -134,6 +138,12 @@ create index idx_invitations_email on invitations(email);
 create index idx_invitations_status on invitations(status) where status = 'pending';
 create index idx_invitations_token on invitations(token);
 create index idx_invitations_expires_at on invitations(expires_at) where status = 'pending';
+
+-- Prevent multiple pending invitations for the same household+email.
+-- Postgres supports partial unique indexes, but not partial UNIQUE constraints in CREATE TABLE.
+create unique index if not exists idx_invitations_unique_pending
+  on invitations(household_id, email)
+  where status = 'pending';
 
 -- Activity Logs
 create index idx_activity_logs_household_id on activity_logs(household_id);

@@ -80,9 +80,9 @@ begin
   with updates as (
     update shopping_items si
     set added_by_member_id = m.id
-    from members m
-    join shopping_lists sl on sl.id = si.list_id
-    where m.user_id = si.added_by
+    from members m, shopping_lists sl
+    where sl.id = si.list_id
+      and m.user_id = si.added_by
       and m.household_id = sl.household_id
       and si.added_by_member_id is null
     returning si.id
@@ -94,9 +94,9 @@ begin
   -- Map shopping_items.purchased_by → purchased_by_member_id
   update shopping_items si
   set purchased_by_member_id = m.id
-  from members m
-  join shopping_lists sl on sl.id = si.list_id
-  where m.user_id = si.purchased_by
+  from members m, shopping_lists sl
+  where sl.id = si.list_id
+    and m.user_id = si.purchased_by
     and m.household_id = sl.household_id
     and si.purchased_by is not null
     and si.purchased_by_member_id is null;
@@ -216,7 +216,6 @@ $$;
 create trigger shopping_list_activity_log
   after insert or update on shopping_lists
   for each row
-  when (TG_OP = 'INSERT' or OLD.status IS DISTINCT FROM NEW.status)
   execute function log_shopping_list_activity();
 
 -- Log shopping item activity
@@ -265,7 +264,6 @@ $$;
 create trigger shopping_item_activity_log
   after insert or update on shopping_items
   for each row
-  when (TG_OP = 'INSERT' or (not OLD.is_purchased and NEW.is_purchased))
   execute function log_shopping_item_activity();
 
 -- ─── 5. Update RLS Policies ──────────────────────────────────
