@@ -13,9 +13,11 @@ export function isSafeInternalPath(path: string): boolean {
   // Disallow full URLs or protocol-relative URLs.
   if (/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(trimmed)) return false;
   if (trimmed.startsWith('//')) return false;
-  // Avoid obvious JS/data payloads.
-  if (trimmed.toLowerCase().startsWith('javascript:')) return false;
-  if (trimmed.toLowerCase().startsWith('data:')) return false;
+  // Avoid obvious JS/data/vbscript payloads.
+  const lower = trimmed.toLowerCase();
+  if (lower.startsWith('javascript:')) return false;
+  if (lower.startsWith('data:')) return false;
+  if (lower.startsWith('vbscript:')) return false;
   return true;
 }
 
