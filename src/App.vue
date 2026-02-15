@@ -8,10 +8,10 @@
         @close="mobileNavOpen = false"
       />
 
-      <main class="flex-1">
+      <main class="flex-1 pb-16 lg:pb-0">
         <header
           v-if="showShell"
-          class="flex items-center justify-between gap-3 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-3 md:px-6 md:py-4 md:h-16"
+          class="flex items-center justify-between gap-3 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-3 md:px-6 md:py-4"
         >
           <div class="flex min-w-0 items-center gap-2 md:gap-3">
             <BaseButton
@@ -22,16 +22,24 @@
             >
               ☰
             </BaseButton>
+            
+            <!-- Household Switcher (Desktop) -->
+            <div class="hidden md:block">
+              <HouseholdSwitcher />
+            </div>
+            
             <h1
-              class="truncate text-lg font-semibold text-neutral-900 dark:text-neutral-50 md:text-h2"
+              class="truncate text-lg font-semibold text-neutral-900 dark:text-neutral-50 md:text-xl"
             >
               {{ pageTitle }}
             </h1>
           </div>
+          
           <div class="flex items-center gap-2 md:gap-3">
             <BaseButton
               variant="ghost"
               aria-label="Report a problem"
+              class="hidden sm:inline-flex"
               @click="reportModalOpen = true"
             >
               Report a problem
@@ -52,12 +60,23 @@
             </div>
           </div>
         </header>
+        
+        <!-- Breadcrumbs -->
+        <div
+          v-if="showShell"
+          class="px-4 py-2 md:px-6 border-b border-neutral-100 dark:border-neutral-700/50"
+        >
+          <Breadcrumbs />
+        </div>
 
-        <section class="p-6">
+        <section class="p-4 md:p-6">
           <RouterView />
         </section>
       </main>
     </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <BottomNav v-if="showShell" />
 
     <ReportProblemModal :open="reportModalOpen" @close="reportModalOpen = false" />
 
@@ -67,17 +86,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted } from 'vue';
 import { RouterView, useRoute, useRouter } from 'vue-router';
 import SidebarNav from '@/components/layout/SidebarNav.vue';
+import BottomNav from '@/components/layout/BottomNav.vue';
+import Breadcrumbs from '@/components/layout/Breadcrumbs.vue';
+import HouseholdSwitcher from '@/components/layout/HouseholdSwitcher.vue';
 import ToastContainer from '@/components/shared/ToastContainer.vue';
 import ThemeToggle from '@/components/shared/ThemeToggle.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import ReportProblemModal from '@/components/shared/ReportProblemModal.vue';
 import { useAuthStore } from '@/stores/auth';
+import { useHouseholdStore } from '@/stores/household';
 import { useTheme } from '@/composables/useTheme';
 
 const authStore = useAuthStore();
+const householdStore = useHouseholdStore();
 const route = useRoute();
 const router = useRouter();
 const { initTheme } = useTheme();
@@ -86,6 +110,13 @@ const reportModalOpen = ref(false);
 
 // Initialize theme
 initTheme();
+
+// Initialize household store (mock mode for now)
+onMounted(() => {
+  if (authStore.isAuthenticated) {
+    householdStore.initializeMockHouseholds(authStore.user?.id || 'user-1');
+  }
+});
 
 const showShell = computed(() => Boolean(route.meta.requiresAuth));
 
@@ -99,8 +130,8 @@ watch(
 const pageTitle = computed(() => {
   const routeName = route.name as string;
   const titles: Record<string, string> = {
-    dashboard: 'Dashboard',
-    'family-list': 'Families',
+    dashboard: 'Home',
+    'family-list': 'Members',
     'family-detail': 'Family Details',
     'shopping-list': 'Shopping List',
     'wishlist-list': 'Wishlists',
@@ -108,7 +139,7 @@ const pageTitle = computed(() => {
     'public-wishlist': 'Public Wishlist',
     settings: 'Settings',
   };
-  return titles[routeName] || 'Family Logistics';
+  return titles[routeName] || 'FamilyBoard';
 });
 
 const logout = async () => {
