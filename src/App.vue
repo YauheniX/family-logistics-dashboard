@@ -118,6 +118,21 @@ onMounted(() => {
   }
 });
 
+// Watch for auth state changes to initialize households on login
+watch(
+  () => authStore.isAuthenticated,
+  (isAuth, wasAuth) => {
+    if (isAuth && !wasAuth) {
+      // User just logged in - initialize households
+      householdStore.initializeMockHouseholds();
+    } else if (!isAuth && wasAuth) {
+      // User just logged out - clear household context
+      householdStore.setCurrentHousehold(null);
+      householdStore.loadHouseholds([]);
+    }
+  },
+);
+
 const showShell = computed(() => Boolean(route.meta.requiresAuth));
 
 watch(

@@ -50,14 +50,14 @@ export const useHouseholdStore = defineStore('household', () => {
     if (savedId) {
       const saved = userHouseholds.find(h => h.id === savedId);
       if (saved) {
-        currentHousehold.value = saved;
+        setCurrentHousehold(saved);
         return;
       }
     }
     
     // Default to first household
     if (userHouseholds.length > 0) {
-      currentHousehold.value = userHouseholds[0];
+      setCurrentHousehold(userHouseholds[0]);
     }
   }
 

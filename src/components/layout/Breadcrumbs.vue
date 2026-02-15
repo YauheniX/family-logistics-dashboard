@@ -54,14 +54,13 @@ const breadcrumbs = computed<Breadcrumb[]>(() => {
   // Build breadcrumbs based on current route
   switch (routeName) {
     case 'family-list':
-      crumbs.push({ label: 'Families', to: '/families' });
+      crumbs.push({ label: 'Members', to: '/families' });
       break;
     case 'family-detail':
-      crumbs.push({ label: 'Families', to: '/families' });
-      crumbs.push({ label: 'Family Details', to: route.path });
+      crumbs.push({ label: 'Members', to: '/families' });
+      crumbs.push({ label: 'Member Details', to: route.path });
       break;
     case 'shopping-list':
-      crumbs.push({ label: 'Shopping Lists', to: '/families' });
       crumbs.push({ label: 'Shopping List', to: route.path });
       break;
     case 'wishlist-list':

@@ -1,4 +1,12 @@
 <template>
+  <!-- Overlay to close more menu -->
+  <div
+    v-if="showMoreMenu"
+    class="fixed inset-0 z-30 bg-black/20 lg:hidden"
+    aria-hidden="true"
+    @click="closeMoreMenu"
+  ></div>
+
   <!-- Mobile Bottom Navigation (visible only on mobile) -->
   <nav
     class="fixed bottom-0 left-0 right-0 z-40 lg:hidden border-t border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-2 py-2 safe-area-inset-bottom"
@@ -38,7 +46,7 @@
     <!-- More Menu Dropdown -->
     <div
       v-if="showMoreMenu"
-      class="absolute bottom-full left-0 right-0 mb-2 mx-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-lg"
+      class="absolute bottom-full left-0 right-0 mb-2 mx-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-lg z-50"
     >
       <div class="py-2">
         <RouterLink
@@ -56,14 +64,6 @@
         </RouterLink>
       </div>
     </div>
-
-    <!-- Overlay to close more menu -->
-    <div
-      v-if="showMoreMenu"
-      class="fixed inset-0 z-[-1] bg-black/20"
-      aria-hidden="true"
-      @click="closeMoreMenu"
-    ></div>
   </nav>
 </template>
 
@@ -84,7 +84,7 @@ interface NavItem {
 // Primary navigation items (always visible)
 const navItems: NavItem[] = [
   { name: 'dashboard', label: 'Home', to: '/', emoji: '🏠' },
-  { name: 'shopping-list', label: 'Shopping', to: '/families', emoji: '🛒' },
+  { name: 'family-list', label: 'Shopping', to: '/families', emoji: '🛒' },
   { name: 'wishlist-list', label: 'Wishlists', to: '/wishlists', emoji: '🎁' },
   { name: 'family-list', label: 'Members', to: '/families', emoji: '👥' },
 ];

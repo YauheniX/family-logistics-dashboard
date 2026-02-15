@@ -31,10 +31,11 @@
     >
       <!-- Household List -->
       <div class="py-2">
-        <div
+        <button
           v-for="household in households"
           :key="household.id"
-          class="flex items-center gap-3 px-4 py-2 cursor-pointer transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700"
+          type="button"
+          class="flex items-center gap-3 px-4 py-2 w-full text-left cursor-pointer transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700"
           :class="{
             'bg-primary-50 dark:bg-primary-900/30': household.id === currentHousehold?.id,
           }"
@@ -62,7 +63,7 @@
               clip-rule="evenodd"
             />
           </svg>
-        </div>
+        </button>
       </div>
 
       <!-- Divider -->
