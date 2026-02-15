@@ -21,6 +21,7 @@ const appVersion = packageJson.version ?? '0.0.0';
 export default defineConfig(() => {
   return {
     plugins: [vue()],
+    publicDir: 'public',
     base: process.env.VITE_BASE_PATH || '/',
     define: {
       __APP_VERSION__: JSON.stringify(appVersion),
