@@ -35,7 +35,8 @@ export function normalizeHashPath(path: string): string {
 
 /**
  * Safely extracts and normalizes a redirect path from a query parameter.
- * Handles both string and string[] values, with fallback to default.
+ * Handles both string and string[] values. Validates the path using isSafeInternalPath
+ * and rejects unsafe values (absolute URLs, JS protocols, etc.) by falling back to defaultPath.
  */
 export function normalizeRedirectParam(
   param: string | string[] | undefined,
