@@ -114,7 +114,7 @@ initTheme();
 // Initialize household store (mock mode for now)
 onMounted(() => {
   if (authStore.isAuthenticated) {
-    householdStore.initializeMockHouseholds(authStore.user?.id || 'user-1');
+    householdStore.initializeMockHouseholds();
   }
 });
 

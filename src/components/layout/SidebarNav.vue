@@ -6,7 +6,7 @@
     @click="emit('close')"
   ></div>
 
-  <aside
+    <aside
     class="fixed inset-y-0 left-0 z-50 w-64 shrink-0 border-r border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 px-5 py-6 transform transition-transform duration-200 lg:hidden"
     :class="mobileOpen ? 'translate-x-0' : '-translate-x-full'"
     :aria-hidden="mobileOpen ? 'false' : 'true'"
@@ -113,10 +113,13 @@ import { computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useHouseholdStore } from '@/stores/household';
 
-const props = defineProps<{
+withDefaults(defineProps<{
   userEmail?: string | null;
   mobileOpen?: boolean;
-}>();
+}>(), {
+  mobileOpen: false,
+  userEmail: null,
+});
 
 const emit = defineEmits<{
   close: [];
@@ -134,6 +137,4 @@ const items = [
   { name: 'wishlist-list', label: 'Wishlists', to: '/wishlists', emoji: '🎁' },
   { name: 'settings', label: 'Settings', to: '/settings', emoji: '⚙️' },
 ];
-
-const mobileOpen = computed(() => props.mobileOpen ?? false);
 </script>
