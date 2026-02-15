@@ -1,6 +1,7 @@
 import { supabase } from '../../shared/infrastructure/supabase.client';
 import type { User, Session } from '@supabase/supabase-js';
 import type { ApiResponse } from '../../shared/domain/repository.interface';
+import { isSafeInternalPath, normalizeHashPath } from '@/utils/pathValidation';
 
 export interface AuthUser {
   id: string;
@@ -248,8 +249,6 @@ export class AuthService {
     }
   }
 
-  
-
   /**
    * Map Supabase User to our AuthUser
    */
@@ -259,29 +258,6 @@ export class AuthService {
       email: user.email || '',
     };
   }
-}
-
-function normalizeHashPath(path: string): string {
-  // Ensure it looks like '/something'. Router uses hash history (#/something).
-  const trimmed = path.trim();
-  if (!trimmed) return '/';
-  if (trimmed.startsWith('#')) {
-    const withoutHash = trimmed.replace(/^#\/?/, '/');
-    return withoutHash.startsWith('/') ? withoutHash : `/${withoutHash}`;
-  }
-  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
-}
-
-function isSafeInternalPath(path: string): boolean {
-  const trimmed = path.trim();
-  if (!trimmed) return false;
-  // Disallow full URLs or protocol-relative URLs.
-  if (/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(trimmed)) return false;
-  if (trimmed.startsWith('//')) return false;
-  // Avoid obvious JS/data payloads.
-  if (trimmed.toLowerCase().startsWith('javascript:')) return false;
-  if (trimmed.toLowerCase().startsWith('data:')) return false;
-  return true;
 }
 
 // Singleton instance

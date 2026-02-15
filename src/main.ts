@@ -5,6 +5,7 @@ import router from './router';
 import './styles/main.css';
 import { useAuthStore } from '@/stores/auth';
 import { handleSupabaseAuthRedirect } from '@/utils/supabaseAuthRedirect';
+import { normalizeRedirectParam } from '@/utils/pathValidation';
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -42,10 +43,11 @@ app.use(pinia);
         const redirectFromQuery = Array.isArray(redirectQuery) ? redirectQuery[0] : redirectQuery;
         const redirectFromStorage = window.sessionStorage.getItem('postAuthRedirect');
 
+        // Try query param first, then storage, then default to '/'
         const target =
-          (typeof redirectFromQuery === 'string' && redirectFromQuery) ||
-          (typeof redirectFromStorage === 'string' && redirectFromStorage) ||
-          '/';
+          normalizeRedirectParam(redirectFromQuery) !== '/'
+            ? normalizeRedirectParam(redirectFromQuery)
+            : normalizeRedirectParam(redirectFromStorage);
 
         window.sessionStorage.removeItem('postAuthRedirect');
         await router.replace(target);
