@@ -9,18 +9,16 @@
           </h2>
         </div>
         <div class="flex flex-wrap gap-2">
-          <RouterLink
-            :to="{ name: 'member-management', params: { id: props.id } }"
-          >
-            <BaseButton>👥 Manage Members</BaseButton>
-          </RouterLink>
+          <BaseButton @click="router.push({ name: 'member-management', params: { id: props.id } })">
+            👥 Manage Members
+          </BaseButton>
           <BaseButton @click="showInviteModal = true"> ➕ Invite Member </BaseButton>
           <BaseButton v-if="isOwner" variant="danger" @click="showDeleteModal = true">
             Delete Family
           </BaseButton>
-          <RouterLink to="/families">
-            <BaseButton variant="ghost">← Back</BaseButton>
-          </RouterLink>
+          <BaseButton variant="ghost" @click="router.push('/families')">
+            ← Back
+          </BaseButton>
         </div>
       </div>
     </BaseCard>

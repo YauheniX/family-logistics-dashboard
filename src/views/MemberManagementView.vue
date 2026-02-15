@@ -68,17 +68,61 @@
             placeholder="member@example.com"
           />
         </div>
-        <div>
-          <label class="label" for="invite-role">Role</label>
-          <select id="invite-role" v-model="inviteRole" class="input">
-            <option value="member">Member</option>
-            <option value="viewer">Viewer (e.g., Grandparent)</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
+        <p class="text-sm text-neutral-600 dark:text-neutral-400">
+          Note: Role selection will be available once role-based invitations are implemented. 
+          Currently, all invitations default to "Member" role.
+        </p>
         <div class="flex gap-3">
           <BaseButton type="submit">Send Invitation</BaseButton>
           <BaseButton variant="ghost" type="button" @click="showInviteMemberModal = false">
+            Cancel
+          </BaseButton>
+        </div>
+      </form>
+    </ModalDialog>
+
+    <!-- Confirm Remove Modal -->
+    <ModalDialog
+      :open="showRemoveModal"
+      title="Remove Member"
+      @close="showRemoveModal = false"
+    >
+      <div class="space-y-4">
+        <p class="text-sm text-neutral-600 dark:text-neutral-300">
+          Are you sure you want to remove this member? This action cannot be undone.
+        </p>
+        <div class="flex gap-3">
+          <BaseButton variant="danger" @click="confirmRemove">
+            Remove
+          </BaseButton>
+          <BaseButton variant="ghost" @click="showRemoveModal = false">
+            Cancel
+          </BaseButton>
+        </div>
+      </div>
+    </ModalDialog>
+
+    <!-- Edit Member Modal -->
+    <ModalDialog
+      :open="showEditModal"
+      title="Edit Member"
+      @close="showEditModal = false"
+    >
+      <form class="space-y-4" @submit.prevent="confirmEdit">
+        <div>
+          <label class="label" for="edit-name">Name</label>
+          <input
+            id="edit-name"
+            v-model="editMemberName"
+            type="text"
+            class="input"
+            required
+            placeholder="Member name"
+          />
+        </div>
+        <div class="flex gap-3">
+          <BaseButton type="submit">Save Changes</BaseButton>
+          <BaseButton variant="ghost" type="button" @click="showEditModal = false">
             Cancel
           </BaseButton>
         </div>
@@ -98,7 +142,7 @@ import MemberCard from '@/components/members/MemberCard.vue';
 import AddChildModal from '@/components/members/AddChildModal.vue';
 import { useFamilyStore } from '@/features/family/presentation/family.store';
 import { useAuthStore } from '@/stores/auth';
-import type { FamilyMember } from '@/features/shared/domain/entities';
+import type { Member } from '@/features/shared/domain/entities';
 
 const route = useRoute();
 const familyStore = useFamilyStore();
@@ -106,8 +150,13 @@ const authStore = useAuthStore();
 
 const showAddChildModal = ref(false);
 const showInviteMemberModal = ref(false);
+const showRemoveModal = ref(false);
+const showEditModal = ref(false);
 const inviteEmail = ref('');
 const inviteRole = ref<'member' | 'viewer' | 'admin'>('member');
+const memberToRemove = ref<string | null>(null);
+const memberToEdit = ref<Member | null>(null);
+const editMemberName = ref('');
 
 const familyId = computed(() => {
   return route.params.id as string || familyStore.currentFamily?.id || '';
@@ -142,15 +191,28 @@ const handleAddChild = async (childData: {
   birthday: string;
   avatar: string;
 }) => {
-  // TODO: Integrate with actual member service when implemented
-  console.log('Adding child:', childData);
-  
-  // For now, simulate adding a child member to the family store
-  // This will need to be replaced with actual API call
+  // Close the modal immediately so the UI reflects that the action was attempted
   showAddChildModal.value = false;
+
+  // Prepare the payload in the shape expected for a child Member entity.
+  // Note: This only documents the intended structure; the actual persistence
+  // logic should be implemented in a family/member service or store method.
+  const memberPayload = {
+    display_name: childData.name,
+    date_of_birth: childData.birthday,
+    avatar_url: childData.avatar,
+    household_id: familyId.value,
+    role: 'child' as const,
+    user_id: null,
+  };
+
+  // For now, make the lack of implementation explicit rather than silently
+  // failing, to avoid the "Add Child" feature appearing to work when it does not.
+  console.error('handleAddChild is not implemented. Intended payload:', memberPayload);
+  console.warn('TODO: Integrate with member service to create a child member.');
   
-  // TODO: Call familyStore method to add child member
-  // await familyStore.addChildMember(familyId.value, childData);
+  // TODO: Call member service method to add child member
+  // await memberService.createMember(memberPayload);
 };
 
 const handleInviteMember = async () => {
@@ -171,14 +233,39 @@ const handleInviteMember = async () => {
   }
 };
 
-const handleRemoveMember = async (memberId: string) => {
-  if (confirm('Are you sure you want to remove this member?')) {
-    await familyStore.removeMember(memberId);
+const handleRemoveMember = (memberId: string) => {
+  memberToRemove.value = memberId;
+  showRemoveModal.value = true;
+};
+
+const confirmRemove = async () => {
+  if (memberToRemove.value) {
+    await familyStore.removeMember(memberToRemove.value);
+    memberToRemove.value = null;
+    showRemoveModal.value = false;
   }
 };
 
-const handleEditMember = (member: FamilyMember) => {
-  // TODO: Implement edit functionality
-  console.log('Edit member:', member);
+const handleEditMember = (member: Member) => {
+  memberToEdit.value = member;
+  editMemberName.value = member.display_name || '';
+  showEditModal.value = true;
+};
+
+const confirmEdit = async () => {
+  if (!memberToEdit.value || !editMemberName.value.trim()) return;
+  
+  // TODO: Implement actual update via member service
+  console.log('Updating member:', memberToEdit.value.id, 'with name:', editMemberName.value);
+  console.warn('TODO: Integrate with member service to update member details.');
+  
+  // TODO: Call member service method to update member
+  // await memberService.updateMember(memberToEdit.value.id, {
+  //   display_name: editMemberName.value.trim()
+  // });
+  
+  showEditModal.value = false;
+  memberToEdit.value = null;
+  editMemberName.value = '';
 };
 </script>

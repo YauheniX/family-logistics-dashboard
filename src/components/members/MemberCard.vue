@@ -99,17 +99,17 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
-import type { FamilyMember } from '@/features/shared/domain/entities';
+import type { Member } from '@/features/shared/domain/entities';
 
 interface Props {
-  member: FamilyMember;
+  member: Member;
 }
 
 const props = defineProps<Props>();
 
 defineEmits<{
   (e: 'remove', id: string): void;
-  (e: 'edit', member: FamilyMember): void;
+  (e: 'edit', member: Member): void;
 }>();
 
 const memberName = computed(() => {
@@ -132,9 +132,41 @@ const isOwner = computed(() => props.member.role === 'owner');
 
 // Calculate age if birthday is provided (for children)
 const age = computed(() => {
-  // This would need to be implemented based on Member entity's date_of_birth field
-  // For now, return null as FamilyMember doesn't have this field yet
-  return null;
+  if (!props.member.date_of_birth) return null;
+  
+  // Parse birthday as date-only value to avoid timezone issues
+  const [yearStr, monthStr, dayStr] = props.member.date_of_birth.split('-');
+  const year = Number(yearStr);
+  const monthIndex = Number(monthStr) - 1; // JS months are 0-based
+  const day = Number(dayStr);
+
+  if (Number.isNaN(year) || Number.isNaN(monthIndex) || Number.isNaN(day)) {
+    return null;
+  }
+
+  // Construct UTC dates for both today and birth date to ensure consistent comparison
+  const todayLocal = new Date();
+  const todayUtc = new Date(
+    Date.UTC(todayLocal.getFullYear(), todayLocal.getMonth(), todayLocal.getDate())
+  );
+  const birthDateUtc = new Date(Date.UTC(year, monthIndex, day));
+
+  let calculatedAge = todayUtc.getUTCFullYear() - birthDateUtc.getUTCFullYear();
+  const monthDiff = todayUtc.getUTCMonth() - birthDateUtc.getUTCMonth();
+
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && todayUtc.getUTCDate() < birthDateUtc.getUTCDate())
+  ) {
+    calculatedAge--;
+  }
+
+  // Guard against future dates resulting in negative ages
+  if (calculatedAge < 0) {
+    return null;
+  }
+
+  return calculatedAge;
 });
 
 // Role-based styling
@@ -233,10 +265,10 @@ const avatarColor = computed(() => {
 });
 
 const canEdit = computed(() => {
-  // TODO: Implement proper permission checks when auth context is available
-  // Should check: isOwner || isAdmin || isSelf
-  // For now, allow all edits (to be restricted by backend/RLS policies)
-  return true;
+  // TODO: Implement proper permission checks when auth context is available,
+  // e.g. isOwner || isAdmin || isSelf, based on the current authenticated user.
+  // Until then, deny edits by default to avoid overexposing edit capabilities.
+  return false;
 });
 
 const canRemove = computed(() => {

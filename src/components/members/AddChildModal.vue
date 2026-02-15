@@ -9,6 +9,7 @@
             v-for="avatar in avatarOptions"
             :key="avatar.id"
             type="button"
+            :aria-label="`Select ${avatar.label} avatar`"
             class="aspect-square rounded-full text-4xl transition-all border-4 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-green-400"
             :class="
               selectedAvatar === avatar.emoji
@@ -104,22 +105,22 @@ const selectedAvatar = ref('👶');
 
 // Avatar options with child-friendly emojis
 const avatarOptions = [
-  { id: 1, emoji: '👶' },
-  { id: 2, emoji: '👧' },
-  { id: 3, emoji: '👦' },
-  { id: 4, emoji: '🧒' },
-  { id: 5, emoji: '👨' },
-  { id: 6, emoji: '👩' },
-  { id: 7, emoji: '🐻' },
-  { id: 8, emoji: '🐰' },
-  { id: 9, emoji: '🐼' },
-  { id: 10, emoji: '🦁' },
-  { id: 11, emoji: '🐯' },
-  { id: 12, emoji: '🦊' },
-  { id: 13, emoji: '🐨' },
-  { id: 14, emoji: '🐸' },
-  { id: 15, emoji: '🦄' },
-  { id: 16, emoji: '🐶' },
+  { id: 1, emoji: '👶', label: 'Baby' },
+  { id: 2, emoji: '👧', label: 'Girl' },
+  { id: 3, emoji: '👦', label: 'Boy' },
+  { id: 4, emoji: '🧒', label: 'Child' },
+  { id: 5, emoji: '👨', label: 'Man' },
+  { id: 6, emoji: '👩', label: 'Woman' },
+  { id: 7, emoji: '🐻', label: 'Bear' },
+  { id: 8, emoji: '🐰', label: 'Rabbit' },
+  { id: 9, emoji: '🐼', label: 'Panda' },
+  { id: 10, emoji: '🦁', label: 'Lion' },
+  { id: 11, emoji: '🐯', label: 'Tiger' },
+  { id: 12, emoji: '🦊', label: 'Fox' },
+  { id: 13, emoji: '🐨', label: 'Koala' },
+  { id: 14, emoji: '🐸', label: 'Frog' },
+  { id: 15, emoji: '🦄', label: 'Unicorn' },
+  { id: 16, emoji: '🐶', label: 'Dog' },
 ];
 
 // Today's date for max date validation
@@ -132,15 +133,38 @@ const maxDate = computed(() => {
 const age = computed(() => {
   if (!birthday.value) return null;
   
-  const birthDate = new Date(birthday.value);
-  const today = new Date();
-  let calculatedAge = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+  // Parse birthday as date-only value to avoid timezone issues
+  const [yearStr, monthStr, dayStr] = birthday.value.split('-');
+  const year = Number(yearStr);
+  const monthIndex = Number(monthStr) - 1; // JS months are 0-based
+  const day = Number(dayStr);
+
+  if (Number.isNaN(year) || Number.isNaN(monthIndex) || Number.isNaN(day)) {
+    return null;
+  }
+
+  // Construct UTC dates for both today and birth date to ensure consistent comparison
+  const todayLocal = new Date();
+  const todayUtc = new Date(
+    Date.UTC(todayLocal.getFullYear(), todayLocal.getMonth(), todayLocal.getDate())
+  );
+  const birthDateUtc = new Date(Date.UTC(year, monthIndex, day));
+
+  let calculatedAge = todayUtc.getUTCFullYear() - birthDateUtc.getUTCFullYear();
+  const monthDiff = todayUtc.getUTCMonth() - birthDateUtc.getUTCMonth();
+
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && todayUtc.getUTCDate() < birthDateUtc.getUTCDate())
+  ) {
     calculatedAge--;
   }
-  
+
+  // Guard against future dates resulting in negative ages
+  if (calculatedAge < 0) {
+    return null;
+  }
+
   return calculatedAge;
 });
 
