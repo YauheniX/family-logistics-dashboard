@@ -92,7 +92,7 @@ export const useHouseholdStore = defineStore('household', () => {
       // members.household_id -> households.id relationship
       const { data, error } = await supabase
         .from('members')
-        .select('role, households:households(id, name, slug)')
+        .select('role, households:household_id(id, name, slug)')
         .eq('user_id', userId)
         .eq('is_active', true);
 
