@@ -54,7 +54,9 @@
       </div>
 
       <!-- Future Features Preview -->
-      <div class="rounded-xl bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 p-4 border border-green-200 dark:border-green-800">
+      <div
+        class="rounded-xl bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 p-4 border border-green-200 dark:border-green-800"
+      >
         <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
           ✨ Coming Soon for {{ childName || 'this child' }}:
         </p>
@@ -67,17 +69,10 @@
 
       <!-- Action Buttons -->
       <div class="flex gap-3 pt-2">
-        <BaseButton
-          type="submit"
-          variant="primary"
-          :disabled="!isFormValid"
-          class="flex-1"
-        >
+        <BaseButton type="submit" variant="primary" :disabled="!isFormValid" class="flex-1">
           👶 Add Child
         </BaseButton>
-        <BaseButton variant="ghost" type="button" @click="$emit('close')">
-          Cancel
-        </BaseButton>
+        <BaseButton variant="ghost" type="button" @click="$emit('close')"> Cancel </BaseButton>
       </div>
     </form>
   </ModalDialog>
@@ -132,7 +127,7 @@ const maxDate = computed(() => {
 // Calculate age from birthday
 const age = computed(() => {
   if (!birthday.value) return null;
-  
+
   // Parse birthday as date-only value to avoid timezone issues
   const [yearStr, monthStr, dayStr] = birthday.value.split('-');
   const year = Number(yearStr);
@@ -146,17 +141,14 @@ const age = computed(() => {
   // Construct UTC dates for both today and birth date to ensure consistent comparison
   const todayLocal = new Date();
   const todayUtc = new Date(
-    Date.UTC(todayLocal.getFullYear(), todayLocal.getMonth(), todayLocal.getDate())
+    Date.UTC(todayLocal.getFullYear(), todayLocal.getMonth(), todayLocal.getDate()),
   );
   const birthDateUtc = new Date(Date.UTC(year, monthIndex, day));
 
   let calculatedAge = todayUtc.getUTCFullYear() - birthDateUtc.getUTCFullYear();
   const monthDiff = todayUtc.getUTCMonth() - birthDateUtc.getUTCMonth();
 
-  if (
-    monthDiff < 0 ||
-    (monthDiff === 0 && todayUtc.getUTCDate() < birthDateUtc.getUTCDate())
-  ) {
+  if (monthDiff < 0 || (monthDiff === 0 && todayUtc.getUTCDate() < birthDateUtc.getUTCDate())) {
     calculatedAge--;
   }
 
@@ -175,13 +167,13 @@ const isFormValid = computed(() => {
 
 const handleSubmit = () => {
   if (!isFormValid.value) return;
-  
+
   emit('submit', {
     name: childName.value.trim(),
     birthday: birthday.value,
     avatar: selectedAvatar.value,
   });
-  
+
   // Reset form
   childName.value = '';
   birthday.value = '';
@@ -192,7 +184,8 @@ const handleSubmit = () => {
 <style scoped>
 /* Soft, playful animations */
 @keyframes bounce-subtle {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {

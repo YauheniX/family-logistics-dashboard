@@ -16,9 +16,7 @@
           <BaseButton v-if="isOwner" variant="danger" @click="showDeleteModal = true">
             Delete Family
           </BaseButton>
-          <BaseButton variant="ghost" @click="router.push('/families')">
-            ← Back
-          </BaseButton>
+          <BaseButton variant="ghost" @click="router.push('/families')"> ← Back </BaseButton>
         </div>
       </div>
     </BaseCard>

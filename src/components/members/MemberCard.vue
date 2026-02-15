@@ -11,11 +11,7 @@
           class="h-16 w-16 rounded-full overflow-hidden border-2"
           :class="avatarBorderClass"
         >
-          <img
-            :src="member.avatar_url"
-            :alt="memberName"
-            class="h-full w-full object-cover"
-          />
+          <img :src="member.avatar_url" :alt="memberName" class="h-full w-full object-cover" />
         </div>
         <div
           v-else
@@ -42,17 +38,17 @@
         <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 truncate">
           {{ memberName }}
         </h3>
-        
+
         <!-- Age for children -->
         <p v-if="isChild && age" class="text-sm text-neutral-600 dark:text-neutral-400">
           {{ age }} years old
         </p>
-        
+
         <!-- Email for adults -->
         <p v-else-if="member.email" class="text-sm text-neutral-600 dark:text-neutral-400 truncate">
           {{ member.email }}
         </p>
-        
+
         <!-- Role Badge -->
         <div class="mt-2">
           <BaseBadge :variant="badgeVariant" :class="badgeClass">
@@ -62,12 +58,8 @@
 
         <!-- Future: Wishlist/Achievements Preview -->
         <div v-if="isChild" class="mt-3 flex gap-2">
-          <span class="text-xs text-neutral-500 dark:text-neutral-400">
-            🎁 Wishlist
-          </span>
-          <span class="text-xs text-neutral-500 dark:text-neutral-400">
-            🏆 Achievements
-          </span>
+          <span class="text-xs text-neutral-500 dark:text-neutral-400"> 🎁 Wishlist </span>
+          <span class="text-xs text-neutral-500 dark:text-neutral-400"> 🏆 Achievements </span>
         </div>
       </div>
 
@@ -133,7 +125,7 @@ const isOwner = computed(() => props.member.role === 'owner');
 // Calculate age if birthday is provided (for children)
 const age = computed(() => {
   if (!props.member.date_of_birth) return null;
-  
+
   // Parse birthday as date-only value to avoid timezone issues
   const [yearStr, monthStr, dayStr] = props.member.date_of_birth.split('-');
   const year = Number(yearStr);
@@ -147,17 +139,14 @@ const age = computed(() => {
   // Construct UTC dates for both today and birth date to ensure consistent comparison
   const todayLocal = new Date();
   const todayUtc = new Date(
-    Date.UTC(todayLocal.getFullYear(), todayLocal.getMonth(), todayLocal.getDate())
+    Date.UTC(todayLocal.getFullYear(), todayLocal.getMonth(), todayLocal.getDate()),
   );
   const birthDateUtc = new Date(Date.UTC(year, monthIndex, day));
 
   let calculatedAge = todayUtc.getUTCFullYear() - birthDateUtc.getUTCFullYear();
   const monthDiff = todayUtc.getUTCMonth() - birthDateUtc.getUTCMonth();
 
-  if (
-    monthDiff < 0 ||
-    (monthDiff === 0 && todayUtc.getUTCDate() < birthDateUtc.getUTCDate())
-  ) {
+  if (monthDiff < 0 || (monthDiff === 0 && todayUtc.getUTCDate() < birthDateUtc.getUTCDate())) {
     calculatedAge--;
   }
 

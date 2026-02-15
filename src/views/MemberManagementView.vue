@@ -15,9 +15,7 @@
           <BaseButton variant="primary" @click="showAddChildModal = true">
             👶 Add Child
           </BaseButton>
-          <BaseButton @click="showInviteMemberModal = true">
-            ➕ Invite Member
-          </BaseButton>
+          <BaseButton @click="showInviteMemberModal = true"> ➕ Invite Member </BaseButton>
         </div>
       </div>
     </BaseCard>
@@ -69,7 +67,7 @@
           />
         </div>
         <p class="text-sm text-neutral-600 dark:text-neutral-400">
-          Note: Role selection will be available once role-based invitations are implemented. 
+          Note: Role selection will be available once role-based invitations are implemented.
           Currently, all invitations default to "Member" role.
         </p>
         <div class="flex gap-3">
@@ -82,32 +80,20 @@
     </ModalDialog>
 
     <!-- Confirm Remove Modal -->
-    <ModalDialog
-      :open="showRemoveModal"
-      title="Remove Member"
-      @close="showRemoveModal = false"
-    >
+    <ModalDialog :open="showRemoveModal" title="Remove Member" @close="showRemoveModal = false">
       <div class="space-y-4">
         <p class="text-sm text-neutral-600 dark:text-neutral-300">
           Are you sure you want to remove this member? This action cannot be undone.
         </p>
         <div class="flex gap-3">
-          <BaseButton variant="danger" @click="confirmRemove">
-            Remove
-          </BaseButton>
-          <BaseButton variant="ghost" @click="showRemoveModal = false">
-            Cancel
-          </BaseButton>
+          <BaseButton variant="danger" @click="confirmRemove"> Remove </BaseButton>
+          <BaseButton variant="ghost" @click="showRemoveModal = false"> Cancel </BaseButton>
         </div>
       </div>
     </ModalDialog>
 
     <!-- Edit Member Modal -->
-    <ModalDialog
-      :open="showEditModal"
-      title="Edit Member"
-      @close="showEditModal = false"
-    >
+    <ModalDialog :open="showEditModal" title="Edit Member" @close="showEditModal = false">
       <form class="space-y-4" @submit.prevent="confirmEdit">
         <div>
           <label class="label" for="edit-name">Name</label>
@@ -159,7 +145,7 @@ const memberToEdit = ref<Member | null>(null);
 const editMemberName = ref('');
 
 const familyId = computed(() => {
-  return route.params.id as string || familyStore.currentFamily?.id || '';
+  return (route.params.id as string) || familyStore.currentFamily?.id || '';
 });
 
 // Sort members: owner first, then adults, then children, then viewers
@@ -172,7 +158,7 @@ const sortedMembers = computed(() => {
     child: 3,
     viewer: 4,
   };
-  
+
   return members.sort((a, b) => {
     const roleA = roleOrder[a.role] ?? 999;
     const roleB = roleOrder[b.role] ?? 999;
@@ -186,11 +172,7 @@ onMounted(async () => {
   }
 });
 
-const handleAddChild = async (childData: {
-  name: string;
-  birthday: string;
-  avatar: string;
-}) => {
+const handleAddChild = async (childData: { name: string; birthday: string; avatar: string }) => {
   // Close the modal immediately so the UI reflects that the action was attempted
   showAddChildModal.value = false;
 
@@ -210,22 +192,22 @@ const handleAddChild = async (childData: {
   // failing, to avoid the "Add Child" feature appearing to work when it does not.
   console.error('handleAddChild is not implemented. Intended payload:', memberPayload);
   console.warn('TODO: Integrate with member service to create a child member.');
-  
+
   // TODO: Call member service method to add child member
   // await memberService.createMember(memberPayload);
 };
 
 const handleInviteMember = async () => {
   if (!inviteEmail.value.trim()) return;
-  
+
   // TODO: Pass inviteRole.value to the service when role-based invitations are supported
   // Currently, the existing inviteMember method only supports basic member invitations
   const result = await familyStore.inviteMember(
     familyId.value,
     inviteEmail.value.trim(),
-    authStore.user?.id
+    authStore.user?.id,
   );
-  
+
   if (result) {
     inviteEmail.value = '';
     inviteRole.value = 'member';
@@ -254,16 +236,16 @@ const handleEditMember = (member: Member) => {
 
 const confirmEdit = async () => {
   if (!memberToEdit.value || !editMemberName.value.trim()) return;
-  
+
   // TODO: Implement actual update via member service
   console.log('Updating member:', memberToEdit.value.id, 'with name:', editMemberName.value);
   console.warn('TODO: Integrate with member service to update member details.');
-  
+
   // TODO: Call member service method to update member
   // await memberService.updateMember(memberToEdit.value.id, {
   //   display_name: editMemberName.value.trim()
   // });
-  
+
   showEditModal.value = false;
   memberToEdit.value = null;
   editMemberName.value = '';

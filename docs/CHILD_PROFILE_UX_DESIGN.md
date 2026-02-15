@@ -1,13 +1,15 @@
 # Child Profile Management UX Design
 
 ## Overview
+
 This document outlines the UX design for managing child profiles in the Family Logistics Dashboard, enabling parents to add children without user accounts and prepare for future account activation.
 
 ## Design Principles
 
 ### 1. Safe & Soft Design Tone
+
 - **Rounded Corners**: All components use `rounded-2xl` for a softer, more approachable appearance
-- **Pastel Color Palette**: 
+- **Pastel Color Palette**:
   - 🟢 Green for children (nurturing, growth)
   - 🟣 Purple for viewers (friendly, distinct)
   - 🟡 Yellow for owners (leadership, authority)
@@ -18,22 +20,25 @@ This document outlines the UX design for managing child profiles in the Family L
 ### 2. Visual Role Differentiation
 
 #### Role Indicators
+
 Each member type has distinct visual markers:
 
-| Role | Icon | Border Color | Badge Color | Purpose |
-|------|------|--------------|-------------|---------|
-| **Owner** | 👑 | Yellow | Primary Blue | Family administrator |
-| **Admin** | ⭐ | Blue | Neutral | Can manage members |
-| **Member** | 👤 | Blue | Neutral | Standard adult member |
-| **Child** | 👶 | Green | Green | Child without account |
-| **Viewer** | 👀 | Purple | Purple | Read-only (grandparent) |
+| Role       | Icon | Border Color | Badge Color  | Purpose                 |
+| ---------- | ---- | ------------ | ------------ | ----------------------- |
+| **Owner**  | 👑   | Yellow       | Primary Blue | Family administrator    |
+| **Admin**  | ⭐   | Blue         | Neutral      | Can manage members      |
+| **Member** | 👤   | Blue         | Neutral      | Standard adult member   |
+| **Child**  | 👶   | Green        | Green        | Child without account   |
+| **Viewer** | 👀   | Purple       | Purple       | Read-only (grandparent) |
 
 ## Component Structure
 
 ### 1. MemberManagementView
+
 **Path**: `/families/:id/members`
 
 #### Layout
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │ Header Card                                         │
@@ -54,6 +59,7 @@ Each member type has distinct visual markers:
 ```
 
 #### Features
+
 - **Smart Sorting**: Members sorted by role priority (owner → admin → member → child → viewer)
 - **Empty State**: Friendly prompt to add first child when no members exist
 - **Responsive Grid**: 1 column on mobile, 2 on tablet, 3 on desktop
@@ -61,6 +67,7 @@ Each member type has distinct visual markers:
 ### 2. MemberCard Component
 
 #### Visual Design
+
 ```
 ┌────────────────────────────────────────────┐
 │                                            │
@@ -76,7 +83,8 @@ Each member type has distinct visual markers:
 ```
 
 #### Dynamic Elements
-- **Avatar**: 
+
+- **Avatar**:
   - Image if provided
   - Emoji initial circle with role-specific border color
   - Role icon overlay badge (bottom-right corner)
@@ -91,6 +99,7 @@ Each member type has distinct visual markers:
   - 🗑️ Remove (cannot remove owner)
 
 #### Accessibility
+
 - Proper ARIA labels for role badges
 - Color-blind safe color combinations
 - High contrast text
@@ -101,6 +110,7 @@ Each member type has distinct visual markers:
 #### Flow States
 
 **State 1: Avatar Selection**
+
 ```
 ┌──────────────────────────────────────────┐
 │ Add Child Profile                    ✕   │
@@ -136,17 +146,21 @@ Each member type has distinct visual markers:
 ```
 
 #### Avatar Options (16 total)
+
 **Human avatars**: 👶 👧 👦 🧒 👨 👩
 **Animal avatars**: 🐻 🐰 🐼 🦁 🐯 🦊 🐨 🐸 🦄 🐶
 
 #### Form Validation
+
 - Name: Required, 1-50 characters
 - Birthday: Required, cannot be future date
 - Avatar: Pre-selected to 👶 by default
 - Real-time age calculation shown as user types
 
 #### Future Features Preview
+
 Shows what will be available for the child:
+
 - Personal wishlist creation
 - Achievement tracking and gamification
 - Account activation when they're ready
@@ -154,6 +168,7 @@ Shows what will be available for the child:
 ### 4. Modal Flows
 
 #### Add Child Flow
+
 ```
 [Manage Members] → [👶 Add Child] → [Fill Form] → [Submit]
      ↓                                                ↓
@@ -161,6 +176,7 @@ Shows what will be available for the child:
 ```
 
 #### Invite Member Flow
+
 ```
 [Manage Members] → [➕ Invite Member] → [Enter Email + Role]
      ↓                                           ↓
@@ -168,6 +184,7 @@ Shows what will be available for the child:
 ```
 
 #### Future: Account Activation Flow
+
 ```
 [Child Profile] → [🔑 Activate Account] → [Setup Credentials]
       ↓                                            ↓
@@ -177,6 +194,7 @@ Shows what will be available for the child:
 ## Empty States
 
 ### No Members Yet
+
 ```
 ┌────────────────────────────────────────┐
 │  [Getting Started]                     │
@@ -193,16 +211,19 @@ Shows what will be available for the child:
 ## Responsive Design
 
 ### Mobile (< 768px)
+
 - Single column layout
 - Stacked action buttons
 - Larger touch targets (min 44px)
 - Simplified avatar grid (3 columns instead of 4)
 
 ### Tablet (768px - 1024px)
+
 - 2-column member grid
 - Compact action button group
 
 ### Desktop (> 1024px)
+
 - 3-column member grid
 - Full feature visibility
 - Hover states and tooltips
@@ -210,6 +231,7 @@ Shows what will be available for the child:
 ## Color System
 
 ### Light Mode
+
 ```css
 Child Border:  border-green-200
 Child Hover:   border-green-300
@@ -227,6 +249,7 @@ Owner Icon:    bg-yellow-500
 ```
 
 ### Dark Mode
+
 ```css
 Child Border:  border-green-800
 Child Hover:   border-green-700
@@ -246,24 +269,28 @@ Owner Icon:    bg-yellow-600
 ## UX Reasoning
 
 ### Why Separate Child Profiles?
+
 1. **Age-Appropriate**: Children don't need full account access initially
 2. **Parental Control**: Parents manage profiles until activation
 3. **Privacy**: No email/password required for young children
 4. **Future-Ready**: Easy transition to full account when appropriate
 
 ### Why Visual Differentiation?
+
 1. **Quick Scanning**: Parents can instantly identify member types
 2. **Role Clarity**: Clear hierarchy and permissions
 3. **Child Safety**: Obvious distinction prevents accidental actions
 4. **Accessibility**: Multiple cues (color, icon, text) for all users
 
 ### Why Emoji Avatars?
+
 1. **Child-Friendly**: Fun, approachable, age-appropriate
 2. **No Upload Required**: Quick setup, no image processing
 3. **Privacy**: No real photos needed initially
 4. **Inclusive**: Wide variety of options
 
 ### Why Future Feature Preview?
+
 1. **Anticipation**: Shows value proposition for activation
 2. **Transparency**: Parents know what's coming
 3. **Motivation**: Encourages eventual account creation
@@ -272,6 +299,7 @@ Owner Icon:    bg-yellow-600
 ## Accessibility
 
 ### WCAG 2.1 AA Compliance
+
 - ✅ Color contrast ratios > 4.5:1 for text
 - ✅ Interactive elements > 44x44px touch targets
 - ✅ Keyboard navigation support
@@ -280,6 +308,7 @@ Owner Icon:    bg-yellow-600
 - ✅ Semantic HTML structure
 
 ### Inclusive Design
+
 - Multiple visual cues (not color-only)
 - Clear, simple language
 - Generous spacing and padding
@@ -288,18 +317,21 @@ Owner Icon:    bg-yellow-600
 ## Future Enhancements
 
 ### Phase 2 (Account Activation)
+
 - Age verification before activation
 - Email/password setup wizard
 - Parent approval workflow
 - Security questions for account recovery
 
 ### Phase 3 (Wishlist Integration)
+
 - Child-specific wishlist creation
 - Parental moderation controls
 - Item approval before publishing
 - Birthday/holiday countdown integration
 
 ### Phase 4 (Gamification)
+
 - Achievement system for completed tasks
 - Point tracking and rewards
 - Age-appropriate challenges
@@ -308,6 +340,7 @@ Owner Icon:    bg-yellow-600
 ## Technical Implementation
 
 ### Component Files
+
 ```
 src/
 ├── views/
@@ -321,6 +354,7 @@ src/
 ```
 
 ### Data Flow
+
 ```
 View → FamilyStore → FamilyService → Repository → API/Mock
                 ↓
@@ -328,7 +362,9 @@ View → FamilyStore → FamilyService → Repository → API/Mock
 ```
 
 ### Type Safety
+
 All components use TypeScript with proper type definitions from:
+
 - `FamilyMember` entity (existing)
 - `Member` entity (new multi-tenant model with date_of_birth)
 
