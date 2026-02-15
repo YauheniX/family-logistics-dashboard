@@ -29,6 +29,7 @@ export const supabase: SupabaseClient<Database> = isMockMode()
         persistSession: true,
         detectSessionInUrl: true,
         autoRefreshToken: true,
+        storage: window.localStorage,
       },
     }) as SupabaseClient<Database>)
   : createClient<Database>(supabaseUrl, supabaseAnonKey, {
