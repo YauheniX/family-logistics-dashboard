@@ -112,6 +112,7 @@ import BaseButton from '@/components/shared/BaseButton.vue';
 import { authService } from '@/features/auth';
 import { useToastStore } from '@/stores/toast';
 import { isValidEmail, isValidPassword, MIN_PASSWORD_LENGTH } from '@/utils/validation';
+import { normalizeRedirectParam } from '@/utils/pathValidation';
 
 const router = useRouter();
 const route = useRoute();
@@ -184,7 +185,8 @@ const handleGoogleLogin = async () => {
   error.value = '';
 
   try {
-    const response = await authService.signInWithOAuth('google');
+    const redirect = normalizeRedirectParam(route.query.redirect);
+    const response = await authService.signInWithOAuth('google', redirect);
 
     if (response.error) {
       error.value = response.error.message;

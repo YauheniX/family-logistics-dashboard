@@ -83,6 +83,11 @@ const router = createRouter({
       component: SettingsView,
       meta: { requiresAuth: true },
     },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      redirect: { name: 'dashboard' },
+    },
   ],
 });
 

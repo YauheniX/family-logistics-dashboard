@@ -1,14 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { reportProblem, type ReportProblemInput } from '@/services/issueReporter';
 import * as backendConfig from '@/config/backend.config';
-import { supabase } from '@/services/supabaseClient';
+import { supabase } from '@/features/shared/infrastructure/supabase.client';
 
 vi.mock('@/config/backend.config', () => ({
   isMockMode: vi.fn(),
 }));
 
-vi.mock('@/services/supabaseClient', () => ({
+vi.mock('@/features/shared/infrastructure/supabase.client', () => ({
   supabase: {
+    auth: {
+      getSession: vi.fn(),
+    },
     functions: {
       invoke: vi.fn(),
     },
@@ -18,6 +21,15 @@ vi.mock('@/services/supabaseClient', () => ({
 describe('Issue Reporter Service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    vi.mocked(supabase.auth.getSession).mockResolvedValue({
+      data: {
+        session: {
+          access_token: 'test-access-token',
+        },
+      },
+      error: null,
+    } as unknown as Awaited<ReturnType<typeof supabase.auth.getSession>>);
   });
 
   it('throws error in mock mode', async () => {
@@ -51,16 +63,22 @@ describe('Issue Reporter Service', () => {
 
     const result = await reportProblem(input);
 
-    expect(supabase.functions.invoke).toHaveBeenCalledWith('report-issue', {
-      body: {
-        title: 'Test Issue',
-        description: 'Test description',
-        screenshot: null,
-        appVersion: expect.any(String),
-        browser: expect.any(String),
-        userId: 'user-123',
-      },
-    });
+    expect(supabase.functions.invoke).toHaveBeenCalledWith(
+      'report-issue',
+      expect.objectContaining({
+        body: {
+          title: 'Test Issue',
+          description: 'Test description',
+          screenshot: null,
+          appVersion: expect.any(String),
+          browser: expect.any(String),
+          userId: 'user-123',
+        },
+        headers: {
+          Authorization: 'Bearer test-access-token',
+        },
+      }),
+    );
 
     expect(result).toEqual({
       issueUrl: 'https://github.com/test/repo/issues/1',
@@ -89,11 +107,17 @@ describe('Issue Reporter Service', () => {
 
     await reportProblem(input);
 
-    expect(supabase.functions.invoke).toHaveBeenCalledWith('report-issue', {
-      body: expect.objectContaining({
-        screenshot,
+    expect(supabase.functions.invoke).toHaveBeenCalledWith(
+      'report-issue',
+      expect.objectContaining({
+        body: expect.objectContaining({
+          screenshot,
+        }),
+        headers: {
+          Authorization: 'Bearer test-access-token',
+        },
       }),
-    });
+    );
   });
 
   it('includes app version and browser in payload', async () => {
