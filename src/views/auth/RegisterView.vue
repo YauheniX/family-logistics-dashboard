@@ -120,7 +120,7 @@
 
 <script setup lang="ts">
 import { ref, onBeforeUnmount } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import BaseInput from '@/components/shared/BaseInput.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import { authService } from '@/features/auth';
@@ -128,6 +128,7 @@ import { useToastStore } from '@/stores/toast';
 import { isValidEmail, isValidPassword, MIN_PASSWORD_LENGTH } from '@/utils/validation';
 
 const router = useRouter();
+const route = useRoute();
 const toastStore = useToastStore();
 
 const email = ref('');
@@ -228,7 +229,8 @@ const handleGoogleRegister = async () => {
   error.value = '';
 
   try {
-    const response = await authService.signInWithOAuth('google');
+    const redirect = (route.query.redirect as string) || '/';
+    const response = await authService.signInWithOAuth('google', redirect);
 
     if (response.error) {
       error.value = response.error.message;

@@ -196,11 +196,26 @@ export class AuthService {
   /**
    * Sign in with OAuth provider (Google, etc.)
    */
-  async signInWithOAuth(provider: string): Promise<ApiResponse<AuthUser>> {
+  async signInWithOAuth(provider: string, postAuthRedirect?: string): Promise<ApiResponse<AuthUser>> {
     try {
-      // Get the base path from Vite config, ensuring proper URL construction
-      const basePath = import.meta.env.BASE_URL || '/';
-      const redirectTo = `${window.location.origin}${basePath}`;
+      // Persist intended in-app route across full-page OAuth redirects.
+      // Must be a hash-router path like '/families/123' (no origin).
+      if (postAuthRedirect && isSafeInternalPath(postAuthRedirect)) {
+        window.sessionStorage.setItem('postAuthRedirect', normalizeHashPath(postAuthRedirect));
+      } else {
+        window.sessionStorage.removeItem('postAuthRedirect');
+      }
+
+      // IMPORTANT:
+      // - Google OAuth redirect URIs cannot contain URL fragments (#), so we must not use hash routes here.
+      // - Using window.location.pathname makes this work for sub-path deployments (e.g. GitHub Pages)
+      //   even if Vite BASE_URL / env config is incorrect.
+      // Example on GitHub Pages: https://example.com/family-logistics-dashboard/#/login
+      // pathname => /family-logistics-dashboard/
+      const path = window.location.pathname.endsWith('/')
+        ? window.location.pathname
+        : `${window.location.pathname}/`;
+      const redirectTo = `${window.location.origin}${path}`;
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: provider as 'google' | 'github' | 'gitlab',
@@ -233,6 +248,8 @@ export class AuthService {
     }
   }
 
+  
+
   /**
    * Map Supabase User to our AuthUser
    */
@@ -242,6 +259,29 @@ export class AuthService {
       email: user.email || '',
     };
   }
+}
+
+function normalizeHashPath(path: string): string {
+  // Ensure it looks like '/something'. Router uses hash history (#/something).
+  const trimmed = path.trim();
+  if (!trimmed) return '/';
+  if (trimmed.startsWith('#')) {
+    const withoutHash = trimmed.replace(/^#\/?/, '/');
+    return withoutHash.startsWith('/') ? withoutHash : `/${withoutHash}`;
+  }
+  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+}
+
+function isSafeInternalPath(path: string): boolean {
+  const trimmed = path.trim();
+  if (!trimmed) return false;
+  // Disallow full URLs or protocol-relative URLs.
+  if (/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(trimmed)) return false;
+  if (trimmed.startsWith('//')) return false;
+  // Avoid obvious JS/data payloads.
+  if (trimmed.toLowerCase().startsWith('javascript:')) return false;
+  if (trimmed.toLowerCase().startsWith('data:')) return false;
+  return true;
 }
 
 // Singleton instance

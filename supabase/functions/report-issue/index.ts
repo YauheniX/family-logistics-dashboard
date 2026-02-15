@@ -20,24 +20,13 @@ type ReportIssueRequest = {
   userId?: string | null; // client-provided (untrusted)
 };
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL');
-if (!supabaseUrl) {
-  throw new Error(
-    'SUPABASE_URL environment variable is not set. Please configure SUPABASE_URL for the report-issue function.',
-  );
-}
-
-let allowedCorsOrigin: string;
-try {
-  allowedCorsOrigin = new URL(supabaseUrl).origin;
-} catch (error) {
-  throw new Error(`SUPABASE_URL environment variable is malformed: ${(error as Error).message}`);
-}
-
+// CORS
+// This function is called from the browser (your app domain), not from your Supabase project domain.
+// Using '*' is fine here because we do NOT rely on cookies; auth is via Authorization bearer token.
 const corsHeaders = {
-  'Access-Control-Allow-Origin': allowedCorsOrigin,
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 } as const;
 
 serve(async (req) => {
@@ -48,6 +37,11 @@ serve(async (req) => {
 
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
+  }
+
+  // Health check for deploy/CORS debugging (does not create issues)
+  if (req.method === 'GET') {
+    return json({ ok: true, function: 'report-issue' }, 200);
   }
 
   if (req.method !== 'POST') {
@@ -224,7 +218,9 @@ async function getVerifiedUserId(req: Request): Promise<string | null> {
 
   const url = Deno.env.get('SUPABASE_URL');
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
-  if (!url || !anonKey) return null;
+  if (!url || !anonKey) {
+    throw new Error('Missing SUPABASE_URL or SUPABASE_ANON_KEY in Edge Function environment.');
+  }
 
   try {
     const supabase = createClient(url, anonKey, {

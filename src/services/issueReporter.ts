@@ -1,4 +1,4 @@
-import { supabase } from '@/services/supabaseClient';
+import { supabase } from '@/features/shared/infrastructure/supabase.client';
 import { isMockMode } from '@/config/backend.config';
 import { APP_VERSION } from '@/utils/appMeta';
 
@@ -24,6 +24,14 @@ export async function reportProblem(input: ReportProblemInput): Promise<ReportPr
     throw new Error('Issue reporting requires a backend (Supabase) to be enabled.');
   }
 
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.access_token) {
+    throw new Error('You must be signed in to report a problem.');
+  }
+
   const payload = {
     title: input.title,
     description: input.description,
@@ -35,12 +43,34 @@ export async function reportProblem(input: ReportProblemInput): Promise<ReportPr
 
   const { data, error } = await supabase.functions.invoke('report-issue', {
     body: payload,
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+    },
   });
 
   if (error) {
     // Supabase may wrap edge errors; surface a readable message.
-    const message = error.message || 'Failed to create GitHub issue.';
-    throw new Error(message);
+    // Common case: browser blocked request due to CORS / function not deployed.
+    const raw = error.message || '';
+
+    // Best-effort extraction of status/body from supabase-js error.
+    const anyError = error as unknown as {
+      context?: { status?: number; body?: unknown };
+      status?: number;
+    };
+    const status = anyError.context?.status ?? anyError.status;
+    const body = anyError.context?.body;
+
+    const details =
+      body == null
+        ? ''
+        : ` Response: ${typeof body === 'string' ? body.slice(0, 500) : JSON.stringify(body).slice(0, 500)}`;
+
+    const message = raw.includes('Failed to send a request to the Edge Function')
+      ? 'Issue reporting endpoint is unreachable. Verify the Supabase Edge Function `report-issue` is deployed and CORS allows your app domain.'
+      : raw || 'Failed to create GitHub issue.';
+
+    throw new Error(`${status ? `[${status}] ` : ''}${message}${details}`);
   }
 
   return (data ?? {}) as ReportProblemResult;

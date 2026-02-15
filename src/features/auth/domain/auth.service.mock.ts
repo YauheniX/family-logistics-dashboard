@@ -219,7 +219,7 @@ export class MockAuthService {
   /**
    * Sign in with OAuth (mock - skips OAuth, auto-creates user)
    */
-  async signInWithOAuth(provider: string): Promise<ApiResponse<AuthUser>> {
+  async signInWithOAuth(provider: string, _postAuthRedirect?: string): Promise<ApiResponse<AuthUser>> {
     try {
       // In mock mode, we'll auto-create a demo user for OAuth
       const demoEmail = `demo-${provider}@example.com`;
