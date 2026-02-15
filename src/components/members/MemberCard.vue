@@ -233,8 +233,10 @@ const avatarColor = computed(() => {
 });
 
 const canEdit = computed(() => {
-  // Owner and admins can edit, or the member themselves
-  return true; // Simplified for now
+  // TODO: Implement proper permission checks when auth context is available
+  // Should check: isOwner || isAdmin || isSelf
+  // For now, allow all edits (to be restricted by backend/RLS policies)
+  return true;
 });
 
 const canRemove = computed(() => {

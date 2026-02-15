@@ -156,6 +156,8 @@ const handleAddChild = async (childData: {
 const handleInviteMember = async () => {
   if (!inviteEmail.value.trim()) return;
   
+  // TODO: Pass inviteRole.value to the service when role-based invitations are supported
+  // Currently, the existing inviteMember method only supports basic member invitations
   const result = await familyStore.inviteMember(
     familyId.value,
     inviteEmail.value.trim(),
