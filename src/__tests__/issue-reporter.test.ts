@@ -36,11 +36,8 @@ describe('Issue Reporter Service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    (import.meta as unknown as { env: Record<string, string | undefined> }).env = {
-      ...(import.meta as unknown as { env: Record<string, string | undefined> }).env,
-      VITE_SUPABASE_URL: 'https://titgbwnsclhzxlfflpho.supabase.co',
-      VITE_SUPABASE_ANON_KEY: 'test-anon-key',
-    };
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://titgbwnsclhzxlfflpho.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'test-anon-key');
 
     vi.stubGlobal(
       'fetch',
