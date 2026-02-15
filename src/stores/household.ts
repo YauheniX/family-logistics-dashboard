@@ -27,13 +27,16 @@ export const useHouseholdStore = defineStore('household', () => {
   );
   const canManageMembers = computed(() => isOwnerOrAdmin.value);
   const canEditContent = computed(
-    () => currentRole.value === 'owner' || currentRole.value === 'admin' || currentRole.value === 'member',
+    () =>
+      currentRole.value === 'owner' ||
+      currentRole.value === 'admin' ||
+      currentRole.value === 'member',
   );
 
   // ─── Actions ─────────────────────────────────────────────
   function setCurrentHousehold(household: Household | null) {
     currentHousehold.value = household;
-    
+
     // Persist to localStorage
     if (household) {
       localStorage.setItem('current_household_id', household.id);
@@ -44,17 +47,17 @@ export const useHouseholdStore = defineStore('household', () => {
 
   function loadHouseholds(userHouseholds: Household[]) {
     households.value = userHouseholds;
-    
+
     // Try to restore previous selection
     const savedId = localStorage.getItem('current_household_id');
     if (savedId) {
-      const saved = userHouseholds.find(h => h.id === savedId);
+      const saved = userHouseholds.find((h) => h.id === savedId);
       if (saved) {
         setCurrentHousehold(saved);
         return;
       }
     }
-    
+
     // Default to first household
     if (userHouseholds.length > 0) {
       setCurrentHousehold(userHouseholds[0]);
@@ -62,7 +65,7 @@ export const useHouseholdStore = defineStore('household', () => {
   }
 
   function switchHousehold(householdId: string) {
-    const household = households.value.find(h => h.id === householdId);
+    const household = households.value.find((h) => h.id === householdId);
     if (household) {
       setCurrentHousehold(household);
     }
@@ -93,7 +96,7 @@ export const useHouseholdStore = defineStore('household', () => {
         role: 'admin',
       },
     ];
-    
+
     loadHouseholds(mockHouseholds);
   }
 

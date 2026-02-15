@@ -22,19 +22,19 @@
             >
               ☰
             </BaseButton>
-            
+
             <!-- Household Switcher (Desktop) -->
             <div class="hidden md:block">
               <HouseholdSwitcher />
             </div>
-            
+
             <h1
               class="truncate text-lg font-semibold text-neutral-900 dark:text-neutral-50 md:text-xl"
             >
               {{ pageTitle }}
             </h1>
           </div>
-          
+
           <div class="flex items-center gap-2 md:gap-3">
             <BaseButton
               variant="ghost"
@@ -60,7 +60,7 @@
             </div>
           </div>
         </header>
-        
+
         <!-- Breadcrumbs -->
         <div
           v-if="showShell"

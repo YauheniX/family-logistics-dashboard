@@ -1,5 +1,9 @@
 <template>
-  <nav v-if="breadcrumbs.length > 0" aria-label="Breadcrumb" class="flex items-center gap-2 text-sm">
+  <nav
+    v-if="breadcrumbs.length > 0"
+    aria-label="Breadcrumb"
+    class="flex items-center gap-2 text-sm"
+  >
     <RouterLink
       v-for="(crumb, index) in breadcrumbs"
       :key="index"

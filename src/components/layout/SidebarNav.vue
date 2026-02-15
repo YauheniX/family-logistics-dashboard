@@ -6,7 +6,7 @@
     @click="emit('close')"
   ></div>
 
-    <aside
+  <aside
     class="fixed inset-y-0 left-0 z-50 w-64 shrink-0 border-r border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 px-5 py-6 transform transition-transform duration-200 lg:hidden"
     :class="mobileOpen ? 'translate-x-0' : '-translate-x-full'"
     :aria-hidden="mobileOpen ? 'false' : 'true'"
@@ -17,9 +17,7 @@
         <span class="text-2xl" aria-hidden="true">🏡</span>
         <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-50">FamilyBoard</h2>
       </div>
-      <p class="text-xs text-neutral-500 dark:text-neutral-400 ml-8">
-        Keeping families connected
-      </p>
+      <p class="text-xs text-neutral-500 dark:text-neutral-400 ml-8">Keeping families connected</p>
     </div>
 
     <!-- Current Household Display -->
@@ -67,9 +65,7 @@
         <span class="text-2xl" aria-hidden="true">🏡</span>
         <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-50">FamilyBoard</h2>
       </div>
-      <p class="text-xs text-neutral-500 dark:text-neutral-400 ml-8">
-        Keeping families connected
-      </p>
+      <p class="text-xs text-neutral-500 dark:text-neutral-400 ml-8">Keeping families connected</p>
     </div>
 
     <!-- Current Household Display -->
@@ -113,13 +109,16 @@ import { computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useHouseholdStore } from '@/stores/household';
 
-withDefaults(defineProps<{
-  userEmail?: string | null;
-  mobileOpen?: boolean;
-}>(), {
-  mobileOpen: false,
-  userEmail: null,
-});
+withDefaults(
+  defineProps<{
+    userEmail?: string | null;
+    mobileOpen?: boolean;
+  }>(),
+  {
+    mobileOpen: false,
+    userEmail: null,
+  },
+);
 
 const emit = defineEmits<{
   close: [];
