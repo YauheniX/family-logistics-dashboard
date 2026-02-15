@@ -12,18 +12,27 @@
     :aria-hidden="mobileOpen ? 'false' : 'true'"
   >
     <!-- Logo/Brand -->
-    <div class="mb-8">
-      <p class="text-xs uppercase tracking-wide text-primary-500 dark:text-primary-400">Family</p>
-      <h2 class="text-h2 text-neutral-900 dark:text-neutral-50">FamilyBoard</h2>
+    <div class="mb-6">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-2xl" aria-hidden="true">🏡</span>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-50">FamilyBoard</h2>
+      </div>
+      <p class="text-xs text-neutral-500 dark:text-neutral-400 ml-8">Keeping families connected</p>
     </div>
 
-    <!-- User Info -->
+    <!-- Current Household Display -->
     <div
-      class="mb-6 rounded-lg bg-white dark:bg-neutral-900 p-4 text-sm border border-neutral-200 dark:border-neutral-700"
+      v-if="currentHousehold"
+      class="mb-6 rounded-xl bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/40 dark:to-primary-800/40 p-4 border border-primary-200 dark:border-primary-700"
     >
-      <p class="font-semibold text-neutral-900 dark:text-neutral-50">Welcome</p>
-      <p class="mt-1 break-words text-neutral-600 dark:text-neutral-400">
-        {{ userEmail || 'Authenticated user' }}
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-xl" aria-hidden="true">{{ currentHousehold.emoji || '🏠' }}</span>
+        <p class="font-semibold text-neutral-900 dark:text-neutral-50 truncate">
+          {{ currentHousehold.name }}
+        </p>
+      </div>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 capitalize ml-7">
+        {{ currentHousehold.role }}
       </p>
     </div>
 
@@ -51,18 +60,27 @@
     class="hidden w-64 shrink-0 border-r border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 px-5 py-6 lg:block"
   >
     <!-- Logo/Brand -->
-    <div class="mb-8">
-      <p class="text-xs uppercase tracking-wide text-primary-500 dark:text-primary-400">Family</p>
-      <h2 class="text-h2 text-neutral-900 dark:text-neutral-50">FamilyBoard</h2>
+    <div class="mb-6">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-2xl" aria-hidden="true">🏡</span>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-50">FamilyBoard</h2>
+      </div>
+      <p class="text-xs text-neutral-500 dark:text-neutral-400 ml-8">Keeping families connected</p>
     </div>
 
-    <!-- User Info -->
+    <!-- Current Household Display -->
     <div
-      class="mb-6 rounded-lg bg-white dark:bg-neutral-900 p-4 text-sm border border-neutral-200 dark:border-neutral-700"
+      v-if="currentHousehold"
+      class="mb-6 rounded-xl bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/40 dark:to-primary-800/40 p-4 border border-primary-200 dark:border-primary-700"
     >
-      <p class="font-semibold text-neutral-900 dark:text-neutral-50">Welcome</p>
-      <p class="mt-1 break-words text-neutral-600 dark:text-neutral-400">
-        {{ userEmail || 'Authenticated user' }}
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-xl" aria-hidden="true">{{ currentHousehold.emoji || '🏠' }}</span>
+        <p class="font-semibold text-neutral-900 dark:text-neutral-50 truncate">
+          {{ currentHousehold.name }}
+        </p>
+      </div>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 capitalize ml-7">
+        {{ currentHousehold.role }}
       </p>
     </div>
 
@@ -89,26 +107,33 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
+import { useHouseholdStore } from '@/stores/household';
 
-const props = defineProps<{
-  userEmail?: string | null;
-  mobileOpen?: boolean;
-}>();
+withDefaults(
+  defineProps<{
+    userEmail?: string | null;
+    mobileOpen?: boolean;
+  }>(),
+  {
+    mobileOpen: false,
+    userEmail: null,
+  },
+);
 
 const emit = defineEmits<{
   close: [];
 }>();
 
 const route = useRoute();
+const householdStore = useHouseholdStore();
+
+const currentHousehold = computed(() => householdStore.currentHousehold);
 
 const items = [
-  { name: 'dashboard', label: 'Dashboard', to: '/', emoji: '📊' },
-  { name: 'family-list', label: 'Family', to: '/families', emoji: '👨‍👩‍👧‍👦' },
-  { name: 'shopping-list', label: 'Shopping Lists', to: '/families', emoji: '🛒' },
+  { name: 'dashboard', label: 'Home', to: '/', emoji: '🏠' },
+  { name: 'family-list', label: 'Members', to: '/families', emoji: '👨‍👩‍👧‍👦' },
+  { name: 'family-list', label: 'Shopping', to: '/families', emoji: '🛒' },
   { name: 'wishlist-list', label: 'Wishlists', to: '/wishlists', emoji: '🎁' },
   { name: 'settings', label: 'Settings', to: '/settings', emoji: '⚙️' },
 ];
-
-const userEmail = props.userEmail;
-const mobileOpen = computed(() => props.mobileOpen ?? false);
 </script>
