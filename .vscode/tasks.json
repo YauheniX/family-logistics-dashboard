@@ -60,7 +60,20 @@
         "reveal": "always",
         "panel": "shared"
       },
-      "problemMatcher": []
+      "problemMatcher": [
+        {
+          "owner": "vite",
+          "pattern": {
+            "regexp": "^(?:\\s*(?:\\[?error\\]?|ERROR)\\s*:?\\s*)(.*)$",
+            "message": 1
+          },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "VITE v",
+            "endsPattern": "ready in"
+          }
+        }
+      ]
     },
     {
       "label": "Debug: Docker PS",

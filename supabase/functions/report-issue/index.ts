@@ -86,9 +86,9 @@ serve(async (req) => {
     }
   }
 
-  const verifiedUserId = await getVerifiedUserId(req);
-  if (!verifiedUserId) {
-    return json({ error: 'Unauthorized' }, 401);
+  const verified = await getVerifiedUser(req);
+  if (!verified.userId) {
+    return json({ error: 'Unauthorized', reason: verified.reason }, 401);
   }
 
   const issueBody = buildIssueBody({
@@ -212,9 +212,9 @@ function sanitizeDescription(value: string): string {
     .slice(0, 5000); // Reasonable limit for descriptions
 }
 
-async function getVerifiedUserId(req: Request): Promise<string | null> {
+async function getVerifiedUser(req: Request): Promise<{ userId: string | null; reason: string }> {
   const authHeader = req.headers.get('Authorization');
-  if (!authHeader) return null;
+  if (!authHeader) return { userId: null, reason: 'Missing Authorization header' };
 
   const url = Deno.env.get('SUPABASE_URL');
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
@@ -222,7 +222,7 @@ async function getVerifiedUserId(req: Request): Promise<string | null> {
     console.error(
       'Missing SUPABASE_URL or SUPABASE_ANON_KEY in Edge Function environment; unable to verify user.',
     );
-    return null;
+    return { userId: null, reason: 'Missing SUPABASE_URL or SUPABASE_ANON_KEY' };
   }
 
   try {
@@ -238,9 +238,11 @@ async function getVerifiedUserId(req: Request): Promise<string | null> {
     });
 
     const { data, error } = await supabase.auth.getUser();
-    if (error) return null;
-    return data.user?.id ?? null;
+    if (error) {
+      return { userId: null, reason: `Invalid token: ${String(error.message || 'unknown')}` };
+    }
+    return { userId: data.user?.id ?? null, reason: data.user?.id ? 'ok' : 'No user in token' };
   } catch {
-    return null;
+    return { userId: null, reason: 'Failed to verify token' };
   }
 }

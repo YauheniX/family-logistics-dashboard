@@ -5,6 +5,16 @@ import { isMockMode } from '@/config/backend.config';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
+function getAuthStorageKey(url: string): string {
+  try {
+    const hostname = new URL(url).hostname;
+    // Keep it stable and unique across projects/environments.
+    return `sb-${hostname}-auth`;
+  } catch {
+    return 'sb-auth';
+  }
+}
+
 if (!isMockMode()) {
   if (!supabaseUrl) {
     throw new Error('Missing VITE_SUPABASE_URL');
@@ -29,6 +39,7 @@ export const supabase: SupabaseClient<Database> = isMockMode()
         persistSession: true,
         detectSessionInUrl: true,
         autoRefreshToken: true,
+        storageKey: 'sb-mock-auth',
         storage: window.localStorage,
       },
     }) as SupabaseClient<Database>)
@@ -37,6 +48,7 @@ export const supabase: SupabaseClient<Database> = isMockMode()
         persistSession: true,
         detectSessionInUrl: true,
         autoRefreshToken: true,
+        storageKey: getAuthStorageKey(supabaseUrl),
         storage: window.localStorage,
       },
     });
