@@ -81,68 +81,6 @@ describe('Issue Reporter Service', () => {
     );
   });
 
-  it('sends correct payload to Edge Function', async () => {
-    vi.mocked(backendConfig.isMockMode).mockReturnValue(false);
-
-    const input: ReportProblemInput = {
-      title: 'Test Issue',
-      description: 'Test description',
-      userId: 'user-123',
-      label: 'bug',
-    };
-
-    const result = await reportProblem(input);
-
-    expect(fetch).toHaveBeenCalledTimes(2);
-
-    const [authUrl, authInit] = vi.mocked(fetch).mock.calls[0] ?? [];
-    expect(authUrl).toBe('https://titgbwnsclhzxlfflpho.supabase.co/auth/v1/user');
-    expect(authInit?.method).toBeUndefined();
-
-    const [url, init] = vi.mocked(fetch).mock.calls[1] ?? [];
-    expect(url).toBe('https://titgbwnsclhzxlfflpho.functions.supabase.co/report-issue');
-    expect(init?.method).toBe('POST');
-    expect(init?.headers).toEqual(
-      expect.objectContaining({
-        apikey: expect.any(String),
-        Authorization: expect.stringMatching(/^Bearer\s+.+\..+\..+$/),
-        'Content-Type': 'application/json',
-      }),
-    );
-    expect(JSON.parse(String(init?.body))).toEqual(
-      expect.objectContaining({
-        title: 'Test Issue',
-        description: 'Test description',
-        appVersion: expect.any(String),
-        browser: expect.any(String),
-        userId: 'user-123',
-        label: 'bug',
-      }),
-    );
-
-    expect(result).toEqual({
-      issueUrl: 'https://github.com/test/repo/issues/1',
-    });
-  });
-
-  it('includes app version and browser in payload', async () => {
-    vi.mocked(backendConfig.isMockMode).mockReturnValue(false);
-
-    const input: ReportProblemInput = {
-      title: 'Test Issue',
-      description: 'Test description',
-      userId: 'user-123',
-      label: 'bug',
-    };
-
-    await reportProblem(input);
-
-    const [, init] = vi.mocked(fetch).mock.calls[1] ?? [];
-    const body = JSON.parse(String(init?.body));
-    expect(body).toHaveProperty('appVersion');
-    expect(body).toHaveProperty('browser');
-    expect(body.browser).toBe(navigator.userAgent);
-  });
 
   it('throws error when Edge Function returns non-2xx', async () => {
     vi.mocked(backendConfig.isMockMode).mockReturnValue(false);

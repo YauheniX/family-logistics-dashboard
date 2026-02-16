@@ -1,6 +1,5 @@
 import { supabase } from '@/features/shared/infrastructure/supabase.client';
 import { isMockMode } from '@/config/backend.config';
-
 export type IssueLabel = 'bug' | 'enhancement' | 'super buba issue';
 
 export type ReportProblemInput = {

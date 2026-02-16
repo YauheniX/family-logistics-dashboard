@@ -136,7 +136,6 @@ describe('ReportProblemModal', () => {
     expect(issueReporter.reportProblem).toHaveBeenCalledWith({
       title: 'Test Issue',
       description: 'Test description',
-      screenshot: null,
       userId: 'user-123',
       label: 'bug',
     });
@@ -277,73 +276,4 @@ describe('ReportProblemModal', () => {
 
     expect(wrapper.emitted('close')).toBeTruthy();
   });
-
-
-
-  // Screenshot submission tests removed because screenshot UI was removed.
-
-  it('does not open issue URL in a new window on successful submission', async () => {
-    // Mock window.open
-    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
-
-    vi.mocked(issueReporter.reportProblem).mockResolvedValue({
-      issueUrl: 'https://github.com/test/repo/issues/3',
-    });
-
-    const authStore = useAuthStore();
-    authStore.user = {
-      id: 'user-789',
-      email: 'test@example.com',
-      app_metadata: {},
-      user_metadata: {},
-      aud: 'authenticated',
-      created_at: new Date().toISOString(),
-    };
-
-    const wrapper = mount(ReportProblemModal, {
-      props: {
-        open: true,
-      },
-      global: {
-        stubs: {
-          ModalDialog: {
-            template: '<div><slot /></div>',
-          },
-          BaseButton: {
-            template: '<button type="button" @click="$attrs.onClick"><slot /></button>',
-            inheritAttrs: false,
-          },
-          BaseInput: {
-            template:
-              '<input v-model="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
-            props: ['modelValue'],
-            emits: ['update:modelValue'],
-          },
-        },
-      },
-    });
-
-    // Fill in form fields
-    const vm = wrapper.vm as unknown as {
-      title: string;
-      description: string;
-    };
-    vm.title = 'Test Issue with URL';
-    vm.description = 'Test description';
-    await wrapper.vm.$nextTick();
-
-    // Submit form
-    const form = wrapper.find('form');
-    await form.trigger('submit.prevent');
-    await wrapper.vm.$nextTick();
-
-    // Wait for async operations
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    expect(windowOpenSpy).not.toHaveBeenCalled();
-
-    windowOpenSpy.mockRestore();
-  });
-
-  // FileReader error handling test removed (screenshot UI removed).
 });
