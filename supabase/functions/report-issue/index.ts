@@ -134,10 +134,8 @@ serve(async (req) => {
     });
 
     const createIssueResponse = createWithLabels;
-    let createIssueResponseText: string | null = null;
 
     if (!createIssueResponse.ok && createIssueResponse.status === 422) {
-      createIssueResponseText = await createIssueResponse.text();
       const retryWithoutLabels = await fetch(issueEndpoint, {
         method: 'POST',
         headers,
@@ -160,7 +158,7 @@ serve(async (req) => {
     }
 
     if (!createIssueResponse.ok) {
-      const text = createIssueResponseText ?? (await createIssueResponse.text());
+      const text = await createIssueResponse.text();
       return json(
         {
           error: 'GitHub issue creation failed.',
