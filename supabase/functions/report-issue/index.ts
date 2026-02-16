@@ -183,7 +183,7 @@ serve(async (req) => {
     return json(
       {
         error: 'Failed to contact GitHub.',
-        details: error instanceof Error ? error.message : String(error),
+        details: 'An unexpected error occurred while contacting GitHub.',
       },
       502,
     );
