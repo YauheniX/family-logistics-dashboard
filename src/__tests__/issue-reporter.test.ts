@@ -72,7 +72,6 @@ describe('Issue Reporter Service', () => {
     const input: ReportProblemInput = {
       title: 'Test Issue',
       description: 'Test description',
-      screenshot: null,
       userId: 'user-123',
       label: 'bug',
     };
@@ -88,7 +87,6 @@ describe('Issue Reporter Service', () => {
     const input: ReportProblemInput = {
       title: 'Test Issue',
       description: 'Test description',
-      screenshot: null,
       userId: 'user-123',
       label: 'bug',
     };
@@ -115,7 +113,6 @@ describe('Issue Reporter Service', () => {
       expect.objectContaining({
         title: 'Test Issue',
         description: 'Test description',
-        screenshot: null,
         appVersion: expect.any(String),
         browser: expect.any(String),
         userId: 'user-123',
@@ -128,40 +125,12 @@ describe('Issue Reporter Service', () => {
     });
   });
 
-  it('includes screenshot in payload when provided', async () => {
-    vi.mocked(backendConfig.isMockMode).mockReturnValue(false);
-
-    const screenshot = {
-      name: 'screenshot.png',
-      type: 'image/png',
-      dataBase64: 'base64data',
-    };
-
-    const input: ReportProblemInput = {
-      title: 'Test Issue',
-      description: 'Test description',
-      screenshot,
-      userId: 'user-123',
-      label: 'bug',
-    };
-
-    await reportProblem(input);
-
-    const [, init] = vi.mocked(fetch).mock.calls[1] ?? [];
-    expect(JSON.parse(String(init?.body))).toEqual(
-      expect.objectContaining({
-        screenshot,
-      }),
-    );
-  });
-
   it('includes app version and browser in payload', async () => {
     vi.mocked(backendConfig.isMockMode).mockReturnValue(false);
 
     const input: ReportProblemInput = {
       title: 'Test Issue',
       description: 'Test description',
-      screenshot: null,
       userId: 'user-123',
       label: 'bug',
     };
@@ -193,7 +162,6 @@ describe('Issue Reporter Service', () => {
     const input: ReportProblemInput = {
       title: 'Test Issue',
       description: 'Test description',
-      screenshot: null,
       userId: 'user-123',
       label: 'bug',
     };
@@ -219,7 +187,6 @@ describe('Issue Reporter Service', () => {
     const input: ReportProblemInput = {
       title: 'Test Issue',
       description: 'Test description',
-      screenshot: null,
       userId: 'user-123',
       label: 'bug',
     };
@@ -249,7 +216,6 @@ describe('Issue Reporter Service', () => {
       const input: ReportProblemInput = {
         title: 'Test Issue',
         description: 'Test description',
-        screenshot: null,
         userId: 'user-123',
         label: 'bug',
       };
@@ -280,7 +246,6 @@ describe('Issue Reporter Service', () => {
       const input: ReportProblemInput = {
         title: 'Test Issue',
         description: 'Test description',
-        screenshot: null,
         userId: 'user-123',
         label: 'bug',
       };
@@ -314,7 +279,6 @@ describe('Issue Reporter Service', () => {
       const input: ReportProblemInput = {
         title: 'Test Issue',
         description: 'Test description',
-        screenshot: null,
         userId: 'user-123',
         label: 'bug',
       };
@@ -365,7 +329,6 @@ describe('Issue Reporter Service', () => {
       const input: ReportProblemInput = {
         title: 'Test Issue',
         description: 'Test description',
-        screenshot: null,
         userId: 'user-123',
         label: 'bug',
       };
@@ -410,7 +373,6 @@ describe('Issue Reporter Service', () => {
       const input: ReportProblemInput = {
         title: 'Test Issue',
         description: 'Test description',
-        screenshot: null,
         userId: 'user-123',
         label: 'bug',
       };
@@ -456,7 +418,6 @@ describe('Issue Reporter Service', () => {
       const input: ReportProblemInput = {
         title: 'Test Issue',
         description: 'Test description',
-        screenshot: null,
         userId: 'user-123',
         label: 'bug',
       };
@@ -497,7 +458,6 @@ describe('Issue Reporter Service', () => {
       const input: ReportProblemInput = {
         title: 'Test Issue',
         description: 'Test description',
-        screenshot: null,
         userId: 'user-123',
         label: 'bug',
       };
@@ -547,7 +507,6 @@ describe('Issue Reporter Service', () => {
         description: 'Test description',
         userId: 'user-123',
         label: 'bug',
-        screenshot: null,
       };
 
       await reportProblem(input);

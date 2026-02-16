@@ -36,25 +36,6 @@
         </select>
       </div>
 
-      <div class="space-y-1">
-        <label class="label" for="problem-screenshot">Optional screenshot</label>
-        <input
-          id="problem-screenshot"
-          ref="fileInputRef"
-          class="input py-1.5"
-          type="file"
-          accept="image/*"
-          :disabled="submitting"
-          @change="handleFileChange"
-        />
-        <p class="text-xs text-neutral-500 dark:text-neutral-400">
-          PNG/JPG/GIF, max {{ maxScreenshotMb }}MB.
-        </p>
-        <p v-if="errors.screenshot" class="text-sm text-danger-500 dark:text-danger-400">
-          {{ errors.screenshot }}
-        </p>
-      </div>
-
       <div class="flex items-center justify-end gap-2 pt-2">
         <BaseButton variant="ghost" type="button" :disabled="submitting" @click="handleClose">
           Cancel
@@ -74,7 +55,7 @@ import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseInput from '@/components/shared/BaseInput.vue';
 import { useToastStore } from '@/stores/toast';
 import { useAuthStore } from '@/stores/auth';
-import { reportProblem, type IssueLabel, type ScreenshotPayload } from '@/services/issueReporter';
+import { reportProblem, type IssueLabel } from '@/services/issueReporter';
 
 defineProps<{ open: boolean }>();
 
@@ -88,25 +69,17 @@ const authStore = useAuthStore();
 const title = ref('');
 const description = ref('');
 const label = ref<IssueLabel>('bug');
-const screenshot = ref<ScreenshotPayload | null>(null);
-const fileInputRef = ref<HTMLInputElement | null>(null);
 
 const submitting = ref(false);
-const errors = ref<{ title?: string; description?: string; screenshot?: string }>({});
-
-const maxScreenshotBytes = 2 * 1024 * 1024;
-const maxScreenshotMb = 2;
+const errors = ref<{ title?: string; description?: string }>({});
 
 const resetForm = () => {
   title.value = '';
   description.value = '';
   label.value = 'bug';
-  screenshot.value = null;
   errors.value = {};
   // Clear file input
-  if (fileInputRef.value) {
-    fileInputRef.value.value = '';
-  }
+  // file input removed
 };
 
 const handleClose = () => {
@@ -114,43 +87,7 @@ const handleClose = () => {
   emit('close');
 };
 
-const handleFileChange = async (event: Event) => {
-  errors.value.screenshot = undefined;
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0] ?? null;
-  if (!file) {
-    screenshot.value = null;
-    return;
-  }
-
-  if (!file.type.startsWith('image/')) {
-    errors.value.screenshot = 'Please choose an image file.';
-    screenshot.value = null;
-    input.value = ''; // Clear input to allow re-selection
-    return;
-  }
-
-  if (file.size > maxScreenshotBytes) {
-    errors.value.screenshot = `Screenshot is too large (max ${maxScreenshotMb}MB).`;
-    screenshot.value = null;
-    input.value = ''; // Clear input to allow re-selection
-    return;
-  }
-
-  try {
-    const dataUrl = await readFileAsDataUrl(file);
-    const base64 = dataUrl.split(',')[1] ?? '';
-    screenshot.value = {
-      name: file.name,
-      type: file.type,
-      dataBase64: base64,
-    };
-  } catch {
-    errors.value.screenshot = 'Failed to read the screenshot file. Please try again.';
-    screenshot.value = null;
-    input.value = ''; // Clear input to allow re-selection after a read error
-  }
-};
+// Screenshot input removed to avoid large payloads causing GitHub failures
 
 const validate = () => {
   errors.value = {};
@@ -172,7 +109,6 @@ const handleSubmit = async () => {
     await reportProblem({
       title: title.value.trim(),
       description: description.value.trim(),
-      screenshot: screenshot.value,
       userId: authStore.user?.id ?? null,
       label: label.value,
     });
@@ -187,12 +123,4 @@ const handleSubmit = async () => {
   }
 };
 
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('Failed to read screenshot file.'));
-    reader.onload = () => resolve(String(reader.result ?? ''));
-    reader.readAsDataURL(file);
-  });
-}
 </script>
