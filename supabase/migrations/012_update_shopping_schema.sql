@@ -216,6 +216,7 @@ $$;
 create trigger shopping_list_activity_log
   after insert or update on shopping_lists
   for each row
+  when (TG_OP = 'INSERT' or OLD.status IS DISTINCT FROM NEW.status)
   execute function log_shopping_list_activity();
 
 -- Log shopping item activity
@@ -264,6 +265,7 @@ $$;
 create trigger shopping_item_activity_log
   after insert or update on shopping_items
   for each row
+  when (TG_OP = 'INSERT' or (not OLD.is_purchased and NEW.is_purchased))
   execute function log_shopping_item_activity();
 
 -- ─── 5. Update RLS Policies ──────────────────────────────────

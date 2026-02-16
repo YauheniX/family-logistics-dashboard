@@ -212,9 +212,7 @@ function sanitizeDescription(value: string): string {
     .slice(0, 5000); // Reasonable limit for descriptions
 }
 
-async function getVerifiedUser(
-  req: Request,
-): Promise<{ userId: string | null; reason: string }> {
+async function getVerifiedUser(req: Request): Promise<{ userId: string | null; reason: string }> {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) return { userId: null, reason: 'Missing Authorization header' };
 

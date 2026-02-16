@@ -104,16 +104,21 @@ export const useHouseholdStore = defineStore('household', () => {
       }
 
       const mapped: Household[] = (data ?? [])
-        .map((row: { role: HouseholdRole | null; households: { id: unknown; name: unknown; slug: unknown } | null }) => {
-          const household = row.households;
-          if (!household?.id) return null;
-          return {
-            id: String(household.id),
-            name: String(household.name ?? 'Household'),
-            slug: String(household.slug ?? ''),
-            role: (row.role as HouseholdRole) ?? 'member',
-          } satisfies Household;
-        })
+        .map(
+          (row: {
+            role: HouseholdRole | null;
+            households: { id: unknown; name: unknown; slug: unknown } | null;
+          }) => {
+            const household = row.households;
+            if (!household?.id) return null;
+            return {
+              id: String(household.id),
+              name: String(household.name ?? 'Household'),
+              slug: String(household.slug ?? ''),
+              role: (row.role as HouseholdRole) ?? 'member',
+            } satisfies Household;
+          },
+        )
         .filter(Boolean) as Household[];
 
       loadHouseholds(mapped);
