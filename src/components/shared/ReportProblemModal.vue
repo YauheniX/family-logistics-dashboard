@@ -29,12 +29,7 @@
 
       <div class="space-y-1">
         <label class="label" for="problem-label">Type</label>
-        <select
-          id="problem-label"
-          v-model="label"
-          class="input"
-          :disabled="submitting"
-        >
+        <select id="problem-label" v-model="label" class="input" :disabled="submitting">
           <option value="bug">Bug</option>
           <option value="enhancement">Enhancement</option>
           <option value="super buba issue">Super Buba Issue</option>

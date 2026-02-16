@@ -160,7 +160,7 @@ serve(async (req) => {
       return json(
         {
           error: 'GitHub issue creation failed.',
-          details: text.slice(0, 2000)
+          details: text.slice(0, 2000),
         },
         502,
       );
@@ -225,7 +225,9 @@ function buildIssueBody(input: {
     );
     parts.push('');
     parts.push('<details>');
-    parts.push(`<summary>Show screenshot data (${sanitizeInline(input.screenshot.name)})</summary>`);
+    parts.push(
+      `<summary>Show screenshot data (${sanitizeInline(input.screenshot.name)})</summary>`,
+    );
     parts.push('');
     parts.push(`- Name: ${sanitizeInline(input.screenshot.name)}`);
     parts.push(`- Type: ${sanitizeInline(input.screenshot.type)}`);
