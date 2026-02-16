@@ -218,28 +218,6 @@ function buildIssueBody(input: {
   parts.push(`- User ID: ${sanitizeInline(input.userId ?? 'anonymous')}`);
   parts.push('');
 
-  if (input.screenshot?.dataBase64) {
-    parts.push('### Screenshot');
-    parts.push(
-      '_Attached as base64 to keep the implementation minimal. Decode locally if needed._',
-    );
-    parts.push('');
-    parts.push('<details>');
-    parts.push(
-      `<summary>Show screenshot data (${sanitizeInline(input.screenshot.name)})</summary>`,
-    );
-    parts.push('');
-    parts.push(`- Name: ${sanitizeInline(input.screenshot.name)}`);
-    parts.push(`- Type: ${sanitizeInline(input.screenshot.type)}`);
-    parts.push('');
-    parts.push('```base64');
-    parts.push(input.screenshot.dataBase64);
-    parts.push('```');
-    parts.push('');
-    parts.push('</details>');
-    parts.push('');
-  }
-
   return parts.join('\n');
 }
 
