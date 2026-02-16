@@ -18,6 +18,7 @@ type ReportIssueRequest = {
   appVersion?: string;
   browser?: string;
   userId?: string | null; // client-provided (untrusted)
+  label?: 'bug' | 'enhancement' | 'super buba issue';
 };
 
 // CORS
@@ -96,30 +97,70 @@ serve(async (req) => {
     screenshot,
     appVersion: body.appVersion,
     browser: body.browser,
-    userId: verifiedUserId,
+    userId: verified.userId,
   });
 
+  const label =
+    body.label === 'enhancement'
+      ? 'enhancement'
+      : body.label === 'super buba issue'
+        ? 'super buba issue'
+        : 'bug';
+
   try {
-    const createIssueResponse = await fetch(
-      `https://api.github.com/repos/${encodeURIComponent(githubOwner)}/${encodeURIComponent(githubRepo)}/issues`,
-      {
+    const issueEndpoint = `https://api.github.com/repos/${encodeURIComponent(githubOwner)}/${encodeURIComponent(githubRepo)}/issues`;
+    const headers = {
+      Authorization: `Bearer ${githubToken}`,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'Content-Type': 'application/json',
+      'User-Agent': 'family-logistics-dashboard',
+    };
+
+    const basePayload = {
+      title: sanitizeInline(title),
+      body: issueBody,
+    };
+
+    // Apply default label. If the label doesn't exist in the repo, GitHub returns 422.
+    // In that case, retry without labels to avoid blocking reporting.
+    const createWithLabels = await fetch(issueEndpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        ...basePayload,
+        labels: [label],
+      }),
+    });
+
+    const createIssueResponse = createWithLabels;
+    let createIssueResponseText: string | null = null;
+
+    if (!createIssueResponse.ok && createIssueResponse.status === 422) {
+      createIssueResponseText = await createIssueResponse.text();
+      const retryWithoutLabels = await fetch(issueEndpoint, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${githubToken}`,
-          Accept: 'application/vnd.github+json',
-          'X-GitHub-Api-Version': '2022-11-28',
-          'Content-Type': 'application/json',
-          'User-Agent': 'family-logistics-dashboard',
+        headers,
+        body: JSON.stringify(basePayload),
+      });
+
+      // If retry succeeds, use it; otherwise keep original failure response for diagnostics.
+      if (retryWithoutLabels.ok) {
+        return json({ issueUrl: (await retryWithoutLabels.json()).html_url }, 200);
+      }
+
+      const retryText = await retryWithoutLabels.text();
+      return json(
+        {
+          error: 'GitHub issue creation failed.',
+          details: retryText.slice(0, 2000),
         },
-        body: JSON.stringify({
-          title: sanitizeInline(title),
-          body: issueBody,
-        }),
-      },
-    );
+        502,
+      );
+    }
 
     if (!createIssueResponse.ok) {
-      const text = await createIssueResponse.text();
+      const text = createIssueResponseText ?? (await createIssueResponse.text());
       return json(
         {
           error: 'GitHub issue creation failed.',
@@ -186,12 +227,18 @@ function buildIssueBody(input: {
     parts.push(
       '_Attached as base64 to keep the implementation minimal. Decode locally if needed._',
     );
+    parts.push('');
+    parts.push('<details>');
+    parts.push(`<summary>Show screenshot data (${sanitizeInline(input.screenshot.name)})</summary>`);
+    parts.push('');
     parts.push(`- Name: ${sanitizeInline(input.screenshot.name)}`);
     parts.push(`- Type: ${sanitizeInline(input.screenshot.type)}`);
     parts.push('');
     parts.push('```base64');
     parts.push(input.screenshot.dataBase64);
     parts.push('```');
+    parts.push('');
+    parts.push('</details>');
     parts.push('');
   }
 

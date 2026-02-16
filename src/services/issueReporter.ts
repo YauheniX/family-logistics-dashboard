@@ -8,11 +8,14 @@ export type ScreenshotPayload = {
   dataBase64: string;
 };
 
+export type IssueLabel = 'bug' | 'enhancement' | 'super buba issue';
+
 export type ReportProblemInput = {
   title: string;
   description: string;
   screenshot: ScreenshotPayload | null;
   userId: string | null;
+  label: IssueLabel;
 };
 
 export type ReportProblemResult = {
@@ -57,6 +60,8 @@ export async function reportProblem(input: ReportProblemInput): Promise<ReportPr
   if (isMockMode()) {
     throw new Error('Issue reporting requires a backend (Supabase) to be enabled.');
   }
+
+  const enableAuthDebug = import.meta.env.DEV || import.meta.env.VITE_ENABLE_AUTH_DEBUG === 'true';
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
@@ -124,6 +129,19 @@ export async function reportProblem(input: ReportProblemInput): Promise<ReportPr
     throw new Error('Your authentication session is invalid. Please sign out and sign back in.');
   }
 
+  if (enableAuthDebug) {
+    const tokenPreview = `${accessToken.slice(0, 12)}...${accessToken.slice(-12)}`;
+    const iss = typeof refreshedPayload.iss === 'string' ? refreshedPayload.iss : undefined;
+    const exp = typeof refreshedPayload.exp === 'number' ? refreshedPayload.exp : undefined;
+    // eslint-disable-next-line no-console
+    console.info('[reportProblem] auth debug', {
+      supabaseUrl,
+      issuer: iss,
+      expIso: exp ? new Date(exp * 1000).toISOString() : undefined,
+      tokenPreview,
+    });
+  }
+
   const payload = {
     title: input.title,
     description: input.description,
@@ -131,7 +149,30 @@ export async function reportProblem(input: ReportProblemInput): Promise<ReportPr
     appVersion: APP_VERSION,
     browser: navigator.userAgent,
     userId: input.userId,
+    label: input.label,
   };
+
+  if (enableAuthDebug) {
+    try {
+      const authCheck = await fetch(`${new URL(supabaseUrl).origin}/auth/v1/user`, {
+        headers: {
+          apikey: supabaseAnonKey,
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      const authCheckText = await authCheck.text();
+      // eslint-disable-next-line no-console
+      console.info('[reportProblem] /auth/v1/user check', {
+        status: authCheck.status,
+        bodySnippet: authCheckText.slice(0, 200),
+      });
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.warn('[reportProblem] /auth/v1/user check failed', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
 
   const functionsBaseUrl = new URL(supabaseUrl);
   // Hosted: https://<ref>.supabase.co -> https://<ref>.functions.supabase.co/report-issue
@@ -139,6 +180,11 @@ export async function reportProblem(input: ReportProblemInput): Promise<ReportPr
   const endpoint = functionsBaseUrl.origin.endsWith('.supabase.co')
     ? `${functionsBaseUrl.origin.replace('.supabase.co', '.functions.supabase.co')}/report-issue`
     : `${functionsBaseUrl.origin}/functions/v1/report-issue`;
+
+  if (enableAuthDebug) {
+    // eslint-disable-next-line no-console
+    console.info('[reportProblem] endpoint', { endpoint });
+  }
 
   const response = await fetch(endpoint, {
     method: 'POST',
@@ -157,6 +203,17 @@ export async function reportProblem(input: ReportProblemInput): Promise<ReportPr
       body = text ? JSON.parse(text) : null;
     } catch {
       body = text;
+    }
+
+    if (enableAuthDebug) {
+      const snippet =
+        body == null
+          ? ''
+          : typeof body === 'string'
+            ? body.slice(0, 300)
+            : JSON.stringify(body).slice(0, 300);
+      // eslint-disable-next-line no-console
+      console.warn('[reportProblem] non-2xx', { status: response.status, bodySnippet: snippet });
     }
 
     if (response.status === 401) {

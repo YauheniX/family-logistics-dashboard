@@ -1,0 +1,4 @@
+# Supabase Edge Function config
+# Disable gateway JWT verification because this function validates the user token itself
+# via supabase.auth.getUser() in getVerifiedUser().
+verify_jwt = false
