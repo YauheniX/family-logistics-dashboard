@@ -81,7 +81,6 @@ describe('Issue Reporter Service', () => {
     );
   });
 
-
   it('throws error when Edge Function returns non-2xx', async () => {
     vi.mocked(backendConfig.isMockMode).mockReturnValue(false);
 

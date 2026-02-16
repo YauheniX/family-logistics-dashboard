@@ -122,5 +122,4 @@ const handleSubmit = async () => {
     submitting.value = false;
   }
 };
-
 </script>

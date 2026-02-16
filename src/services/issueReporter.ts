@@ -120,7 +120,6 @@ export async function reportProblem(input: ReportProblemInput): Promise<ReportPr
     throw new Error('Your authentication session is invalid. Please sign out and sign back in.');
   }
 
-
   const functionsBaseUrl = new URL(supabaseUrl);
   // Hosted: https://<ref>.supabase.co -> https://<ref>.functions.supabase.co/report-issue
   // Local:  http://localhost:54321   -> http://localhost:54321/functions/v1/report-issue
