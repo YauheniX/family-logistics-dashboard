@@ -158,7 +158,6 @@ serve(async (req) => {
     if (!createIssueResponse.ok) {
       const text = await createIssueResponse.text();
       return json(
-      const text = await createIssueResponse.text();
           error: 'GitHub issue creation failed.',
           details: text.slice(0, 2000),
         },
