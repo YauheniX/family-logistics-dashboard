@@ -74,6 +74,7 @@ describe('Issue Reporter Service', () => {
       description: 'Test description',
       screenshot: null,
       userId: 'user-123',
+      label: 'bug',
     };
 
     await expect(reportProblem(input)).rejects.toThrow(
@@ -89,12 +90,18 @@ describe('Issue Reporter Service', () => {
       description: 'Test description',
       screenshot: null,
       userId: 'user-123',
+      label: 'bug',
     };
 
     const result = await reportProblem(input);
 
-    expect(fetch).toHaveBeenCalledTimes(1);
-    const [url, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    expect(fetch).toHaveBeenCalledTimes(2);
+
+    const [authUrl, authInit] = vi.mocked(fetch).mock.calls[0] ?? [];
+    expect(authUrl).toBe('https://titgbwnsclhzxlfflpho.supabase.co/auth/v1/user');
+    expect(authInit?.method).toBeUndefined();
+
+    const [url, init] = vi.mocked(fetch).mock.calls[1] ?? [];
     expect(url).toBe('https://titgbwnsclhzxlfflpho.functions.supabase.co/report-issue');
     expect(init?.method).toBe('POST');
     expect(init?.headers).toEqual(
@@ -112,6 +119,7 @@ describe('Issue Reporter Service', () => {
         appVersion: expect.any(String),
         browser: expect.any(String),
         userId: 'user-123',
+        label: 'bug',
       }),
     );
 
@@ -134,11 +142,12 @@ describe('Issue Reporter Service', () => {
       description: 'Test description',
       screenshot,
       userId: 'user-123',
+      label: 'bug',
     };
 
     await reportProblem(input);
 
-    const [, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    const [, init] = vi.mocked(fetch).mock.calls[1] ?? [];
     expect(JSON.parse(String(init?.body))).toEqual(
       expect.objectContaining({
         screenshot,
@@ -154,11 +163,12 @@ describe('Issue Reporter Service', () => {
       description: 'Test description',
       screenshot: null,
       userId: 'user-123',
+      label: 'bug',
     };
 
     await reportProblem(input);
 
-    const [, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    const [, init] = vi.mocked(fetch).mock.calls[1] ?? [];
     const body = JSON.parse(String(init?.body));
     expect(body).toHaveProperty('appVersion');
     expect(body).toHaveProperty('browser');
@@ -185,6 +195,7 @@ describe('Issue Reporter Service', () => {
       description: 'Test description',
       screenshot: null,
       userId: 'user-123',
+      label: 'bug',
     };
 
     await expect(reportProblem(input)).rejects.toThrow('[500] Edge Function request failed');
@@ -210,6 +221,7 @@ describe('Issue Reporter Service', () => {
       description: 'Test description',
       screenshot: null,
       userId: 'user-123',
+      label: 'bug',
     };
 
     const result = await reportProblem(input);
@@ -239,6 +251,7 @@ describe('Issue Reporter Service', () => {
         description: 'Test description',
         screenshot: null,
         userId: 'user-123',
+        label: 'bug',
       };
 
       await expect(reportProblem(input)).rejects.toThrow(
@@ -269,6 +282,7 @@ describe('Issue Reporter Service', () => {
         description: 'Test description',
         screenshot: null,
         userId: 'user-123',
+        label: 'bug',
       };
 
       await expect(reportProblem(input)).rejects.toThrow(
@@ -302,6 +316,7 @@ describe('Issue Reporter Service', () => {
         description: 'Test description',
         screenshot: null,
         userId: 'user-123',
+        label: 'bug',
       };
 
       await expect(reportProblem(input)).rejects.toThrow(
@@ -352,6 +367,7 @@ describe('Issue Reporter Service', () => {
         description: 'Test description',
         screenshot: null,
         userId: 'user-123',
+        label: 'bug',
       };
 
       await reportProblem(input);
@@ -396,6 +412,7 @@ describe('Issue Reporter Service', () => {
         description: 'Test description',
         screenshot: null,
         userId: 'user-123',
+        label: 'bug',
       };
 
       await expect(reportProblem(input)).rejects.toThrow('Refresh failed');
@@ -441,6 +458,7 @@ describe('Issue Reporter Service', () => {
         description: 'Test description',
         screenshot: null,
         userId: 'user-123',
+        label: 'bug',
       };
 
       await expect(reportProblem(input)).rejects.toThrow(
@@ -481,6 +499,7 @@ describe('Issue Reporter Service', () => {
         description: 'Test description',
         screenshot: null,
         userId: 'user-123',
+        label: 'bug',
       };
 
       await expect(reportProblem(input)).rejects.toThrow('Failed to get session after refresh');
@@ -526,8 +545,9 @@ describe('Issue Reporter Service', () => {
       const input: ReportProblemInput = {
         title: 'Test Issue',
         description: 'Test description',
-        screenshot: null,
         userId: 'user-123',
+        label: 'bug',
+        screenshot: null,
       };
 
       await reportProblem(input);

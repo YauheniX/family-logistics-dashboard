@@ -28,6 +28,15 @@
       </div>
 
       <div class="space-y-1">
+        <label class="label" for="problem-label">Type</label>
+        <select id="problem-label" v-model="label" class="input" :disabled="submitting">
+          <option value="bug">Bug</option>
+          <option value="enhancement">Enhancement</option>
+          <option value="super buba issue">Super Buba Issue</option>
+        </select>
+      </div>
+
+      <div class="space-y-1">
         <label class="label" for="problem-screenshot">Optional screenshot</label>
         <input
           id="problem-screenshot"
@@ -65,7 +74,7 @@ import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseInput from '@/components/shared/BaseInput.vue';
 import { useToastStore } from '@/stores/toast';
 import { useAuthStore } from '@/stores/auth';
-import { reportProblem, type ScreenshotPayload } from '@/services/issueReporter';
+import { reportProblem, type IssueLabel, type ScreenshotPayload } from '@/services/issueReporter';
 
 defineProps<{ open: boolean }>();
 
@@ -78,6 +87,7 @@ const authStore = useAuthStore();
 
 const title = ref('');
 const description = ref('');
+const label = ref<IssueLabel>('bug');
 const screenshot = ref<ScreenshotPayload | null>(null);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 
@@ -90,6 +100,7 @@ const maxScreenshotMb = 2;
 const resetForm = () => {
   title.value = '';
   description.value = '';
+  label.value = 'bug';
   screenshot.value = null;
   errors.value = {};
   // Clear file input
@@ -158,17 +169,15 @@ const handleSubmit = async () => {
 
   submitting.value = true;
   try {
-    const result = await reportProblem({
+    await reportProblem({
       title: title.value.trim(),
       description: description.value.trim(),
       screenshot: screenshot.value,
       userId: authStore.user?.id ?? null,
+      label: label.value,
     });
 
     toastStore.success('Issue created. Thanks for the report!');
-    if (result.issueUrl) {
-      window.open(result.issueUrl, '_blank', 'noopener,noreferrer');
-    }
     handleClose();
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unable to create issue.';

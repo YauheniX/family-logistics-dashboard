@@ -39,6 +39,11 @@ describe('ReportProblemModal', () => {
 
     expect(wrapper.find('#problem-description').exists()).toBe(true);
     expect(wrapper.find('#problem-screenshot').exists()).toBe(true);
+    const typeSelect = wrapper.find('#problem-label');
+    expect(typeSelect.exists()).toBe(true);
+    expect(typeSelect.html()).toContain('value="bug"');
+    expect(typeSelect.html()).toContain('value="enhancement"');
+    expect(typeSelect.findAll('option').length).toBeGreaterThanOrEqual(3);
   });
 
   it('validates required fields', async () => {
@@ -237,6 +242,7 @@ describe('ReportProblemModal', () => {
       description: 'Test description',
       screenshot: null,
       userId: 'user-123',
+      label: 'bug',
     });
 
     const toastStore = useToastStore();
@@ -520,6 +526,7 @@ describe('ReportProblemModal', () => {
         title: 'Bug with screenshot',
         description: 'See attached screenshot',
         userId: 'user-456',
+        label: 'bug',
       }),
     );
 
@@ -530,7 +537,7 @@ describe('ReportProblemModal', () => {
     expect(callArgs.screenshot?.type).toBe('image/png');
   });
 
-  it('opens issue URL in new window on successful submission', async () => {
+  it('does not open issue URL in a new window on successful submission', async () => {
     // Mock window.open
     const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
 
@@ -581,22 +588,18 @@ describe('ReportProblemModal', () => {
     // Wait for async operations
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(windowOpenSpy).toHaveBeenCalledWith(
-      'https://github.com/test/repo/issues/3',
-      '_blank',
-      'noopener,noreferrer',
-    );
+    expect(windowOpenSpy).not.toHaveBeenCalled();
 
     windowOpenSpy.mockRestore();
   });
 
   it('handles FileReader errors when reading screenshot', async () => {
-    const originalFileReader = (global as any).FileReader;
+    const originalFileReader = globalThis.FileReader;
 
     class MockFileReader {
       public result: string | ArrayBuffer | null = null;
-      public onload: ((this: FileReader, ev: ProgressEvent<FileReader>) => any) | null = null;
-      public onerror: ((this: FileReader, ev: ProgressEvent<FileReader>) => any) | null = null;
+      public onload: ((this: FileReader, ev: ProgressEvent<FileReader>) => void) | null = null;
+      public onerror: ((this: FileReader, ev: ProgressEvent<FileReader>) => void) | null = null;
 
       readAsDataURL(_file: Blob) {
         if (this.onerror) {
@@ -607,7 +610,8 @@ describe('ReportProblemModal', () => {
     }
 
     // Override global FileReader to simulate an error during file reading
-    (global as any).FileReader = MockFileReader as unknown as typeof FileReader;
+    (globalThis as unknown as { FileReader: typeof FileReader }).FileReader =
+      MockFileReader as unknown as typeof FileReader;
 
     try {
       const wrapper = mount(ReportProblemModal, {
@@ -645,7 +649,7 @@ describe('ReportProblemModal', () => {
       // Should show an error message
       expect(wrapper.text()).toContain('Failed to read the screenshot file');
     } finally {
-      (global as any).FileReader = originalFileReader;
+      (globalThis as unknown as { FileReader: typeof FileReader }).FileReader = originalFileReader;
     }
   });
 });
