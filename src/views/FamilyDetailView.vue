@@ -259,9 +259,12 @@ const handleCreateList = async () => {
     description: newListDescription.value.trim() || null,
   });
   if (result) {
+    // Set the newly created list as the current shopping list and navigate to it
+    shoppingStore.currentList = result;
     newListTitle.value = '';
     newListDescription.value = '';
     showCreateListModal.value = false;
+    router.push({ name: 'shopping-list', params: { listId: result.id } });
   }
 };
 

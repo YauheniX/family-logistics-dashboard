@@ -4,6 +4,7 @@ import FamilyListView from '@/views/FamilyListView.vue';
 import FamilyDetailView from '@/views/FamilyDetailView.vue';
 import MemberManagementView from '@/views/MemberManagementView.vue';
 import ShoppingListView from '@/views/ShoppingListView.vue';
+import ShoppingIndexView from '@/views/ShoppingIndexView.vue';
 import WishlistListView from '@/views/WishlistListView.vue';
 import WishlistEditView from '@/views/WishlistEditView.vue';
 import PublicWishlistView from '@/views/PublicWishlistView.vue';
@@ -57,6 +58,12 @@ const router = createRouter({
       name: 'member-management',
       component: MemberManagementView,
       props: true,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/shopping',
+      name: 'shopping',
+      component: ShoppingIndexView,
       meta: { requiresAuth: true },
     },
     {

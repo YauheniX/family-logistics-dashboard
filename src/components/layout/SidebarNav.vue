@@ -108,6 +108,7 @@
 import { computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useHouseholdStore } from '@/stores/household';
+import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
 
 withDefaults(
   defineProps<{
@@ -129,11 +130,11 @@ const householdStore = useHouseholdStore();
 
 const currentHousehold = computed(() => householdStore.currentHousehold);
 
-const items = [
+const items = computed(() => [
   { name: 'dashboard', label: 'Home', to: '/', emoji: '🏠' },
   { name: 'family-list', label: 'Members', to: '/families', emoji: '👨‍👩‍👧‍👦' },
-  { name: 'family-list', label: 'Shopping', to: '/families', emoji: '🛒' },
+  { name: 'shopping', label: 'Shopping', to: { name: 'shopping' }, emoji: '🛒' },
   { name: 'wishlist-list', label: 'Wishlists', to: '/wishlists', emoji: '🎁' },
   { name: 'settings', label: 'Settings', to: '/settings', emoji: '⚙️' },
-];
+]);
 </script>

@@ -6,7 +6,7 @@
           Good morning, {{ userName }}!
         </h2>
         <p class="mt-2 text-neutral-600 dark:text-neutral-400">
-          Manage your families, shopping lists, and wishlists in one place.
+          Manage your household, shopping lists, and wishlists in one place.
         </p>
       </div>
     </BaseCard>
