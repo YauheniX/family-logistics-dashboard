@@ -76,7 +76,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
-import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
 
 const route = useRoute();
 const showMoreMenu = ref(false);

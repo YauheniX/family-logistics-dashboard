@@ -108,7 +108,6 @@
 import { computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useHouseholdStore } from '@/stores/household';
-import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
 
 withDefaults(
   defineProps<{

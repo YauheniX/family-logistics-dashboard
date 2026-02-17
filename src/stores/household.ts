@@ -212,7 +212,7 @@ export const useHouseholdStore = defineStore('household', () => {
           .eq('id', userId)
           .single();
         displayName = profile?.display_name ?? '';
-      } catch (e) {
+      } catch {
         // ignore
       }
       if (!displayName) {

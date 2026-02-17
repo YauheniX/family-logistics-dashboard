@@ -141,7 +141,7 @@ import type { ShoppingItem } from '@/features/shared/domain/entities';
 
 const props = defineProps<{ listId: string }>();
 
-const router = useRouter();
+const _router = useRouter();
 const authStore = useAuthStore();
 const shoppingStore = useShoppingStore();
 
