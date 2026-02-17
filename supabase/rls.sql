@@ -105,25 +105,31 @@ create policy "family_members_delete"
 -- Accessible only if user belongs to that family
 create policy "shopping_lists_select"
   on shopping_lists for select
-  using (user_is_family_member(family_id, auth.uid()));
+  using (
+    user_is_family_member(family_id, auth.uid())
+  );
 
 -- Any family member can create a list
 create policy "shopping_lists_insert"
   on shopping_lists for insert
-  with check (user_is_family_member(family_id, auth.uid()));
+  with check (
+    created_by = auth.uid()
+    user_is_family_member(family_id, auth.uid())
 
 -- Any family member can update a list (e.g., archive it)
 create policy "shopping_lists_update"
   on shopping_lists for update
-  using (user_is_family_member(family_id, auth.uid()));
+  using (
+    created_by = auth.uid()
+    or user_is_family_member(family_id, auth.uid())
+  );
 
 -- Only list creator or family owner can delete a list
 create policy "shopping_lists_delete"
   on shopping_lists for delete
-  using (
-    created_by = auth.uid()
-    or user_is_family_owner(family_id, auth.uid())
+    user_is_family_member(family_id, auth.uid())
   );
+
 
 -- ═════════════════════════════════════════════════════════════
 -- SHOPPING ITEMS
@@ -144,21 +150,28 @@ create policy "shopping_items_select"
 create policy "shopping_items_insert"
   on shopping_items for insert
   with check (
+    -- Normal case: user is a member of the list's family
     exists (
       select 1 from shopping_lists sl
       where sl.id = list_id
         and user_is_family_member(sl.family_id, auth.uid())
     )
-  );
-
--- Any family member can update items (mark purchased, edit)
-create policy "shopping_items_update"
-  on shopping_items for update
-  using (
+    -- Or the inserting user is recorded on the row
+    or added_by = auth.uid()
+    -- User must be a member of the list's family at insert time
     exists (
       select 1 from shopping_lists sl
       where sl.id = list_id
         and user_is_family_member(sl.family_id, auth.uid())
+    )
+      where sl.id = list_id
+        and user_is_family_member(sl.family_id, auth.uid())
+    )
+    or added_by = auth.uid()
+    or exists (
+      select 1 from shopping_lists sl
+      where sl.id = list_id
+        and sl.created_by = auth.uid()
     )
   );
 
@@ -177,11 +190,6 @@ create policy "shopping_items_delete"
 -- ═════════════════════════════════════════════════════════════
 -- WISHLISTS
 -- ═════════════════════════════════════════════════════════════
-
--- Owner has full access; public wishlists readable by anyone
-create policy "wishlists_select"
-  on wishlists for select
-  using (user_id = auth.uid() or is_public = true);
 
 -- Authenticated users can create their own wishlists
 create policy "wishlists_insert"

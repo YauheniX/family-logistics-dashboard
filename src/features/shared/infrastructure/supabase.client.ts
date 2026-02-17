@@ -15,20 +15,6 @@ function getAuthStorageKey(url: string): string {
   }
 }
 
-if (!isMockMode()) {
-  if (!supabaseUrl) {
-    throw new Error('Missing VITE_SUPABASE_URL');
-  }
-  if (!supabaseAnonKey) {
-    throw new Error('Missing VITE_SUPABASE_ANON_KEY');
-  }
-
-  if (import.meta.env.DEV) {
-    console.log('Supabase URL:', supabaseUrl);
-    console.log('Supabase Anon Key:', supabaseAnonKey ? '***loaded***' : 'MISSING');
-  }
-}
-
 /**
  * Typed Supabase client with database schema
  * Note: In mock mode, this client won't be used but we still export it for type compatibility

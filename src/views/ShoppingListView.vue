@@ -17,7 +17,6 @@
           </div>
           <div class="flex items-center gap-2">
             <BaseButton variant="primary" @click="showAddItemForm = true"> + Add Item </BaseButton>
-            <BaseButton variant="ghost" @click="router.back()">← Back</BaseButton>
           </div>
         </div>
       </template>
@@ -142,7 +141,7 @@ import type { ShoppingItem } from '@/features/shared/domain/entities';
 
 const props = defineProps<{ listId: string }>();
 
-const router = useRouter();
+const _router = useRouter();
 const authStore = useAuthStore();
 const shoppingStore = useShoppingStore();
 

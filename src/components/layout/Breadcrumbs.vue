@@ -38,6 +38,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
+import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
 
 interface Breadcrumb {
   label: string;
@@ -45,6 +46,8 @@ interface Breadcrumb {
 }
 
 const route = useRoute();
+
+const shoppingStore = useShoppingStore();
 
 const breadcrumbs = computed<Breadcrumb[]>(() => {
   const crumbs: Breadcrumb[] = [];
@@ -64,9 +67,15 @@ const breadcrumbs = computed<Breadcrumb[]>(() => {
       crumbs.push({ label: 'Members', to: '/families' });
       crumbs.push({ label: 'Member Details', to: route.path });
       break;
-    case 'shopping-list':
-      crumbs.push({ label: 'Shopping List', to: route.path });
+    case 'shopping':
+      crumbs.push({ label: 'Shopping', to: '/shopping' });
       break;
+    case 'shopping-list':
+      crumbs.push({ label: 'Shopping', to: '/shopping' });
+      // Use store title if available
+      crumbs.push({ label: shoppingStore.currentList?.title ?? 'Shopping List', to: route.path });
+      break;
+
     case 'wishlist-list':
       crumbs.push({ label: 'Wishlists', to: '/wishlists' });
       break;

@@ -74,7 +74,7 @@
         <button
           class="flex items-center gap-3 px-4 py-2 w-full text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700"
           role="menuitem"
-          @click="createNewHousehold"
+          @click="openCreateModal"
         >
           <span class="text-lg" aria-hidden="true">➕</span>
           <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">
@@ -83,6 +83,23 @@
         </button>
       </div>
     </div>
+
+    <ModalDialog :open="showCreateModal" title="Create Household" @close="showCreateModal = false">
+      <form @submit.prevent="submitCreateHousehold">
+        <div>
+          <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+            >Household name</label
+          >
+          <BaseInput v-model="newHouseholdName" placeholder="e.g. Smith Family" autofocus />
+        </div>
+        <div class="mt-4 flex justify-end gap-2">
+          <BaseButton variant="ghost" type="button" @click.prevent="showCreateModal = false"
+            >Cancel</BaseButton
+          >
+          <BaseButton type="submit">Create</BaseButton>
+        </div>
+      </form>
+    </ModalDialog>
   </div>
 </template>
 
@@ -90,6 +107,9 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useHouseholdStore } from '@/stores/household';
 import { useToastStore } from '@/stores/toast';
+import ModalDialog from '@/components/shared/ModalDialog.vue';
+import BaseButton from '@/components/shared/BaseButton.vue';
+import BaseInput from '@/components/shared/BaseInput.vue';
 
 const householdStore = useHouseholdStore();
 const toastStore = useToastStore();
@@ -110,10 +130,28 @@ function selectHousehold(householdId: string) {
   toastStore.info(`Switched to ${householdStore.currentHousehold?.name}`);
 }
 
-function createNewHousehold() {
+const showCreateModal = ref(false);
+const newHouseholdName = ref('');
+
+function openCreateModal() {
   isOpen.value = false;
-  // TODO: Open create household modal
-  toastStore.info('Create household feature coming soon!');
+  newHouseholdName.value = '';
+  showCreateModal.value = true;
+}
+
+async function submitCreateHousehold() {
+  if (!newHouseholdName.value.trim()) {
+    toastStore.error('Household name is required');
+    return;
+  }
+
+  const result = await householdStore.createHousehold(newHouseholdName.value.trim());
+  if (result) {
+    toastStore.success(`Created household "${result.name}"`);
+    showCreateModal.value = false;
+  } else {
+    // createHousehold shows detailed toast on failure
+  }
 }
 
 function closeDropdown() {

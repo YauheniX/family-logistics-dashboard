@@ -2,6 +2,7 @@ import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { isMockMode } from '@/config/backend.config';
 import { supabase } from '@/features/shared/infrastructure/supabase.client';
+import { useToastStore } from '@/stores/toast';
 
 export interface Household {
   id: string;
@@ -156,6 +157,103 @@ export const useHouseholdStore = defineStore('household', () => {
     loadHouseholds(mockHouseholds);
   }
 
+  async function createHousehold(name: string) {
+    const toast = useToastStore();
+
+    if (!name || !name.trim()) {
+      toast.error('Household name is required');
+      return null;
+    }
+
+    if (isMockMode()) {
+      const mock: Household = {
+        id: String(Date.now()),
+        name: name.trim(),
+        slug: name
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9-]+/g, '-'),
+        role: 'owner',
+      };
+      households.value.unshift(mock);
+      setCurrentHousehold(mock);
+      toast.success('Household created (mock)');
+      return mock;
+    }
+
+    loading.value = true;
+    try {
+      // Get current authenticated user
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData?.user?.id) {
+        toast.error('Authentication required to create a household');
+        return null;
+      }
+      const userId = authData.user.id;
+
+      // Insert household
+      const { data: householdData, error: householdError } = await supabase
+        .from('households')
+        .insert({ name: name.trim(), created_by: userId })
+        .select()
+        .single();
+
+      if (householdError || !householdData) {
+        toast.error(`Failed to create household: ${householdError?.message ?? 'unknown'}`);
+        return null;
+      }
+
+      // Determine display name for member
+      let displayName = '';
+      try {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('display_name')
+          .eq('id', userId)
+          .single();
+        displayName = profile?.display_name ?? '';
+      } catch {
+        // ignore
+      }
+      if (!displayName) {
+        displayName = authData.user.email ? String(authData.user.email).split('@')[0] : 'Member';
+      }
+
+      // Insert owner member
+      const { error: memberError } = await supabase
+        .from('members')
+        .insert({
+          household_id: householdData.id,
+          user_id: userId,
+          role: 'owner',
+          display_name: displayName,
+        })
+        .select()
+        .single();
+
+      if (memberError) {
+        // Rollback household if member insert failed
+        await supabase.from('households').delete().eq('id', householdData.id);
+        toast.error(`Failed to add owner member: ${memberError.message}`);
+        return null;
+      }
+
+      const newHousehold: Household = {
+        id: String(householdData.id),
+        name: String(householdData.name),
+        slug: String(householdData.slug ?? ''),
+        role: 'owner',
+      };
+
+      households.value.unshift(newHousehold);
+      setCurrentHousehold(newHousehold);
+      toast.success('Household created successfully');
+      return newHousehold;
+    } finally {
+      loading.value = false;
+    }
+  }
+
   return {
     // State
     currentHousehold,
@@ -173,5 +271,6 @@ export const useHouseholdStore = defineStore('household', () => {
     switchHousehold,
     initializeForUser,
     initializeMockHouseholds,
+    createHousehold,
   };
 });

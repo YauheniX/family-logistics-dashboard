@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
 const route = useRoute();
@@ -88,12 +88,12 @@ interface NavItem {
 }
 
 // Primary navigation items (always visible)
-const navItems: NavItem[] = [
+const navItems = computed<NavItem[]>(() => [
   { name: 'dashboard', label: 'Home', to: '/', emoji: '🏠' },
-  { name: 'family-list', label: 'Shopping', to: '/families', emoji: '🛒' },
+  { name: 'shopping', label: 'Shopping', to: { name: 'shopping' }, emoji: '🛒' },
   { name: 'wishlist-list', label: 'Wishlists', to: '/wishlists', emoji: '🎁' },
   { name: 'family-list', label: 'Members', to: '/families', emoji: '👥' },
-];
+]);
 
 // Additional items in "More" menu
 const moreItems: NavItem[] = [
