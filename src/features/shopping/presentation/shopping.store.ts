@@ -38,11 +38,11 @@ export const useShoppingStore = defineStore('shopping', () => {
 
   // ─── List Actions ───────────────────────────────────────
 
-  async function loadLists(familyId: string) {
+  async function loadLists(householdId: string) {
     loading.value = true;
     error.value = null;
     try {
-      const response = await shoppingService.getFamilyLists(familyId);
+      const response = await shoppingService.getHouseholdLists(householdId);
       if (response.error) {
         error.value = response.error.message;
         useToastStore().error(`Failed to load shopping lists: ${response.error.message}`);

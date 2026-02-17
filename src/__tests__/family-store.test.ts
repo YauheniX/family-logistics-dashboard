@@ -1,21 +1,21 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
-import { useFamilyStore } from '@/features/family/presentation/family.store';
+import { useHouseholdEntityStore } from '@/features/household/presentation/household.store';
 
-vi.mock('@/features/family/domain/family.service', () => ({
-  familyService: {
-    getUserFamilies: vi.fn(),
-    getFamily: vi.fn(),
-    createFamily: vi.fn(),
-    updateFamily: vi.fn(),
-    deleteFamily: vi.fn(),
-    getFamilyMembers: vi.fn(),
+vi.mock('@/features/household/domain/household.service', () => ({
+  householdService: {
+    getUserHouseholds: vi.fn(),
+    getHousehold: vi.fn(),
+    createHousehold: vi.fn(),
+    updateHousehold: vi.fn(),
+    deleteHousehold: vi.fn(),
+    getMembers: vi.fn(),
     inviteMemberByEmail: vi.fn(),
     removeMember: vi.fn(),
   },
 }));
 
-const mockFamily = {
+const mockHousehold = {
   id: 'f1',
   name: 'Test Family',
   created_by: 'u1',
@@ -24,207 +24,207 @@ const mockFamily = {
 
 const mockMember = {
   id: 'm1',
-  family_id: 'f1',
+  household_id: 'f1',
   user_id: 'u2',
   role: 'member' as const,
   joined_at: '2024-01-01T00:00:00Z',
   email: 'member@test.com',
 };
 
-describe('Family Store', () => {
+describe('Household Store', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.clearAllMocks();
   });
 
   it('initializes with default state', () => {
-    const store = useFamilyStore();
-    expect(store.families).toEqual([]);
-    expect(store.currentFamily).toBeNull();
+    const store = useHouseholdEntityStore();
+    expect(store.households).toEqual([]);
+    expect(store.currentHousehold).toBeNull();
     expect(store.members).toEqual([]);
     expect(store.loading).toBe(false);
     expect(store.error).toBeNull();
-    expect(store.familyCount).toBe(0);
+    expect(store.householdCount).toBe(0);
     expect(store.memberCount).toBe(0);
   });
 
-  // ─── loadFamilies ─────────────────────────────────────────
+  // ─── loadHouseholds ─────────────────────────────────────────
 
-  it('loads families successfully', async () => {
-    const { familyService } = await import('@/features/family/domain/family.service');
-    vi.mocked(familyService.getUserFamilies).mockResolvedValue({
-      data: [mockFamily],
+  it('loads households successfully', async () => {
+    const { householdService } = await import('@/features/household/domain/household.service');
+    vi.mocked(householdService.getUserHouseholds).mockResolvedValue({
+      data: [mockHousehold],
       error: null,
     });
 
-    const store = useFamilyStore();
-    await store.loadFamilies('u1');
+    const store = useHouseholdEntityStore();
+    await store.loadHouseholds('u1');
 
-    expect(store.families).toEqual([mockFamily]);
-    expect(store.familyCount).toBe(1);
+    expect(store.households).toEqual([mockHousehold]);
+    expect(store.householdCount).toBe(1);
     expect(store.loading).toBe(false);
     expect(store.error).toBeNull();
   });
 
-  it('handles loadFamilies error', async () => {
-    const { familyService } = await import('@/features/family/domain/family.service');
-    vi.mocked(familyService.getUserFamilies).mockResolvedValue({
+  it('handles loadHouseholds error', async () => {
+    const { householdService } = await import('@/features/household/domain/household.service');
+    vi.mocked(householdService.getUserHouseholds).mockResolvedValue({
       data: null,
       error: { message: 'Network error' },
     });
 
-    const store = useFamilyStore();
-    await store.loadFamilies('u1');
+    const store = useHouseholdEntityStore();
+    await store.loadHouseholds('u1');
 
-    expect(store.families).toEqual([]);
+    expect(store.households).toEqual([]);
     expect(store.error).toBe('Network error');
     expect(store.loading).toBe(false);
   });
 
-  // ─── createFamily ─────────────────────────────────────────
+  // ─── createHousehold ─────────────────────────────────────────
 
   it('creates a family successfully', async () => {
-    const { familyService } = await import('@/features/family/domain/family.service');
-    vi.mocked(familyService.createFamily).mockResolvedValue({
-      data: mockFamily,
+    const { householdService } = await import('@/features/household/domain/household.service');
+    vi.mocked(householdService.createHousehold).mockResolvedValue({
+      data: mockHousehold,
       error: null,
     });
 
-    const store = useFamilyStore();
-    const result = await store.createFamily('Test Family', 'u1');
+    const store = useHouseholdEntityStore();
+    const result = await store.createHousehold('Test Family', 'u1');
 
-    expect(result).toEqual(mockFamily);
-    expect(store.families).toContainEqual(mockFamily);
+    expect(result).toEqual(mockHousehold);
+    expect(store.households).toContainEqual(mockHousehold);
     expect(store.loading).toBe(false);
   });
 
-  it('handles createFamily error', async () => {
-    const { familyService } = await import('@/features/family/domain/family.service');
-    vi.mocked(familyService.createFamily).mockResolvedValue({
+  it('handles createHousehold error', async () => {
+    const { householdService } = await import('@/features/household/domain/household.service');
+    vi.mocked(householdService.createHousehold).mockResolvedValue({
       data: null,
       error: { message: 'Creation failed' },
     });
 
-    const store = useFamilyStore();
-    const result = await store.createFamily('Test Family', 'u1');
+    const store = useHouseholdEntityStore();
+    const result = await store.createHousehold('Test Family', 'u1');
 
     expect(result).toBeNull();
-    expect(store.families).toEqual([]);
+    expect(store.households).toEqual([]);
   });
 
-  // ─── loadFamily ────────────────────────────────────────────
+  // ─── loadHousehold ────────────────────────────────────────────
 
   it('loads a single family successfully', async () => {
-    const { familyService } = await import('@/features/family/domain/family.service');
-    vi.mocked(familyService.getFamily).mockResolvedValue({
-      data: mockFamily,
+    const { householdService } = await import('@/features/household/domain/household.service');
+    vi.mocked(householdService.getHousehold).mockResolvedValue({
+      data: mockHousehold,
       error: null,
     });
-    vi.mocked(familyService.getFamilyMembers).mockResolvedValue({
+    vi.mocked(householdService.getMembers).mockResolvedValue({
       data: [mockMember],
       error: null,
     });
 
-    const store = useFamilyStore();
-    await store.loadFamily('f1');
+    const store = useHouseholdEntityStore();
+    await store.loadHousehold('f1');
 
-    expect(store.currentFamily).toEqual(mockFamily);
+    expect(store.currentHousehold).toEqual(mockHousehold);
     expect(store.members).toEqual([mockMember]);
     expect(store.loading).toBe(false);
     expect(store.error).toBeNull();
   });
 
-  it('handles loadFamily error', async () => {
-    const { familyService } = await import('@/features/family/domain/family.service');
-    vi.mocked(familyService.getFamily).mockResolvedValue({
+  it('handles loadHousehold error', async () => {
+    const { householdService } = await import('@/features/household/domain/household.service');
+    vi.mocked(householdService.getHousehold).mockResolvedValue({
       data: null,
       error: { message: 'Not found' },
     });
 
-    const store = useFamilyStore();
-    await store.loadFamily('f1');
+    const store = useHouseholdEntityStore();
+    await store.loadHousehold('f1');
 
-    expect(store.currentFamily).toBeNull();
+    expect(store.currentHousehold).toBeNull();
     expect(store.error).toBe('Not found');
     expect(store.loading).toBe(false);
   });
 
-  // ─── updateFamily ────────────────────────────────────────
+  // ─── updateHousehold ────────────────────────────────────────
 
   it('updates a family successfully', async () => {
-    const { familyService } = await import('@/features/family/domain/family.service');
-    const updated = { ...mockFamily, name: 'Updated Family' };
-    vi.mocked(familyService.updateFamily).mockResolvedValue({
+    const { householdService } = await import('@/features/household/domain/household.service');
+    const updated = { ...mockHousehold, name: 'Updated Family' };
+    vi.mocked(householdService.updateHousehold).mockResolvedValue({
       data: updated,
       error: null,
     });
 
-    const store = useFamilyStore();
-    store.families = [mockFamily];
-    const result = await store.updateFamily('f1', { name: 'Updated Family' });
+    const store = useHouseholdEntityStore();
+    store.households = [mockHousehold];
+    const result = await store.updateHousehold('f1', { name: 'Updated Family' });
 
     expect(result).toEqual(updated);
-    expect(store.families[0].name).toBe('Updated Family');
-    expect(store.currentFamily).toEqual(updated);
+    expect(store.households[0].name).toBe('Updated Family');
+    expect(store.currentHousehold).toEqual(updated);
     expect(store.loading).toBe(false);
   });
 
-  it('handles updateFamily error', async () => {
-    const { familyService } = await import('@/features/family/domain/family.service');
-    vi.mocked(familyService.updateFamily).mockResolvedValue({
+  it('handles updateHousehold error', async () => {
+    const { householdService } = await import('@/features/household/domain/household.service');
+    vi.mocked(householdService.updateHousehold).mockResolvedValue({
       data: null,
       error: { message: 'Update failed' },
     });
 
-    const store = useFamilyStore();
-    store.families = [mockFamily];
-    const result = await store.updateFamily('f1', { name: 'Updated Family' });
+    const store = useHouseholdEntityStore();
+    store.households = [mockHousehold];
+    const result = await store.updateHousehold('f1', { name: 'Updated Family' });
 
     expect(result).toBeNull();
-    expect(store.families[0].name).toBe('Test Family');
+    expect(store.households[0].name).toBe('Test Family');
   });
 
-  // ─── removeFamily ────────────────────────────────────────
+  // ─── removeHousehold ────────────────────────────────────────
 
   it('removes a family successfully', async () => {
-    const { familyService } = await import('@/features/family/domain/family.service');
-    vi.mocked(familyService.deleteFamily).mockResolvedValue({
+    const { householdService } = await import('@/features/household/domain/household.service');
+    vi.mocked(householdService.deleteHousehold).mockResolvedValue({
       data: undefined,
       error: null,
     });
 
-    const store = useFamilyStore();
-    store.families = [mockFamily];
-    await store.removeFamily('f1');
+    const store = useHouseholdEntityStore();
+    store.households = [mockHousehold];
+    await store.removeHousehold('f1');
 
-    expect(store.families).toEqual([]);
+    expect(store.households).toEqual([]);
     expect(store.loading).toBe(false);
   });
 
-  it('handles removeFamily error', async () => {
-    const { familyService } = await import('@/features/family/domain/family.service');
-    vi.mocked(familyService.deleteFamily).mockResolvedValue({
+  it('handles removeHousehold error', async () => {
+    const { householdService } = await import('@/features/household/domain/household.service');
+    vi.mocked(householdService.deleteHousehold).mockResolvedValue({
       data: null,
       error: { message: 'Delete failed' },
     });
 
-    const store = useFamilyStore();
-    store.families = [mockFamily];
-    await store.removeFamily('f1');
+    const store = useHouseholdEntityStore();
+    store.households = [mockHousehold];
+    await store.removeHousehold('f1');
 
-    expect(store.families).toContainEqual(mockFamily);
+    expect(store.households).toContainEqual(mockHousehold);
   });
 
   // ─── loadMembers ──────────────────────────────────────────
 
   it('loads family members successfully', async () => {
-    const { familyService } = await import('@/features/family/domain/family.service');
-    vi.mocked(familyService.getFamilyMembers).mockResolvedValue({
+    const { householdService } = await import('@/features/household/domain/household.service');
+    vi.mocked(householdService.getMembers).mockResolvedValue({
       data: [mockMember],
       error: null,
     });
 
-    const store = useFamilyStore();
+    const store = useHouseholdEntityStore();
     await store.loadMembers('f1');
 
     expect(store.members).toEqual([mockMember]);
@@ -232,13 +232,13 @@ describe('Family Store', () => {
   });
 
   it('handles loadMembers error', async () => {
-    const { familyService } = await import('@/features/family/domain/family.service');
-    vi.mocked(familyService.getFamilyMembers).mockResolvedValue({
+    const { householdService } = await import('@/features/household/domain/household.service');
+    vi.mocked(householdService.getMembers).mockResolvedValue({
       data: null,
       error: { message: 'Load failed' },
     });
 
-    const store = useFamilyStore();
+    const store = useHouseholdEntityStore();
     await store.loadMembers('f1');
 
     expect(store.members).toEqual([]);
@@ -247,13 +247,13 @@ describe('Family Store', () => {
   // ─── inviteMember ─────────────────────────────────────────
 
   it('invites a member successfully', async () => {
-    const { familyService } = await import('@/features/family/domain/family.service');
-    vi.mocked(familyService.inviteMemberByEmail).mockResolvedValue({
+    const { householdService } = await import('@/features/household/domain/household.service');
+    vi.mocked(householdService.inviteMemberByEmail).mockResolvedValue({
       data: mockMember,
       error: null,
     });
 
-    const store = useFamilyStore();
+    const store = useHouseholdEntityStore();
     const result = await store.inviteMember('f1', 'member@test.com', 'u1');
 
     expect(result).toEqual(mockMember);
@@ -261,13 +261,13 @@ describe('Family Store', () => {
   });
 
   it('handles inviteMember error', async () => {
-    const { familyService } = await import('@/features/family/domain/family.service');
-    vi.mocked(familyService.inviteMemberByEmail).mockResolvedValue({
+    const { householdService } = await import('@/features/household/domain/household.service');
+    vi.mocked(householdService.inviteMemberByEmail).mockResolvedValue({
       data: null,
       error: { message: 'Invite failed' },
     });
 
-    const store = useFamilyStore();
+    const store = useHouseholdEntityStore();
     const result = await store.inviteMember('f1', 'bad@test.com');
 
     expect(result).toBeNull();
@@ -277,13 +277,13 @@ describe('Family Store', () => {
   // ─── removeMember ─────────────────────────────────────────
 
   it('removes a member successfully', async () => {
-    const { familyService } = await import('@/features/family/domain/family.service');
-    vi.mocked(familyService.removeMember).mockResolvedValue({
+    const { householdService } = await import('@/features/household/domain/household.service');
+    vi.mocked(householdService.removeMember).mockResolvedValue({
       data: undefined,
       error: null,
     });
 
-    const store = useFamilyStore();
+    const store = useHouseholdEntityStore();
     store.members = [mockMember];
     await store.removeMember('m1');
 
@@ -291,13 +291,13 @@ describe('Family Store', () => {
   });
 
   it('handles removeMember error', async () => {
-    const { familyService } = await import('@/features/family/domain/family.service');
-    vi.mocked(familyService.removeMember).mockResolvedValue({
+    const { householdService } = await import('@/features/household/domain/household.service');
+    vi.mocked(householdService.removeMember).mockResolvedValue({
       data: null,
       error: { message: 'Remove failed' },
     });
 
-    const store = useFamilyStore();
+    const store = useHouseholdEntityStore();
     store.members = [mockMember];
     await store.removeMember('m1');
 

@@ -23,13 +23,13 @@ export class MockShoppingListRepository extends MockRepository<
   }
 
   /**
-   * Find shopping lists by family ID
+   * Find shopping lists by household ID
    */
-  async findByFamilyId(familyId: string): Promise<ApiResponse<ShoppingList[]>> {
+  async findByHouseholdId(householdId: string): Promise<ApiResponse<ShoppingList[]>> {
     try {
       const lists = await this.loadAll();
       const filtered = lists
-        .filter((l) => l.family_id === familyId)
+        .filter((l) => l.household_id === householdId)
         .sort((a, b) => {
           const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
           const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;

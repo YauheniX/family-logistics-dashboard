@@ -157,6 +157,60 @@ export const useHouseholdStore = defineStore('household', () => {
     loadHouseholds(mockHouseholds);
   }
 
+
+  const ensuringForUserIds = new Set<string>();
+
+  async function ensureDefaultHouseholdForUser(userId: string, userEmail?: string | null) {
+    const toast = useToastStore();
+    if (!userId) return null;
+    if (ensuringForUserIds.has(userId)) {
+      console.log('[household] Skipping duplicate default household creation for user', userId);
+      return null;
+    }
+
+    ensuringForUserIds.add(userId);
+    loading.value = true;
+
+    try {
+      console.log('[household] Verifying default household for user', userId);
+      const { data: existingMemberships, error: membershipError } = await supabase
+        .from('members')
+        .select('id, household_id')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .limit(1);
+
+      if (membershipError) {
+        console.error('[household] Failed to check existing memberships', membershipError);
+        toast.error('Failed to verify household membership');
+        return null;
+      }
+
+      if ((existingMemberships ?? []).length > 0) {
+        console.log('[household] Existing household membership found, skipping creation', existingMemberships);
+        return null;
+      }
+
+      const defaultName = userEmail ? `${userEmail.split('@')[0]}'s household` : 'My Household';
+      const created = await createHousehold(defaultName);
+      if (!created) {
+        console.error('[household] Default household creation failed for user', userId);
+        toast.error('Could not create your default household');
+        return null;
+      }
+
+      console.log('[household] Default household created', created);
+      toast.success('Your household is ready');
+      return created;
+    } catch (error) {
+      console.error('[household] Unexpected error while ensuring default household', error);
+      toast.error('Unexpected error while creating household');
+      return null;
+    } finally {
+      ensuringForUserIds.delete(userId);
+      loading.value = false;
+    }
+  }
   async function createHousehold(name: string) {
     const toast = useToastStore();
 
@@ -272,5 +326,6 @@ export const useHouseholdStore = defineStore('household', () => {
     initializeForUser,
     initializeMockHouseholds,
     createHousehold,
+    ensureDefaultHouseholdForUser,
   };
 });

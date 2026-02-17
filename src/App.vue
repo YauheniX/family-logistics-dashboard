@@ -114,7 +114,9 @@ initTheme();
 // Initialize household store (mock mode for now)
 onMounted(() => {
   if (authStore.user?.id) {
-    householdStore.initializeForUser(authStore.user.id);
+    householdStore.ensureDefaultHouseholdForUser(authStore.user.id, authStore.user.email).finally(() => {
+      householdStore.initializeForUser(authStore.user!.id);
+    });
   }
 });
 
@@ -123,7 +125,9 @@ watch(
   () => authStore.user?.id,
   (userId, prevUserId) => {
     if (userId && !prevUserId) {
-      householdStore.initializeForUser(userId);
+      householdStore.ensureDefaultHouseholdForUser(userId, authStore.user?.email).finally(() => {
+        householdStore.initializeForUser(userId);
+      });
     } else if (!userId && prevUserId) {
       // User just logged out - clear household context
       householdStore.setCurrentHousehold(null);
@@ -145,15 +149,15 @@ const pageTitle = computed(() => {
   const routeName = route.name as string;
   const titles: Record<string, string> = {
     dashboard: 'Home',
-    'family-list': 'Members',
-    'family-detail': 'Family Details',
+    'household-list': 'Members',
+    'household-detail': 'Household Details',
     'shopping-list': 'Shopping List',
     'wishlist-list': 'Wishlists',
     'wishlist-edit': 'My Wishlist',
     'public-wishlist': 'Public Wishlist',
     settings: 'Settings',
   };
-  return titles[routeName] || 'FamilyBoard';
+  return titles[routeName] || 'HouseholdBoard';
 });
 
 const logout = async () => {

@@ -3,30 +3,30 @@
     <BaseCard>
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p class="text-sm text-neutral-500 dark:text-neutral-400">Families</p>
-          <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">My Families</h2>
+          <p class="text-sm text-neutral-500 dark:text-neutral-400">Households</p>
+          <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">My Households</h2>
           <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
-            Manage your family groups and their shopping lists.
+            Manage your household groups and their shopping lists.
           </p>
         </div>
-        <BaseButton @click="showCreateModal = true"> ➕ Create Family </BaseButton>
+        <BaseButton @click="showCreateModal = true"> ➕ Create Household </BaseButton>
       </div>
     </BaseCard>
 
-    <LoadingState v-if="familyStore.loading" message="Loading families..." />
+    <LoadingState v-if="householdEntityStore.loading" message="Loading households..." />
 
-    <div v-else-if="familyStore.families.length" class="page-grid">
+    <div v-else-if="householdEntityStore.households.length" class="page-grid">
       <RouterLink
-        v-for="family in familyStore.families"
-        :key="family.id"
-        :to="{ name: 'family-detail', params: { id: family.id } }"
+        v-for="household in householdEntityStore.households"
+        :key="household.id"
+        :to="{ name: 'household-detail', params: { id: household.id } }"
       >
         <BaseCard hover>
           <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-            {{ family.name }}
+            {{ household.name }}
           </h3>
           <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-            Created {{ new Date(family.created_at).toLocaleDateString() }}
+            Created {{ new Date(household.created_at).toLocaleDateString() }}
           </p>
         </BaseCard>
       </RouterLink>
@@ -34,26 +34,26 @@
 
     <EmptyState
       v-else
-      title="No families yet"
-      description="Create your first family to start managing shopping lists together."
-      cta="Create a Family"
+      title="No households yet"
+      description="Create your first household to start managing shopping lists together."
+      cta="Create a Household"
       @action="showCreateModal = true"
     />
 
-    <ModalDialog :open="showCreateModal" title="Create Family" @close="showCreateModal = false">
+    <ModalDialog :open="showCreateModal" title="Create Household" @close="showCreateModal = false">
       <form class="space-y-4" @submit.prevent="handleCreate">
         <div>
-          <label class="label" for="family-name">Family name</label>
+          <label class="label" for="household-name">Household name</label>
           <input
-            id="family-name"
-            v-model="newFamilyName"
+            id="household-name"
+            v-model="newHouseholdName"
             class="input"
             required
             placeholder="e.g. The Smiths"
           />
         </div>
         <div class="flex gap-3">
-          <BaseButton type="submit" :disabled="familyStore.loading">Create</BaseButton>
+          <BaseButton type="submit" :disabled="householdEntityStore.loading">Create</BaseButton>
           <BaseButton variant="ghost" @click="showCreateModal = false">Cancel</BaseButton>
         </div>
       </form>
@@ -70,19 +70,19 @@ import EmptyState from '@/components/shared/EmptyState.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import ModalDialog from '@/components/shared/ModalDialog.vue';
 import { useAuthStore } from '@/stores/auth';
-import { useFamilyStore } from '@/features/family/presentation/family.store';
+import { useHouseholdEntityStore } from '@/features/household/presentation/household.store';
 
 const authStore = useAuthStore();
-const familyStore = useFamilyStore();
+const householdEntityStore = useHouseholdEntityStore();
 
 const showCreateModal = ref(false);
-const newFamilyName = ref('');
+const newHouseholdName = ref('');
 
 const handleCreate = async () => {
-  if (!authStore.user?.id || !newFamilyName.value.trim()) return;
-  const created = await familyStore.createFamily(newFamilyName.value.trim(), authStore.user.id);
+  if (!authStore.user?.id || !newHouseholdName.value.trim()) return;
+  const created = await householdEntityStore.createHousehold(newHouseholdName.value.trim(), authStore.user.id);
   if (created) {
-    newFamilyName.value = '';
+    newHouseholdName.value = '';
     showCreateModal.value = false;
   }
 };
@@ -90,7 +90,7 @@ const handleCreate = async () => {
 watch(
   () => authStore.user?.id,
   (userId) => {
-    if (userId) familyStore.loadFamilies(userId);
+    if (userId) householdEntityStore.loadHouseholds(userId);
   },
   { immediate: true },
 );

@@ -4,7 +4,7 @@ import { useShoppingStore } from '@/features/shopping/presentation/shopping.stor
 
 vi.mock('@/features/shopping/domain/shopping.service', () => ({
   shoppingService: {
-    getFamilyLists: vi.fn(),
+    getHouseholdLists: vi.fn(),
     getList: vi.fn(),
     createList: vi.fn(),
     updateList: vi.fn(),
@@ -20,7 +20,7 @@ vi.mock('@/features/shopping/domain/shopping.service', () => ({
 
 const mockList = {
   id: 'l1',
-  family_id: 'f1',
+  household_id: 'f1',
   title: 'Groceries',
   description: null,
   created_by: 'u1',
@@ -59,7 +59,7 @@ describe('Shopping Store', () => {
 
   it('loads lists successfully', async () => {
     const { shoppingService } = await import('@/features/shopping/domain/shopping.service');
-    vi.mocked(shoppingService.getFamilyLists).mockResolvedValue({
+    vi.mocked(shoppingService.getHouseholdLists).mockResolvedValue({
       data: [mockList],
       error: null,
     });
@@ -74,7 +74,7 @@ describe('Shopping Store', () => {
 
   it('handles loadLists error', async () => {
     const { shoppingService } = await import('@/features/shopping/domain/shopping.service');
-    vi.mocked(shoppingService.getFamilyLists).mockResolvedValue({
+    vi.mocked(shoppingService.getHouseholdLists).mockResolvedValue({
       data: null,
       error: { message: 'Network error' },
     });
@@ -97,7 +97,7 @@ describe('Shopping Store', () => {
 
     const store = useShoppingStore();
     const result = await store.createList({
-      family_id: 'f1',
+      household_id: 'f1',
       title: 'Groceries',
       description: null,
     });
@@ -116,7 +116,7 @@ describe('Shopping Store', () => {
 
     const store = useShoppingStore();
     const result = await store.createList({
-      family_id: 'f1',
+      household_id: 'f1',
       title: 'Groceries',
       description: null,
     });

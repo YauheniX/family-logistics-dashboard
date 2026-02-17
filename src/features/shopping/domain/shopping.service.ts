@@ -16,10 +16,10 @@ export class ShoppingService {
   // ─── List Operations ──────────────────────────────────────
 
   /**
-   * Get all shopping lists for a family
+   * Get all shopping lists for a household
    */
-  async getFamilyLists(familyId: string): Promise<ApiResponse<ShoppingList[]>> {
-    return await shoppingListRepository.findByFamilyId(familyId);
+  async getHouseholdLists(householdId: string): Promise<ApiResponse<ShoppingList[]>> {
+    return await shoppingListRepository.findByHouseholdId(householdId);
   }
 
   /**

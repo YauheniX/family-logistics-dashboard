@@ -85,7 +85,7 @@ const newListDescription = ref('');
 const handleCreateList = async () => {
   if (!newListTitle.value.trim() || !currentHousehold?.id) return;
   const result = await shoppingStore.createList({
-    family_id: String(currentHousehold.id),
+    household_id: String(currentHousehold.id),
     title: newListTitle.value.trim(),
     description: newListDescription.value.trim() || null,
   });

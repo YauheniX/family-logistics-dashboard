@@ -203,7 +203,7 @@ export class AuthService {
   ): Promise<ApiResponse<AuthUser>> {
     try {
       // Persist intended in-app route across full-page OAuth redirects.
-      // Must be a hash-router path like '/families/123' (no origin).
+      // Must be a hash-router path like '/households/123' (no origin).
       if (postAuthRedirect && isSafeInternalPath(postAuthRedirect)) {
         window.sessionStorage.setItem('postAuthRedirect', normalizeHashPath(postAuthRedirect));
       } else {

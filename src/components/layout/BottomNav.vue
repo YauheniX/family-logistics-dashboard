@@ -92,7 +92,7 @@ const navItems = computed<NavItem[]>(() => [
   { name: 'dashboard', label: 'Home', to: '/', emoji: '🏠' },
   { name: 'shopping', label: 'Shopping', to: { name: 'shopping' }, emoji: '🛒' },
   { name: 'wishlist-list', label: 'Wishlists', to: '/wishlists', emoji: '🎁' },
-  { name: 'family-list', label: 'Members', to: '/families', emoji: '👥' },
+  { name: 'household-list', label: 'Members', to: '/households', emoji: '👥' },
 ]);
 
 // Additional items in "More" menu
