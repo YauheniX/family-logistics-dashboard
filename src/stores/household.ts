@@ -220,7 +220,7 @@ export const useHouseholdStore = defineStore('household', () => {
       }
 
       // Insert owner member
-      const { data: memberData, error: memberError } = await supabase
+      const { error: memberError } = await supabase
         .from('members')
         .insert({
           household_id: householdData.id,
