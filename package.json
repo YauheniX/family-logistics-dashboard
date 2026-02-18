@@ -16,6 +16,11 @@
     "supabase:verify": "node scripts/verify-supabase-setup.js",
     "supabase:init": "bash scripts/setup-supabase.sh"
   },
+  "lint-staged": {
+    "*.{js,ts,vue,css,scss,md,json,html}": [
+      "prettier --write"
+    ]
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
     "chart.js": "^4.4.7",
