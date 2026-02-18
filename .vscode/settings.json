@@ -1,4 +1,11 @@
 {
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[vue]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}
+{
   "terminal.integrated.env.windows": {
     "PATH": "${env:ProgramFiles}\\Docker\\Docker\\resources\\bin;${env:PATH}"
   },
