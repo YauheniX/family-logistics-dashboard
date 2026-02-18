@@ -1,13 +1,7 @@
 {
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.defaultFormatter": "GitHub.copilot-chat",
   "[vue]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "GitHub.copilot-chat"
   }
-}
-{
-  "terminal.integrated.env.windows": {
-    "PATH": "${env:ProgramFiles}\\Docker\\Docker\\resources\\bin;${env:PATH}"
-  },
-  "docker.dockerPath": "${env:ProgramFiles}\\Docker\\Docker\\resources\\bin\\docker.exe"
 }
