@@ -14,15 +14,6 @@
           class="flex items-center justify-between gap-3 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-3 md:px-6 md:py-4"
         >
           <div class="flex min-w-0 items-center gap-2 md:gap-3">
-            <BaseButton
-              variant="ghost"
-              class="lg:hidden"
-              aria-label="Open navigation"
-              @click="mobileNavOpen = true"
-            >
-              ☰
-            </BaseButton>
-
             <!-- Household Switcher (Desktop) -->
             <div class="hidden md:block">
               <HouseholdSwitcher />
@@ -52,10 +43,23 @@
             >
               <div class="hidden md:block text-right">
                 <p class="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
-                  {{ authStore.user?.email }}
+                  {{ displayNameOrEmail }}
                 </p>
-                <p class="text-xs text-neutral-500 dark:text-neutral-400">Signed in</p>
               </div>
+              <!-- User Avatar -->
+              <div
+                class="flex h-8 w-8 items-center justify-center rounded-full bg-primary-500 text-white text-sm font-semibold overflow-hidden"
+                :title="displayNameOrEmail"
+              >
+                <img
+                  v-if="userAvatarUrl"
+                  :src="userAvatarUrl"
+                  :alt="`${displayNameOrEmail} avatar`"
+                  class="h-full w-full object-cover"
+                />
+                <span v-else>{{ userInitial }}</span>
+              </div>
+
               <BaseButton variant="ghost" @click="logout">Logout</BaseButton>
             </div>
           </div>
@@ -99,12 +103,19 @@ import ReportProblemModal from '@/components/shared/ReportProblemModal.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useHouseholdStore } from '@/stores/household';
 import { useTheme } from '@/composables/useTheme';
+import { useUserProfile } from '@/composables/useUserProfile';
 
 const authStore = useAuthStore();
 const householdStore = useHouseholdStore();
 const route = useRoute();
 const router = useRouter();
 const { initTheme } = useTheme();
+const {
+  userDisplayName,
+  userAvatarUrl: profileAvatarUrl,
+  loadUserProfile,
+  clearUserProfile,
+} = useUserProfile();
 const mobileNavOpen = ref(false);
 const reportModalOpen = ref(false);
 
@@ -113,9 +124,12 @@ initTheme();
 
 // Initialize household store (mock mode for now)
 onMounted(() => {
+  console.log('[App.vue] onMounted - authStore.user:', authStore.user);
   const userId = authStore.user?.id;
   const email = authStore.user?.email ?? null;
   if (userId) {
+    console.log('[App.vue] onMounted - Loading user profile for:', userId);
+    loadUserProfile(userId);
     householdStore.ensureDefaultHouseholdForUser(userId, email).finally(() => {
       householdStore.initializeForUser(userId);
     });
@@ -126,13 +140,18 @@ onMounted(() => {
 watch(
   () => authStore.user?.id,
   (userId, prevUserId) => {
+    console.log('[App.vue] watch authStore.user.id changed:', { userId, prevUserId });
     if (userId && !prevUserId) {
       const email = authStore.user?.email ?? null;
+      console.log('[App.vue] watch - Loading user profile for:', userId);
+      loadUserProfile(userId);
       householdStore.ensureDefaultHouseholdForUser(userId, email).finally(() => {
         householdStore.initializeForUser(userId);
       });
     } else if (!userId && prevUserId) {
       // User just logged out - clear household context
+      console.log('[App.vue] watch - User logged out, clearing profile');
+      clearUserProfile();
       householdStore.setCurrentHousehold(null);
       householdStore.loadHouseholds([]);
     }
@@ -140,6 +159,44 @@ watch(
 );
 
 const showShell = computed(() => Boolean(route.meta.requiresAuth));
+
+const userAvatarUrl = computed(() => {
+  // Prefer profile avatar from user_profiles table, fallback to OAuth avatar
+  const profileAvatar = profileAvatarUrl.value;
+  const oauthAvatar = authStore.user?.user_metadata?.avatar_url;
+  const result = profileAvatar || oauthAvatar || null;
+
+  console.log('[App.vue] userAvatarUrl computed:', {
+    profileAvatar,
+    oauthAvatar,
+    result,
+  });
+
+  return result;
+});
+
+const userInitial = computed(() => {
+  if (userDisplayName.value) {
+    const names = userDisplayName.value.split(' ');
+    return names
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  }
+  const email = authStore.user?.email;
+  return email ? email.charAt(0).toUpperCase() : '?';
+});
+
+const displayNameOrEmail = computed(() => {
+  const result = userDisplayName.value || authStore.user?.email || 'User';
+  console.log('[App.vue] displayNameOrEmail computed:', {
+    userDisplayName: userDisplayName.value,
+    userEmail: authStore.user?.email,
+    result,
+  });
+  return result;
+});
 
 watch(
   () => route.fullPath,

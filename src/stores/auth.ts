@@ -6,12 +6,12 @@
 
 import { defineStore } from 'pinia';
 import type { Session, User } from '@supabase/supabase-js';
-import { authService } from '@/features/auth';
+import { authService, type AuthUser } from '@/features/auth';
 import { useToastStore } from '@/stores/toast';
 
 interface LegacyAuthState {
   session: Session | null;
-  user: User | null;
+  user: (User & { user_metadata?: Record<string, any> }) | AuthUser | null;
   loading: boolean;
   initialized: boolean;
   error: string | null;
@@ -40,14 +40,14 @@ export const useAuthStore = defineStore('auth', {
       try {
         const response = await authService.getCurrentUser();
         if (!response.error && response.data) {
-          this.user = { id: response.data.id, email: response.data.email } as User;
+          this.user = response.data;
           // Session will be set via onAuthStateChange callback
         }
 
         // Set up auth state change listener
         authService.onAuthStateChange((user, session) => {
           if (user && session) {
-            this.user = { id: user.id, email: user.email } as User;
+            this.user = user;
             this.session = session as Session;
           } else {
             this.user = null;

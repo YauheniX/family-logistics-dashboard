@@ -12,7 +12,6 @@
           <BaseButton @click="router.push({ name: 'member-management', params: { id: props.id } })">
             👥 Manage Members
           </BaseButton>
-          <BaseButton @click="showInviteModal = true"> ➕ Invite Member </BaseButton>
           <BaseButton v-if="isOwner" variant="danger" @click="showDeleteModal = true">
             Delete Household
           </BaseButton>
@@ -275,14 +274,32 @@ const handleCreateList = async () => {
 };
 
 const confirmDelete = async () => {
-  if (!householdEntityStore.currentHousehold) return;
+  if (!householdEntityStore.currentHousehold) {
+    if (import.meta.env.DEV) {
+      console.error('No current household to delete');
+    }
+    return;
+  }
+
+  if (import.meta.env.DEV) {
+    console.log('Attempting to delete household:', householdEntityStore.currentHousehold.id);
+    console.log('Current user:', authStore.user?.id);
+    console.log('Is owner:', isOwner.value);
+  }
 
   const deleted = await householdEntityStore.removeHousehold(
     householdEntityStore.currentHousehold.id,
   );
+
+  if (import.meta.env.DEV) {
+    console.log('Delete result:', deleted);
+  }
+
   if (deleted) {
     showDeleteModal.value = false;
     router.push('/households');
+  } else if (import.meta.env.DEV) {
+    console.error('Failed to delete household');
   }
 };
 </script>

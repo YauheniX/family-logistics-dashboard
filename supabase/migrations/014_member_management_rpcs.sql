@@ -148,8 +148,8 @@ begin
       using errcode = 'P0001';
   end if;
 
-  -- Generate secure token
-  v_token := encode(gen_random_bytes(32), 'hex');
+  -- Generate secure token using built-in gen_random_uuid() (no extensions needed)
+  v_token := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');
   v_caller_member_id := get_member_id(p_household_id, auth.uid());
 
   -- Create invitation

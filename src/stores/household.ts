@@ -239,58 +239,30 @@ export const useHouseholdStore = defineStore('household', () => {
 
     loading.value = true;
     try {
-      // Get current authenticated user
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      if (authError || !authData?.user?.id) {
-        toast.error('Authentication required to create a household');
+      // Use atomic RPC function to create household and owner member in one transaction
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: result, error: rpcError } = await (supabase.rpc as any)(
+        'create_household_with_owner',
+        {
+          p_name: name.trim(),
+          p_creator_display_name: null, // Let RPC auto-determine from user profile
+        },
+      );
+
+      if (rpcError || !result) {
+        toast.error(`Failed to create household: ${rpcError?.message ?? 'unknown error'}`);
         return null;
       }
-      const userId = authData.user.id;
 
-      // Insert household
-      const { data: householdData, error: householdError } = await supabase
+      // Fetch the created household with full details
+      const { data: householdData, error: fetchError } = await supabase
         .from('households')
-        .insert({ name: name.trim(), created_by: userId })
-        .select()
+        .select('*')
+        .eq('id', result.household_id)
         .single();
 
-      if (householdError || !householdData) {
-        toast.error(`Failed to create household: ${householdError?.message ?? 'unknown'}`);
-        return null;
-      }
-
-      // Determine display name for member
-      let displayName = '';
-      try {
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('display_name')
-          .eq('id', userId)
-          .single();
-        displayName = profile?.display_name ?? '';
-      } catch {
-        // ignore
-      }
-      if (!displayName) {
-        displayName = authData.user.email ? String(authData.user.email).split('@')[0] : 'Member';
-      }
-
-      // Insert owner member
-      const { error: memberError } = await supabase
-        .from('members')
-        .insert({
-          household_id: householdData.id,
-          user_id: userId,
-          role: 'owner',
-          display_name: displayName,
-        })
-        .select()
-        .single();
-
-      if (memberError) {
-        // Rollback household if member insert failed
-        await supabase.from('households').delete().eq('id', householdData.id);
-        toast.error(`Failed to add owner member: ${memberError.message}`);
+      if (fetchError || !householdData) {
+        toast.error(`Failed to fetch created household: ${fetchError?.message ?? 'unknown'}`);
         return null;
       }
 

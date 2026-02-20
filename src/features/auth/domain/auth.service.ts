@@ -6,6 +6,11 @@ import { isSafeInternalPath, normalizeHashPath } from '@/utils/pathValidation';
 export interface AuthUser {
   id: string;
   email: string;
+  user_metadata?: {
+    avatar_url?: string;
+    full_name?: string;
+    [key: string]: any;
+  };
 }
 
 /**
@@ -259,6 +264,7 @@ export class AuthService {
     return {
       id: user.id,
       email: user.email || '',
+      user_metadata: user.user_metadata,
     };
   }
 }
