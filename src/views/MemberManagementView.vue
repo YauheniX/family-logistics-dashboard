@@ -6,11 +6,13 @@
         <div>
           <p class="text-sm text-neutral-500 dark:text-neutral-400">
             {{
-              householdStore.currentHousehold?.name || familyStore.currentFamily?.name || 'Family'
+              householdStore.currentHousehold?.name ||
+              householdEntityStore.currentHousehold?.name ||
+              'Household'
             }}
           </p>
           <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-            Family Members
+            Household Members
           </h2>
         </div>
         <div v-if="isOwnerOrAdmin" class="flex flex-wrap gap-2">
@@ -48,8 +50,8 @@
     <EmptyState
       v-else
       badge="Getting Started"
-      title="No family members yet"
-      description="Start by adding children or inviting other family members to your household."
+      title="No household members yet"
+      description="Start by adding children or inviting other household members to your household."
       cta="Add Your First Child"
       @action="showAddChildModal = true"
     />
@@ -64,7 +66,7 @@
     <!-- Invite Member Modal -->
     <ModalDialog
       :open="showInviteMemberModal"
-      title="Invite Family Member"
+      title="Invite Household Member"
       @close="showInviteMemberModal = false"
     >
       <form class="space-y-4" @submit.prevent="handleInviteMember">
@@ -145,13 +147,13 @@ import EmptyState from '@/components/shared/EmptyState.vue';
 import ModalDialog from '@/components/shared/ModalDialog.vue';
 import MemberCard from '@/components/members/MemberCard.vue';
 import AddChildModal from '@/components/members/AddChildModal.vue';
-import { useFamilyStore } from '@/features/family/presentation/family.store';
+import { useHouseholdEntityStore } from '@/features/household/presentation/household.store';
 import { useHouseholdStore } from '@/stores/household';
 import { useMembers } from '@/composables/useMembers';
 import type { Member } from '@/features/shared/domain/entities';
 
 const route = useRoute();
-const familyStore = useFamilyStore();
+const householdEntityStore = useHouseholdEntityStore();
 const householdStore = useHouseholdStore();
 const {
   members: householdMembers,
@@ -173,17 +175,17 @@ const memberToRemove = ref<string | null>(null);
 const memberToEdit = ref<Member | null>(null);
 const editMemberName = ref('');
 
-const familyId = computed(() => {
-  return (route.params.id as string) || familyStore.currentFamily?.id || '';
+const householdId = computed(() => {
+  return (route.params.id as string) || householdEntityStore.currentHousehold?.id || '';
 });
 
 // Sort members: owner first, then adults, then children, then viewers
 const displayMembers = computed(() => {
   // If a household is selected, always use its members (even if empty);
-  // otherwise, fall back to the legacy family store members.
+  // otherwise, fall back to the legacy household store members.
   const memberList = householdStore.currentHousehold
     ? [...householdMembers.value]
-    : [...familyStore.members];
+    : [...householdEntityStore.members];
 
   const roleOrder: Record<string, number> = {
     owner: 0,
@@ -207,9 +209,9 @@ onMounted(async () => {
     return;
   }
 
-  // Migration fallback: load via familyStore when no household context is present
-  if (familyId.value) {
-    await familyStore.loadFamily(familyId.value);
+  // Migration fallback: load via householdEntityStore when no household context is present
+  if (householdId.value) {
+    await householdEntityStore.loadHousehold(householdId.value);
   }
 });
 

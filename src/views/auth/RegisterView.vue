@@ -3,7 +3,7 @@
     <!-- Header Card -->
     <div class="glass-card p-6 text-center">
       <h1 class="text-h1 text-neutral-900 dark:text-neutral-50 mb-2">Create Account</h1>
-      <p class="text-body text-neutral-700 dark:text-neutral-300">Join to manage your family</p>
+      <p class="text-body text-neutral-700 dark:text-neutral-300">Join to manage your household</p>
     </div>
 
     <!-- Register Form Card -->
@@ -125,12 +125,14 @@ import BaseInput from '@/components/shared/BaseInput.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import { authService } from '@/features/auth';
 import { useToastStore } from '@/stores/toast';
+import { useHouseholdStore } from '@/stores/household';
 import { isValidEmail, isValidPassword, MIN_PASSWORD_LENGTH } from '@/utils/validation';
 import { normalizeRedirectParam } from '@/utils/pathValidation';
 
 const router = useRouter();
 const route = useRoute();
 const toastStore = useToastStore();
+const householdStore = useHouseholdStore();
 
 const email = ref('');
 const password = ref('');
@@ -206,6 +208,13 @@ const handleRegister = async () => {
       success.value =
         'Account created successfully! Please check your email to confirm your account.';
       toastStore.success(success.value);
+
+      if (response.data?.user?.id) {
+        await householdStore.ensureDefaultHouseholdForUser(
+          response.data.user.id,
+          response.data.user.email,
+        );
+      }
 
       // Clear form
       email.value = '';

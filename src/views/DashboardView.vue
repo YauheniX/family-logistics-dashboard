@@ -40,30 +40,32 @@
       </BaseCard>
     </div>
 
-    <LoadingState v-if="familyStore.loading" message="Loading your data..." />
+    <LoadingState v-if="householdEntityStore.loading" message="Loading your data..." />
 
     <template v-else>
-      <!-- My Families -->
+      <!-- My Households -->
       <BaseCard :padding="false">
         <div class="p-5">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-              My Families
+              My Households
             </h3>
-            <RouterLink to="/families" class="btn-ghost text-sm">View All</RouterLink>
+            <RouterLink to="/households" class="btn-ghost text-sm">View All</RouterLink>
           </div>
-          <div v-if="familyStore.families.length" class="mt-3 space-y-2">
+          <div v-if="householdEntityStore.households.length" class="mt-3 space-y-2">
             <RouterLink
-              v-for="family in familyStore.families"
-              :key="family.id"
-              :to="{ name: 'family-detail', params: { id: family.id } }"
+              v-for="household in householdEntityStore.households"
+              :key="household.id"
+              :to="{ name: 'household-detail', params: { id: household.id } }"
               class="flex items-center justify-between rounded-lg border border-neutral-200 dark:border-neutral-700 p-3 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
             >
-              <p class="font-medium text-neutral-800 dark:text-neutral-200">{{ family.name }}</p>
+              <p class="font-medium text-neutral-800 dark:text-neutral-200">{{ household.name }}</p>
               <span class="text-xs text-neutral-500 dark:text-neutral-400">View →</span>
             </RouterLink>
           </div>
-          <p v-else class="mt-3 text-sm text-neutral-500 dark:text-neutral-400">No families yet.</p>
+          <p v-else class="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
+            No households yet.
+          </p>
         </div>
       </BaseCard>
 
@@ -132,11 +134,15 @@
     </template>
 
     <EmptyState
-      v-if="!familyStore.loading && !familyStore.families.length && !wishlistStore.wishlists.length"
+      v-if="
+        !householdEntityStore.loading &&
+        !householdEntityStore.households.length &&
+        !wishlistStore.wishlists.length
+      "
       title="Welcome!"
-      description="Get started by creating a family or a wishlist."
-      cta="Create a Family"
-      @action="() => router.push('/families')"
+      description="Get started by creating a household or a wishlist."
+      cta="Create a Household"
+      @action="() => router.push('/households')"
     />
   </div>
 </template>
@@ -149,12 +155,12 @@ import BaseBadge from '@/components/shared/BaseBadge.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import { useAuthStore } from '@/stores/auth';
-import { useFamilyStore } from '@/features/family/presentation/family.store';
+import { useHouseholdEntityStore } from '@/features/household/presentation/household.store';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
 import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
 
 const authStore = useAuthStore();
-const familyStore = useFamilyStore();
+const householdEntityStore = useHouseholdEntityStore();
 const shoppingStore = useShoppingStore();
 const wishlistStore = useWishlistStore();
 const router = useRouter();
@@ -171,12 +177,15 @@ const itemsToBuyCount = computed(() => shoppingStore.unpurchasedItems.length);
 const reservedItemsCount = computed(() => wishlistStore.reservedItems.length);
 
 async function loadDashboardData(userId: string) {
-  await Promise.all([familyStore.loadFamilies(userId), wishlistStore.loadWishlists(userId)]);
+  await Promise.all([
+    householdEntityStore.loadHouseholds(userId),
+    wishlistStore.loadWishlists(userId),
+  ]);
 
   // Load shopping lists sequentially to avoid excessive concurrent requests
-  // when the user belongs to many families
-  for (const family of familyStore.families) {
-    await shoppingStore.loadLists(family.id);
+  // when the user belongs to many households
+  for (const household of householdEntityStore.households) {
+    await shoppingStore.loadLists(household.id);
   }
 }
 

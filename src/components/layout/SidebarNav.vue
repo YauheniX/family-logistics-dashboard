@@ -15,9 +15,11 @@
     <div class="mb-6">
       <div class="flex items-center gap-2 mb-1">
         <span class="text-2xl" aria-hidden="true">🏡</span>
-        <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-50">FamilyBoard</h2>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-50">HouseholdBoard</h2>
       </div>
-      <p class="text-xs text-neutral-500 dark:text-neutral-400 ml-8">Keeping families connected</p>
+      <p class="text-xs text-neutral-500 dark:text-neutral-400 ml-8">
+        Keeping households connected
+      </p>
     </div>
 
     <!-- Current Household Display -->
@@ -40,7 +42,7 @@
     <nav class="space-y-1">
       <RouterLink
         v-for="item in items"
-        :key="item.to"
+        :key="item.name"
         :to="item.to"
         class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
         :class="
@@ -63,9 +65,11 @@
     <div class="mb-6">
       <div class="flex items-center gap-2 mb-1">
         <span class="text-2xl" aria-hidden="true">🏡</span>
-        <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-50">FamilyBoard</h2>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-50">HouseholdBoard</h2>
       </div>
-      <p class="text-xs text-neutral-500 dark:text-neutral-400 ml-8">Keeping families connected</p>
+      <p class="text-xs text-neutral-500 dark:text-neutral-400 ml-8">
+        Keeping households connected
+      </p>
     </div>
 
     <!-- Current Household Display -->
@@ -88,7 +92,7 @@
     <nav class="space-y-1">
       <RouterLink
         v-for="item in items"
-        :key="item.to"
+        :key="item.name"
         :to="item.to"
         class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
         :class="
@@ -131,7 +135,12 @@ const currentHousehold = computed(() => householdStore.currentHousehold);
 
 const items = computed(() => [
   { name: 'dashboard', label: 'Home', to: '/', emoji: '🏠' },
-  { name: 'family-list', label: 'Members', to: '/families', emoji: '👨‍👩‍👧‍👦' },
+  {
+    name: 'household-list',
+    label: 'Manage Household',
+    to: currentHousehold.value ? `/households/${currentHousehold.value.id}` : '/households',
+    emoji: '👨‍👩‍👧‍👦',
+  },
   { name: 'shopping', label: 'Shopping', to: { name: 'shopping' }, emoji: '🛒' },
   { name: 'wishlist-list', label: 'Wishlists', to: '/wishlists', emoji: '🎁' },
   { name: 'settings', label: 'Settings', to: '/settings', emoji: '⚙️' },

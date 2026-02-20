@@ -1,49 +1,49 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { useToastStore } from '@/stores/toast';
-import { familyService } from '@/features/family/domain/family.service';
-import type { Family, UpdateFamilyDto, FamilyMember } from '@/features/shared/domain/entities';
+import { householdService } from '@/features/household/domain/household.service';
+import type { Household, UpdateHouseholdDto, Member } from '@/features/shared/domain/entities';
 
-export const useFamilyStore = defineStore('family', () => {
+export const useHouseholdEntityStore = defineStore('household-entity', () => {
   // ─── State ───────────────────────────────────────────────
-  const families = ref<Family[]>([]);
-  const currentFamily = ref<Family | null>(null);
-  const members = ref<FamilyMember[]>([]);
+  const households = ref<Household[]>([]);
+  const currentHousehold = ref<Household | null>(null);
+  const members = ref<Member[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);
 
   // ─── Getters ─────────────────────────────────────────────
-  const familyCount = computed(() => families.value.length);
+  const householdCount = computed(() => households.value.length);
   const memberCount = computed(() => members.value.length);
 
   // ─── Actions ─────────────────────────────────────────────
-  async function loadFamilies(userId: string) {
+  async function loadHouseholds(userId: string) {
     loading.value = true;
     error.value = null;
     try {
-      const response = await familyService.getUserFamilies(userId);
+      const response = await householdService.getUserHouseholds(userId);
       if (response.error) {
         error.value = response.error.message;
-        useToastStore().error(`Failed to load families: ${response.error.message}`);
+        useToastStore().error(`Failed to load households: ${response.error.message}`);
       } else {
-        families.value = response.data ?? [];
+        households.value = response.data ?? [];
       }
     } finally {
       loading.value = false;
     }
   }
 
-  async function loadFamily(id: string) {
+  async function loadHousehold(id: string) {
     loading.value = true;
     error.value = null;
     try {
-      const response = await familyService.getFamily(id);
+      const response = await householdService.getHousehold(id);
       if (response.error) {
         error.value = response.error.message;
-        useToastStore().error(`Failed to load family: ${response.error.message}`);
+        useToastStore().error(`Failed to load household: ${response.error.message}`);
       } else {
-        currentFamily.value = response.data;
-        if (currentFamily.value) {
+        currentHousehold.value = response.data;
+        if (currentHousehold.value) {
           await loadMembers(id);
         }
       }
@@ -52,17 +52,17 @@ export const useFamilyStore = defineStore('family', () => {
     }
   }
 
-  async function createFamily(name: string, userId: string) {
+  async function createHousehold(name: string, userId: string) {
     loading.value = true;
     try {
-      const response = await familyService.createFamily(name, userId);
+      const response = await householdService.createHousehold(name, userId);
       if (response.error) {
-        useToastStore().error(`Failed to create family: ${response.error.message}`);
+        useToastStore().error(`Failed to create household: ${response.error.message}`);
         return null;
       }
       if (response.data) {
-        families.value.unshift(response.data);
-        useToastStore().success('Family created successfully!');
+        households.value.unshift(response.data);
+        useToastStore().success('Household created successfully!');
       }
       return response.data;
     } finally {
@@ -70,18 +70,20 @@ export const useFamilyStore = defineStore('family', () => {
     }
   }
 
-  async function updateFamily(id: string, data: UpdateFamilyDto) {
+  async function updateHousehold(id: string, data: UpdateHouseholdDto) {
     loading.value = true;
     try {
-      const response = await familyService.updateFamily(id, data);
+      const response = await householdService.updateHousehold(id, data);
       if (response.error) {
-        useToastStore().error(`Failed to update family: ${response.error.message}`);
+        useToastStore().error(`Failed to update household: ${response.error.message}`);
         return null;
       }
       if (response.data) {
-        families.value = families.value.map((f) => (f.id === id ? response.data! : f));
-        currentFamily.value = response.data;
-        useToastStore().success('Family updated successfully!');
+        households.value = households.value.map((household) =>
+          household.id === id ? response.data! : household,
+        );
+        currentHousehold.value = response.data;
+        useToastStore().success('Household updated successfully!');
       }
       return response.data;
     } finally {
@@ -89,20 +91,20 @@ export const useFamilyStore = defineStore('family', () => {
     }
   }
 
-  async function removeFamily(id: string): Promise<boolean> {
+  async function removeHousehold(id: string): Promise<boolean> {
     loading.value = true;
     try {
-      const response = await familyService.deleteFamily(id);
+      const response = await householdService.deleteHousehold(id);
       if (response.error) {
-        useToastStore().error(`Failed to delete family: ${response.error.message}`);
+        useToastStore().error(`Failed to delete household: ${response.error.message}`);
         return false;
       } else {
-        families.value = families.value.filter((f) => f.id !== id);
-        if (currentFamily.value?.id === id) {
-          currentFamily.value = null;
+        households.value = households.value.filter((household) => household.id !== id);
+        if (currentHousehold.value?.id === id) {
+          currentHousehold.value = null;
           members.value = [];
         }
-        useToastStore().success('Family deleted successfully!');
+        useToastStore().success('Household deleted successfully!');
         return true;
       }
     } finally {
@@ -110,8 +112,8 @@ export const useFamilyStore = defineStore('family', () => {
     }
   }
 
-  async function loadMembers(familyId: string) {
-    const response = await familyService.getFamilyMembers(familyId);
+  async function loadMembers(householdId: string) {
+    const response = await householdService.getMembers(householdId);
     if (response.error) {
       error.value = response.error.message;
       useToastStore().error(`Failed to load members: ${response.error.message}`);
@@ -120,8 +122,8 @@ export const useFamilyStore = defineStore('family', () => {
     }
   }
 
-  async function inviteMember(familyId: string, email: string, currentUserId?: string) {
-    const response = await familyService.inviteMemberByEmail(familyId, email, currentUserId);
+  async function inviteMember(householdId: string, email: string, currentUserId?: string) {
+    const response = await householdService.inviteMemberByEmail(householdId, email, currentUserId);
     if (response.error) {
       useToastStore().error(`Failed to invite member: ${response.error.message}`);
       return null;
@@ -134,7 +136,7 @@ export const useFamilyStore = defineStore('family', () => {
   }
 
   async function removeMember(memberId: string) {
-    const response = await familyService.removeMember(memberId);
+    const response = await householdService.removeMember(memberId);
     if (response.error) {
       useToastStore().error(`Failed to remove member: ${response.error.message}`);
     } else {
@@ -145,20 +147,20 @@ export const useFamilyStore = defineStore('family', () => {
 
   return {
     // State
-    families,
-    currentFamily,
+    households,
+    currentHousehold,
     members,
     loading,
     error,
     // Getters
-    familyCount,
+    householdCount,
     memberCount,
     // Actions
-    loadFamilies,
-    loadFamily,
-    createFamily,
-    updateFamily,
-    removeFamily,
+    loadHouseholds,
+    loadHousehold,
+    createHousehold,
+    updateHousehold,
+    removeHousehold,
     loadMembers,
     inviteMember,
     removeMember,

@@ -10,3 +10,4 @@ family-logistics-dashboard.code-workspace
 .tools/supabase.tar.gz
 .env
 coverage/
+package-lock.json

@@ -1,7 +1,7 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import DashboardView from '@/views/DashboardView.vue';
-import FamilyListView from '@/views/FamilyListView.vue';
-import FamilyDetailView from '@/views/FamilyDetailView.vue';
+import HouseholdListView from '@/views/HouseholdListView.vue';
+import HouseholdDetailView from '@/views/HouseholdDetailView.vue';
 import MemberManagementView from '@/views/MemberManagementView.vue';
 import ShoppingListView from '@/views/ShoppingListView.vue';
 import ShoppingIndexView from '@/views/ShoppingIndexView.vue';
@@ -41,20 +41,20 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: '/families',
-      name: 'family-list',
-      component: FamilyListView,
+      path: '/households',
+      name: 'household-list',
+      component: HouseholdListView,
       meta: { requiresAuth: true },
     },
     {
-      path: '/families/:id',
-      name: 'family-detail',
-      component: FamilyDetailView,
+      path: '/households/:id',
+      name: 'household-detail',
+      component: HouseholdDetailView,
       props: true,
       meta: { requiresAuth: true },
     },
     {
-      path: '/families/:id/members',
+      path: '/households/:id/members',
       name: 'member-management',
       component: MemberManagementView,
       props: true,

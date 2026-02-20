@@ -1,22 +1,21 @@
 <template>
-  <div v-if="familyStore.currentFamily" class="space-y-6">
+  <div v-if="householdEntityStore.currentHousehold" class="space-y-6">
     <BaseCard>
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p class="text-sm text-neutral-500 dark:text-neutral-400">Family</p>
+          <p class="text-sm text-neutral-500 dark:text-neutral-400">Household</p>
           <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-            {{ familyStore.currentFamily.name }}
+            {{ householdEntityStore.currentHousehold.name }}
           </h2>
         </div>
         <div class="flex flex-wrap gap-2">
           <BaseButton @click="router.push({ name: 'member-management', params: { id: props.id } })">
             👥 Manage Members
           </BaseButton>
-          <BaseButton @click="showInviteModal = true"> ➕ Invite Member </BaseButton>
           <BaseButton v-if="isOwner" variant="danger" @click="showDeleteModal = true">
-            Delete Family
+            Delete Household
           </BaseButton>
-          <BaseButton variant="ghost" @click="router.push('/families')"> ← Back </BaseButton>
+          <BaseButton variant="ghost" @click="router.push('/households')"> ← Back </BaseButton>
         </div>
       </div>
     </BaseCard>
@@ -27,12 +26,12 @@
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Members</h3>
           <span class="text-sm text-neutral-600 dark:text-neutral-300"
-            >{{ familyStore.members.length }} members</span
+            >{{ householdEntityStore.members.length }} members</span
           >
         </div>
         <ul class="space-y-3">
           <li
-            v-for="member in familyStore.members"
+            v-for="member in householdEntityStore.members"
             :key="member.id"
             class="flex items-center gap-3 p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800"
           >
@@ -57,13 +56,13 @@
             <BaseButton
               v-if="member.role !== 'owner'"
               variant="danger"
-              @click="familyStore.removeMember(member.id)"
+              @click="householdEntityStore.removeMember(member.id)"
             >
               Remove
             </BaseButton>
           </li>
           <p
-            v-if="!familyStore.members.length"
+            v-if="!householdEntityStore.members.length"
             class="text-sm text-neutral-500 dark:text-neutral-400"
           >
             No members yet.
@@ -155,15 +154,19 @@
       </form>
     </ModalDialog>
 
-    <!-- Delete Family Modal -->
-    <ModalDialog :open="showDeleteModal" title="Delete Family" @close="showDeleteModal = false">
+    <!-- Delete Household Modal -->
+    <ModalDialog :open="showDeleteModal" title="Delete Household" @close="showDeleteModal = false">
       <div class="space-y-4">
         <p class="text-sm text-neutral-600 dark:text-neutral-300">
-          Delete <span class="font-semibold">{{ familyStore.currentFamily.name }}</span
+          Delete <span class="font-semibold">{{ householdEntityStore.currentHousehold.name }}</span
           >? This action cannot be undone.
         </p>
         <div class="flex gap-3">
-          <BaseButton variant="danger" :disabled="familyStore.loading" @click="confirmDelete">
+          <BaseButton
+            variant="danger"
+            :disabled="householdEntityStore.loading"
+            @click="confirmDelete"
+          >
             Delete
           </BaseButton>
           <BaseButton variant="ghost" @click="showDeleteModal = false">Cancel</BaseButton>
@@ -171,7 +174,7 @@
       </div>
     </ModalDialog>
   </div>
-  <LoadingState v-else message="Loading family..." />
+  <LoadingState v-else message="Loading household..." />
 </template>
 
 <script setup lang="ts">
@@ -183,13 +186,13 @@ import BaseBadge from '@/components/shared/BaseBadge.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import ModalDialog from '@/components/shared/ModalDialog.vue';
 import { useAuthStore } from '@/stores/auth';
-import { useFamilyStore } from '@/features/family/presentation/family.store';
+import { useHouseholdEntityStore } from '@/features/household/presentation/household.store';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
 
 const props = defineProps<{ id: string }>();
 
 const authStore = useAuthStore();
-const familyStore = useFamilyStore();
+const householdEntityStore = useHouseholdEntityStore();
 const shoppingStore = useShoppingStore();
 const router = useRouter();
 
@@ -202,12 +205,14 @@ const newListDescription = ref('');
 
 const isOwner = computed(() => {
   const userId = authStore.user?.id;
-  const family = familyStore.currentFamily;
+  const household = householdEntityStore.currentHousehold;
 
-  if (!userId || !family) return false;
-  if (family.created_by === userId) return true;
+  if (!userId || !household) return false;
+  if (household.created_by === userId) return true;
 
-  return familyStore.members.some((member) => member.user_id === userId && member.role === 'owner');
+  return householdEntityStore.members.some(
+    (member) => member.user_id === userId && member.role === 'owner',
+  );
 });
 
 const getInitials = (name: string): string => {
@@ -234,13 +239,13 @@ const getAvatarColor = (name: string): string => {
 };
 
 onMounted(async () => {
-  await familyStore.loadFamily(props.id);
+  await householdEntityStore.loadHousehold(props.id);
   await shoppingStore.loadLists(props.id);
 });
 
 const handleInvite = async () => {
   if (!inviteEmail.value.trim()) return;
-  const result = await familyStore.inviteMember(
+  const result = await householdEntityStore.inviteMember(
     props.id,
     inviteEmail.value.trim(),
     authStore.user?.id,
@@ -254,7 +259,7 @@ const handleInvite = async () => {
 const handleCreateList = async () => {
   if (!newListTitle.value.trim()) return;
   const result = await shoppingStore.createList({
-    family_id: props.id,
+    household_id: props.id,
     title: newListTitle.value.trim(),
     description: newListDescription.value.trim() || null,
   });
@@ -269,12 +274,32 @@ const handleCreateList = async () => {
 };
 
 const confirmDelete = async () => {
-  if (!familyStore.currentFamily) return;
+  if (!householdEntityStore.currentHousehold) {
+    if (import.meta.env.DEV) {
+      console.error('No current household to delete');
+    }
+    return;
+  }
 
-  const deleted = await familyStore.removeFamily(familyStore.currentFamily.id);
+  if (import.meta.env.DEV) {
+    console.log('Attempting to delete household:', householdEntityStore.currentHousehold.id);
+    console.log('Current user:', authStore.user?.id);
+    console.log('Is owner:', isOwner.value);
+  }
+
+  const deleted = await householdEntityStore.removeHousehold(
+    householdEntityStore.currentHousehold.id,
+  );
+
+  if (import.meta.env.DEV) {
+    console.log('Delete result:', deleted);
+  }
+
   if (deleted) {
     showDeleteModal.value = false;
-    router.push('/families');
+    router.push('/households');
+  } else if (import.meta.env.DEV) {
+    console.error('Failed to delete household');
   }
 };
 </script>

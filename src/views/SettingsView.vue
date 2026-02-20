@@ -18,6 +18,17 @@
         <!-- Avatar Upload -->
         <div class="flex items-center gap-4">
           <div
+            v-if="profileForm.avatarUrl"
+            class="h-20 w-20 rounded-full bg-neutral-200 dark:bg-neutral-700 overflow-hidden"
+          >
+            <img
+              :src="profileForm.avatarUrl"
+              :alt="profileForm.name || 'User avatar'"
+              class="h-full w-full object-cover"
+            />
+          </div>
+          <div
+            v-else
             class="h-20 w-20 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-2xl font-semibold text-primary-700 dark:text-primary-400"
           >
             {{ userInitials }}
@@ -59,6 +70,7 @@
           label="Full Name"
           placeholder="Your full name"
           :error="errors.name"
+          :disabled="loading"
         />
 
         <!-- Email Input (Read-only) -->
@@ -71,7 +83,12 @@
         />
 
         <div class="flex justify-end pt-2">
-          <BaseButton variant="primary" :loading="saving" @click="handleSaveProfile">
+          <BaseButton
+            variant="primary"
+            :loading="saving"
+            :disabled="loading"
+            @click="handleSaveProfile"
+          >
             Save Changes
           </BaseButton>
         </div>
@@ -197,18 +214,23 @@ import BaseButton from '@/components/shared/BaseButton.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useToastStore } from '@/stores/toast';
 import { useTheme } from '@/composables/useTheme';
+import { useUserProfile } from '@/composables/useUserProfile';
+import { supabase } from '@/features/shared/infrastructure/supabase.client';
 
 const authStore = useAuthStore();
 const toastStore = useToastStore();
 const { currentTheme, setTheme } = useTheme();
+const { loadUserProfile } = useUserProfile();
 
 const profileForm = ref({
   name: '',
   email: authStore.user?.email || '',
+  avatarUrl: null as string | null,
 });
 
 const errors = ref<{ name?: string }>({});
 const saving = ref(false);
+const loading = ref(true);
 
 const preferences = ref({
   emailNotifications: true,
@@ -252,7 +274,7 @@ const handleAvatarUpload = () => {
   toastStore.info('Avatar upload feature coming soon!');
 };
 
-const handleSaveProfile = () => {
+const handleSaveProfile = async () => {
   errors.value = {};
 
   if (!profileForm.value.name || profileForm.value.name.trim().length < 2) {
@@ -260,13 +282,105 @@ const handleSaveProfile = () => {
     return;
   }
 
+  if (!authStore.user?.id) {
+    toastStore.error('User not authenticated');
+    return;
+  }
+
   saving.value = true;
 
-  // Simulate save
-  setTimeout(() => {
+  try {
+    console.log('[SettingsView] Saving profile for user:', authStore.user.id);
+    console.log('[SettingsView] Profile name:', profileForm.value.name.trim());
+
+    // Debug: Check current session
+    const { data: sessionData } = await supabase.auth.getSession();
+    console.log('[SettingsView] Current session:', sessionData.session?.user?.id);
+    console.log(
+      '[SettingsView] Session user ID matches?',
+      sessionData.session?.user?.id === authStore.user.id,
+    );
+
+    // Check if profile exists first (RLS requires explicit insert vs update)
+    const { data: existingProfile } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .eq('id', authStore.user.id)
+      .maybeSingle();
+
+    console.log('[SettingsView] Existing profile check:', existingProfile);
+
+    const profileData = {
+      display_name: profileForm.value.name.trim(),
+    };
+
+    let error;
+    let updatedData;
+    if (existingProfile) {
+      // Profile exists, update it
+      console.log('[SettingsView] Updating existing profile with data:', profileData);
+      console.log('[SettingsView] For user ID:', authStore.user.id);
+      const result = await supabase
+        .from('user_profiles')
+        .update(profileData)
+        .eq('id', authStore.user.id)
+        .select();
+      console.log('[SettingsView] Update result:', result);
+      error = result.error;
+      updatedData = result.data?.[0];
+    } else {
+      // Profile doesn't exist, insert it
+      console.log('[SettingsView] Inserting new profile');
+      const result = await supabase
+        .from('user_profiles')
+        .insert({
+          id: authStore.user.id,
+          ...profileData,
+        })
+        .select();
+      console.log('[SettingsView] Insert result:', result);
+      error = result.error;
+      updatedData = result.data?.[0];
+    }
+
+    console.log('[SettingsView] Updated data returned:', updatedData);
+
+    if (error) {
+      console.error('[SettingsView] Error saving profile:', error);
+      toastStore.error(`Failed to save profile: ${error.message}`);
+      return;
+    }
+
+    // Verify the save by reading back the data
+    const { data: savedProfile, error: verifyError } = await supabase
+      .from('user_profiles')
+      .select('display_name')
+      .eq('id', authStore.user.id)
+      .maybeSingle();
+
+    console.log('[SettingsView] Verification query:', { savedProfile, verifyError });
+
+    if (verifyError) {
+      console.error('[SettingsView] Error verifying saved profile:', verifyError);
+      toastStore.warning('Profile saved but could not verify changes');
+    } else if (savedProfile) {
+      console.log('[SettingsView] Profile saved successfully:', savedProfile);
+      profileForm.value.name = savedProfile.display_name || '';
+      // Refresh global user profile to update header
+      console.log('[SettingsView] Calling loadUserProfile...');
+      await loadUserProfile(authStore.user.id);
+      console.log('[SettingsView] loadUserProfile completed');
+      toastStore.success('Profile updated successfully!');
+    } else {
+      console.error('[SettingsView] Profile not found after save');
+      toastStore.warning('Profile save may have failed');
+    }
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    toastStore.error('An unexpected error occurred');
+  } finally {
     saving.value = false;
-    toastStore.success('Profile updated successfully!');
-  }, 500);
+  }
 };
 
 const handleChangePassword = () => {
@@ -282,7 +396,32 @@ const handleSavePreferences = () => {
   toastStore.success('Preferences saved');
 };
 
-onMounted(() => {
+onMounted(async () => {
+  // Load user profile
+  if (authStore.user?.id) {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('display_name, avatar_url')
+        .eq('id', authStore.user.id)
+        .maybeSingle();
+
+      if (!error && data) {
+        profileForm.value.name = data.display_name;
+        profileForm.value.avatarUrl = data.avatar_url;
+      } else if (!data) {
+        // Profile doesn't exist yet, use email as default
+        profileForm.value.name = authStore.user.email?.split('@')[0] || '';
+      }
+    } catch (err) {
+      console.error('Error loading profile:', err);
+    } finally {
+      loading.value = false;
+    }
+  } else {
+    loading.value = false;
+  }
+
   // Load saved preferences from localStorage if available
   const savedPrefs = localStorage.getItem('user-preferences');
   if (savedPrefs) {

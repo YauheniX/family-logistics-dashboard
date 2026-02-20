@@ -1,5 +1,5 @@
 <template>
-  <ModalDialog :open="open" title="Invite Family Member" @close="handleClose">
+  <ModalDialog :open="open" title="Invite Household Member" @close="handleClose">
     <form class="space-y-4" @submit.prevent="handleSubmit">
       <p class="text-body text-neutral-700 dark:text-neutral-300">
         Enter their email address to send an invitation.
@@ -46,7 +46,7 @@ import { isValidEmail } from '@/utils/validation';
 
 interface Props {
   open: boolean;
-  familyId?: string;
+  householdId?: string;
 }
 
 const props = defineProps<Props>();

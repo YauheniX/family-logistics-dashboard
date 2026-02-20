@@ -410,11 +410,12 @@ alter table members enable row level security;
 alter table invitations enable row level security;
 alter table activity_logs enable row level security;
 
--- Households: Visible to members
+-- Households: Visible to members or creator
 create policy "households_select"
   on households for select
   using (
-    id in (
+    created_by = auth.uid()
+    or id in (
       select household_id from members
       where user_id = auth.uid()
         and is_active = true

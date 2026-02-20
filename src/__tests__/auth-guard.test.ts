@@ -5,8 +5,8 @@ import { useAuthStore } from '@/features/auth/presentation/auth.store';
 
 // Mock Vue components
 vi.mock('@/views/DashboardView.vue', () => ({ default: { template: '<div />' } }));
-vi.mock('@/views/FamilyListView.vue', () => ({ default: { template: '<div />' } }));
-vi.mock('@/views/FamilyDetailView.vue', () => ({ default: { template: '<div />' } }));
+vi.mock('@/views/HouseholdListView.vue', () => ({ default: { template: '<div />' } }));
+vi.mock('@/views/HouseholdDetailView.vue', () => ({ default: { template: '<div />' } }));
 vi.mock('@/views/ShoppingListView.vue', () => ({ default: { template: '<div />' } }));
 vi.mock('@/views/WishlistListView.vue', () => ({ default: { template: '<div />' } }));
 vi.mock('@/views/WishlistEditView.vue', () => ({ default: { template: '<div />' } }));
@@ -55,8 +55,8 @@ function createTestRouter() {
         meta: { requiresAuth: true },
       },
       {
-        path: '/families',
-        name: 'family-list',
+        path: '/households',
+        name: 'household-list',
         component: { template: '<div />' },
         meta: { requiresAuth: true },
       },
@@ -109,11 +109,11 @@ describe('Auth Guard', () => {
     authStore.user = null;
 
     const router = createTestRouter();
-    router.push('/families');
+    router.push('/households');
     await router.isReady();
 
     expect(router.currentRoute.value.name).toBe('login');
-    expect(router.currentRoute.value.query.redirect).toBe('/families');
+    expect(router.currentRoute.value.query.redirect).toBe('/households');
   });
 
   it('allows authenticated user to access protected routes', async () => {

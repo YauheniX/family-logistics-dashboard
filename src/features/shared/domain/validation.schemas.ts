@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // ─── Enums ───────────────────────────────────────────────
-export const FamilyMemberRoleSchema = z.enum(['owner', 'member']);
+export const MemberRoleSchema = z.enum(['owner', 'admin', 'member', 'child', 'viewer']);
 export const ShoppingListStatusSchema = z.enum(['active', 'archived']);
 export const ItemPrioritySchema = z.enum(['low', 'medium', 'high']);
 
@@ -31,16 +31,16 @@ export const UserProfileFormSchema = z.object({
 });
 export type UserProfileFormData = z.infer<typeof UserProfileFormSchema>;
 
-// ─── Family Schemas ──────────────────────────────────────
-export const FamilyFormSchema = z.object({
-  name: z.string().min(1, 'Family name is required').max(200, 'Family name is too long'),
+// ─── Household Schemas ───────────────────────────────────
+export const HouseholdFormSchema = z.object({
+  name: z.string().min(1, 'Household name is required').max(200, 'Household name is too long'),
 });
-export type FamilyFormData = z.infer<typeof FamilyFormSchema>;
+export type HouseholdFormData = z.infer<typeof HouseholdFormSchema>;
 
-export const FamilyInviteSchema = z.object({
+export const HouseholdInviteSchema = z.object({
   email: z.string().email('Invalid email address'),
 });
-export type FamilyInviteData = z.infer<typeof FamilyInviteSchema>;
+export type HouseholdInviteData = z.infer<typeof HouseholdInviteSchema>;
 
 // ─── Shopping List Schemas ───────────────────────────────
 export const ShoppingListFormSchema = z.object({

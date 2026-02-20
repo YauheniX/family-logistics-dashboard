@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  FamilyFormSchema,
+  HouseholdFormSchema,
   ShoppingItemFormSchema,
   WishlistFormSchema,
   WishlistItemFormSchema,
@@ -8,26 +8,26 @@ import {
 } from '@/features/shared/domain/validation.schemas';
 
 describe('Validation Schemas', () => {
-  // ─── FamilyFormSchema ─────────────────────────────────────
+  // ─── HouseholdFormSchema ─────────────────────────────────────
 
-  describe('FamilyFormSchema', () => {
-    it('accepts valid family name', () => {
-      const result = FamilyFormSchema.safeParse({ name: 'Smith Family' });
+  describe('HouseholdFormSchema', () => {
+    it('accepts valid household name', () => {
+      const result = HouseholdFormSchema.safeParse({ name: 'Smith Household' });
       expect(result.success).toBe(true);
     });
 
-    it('rejects empty family name', () => {
-      const result = FamilyFormSchema.safeParse({ name: '' });
+    it('rejects empty household name', () => {
+      const result = HouseholdFormSchema.safeParse({ name: '' });
       expect(result.success).toBe(false);
     });
 
-    it('rejects family name exceeding max length', () => {
-      const result = FamilyFormSchema.safeParse({ name: 'a'.repeat(201) });
+    it('rejects household name exceeding max length', () => {
+      const result = HouseholdFormSchema.safeParse({ name: 'a'.repeat(201) });
       expect(result.success).toBe(false);
     });
 
     it('rejects missing name field', () => {
-      const result = FamilyFormSchema.safeParse({});
+      const result = HouseholdFormSchema.safeParse({});
       expect(result.success).toBe(false);
     });
   });

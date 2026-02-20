@@ -23,11 +23,11 @@ export class ShoppingListRepository extends BaseRepository<
   }
 
   /**
-   * Find shopping lists by family ID
+   * Find shopping lists by household ID
    */
-  async findByFamilyId(familyId: string): Promise<ApiResponse<ShoppingList[]>> {
+  async findByHouseholdId(householdId: string): Promise<ApiResponse<ShoppingList[]>> {
     return this.findAll((builder) =>
-      builder.eq('family_id', familyId).order('created_at', { ascending: false }),
+      builder.eq('household_id', householdId).order('created_at', { ascending: false }),
     );
   }
 

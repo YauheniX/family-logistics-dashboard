@@ -157,6 +157,62 @@ export const useHouseholdStore = defineStore('household', () => {
     loadHouseholds(mockHouseholds);
   }
 
+  const ensuringForUserIds = new Set<string>();
+
+  async function ensureDefaultHouseholdForUser(userId: string, userEmail?: string | null) {
+    const toast = useToastStore();
+    if (!userId) return null;
+    if (ensuringForUserIds.has(userId)) {
+      console.log('[household] Skipping duplicate default household creation for user', userId);
+      return null;
+    }
+
+    ensuringForUserIds.add(userId);
+    loading.value = true;
+
+    try {
+      console.log('[household] Verifying default household for user', userId);
+      const { data: existingMemberships, error: membershipError } = await supabase
+        .from('members')
+        .select('id, household_id')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .limit(1);
+
+      if (membershipError) {
+        console.error('[household] Failed to check existing memberships', membershipError);
+        toast.error('Failed to verify household membership');
+        return null;
+      }
+
+      if ((existingMemberships ?? []).length > 0) {
+        console.log(
+          '[household] Existing household membership found, skipping creation',
+          existingMemberships,
+        );
+        return null;
+      }
+
+      const defaultName = userEmail ? `${userEmail.split('@')[0]}'s household` : 'My Household';
+      const created = await createHousehold(defaultName);
+      if (!created) {
+        console.error('[household] Default household creation failed for user', userId);
+        toast.error('Could not create your default household');
+        return null;
+      }
+
+      console.log('[household] Default household created', created);
+      toast.success('Your household is ready');
+      return created;
+    } catch (error) {
+      console.error('[household] Unexpected error while ensuring default household', error);
+      toast.error('Unexpected error while creating household');
+      return null;
+    } finally {
+      ensuringForUserIds.delete(userId);
+      loading.value = false;
+    }
+  }
   async function createHousehold(name: string) {
     const toast = useToastStore();
 
@@ -183,58 +239,30 @@ export const useHouseholdStore = defineStore('household', () => {
 
     loading.value = true;
     try {
-      // Get current authenticated user
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      if (authError || !authData?.user?.id) {
-        toast.error('Authentication required to create a household');
+      // Use atomic RPC function to create household and owner member in one transaction
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: result, error: rpcError } = await (supabase.rpc as any)(
+        'create_household_with_owner',
+        {
+          p_name: name.trim(),
+          p_creator_display_name: null, // Let RPC auto-determine from user profile
+        },
+      );
+
+      if (rpcError || !result) {
+        toast.error(`Failed to create household: ${rpcError?.message ?? 'unknown error'}`);
         return null;
       }
-      const userId = authData.user.id;
 
-      // Insert household
-      const { data: householdData, error: householdError } = await supabase
+      // Fetch the created household with full details
+      const { data: householdData, error: fetchError } = await supabase
         .from('households')
-        .insert({ name: name.trim(), created_by: userId })
-        .select()
+        .select('*')
+        .eq('id', result.household_id)
         .single();
 
-      if (householdError || !householdData) {
-        toast.error(`Failed to create household: ${householdError?.message ?? 'unknown'}`);
-        return null;
-      }
-
-      // Determine display name for member
-      let displayName = '';
-      try {
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('display_name')
-          .eq('id', userId)
-          .single();
-        displayName = profile?.display_name ?? '';
-      } catch {
-        // ignore
-      }
-      if (!displayName) {
-        displayName = authData.user.email ? String(authData.user.email).split('@')[0] : 'Member';
-      }
-
-      // Insert owner member
-      const { error: memberError } = await supabase
-        .from('members')
-        .insert({
-          household_id: householdData.id,
-          user_id: userId,
-          role: 'owner',
-          display_name: displayName,
-        })
-        .select()
-        .single();
-
-      if (memberError) {
-        // Rollback household if member insert failed
-        await supabase.from('households').delete().eq('id', householdData.id);
-        toast.error(`Failed to add owner member: ${memberError.message}`);
+      if (fetchError || !householdData) {
+        toast.error(`Failed to fetch created household: ${fetchError?.message ?? 'unknown'}`);
         return null;
       }
 
@@ -272,5 +300,6 @@ export const useHouseholdStore = defineStore('household', () => {
     initializeForUser,
     initializeMockHouseholds,
     createHousehold,
+    ensureDefaultHouseholdForUser,
   };
 });

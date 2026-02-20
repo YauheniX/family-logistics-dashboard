@@ -16,7 +16,8 @@
             </p>
           </div>
           <div class="flex items-center gap-2">
-            <BaseButton variant="primary" @click="showAddItemForm = true"> + Add Item </BaseButton>
+            <BaseButton variant="ghost" @click="showEditListModal = true">✏️ Edit List</BaseButton>
+            <BaseButton variant="primary" @click="showItemForm = true"> + Add Item </BaseButton>
           </div>
         </div>
       </template>
@@ -72,6 +73,14 @@
           <BaseBadge v-if="item.quantity > 1" variant="neutral">×{{ item.quantity }}</BaseBadge>
           <button
             type="button"
+            class="rounded-md px-2 py-1 text-neutral-400 hover:text-primary-500 dark:hover:text-primary-400 transition-colors"
+            aria-label="Edit item"
+            @click="handleEditItem(item)"
+          >
+            ✏️
+          </button>
+          <button
+            type="button"
             class="rounded-md px-2 py-1 text-neutral-400 hover:text-danger-500 dark:hover:text-danger-400 transition-colors"
             aria-label="Remove item"
             @click="shoppingStore.removeItem(item.id)"
@@ -89,21 +98,23 @@
       badge="Shopping"
     />
 
-    <!-- Add Item Form -->
+    <!-- Add/Edit Item Form -->
     <BaseCard v-if="showAddItemForm">
       <template #header>
         <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50">Add Item</h3>
+          <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
+            {{ editingItemId ? 'Edit Item' : 'Add Item' }}
+          </h3>
           <button
             type="button"
             class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
-            @click="showAddItemForm = false"
+            @click="resetForm"
           >
             ✕
           </button>
         </div>
       </template>
-      <form class="grid gap-4 md:grid-cols-3" @submit.prevent="handleAddItem">
+      <form class="grid gap-4 md:grid-cols-3" @submit.prevent="handleSubmitItem">
         <BaseInput v-model="newItemTitle" placeholder="Item name" class="md:col-span-2" required />
         <BaseInput
           v-model="newItemQuantity"
@@ -118,10 +129,43 @@
           class="md:col-span-3"
         />
         <BaseButton type="submit" variant="primary" class="md:col-span-3" full-width>
-          Add item
+          {{ editingItemId ? 'Update Item' : 'Add item' }}
         </BaseButton>
       </form>
     </BaseCard>
+
+    <!-- Edit List Modal -->
+    <ModalDialog
+      :open="showEditListModal"
+      title="Edit Shopping List"
+      @close="showEditListModal = false"
+    >
+      <form class="space-y-4" @submit.prevent="handleUpdateList">
+        <div>
+          <label class="label" for="edit-list-title">Title</label>
+          <BaseInput
+            id="edit-list-title"
+            v-model="editListTitle"
+            required
+            placeholder="Weekly groceries"
+          />
+        </div>
+        <div>
+          <label class="label" for="edit-list-description">Description</label>
+          <BaseInput
+            id="edit-list-description"
+            v-model="editListDescription"
+            placeholder="Optional description"
+          />
+        </div>
+        <div class="flex gap-3">
+          <BaseButton type="submit">Update</BaseButton>
+          <BaseButton variant="ghost" @click.prevent="showEditListModal = false">
+            Cancel
+          </BaseButton>
+        </div>
+      </form>
+    </ModalDialog>
   </div>
   <LoadingState v-else message="Loading shopping list..." />
 </template>
@@ -135,6 +179,7 @@ import BaseInput from '@/components/shared/BaseInput.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
+import ModalDialog from '@/components/shared/ModalDialog.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
 import type { ShoppingItem } from '@/features/shared/domain/entities';
@@ -148,12 +193,20 @@ const shoppingStore = useShoppingStore();
 const showPurchased = ref(true);
 const showOnlyMine = ref(false);
 const showAddItemForm = ref(false);
+const showEditListModal = ref(false);
+const editingItemId = ref<string | null>(null);
 const newItemTitle = ref('');
 const newItemQuantity = ref(1);
 const newItemCategory = ref('');
+const editListTitle = ref('');
+const editListDescription = ref('');
 
 onMounted(async () => {
   await shoppingStore.loadList(props.listId);
+  if (shoppingStore.currentList) {
+    editListTitle.value = shoppingStore.currentList.title;
+    editListDescription.value = shoppingStore.currentList.description || '';
+  }
 });
 
 const filteredItems = computed(() => {
@@ -183,17 +236,51 @@ const handleTogglePurchased = async (itemId: string) => {
   await shoppingStore.togglePurchased(itemId, authStore.user?.id ?? null);
 };
 
-const handleAddItem = async () => {
-  if (!newItemTitle.value.trim()) return;
-  await shoppingStore.addItem({
-    list_id: props.listId,
-    title: newItemTitle.value.trim(),
-    quantity: newItemQuantity.value || 1,
-    category: newItemCategory.value.trim() || 'Uncategorized',
-  });
+const handleEditItem = (item: ShoppingItem) => {
+  editingItemId.value = item.id;
+  newItemTitle.value = item.title;
+  newItemQuantity.value = item.quantity || 1;
+  newItemCategory.value = item.category || '';
+  showAddItemForm.value = true;
+};
+
+const resetForm = () => {
+  editingItemId.value = null;
   newItemTitle.value = '';
   newItemQuantity.value = 1;
   newItemCategory.value = '';
   showAddItemForm.value = false;
+};
+
+const handleSubmitItem = async () => {
+  if (!newItemTitle.value.trim()) return;
+
+  if (editingItemId.value) {
+    // Update existing item
+    await shoppingStore.updateItem(editingItemId.value, {
+      title: newItemTitle.value.trim(),
+      quantity: newItemQuantity.value || 1,
+      category: newItemCategory.value.trim() || 'Uncategorized',
+    });
+  } else {
+    // Add new item
+    await shoppingStore.addItem({
+      list_id: props.listId,
+      title: newItemTitle.value.trim(),
+      quantity: newItemQuantity.value || 1,
+      category: newItemCategory.value.trim() || 'Uncategorized',
+    });
+  }
+
+  resetForm();
+};
+
+const handleUpdateList = async () => {
+  if (!editListTitle.value.trim()) return;
+  await shoppingStore.updateList(props.listId, {
+    title: editListTitle.value.trim(),
+    description: editListDescription.value.trim() || null,
+  });
+  showEditListModal.value = false;
 };
 </script>

@@ -4,7 +4,6 @@
  */
 
 // ─── Enums ───────────────────────────────────────────────
-export type FamilyMemberRole = 'owner' | 'member';
 export type MemberRole = 'owner' | 'admin' | 'member' | 'child' | 'viewer';
 export type ShoppingListStatus = 'active' | 'archived';
 export type ItemPriority = 'low' | 'medium' | 'high';
@@ -21,30 +20,6 @@ export interface UserProfile {
 
 export type CreateUserProfileDto = Omit<UserProfile, 'created_at'>;
 export type UpdateUserProfileDto = Partial<Pick<UserProfile, 'display_name' | 'avatar_url'>>;
-
-// ─── Family ──────────────────────────────────────────────
-export interface Family {
-  id: string;
-  name: string;
-  created_by: string;
-  created_at: string;
-}
-
-export type CreateFamilyDto = Pick<Family, 'name'>;
-export type UpdateFamilyDto = Partial<Pick<Family, 'name'>>;
-
-// ─── Family Member ───────────────────────────────────────
-export interface FamilyMember {
-  id: string;
-  family_id: string;
-  user_id: string;
-  role: FamilyMemberRole;
-  joined_at: string;
-  display_name?: string;
-  email?: string;
-}
-
-export type CreateFamilyMemberDto = Pick<FamilyMember, 'family_id' | 'user_id' | 'role'>;
 
 // ─── Household (New Multi-Tenant Entity) ────────────────
 export interface Household {
@@ -137,8 +112,7 @@ export type CreateActivityLogDto = Pick<
 // ─── Shopping List ───────────────────────────────────────
 export interface ShoppingList {
   id: string;
-  family_id: string; // Legacy - kept for backward compatibility
-  household_id?: string; // New multi-tenant field
+  household_id: string;
   title: string;
   description: string | null;
   created_by: string; // Legacy - user_id
@@ -148,10 +122,7 @@ export interface ShoppingList {
   status: ShoppingListStatus;
 }
 
-export type CreateShoppingListDto = Pick<ShoppingList, 'title' | 'description'> & {
-  family_id?: string; // Legacy
-  household_id?: string; // New
-};
+export type CreateShoppingListDto = Pick<ShoppingList, 'title' | 'description' | 'household_id'>;
 export type UpdateShoppingListDto = Partial<Pick<ShoppingList, 'title' | 'description' | 'status'>>;
 
 // ─── Shopping Item ───────────────────────────────────────

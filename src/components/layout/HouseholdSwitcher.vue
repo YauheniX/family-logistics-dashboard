@@ -69,8 +69,8 @@
       <!-- Divider -->
       <div class="border-t border-neutral-200 dark:border-neutral-700"></div>
 
-      <!-- Create New Household -->
-      <div class="py-2">
+      <!-- Create New Household (only if user is not owner in any household) -->
+      <div v-if="!isOwnerInAnyHousehold" class="py-2">
         <button
           class="flex items-center gap-3 px-4 py-2 w-full text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700"
           role="menuitem"
@@ -81,6 +81,13 @@
             Create New Household
           </span>
         </button>
+      </div>
+
+      <!-- No Household Selected Message -->
+      <div v-if="!currentHousehold && isOwnerInAnyHousehold" class="py-2 px-4">
+        <p class="text-xs text-neutral-500 dark:text-neutral-400 text-center">
+          Select a household above
+        </p>
       </div>
     </div>
 
@@ -119,6 +126,11 @@ const dropdownRef = ref<HTMLElement | null>(null);
 
 const currentHousehold = computed(() => householdStore.currentHousehold);
 const households = computed(() => householdStore.households);
+
+// Check if user is owner in any household
+const isOwnerInAnyHousehold = computed(() => {
+  return households.value.some((h) => h.role === 'owner');
+});
 
 function toggleDropdown() {
   isOpen.value = !isOpen.value;
