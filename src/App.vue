@@ -113,9 +113,11 @@ initTheme();
 
 // Initialize household store (mock mode for now)
 onMounted(() => {
-  if (authStore.user?.id) {
-    householdStore.ensureDefaultHouseholdForUser(authStore.user.id, authStore.user.email).finally(() => {
-      householdStore.initializeForUser(authStore.user!.id);
+  const userId = authStore.user?.id;
+  const email = authStore.user?.email;
+  if (userId) {
+    householdStore.ensureDefaultHouseholdForUser(userId, email).finally(() => {
+      householdStore.initializeForUser(userId);
     });
   }
 });
@@ -125,7 +127,8 @@ watch(
   () => authStore.user?.id,
   (userId, prevUserId) => {
     if (userId && !prevUserId) {
-      householdStore.ensureDefaultHouseholdForUser(userId, authStore.user?.email).finally(() => {
+      const email = authStore.user?.email;
+      householdStore.ensureDefaultHouseholdForUser(userId, email).finally(() => {
         householdStore.initializeForUser(userId);
       });
     } else if (!userId && prevUserId) {

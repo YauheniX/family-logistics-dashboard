@@ -30,7 +30,7 @@ export class HouseholdRepository extends BaseRepository<Household, CreateHouseho
       return ownResponse;
     }
 
-    // Fetch households user is a member of via household_members
+    // Fetch households user is a member of via members
     const membershipsResponse = await this.execute<{ household_id: string }[]>(async () => {
       return await supabase.from('members').select('household_id').eq('user_id', userId);
     });
@@ -58,6 +58,40 @@ export class HouseholdRepository extends BaseRepository<Household, CreateHouseho
       data: [...(ownResponse.data ?? []), ...memberHouseholds],
       error: null,
     };
+  }
+
+  /**
+   * Atomically create a household with an owner member in a single transaction
+   * This prevents orphaned household records if the member creation fails
+   */
+  async createWithOwner(
+    name: string,
+    userId: string,
+    displayName?: string,
+  ): Promise<ApiResponse<Household>> {
+    const rpcResponse = await this.execute<{
+      household_id: string;
+      member_id: string;
+      household_name: string;
+      slug: string;
+    }>(async () => {
+      return await supabase.rpc('create_household_with_owner', {
+        p_name: name,
+        p_creator_user_id: userId,
+        p_creator_display_name: displayName || null,
+      });
+    });
+
+    if (rpcResponse.error || !rpcResponse.data) {
+      return {
+        data: null,
+        error:
+          rpcResponse.error || { message: 'Failed to create household: RPC returned no data' },
+      };
+    }
+
+    // Fetch the created household to return complete data
+    return await this.findById(rpcResponse.data.household_id);
   }
 }
 
@@ -163,6 +197,9 @@ export class MemberRepository extends BaseRepository<
       household_id: householdId,
       user_id: userId,
       role: 'member',
+      display_name: email.split('@')[0], // Default to email prefix
+      date_of_birth: null,
+      avatar_url: null,
     };
 
     const memberResponse = await this.create(memberDto);

@@ -83,7 +83,7 @@ describe('Household Store', () => {
 
   // ─── createHousehold ─────────────────────────────────────────
 
-  it('creates a family successfully', async () => {
+  it('creates a household successfully', async () => {
     const { householdService } = await import('@/features/household/domain/household.service');
     vi.mocked(householdService.createHousehold).mockResolvedValue({
       data: mockHousehold,
@@ -114,7 +114,7 @@ describe('Household Store', () => {
 
   // ─── loadHousehold ────────────────────────────────────────────
 
-  it('loads a single family successfully', async () => {
+  it('loads a single household successfully', async () => {
     const { householdService } = await import('@/features/household/domain/household.service');
     vi.mocked(householdService.getHousehold).mockResolvedValue({
       data: mockHousehold,
@@ -151,7 +151,7 @@ describe('Household Store', () => {
 
   // ─── updateHousehold ────────────────────────────────────────
 
-  it('updates a family successfully', async () => {
+  it('updates a household successfully', async () => {
     const { householdService } = await import('@/features/household/domain/household.service');
     const updated = { ...mockHousehold, name: 'Updated Family' };
     vi.mocked(householdService.updateHousehold).mockResolvedValue({
@@ -186,7 +186,7 @@ describe('Household Store', () => {
 
   // ─── removeHousehold ────────────────────────────────────────
 
-  it('removes a family successfully', async () => {
+  it('removes a household successfully', async () => {
     const { householdService } = await import('@/features/household/domain/household.service');
     vi.mocked(householdService.deleteHousehold).mockResolvedValue({
       data: undefined,
@@ -217,7 +217,7 @@ describe('Household Store', () => {
 
   // ─── loadMembers ──────────────────────────────────────────
 
-  it('loads family members successfully', async () => {
+  it('loads household members successfully', async () => {
     const { householdService } = await import('@/features/household/domain/household.service');
     vi.mocked(householdService.getMembers).mockResolvedValue({
       data: [mockMember],

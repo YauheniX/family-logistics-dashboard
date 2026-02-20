@@ -28,34 +28,11 @@ export class HouseholdService {
 
   /**
    * Create a new household and auto-add the user as owner
+   * Uses atomic database transaction to prevent orphaned household records
    */
   async createHousehold(name: string, userId: string): Promise<ApiResponse<Household>> {
-    const dto: CreateHouseholdDto = { name };
-
-    const householdResponse = await householdRepository.create({
-      ...dto,
-      created_by: userId,
-    } as CreateHouseholdDto & { created_by: string });
-
-    if (householdResponse.error || !householdResponse.data) {
-      return householdResponse;
-    }
-
-    // Auto-add creator as owner
-    const memberDto: CreateMemberDto = {
-      household_id: householdResponse.data.id,
-      user_id: userId,
-      role: 'owner',
-    };
-
-    const memberResponse = await memberRepository.create(memberDto);
-    if (memberResponse.error) {
-      // Rollback: delete the household if adding owner membership fails
-      await householdRepository.delete(householdResponse.data.id);
-      return { data: null, error: memberResponse.error };
-    }
-
-    return householdResponse;
+    // Use atomic RPC to create household and owner member in a single transaction
+    return await householdRepository.createWithOwner(name, userId);
   }
 
   /**

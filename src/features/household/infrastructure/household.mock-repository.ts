@@ -13,8 +13,11 @@ import type {
 import type { ApiResponse } from '../../shared/domain/repository.interface';
 
 export class MockHouseholdRepository extends MockRepository<Household, CreateHouseholdDto, UpdateHouseholdDto> {
-  constructor() {
+  private memberRepository: MockMemberRepository;
+
+  constructor(memberRepository?: MockMemberRepository) {
     super('mock_households');
+    this.memberRepository = memberRepository || new MockMemberRepository();
   }
 
   /**
@@ -49,6 +52,56 @@ export class MockHouseholdRepository extends MockRepository<Household, CreateHou
         data: null,
         error: {
           message: error instanceof Error ? error.message : 'Failed to fetch households',
+        },
+      };
+    }
+  }
+
+  /**
+   * Atomically create a household with an owner member (mock version)
+   * Simulates the database RPC behavior for consistency
+   */
+  async createWithOwner(
+    name: string,
+    userId: string,
+    displayName?: string,
+  ): Promise<ApiResponse<Household>> {
+    try {
+      // Create household
+      const householdDto: CreateHouseholdDto = { name };
+      const householdResult = await this.create({
+        ...householdDto,
+        created_by: userId,
+      } as CreateHouseholdDto & { created_by: string });
+
+      if (householdResult.error || !householdResult.data) {
+        return householdResult;
+      }
+
+      // Create owner member using injected repository
+      const memberDto: CreateMemberDto = {
+        household_id: householdResult.data.id,
+        user_id: userId,
+        role: 'owner',
+        display_name: displayName || 'Owner',
+        date_of_birth: null,
+        avatar_url: null,
+      };
+
+      const memberResult = await this.memberRepository.create(memberDto);
+
+      if (memberResult.error) {
+        // Rollback: delete the household
+        await this.delete(householdResult.data.id);
+        return { data: null, error: memberResult.error };
+      }
+
+      return householdResult;
+    } catch (error) {
+      return {
+        data: null,
+        error: {
+          message: error instanceof Error ? error.message : 'Failed to create household',
         },
       };
     }
@@ -106,6 +159,9 @@ export class MockMemberRepository extends MockRepository<
         household_id: householdId,
         user_id: mockUserId,
         role: 'member',
+        display_name: email.split('@')[0], // Use email prefix as display name
+        date_of_birth: null,
+        avatar_url: null,
       };
 
       const result = await this.create(newMember);

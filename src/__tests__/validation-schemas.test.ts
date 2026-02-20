@@ -11,17 +11,17 @@ describe('Validation Schemas', () => {
   // ─── HouseholdFormSchema ─────────────────────────────────────
 
   describe('HouseholdFormSchema', () => {
-    it('accepts valid family name', () => {
+    it('accepts valid household name', () => {
       const result = HouseholdFormSchema.safeParse({ name: 'Smith Household' });
       expect(result.success).toBe(true);
     });
 
-    it('rejects empty family name', () => {
+    it('rejects empty household name', () => {
       const result = HouseholdFormSchema.safeParse({ name: '' });
       expect(result.success).toBe(false);
     });
 
-    it('rejects family name exceeding max length', () => {
+    it('rejects household name exceeding max length', () => {
       const result = HouseholdFormSchema.safeParse({ name: 'a'.repeat(201) });
       expect(result.success).toBe(false);
     });

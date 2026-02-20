@@ -37,7 +37,9 @@ alter table if exists public.households enable row level security;
 alter table if exists public.members enable row level security;
 
 create or replace function public.user_is_household_member(p_household_id uuid, p_user_id uuid)
-returns boolean language sql stable security definer as $$
+returns boolean language sql stable security definer
+set search_path = public
+as $$
   select exists (
     select 1
     from public.members m
@@ -48,7 +50,9 @@ returns boolean language sql stable security definer as $$
 $$;
 
 create or replace function public.user_is_household_owner(p_household_id uuid, p_user_id uuid)
-returns boolean language sql stable security definer as $$
+returns boolean language sql stable security definer
+set search_path = public
+as $$
   select exists (
     select 1
     from public.members m
@@ -61,7 +65,10 @@ $$;
 
 drop policy if exists households_select on public.households;
 create policy households_select on public.households for select
-using (public.user_is_household_member(id, auth.uid()));
+using (
+  public.user_is_household_member(id, auth.uid())
+  or created_by = auth.uid()
+);
 
 drop policy if exists households_insert on public.households;
 create policy households_insert on public.households for insert
@@ -79,18 +86,28 @@ drop policy if exists members_select on public.members;
 create policy members_select on public.members for select
 using (public.user_is_household_member(household_id, auth.uid()));
 
-drop policy if exists members_insert on public.members;
 create policy members_insert on public.members for insert
 with check (
   public.user_is_household_owner(household_id, auth.uid())
-  or user_id = auth.uid()
+  or exists (
+    select 1 from public.households
+    where id = household_id and created_by = auth.uid()
+  )
 );
 
 drop policy if exists members_delete on public.members;
 create policy members_delete on public.members for delete
 using (
-  public.user_is_household_owner(household_id, auth.uid())
-  or user_id = auth.uid()
+  (
+    select
+      -- Owner can delete other members (but not themselves to prevent orphaned households)
+      (is_owner and user_id != auth.uid())
+      -- Non-owner members can delete themselves
+      or (user_id = auth.uid() and not is_owner)
+    from (
+      select public.user_is_household_owner(household_id, auth.uid()) as is_owner
+    ) owner_status
+  )
 );
 
 commit;
