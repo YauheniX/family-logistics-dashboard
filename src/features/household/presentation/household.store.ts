@@ -79,7 +79,9 @@ export const useHouseholdEntityStore = defineStore('household-entity', () => {
         return null;
       }
       if (response.data) {
-        households.value = households.value.map((household) => (household.id === id ? response.data! : household));
+        households.value = households.value.map((household) =>
+          household.id === id ? response.data! : household,
+        );
         currentHousehold.value = response.data;
         useToastStore().success('Household updated successfully!');
       }

@@ -17,7 +17,9 @@
         <span class="text-2xl" aria-hidden="true">🏡</span>
         <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-50">HouseholdBoard</h2>
       </div>
-      <p class="text-xs text-neutral-500 dark:text-neutral-400 ml-8">Keeping households connected</p>
+      <p class="text-xs text-neutral-500 dark:text-neutral-400 ml-8">
+        Keeping households connected
+      </p>
     </div>
 
     <!-- Current Household Display -->
@@ -65,7 +67,9 @@
         <span class="text-2xl" aria-hidden="true">🏡</span>
         <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-50">HouseholdBoard</h2>
       </div>
-      <p class="text-xs text-neutral-500 dark:text-neutral-400 ml-8">Keeping households connected</p>
+      <p class="text-xs text-neutral-500 dark:text-neutral-400 ml-8">
+        Keeping households connected
+      </p>
     </div>
 
     <!-- Current Household Display -->

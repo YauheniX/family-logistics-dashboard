@@ -4,7 +4,9 @@
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p class="text-sm text-neutral-500 dark:text-neutral-400">Households</p>
-          <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">My Households</h2>
+          <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+            My Households
+          </h2>
           <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
             Manage your household groups and their shopping lists.
           </p>
@@ -80,7 +82,10 @@ const newHouseholdName = ref('');
 
 const handleCreate = async () => {
   if (!authStore.user?.id || !newHouseholdName.value.trim()) return;
-  const created = await householdEntityStore.createHousehold(newHouseholdName.value.trim(), authStore.user.id);
+  const created = await householdEntityStore.createHousehold(
+    newHouseholdName.value.trim(),
+    authStore.user.id,
+  );
   if (created) {
     newHouseholdName.value = '';
     showCreateModal.value = false;

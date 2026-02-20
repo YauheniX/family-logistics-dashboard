@@ -86,6 +86,7 @@ drop policy if exists members_select on public.members;
 create policy members_select on public.members for select
 using (public.user_is_household_member(household_id, auth.uid()));
 
+drop policy if exists members_insert on public.members;
 create policy members_insert on public.members for insert
 with check (
   public.user_is_household_owner(household_id, auth.uid())

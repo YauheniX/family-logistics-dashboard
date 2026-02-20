@@ -6,7 +6,9 @@
         <div>
           <p class="text-sm text-neutral-500 dark:text-neutral-400">
             {{
-              householdStore.currentHousehold?.name || householdEntityStore.currentHousehold?.name || 'Household'
+              householdStore.currentHousehold?.name ||
+              householdEntityStore.currentHousehold?.name ||
+              'Household'
             }}
           </p>
           <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">

@@ -163,7 +163,11 @@
           >? This action cannot be undone.
         </p>
         <div class="flex gap-3">
-          <BaseButton variant="danger" :disabled="householdEntityStore.loading" @click="confirmDelete">
+          <BaseButton
+            variant="danger"
+            :disabled="householdEntityStore.loading"
+            @click="confirmDelete"
+          >
             Delete
           </BaseButton>
           <BaseButton variant="ghost" @click="showDeleteModal = false">Cancel</BaseButton>
@@ -207,7 +211,9 @@ const isOwner = computed(() => {
   if (!userId || !household) return false;
   if (household.created_by === userId) return true;
 
-  return householdEntityStore.members.some((member) => member.user_id === userId && member.role === 'owner');
+  return householdEntityStore.members.some(
+    (member) => member.user_id === userId && member.role === 'owner',
+  );
 });
 
 const getInitials = (name: string): string => {
@@ -271,7 +277,9 @@ const handleCreateList = async () => {
 const confirmDelete = async () => {
   if (!householdEntityStore.currentHousehold) return;
 
-  const deleted = await householdEntityStore.removeHousehold(householdEntityStore.currentHousehold.id);
+  const deleted = await householdEntityStore.removeHousehold(
+    householdEntityStore.currentHousehold.id,
+  );
   if (deleted) {
     showDeleteModal.value = false;
     router.push('/households');

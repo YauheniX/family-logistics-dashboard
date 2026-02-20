@@ -63,7 +63,9 @@
               <span class="text-xs text-neutral-500 dark:text-neutral-400">View →</span>
             </RouterLink>
           </div>
-          <p v-else class="mt-3 text-sm text-neutral-500 dark:text-neutral-400">No households yet.</p>
+          <p v-else class="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
+            No households yet.
+          </p>
         </div>
       </BaseCard>
 
@@ -132,7 +134,11 @@
     </template>
 
     <EmptyState
-      v-if="!householdEntityStore.loading && !householdEntityStore.households.length && !wishlistStore.wishlists.length"
+      v-if="
+        !householdEntityStore.loading &&
+        !householdEntityStore.households.length &&
+        !wishlistStore.wishlists.length
+      "
       title="Welcome!"
       description="Get started by creating a household or a wishlist."
       cta="Create a Household"
@@ -171,7 +177,10 @@ const itemsToBuyCount = computed(() => shoppingStore.unpurchasedItems.length);
 const reservedItemsCount = computed(() => wishlistStore.reservedItems.length);
 
 async function loadDashboardData(userId: string) {
-  await Promise.all([householdEntityStore.loadHouseholds(userId), wishlistStore.loadWishlists(userId)]);
+  await Promise.all([
+    householdEntityStore.loadHouseholds(userId),
+    wishlistStore.loadWishlists(userId),
+  ]);
 
   // Load shopping lists sequentially to avoid excessive concurrent requests
   // when the user belongs to many households

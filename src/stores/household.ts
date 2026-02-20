@@ -157,7 +157,6 @@ export const useHouseholdStore = defineStore('household', () => {
     loadHouseholds(mockHouseholds);
   }
 
-
   const ensuringForUserIds = new Set<string>();
 
   async function ensureDefaultHouseholdForUser(userId: string, userEmail?: string | null) {
@@ -187,7 +186,10 @@ export const useHouseholdStore = defineStore('household', () => {
       }
 
       if ((existingMemberships ?? []).length > 0) {
-        console.log('[household] Existing household membership found, skipping creation', existingMemberships);
+        console.log(
+          '[household] Existing household membership found, skipping creation',
+          existingMemberships,
+        );
         return null;
       }
 

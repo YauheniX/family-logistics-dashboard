@@ -12,7 +12,11 @@ import type {
 } from '../../shared/domain/entities';
 import type { ApiResponse } from '../../shared/domain/repository.interface';
 
-export class MockHouseholdRepository extends MockRepository<Household, CreateHouseholdDto, UpdateHouseholdDto> {
+export class MockHouseholdRepository extends MockRepository<
+  Household,
+  CreateHouseholdDto,
+  UpdateHouseholdDto
+> {
   private memberRepository: MockMemberRepository;
 
   constructor(memberRepository?: MockMemberRepository) {
@@ -108,11 +112,7 @@ export class MockHouseholdRepository extends MockRepository<Household, CreateHou
   }
 }
 
-export class MockMemberRepository extends MockRepository<
-  Member,
-  CreateMemberDto,
-  Partial<Member>
-> {
+export class MockMemberRepository extends MockRepository<Member, CreateMemberDto, Partial<Member>> {
   constructor() {
     super('mock_household_members');
   }

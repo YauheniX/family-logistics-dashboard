@@ -12,7 +12,11 @@ import type { ApiResponse } from '../../shared/domain/repository.interface';
 /**
  * Household repository - handles household data operations via Supabase
  */
-export class HouseholdRepository extends BaseRepository<Household, CreateHouseholdDto, UpdateHouseholdDto> {
+export class HouseholdRepository extends BaseRepository<
+  Household,
+  CreateHouseholdDto,
+  UpdateHouseholdDto
+> {
   constructor() {
     super(supabase, 'households');
   }
@@ -32,7 +36,8 @@ export class HouseholdRepository extends BaseRepository<Household, CreateHouseho
 
     // Fetch households user is a member of via members
     const membershipsResponse = await this.execute<{ household_id: string }[]>(async () => {
-      return await supabase.from('members').select('household_id').eq('user_id', userId);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return await (supabase.from('members') as any).select('household_id').eq('user_id', userId);
     });
 
     if (membershipsResponse.error) {
@@ -75,9 +80,9 @@ export class HouseholdRepository extends BaseRepository<Household, CreateHouseho
       household_name: string;
       slug: string;
     }>(async () => {
-      return await supabase.rpc('create_household_with_owner', {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return await (supabase.rpc as any)('create_household_with_owner', {
         p_name: name,
-        p_creator_user_id: userId,
         p_creator_display_name: displayName || null,
       });
     });
@@ -85,8 +90,7 @@ export class HouseholdRepository extends BaseRepository<Household, CreateHouseho
     if (rpcResponse.error || !rpcResponse.data) {
       return {
         data: null,
-        error:
-          rpcResponse.error || { message: 'Failed to create household: RPC returned no data' },
+        error: rpcResponse.error || { message: 'Failed to create household: RPC returned no data' },
       };
     }
 
@@ -98,11 +102,7 @@ export class HouseholdRepository extends BaseRepository<Household, CreateHouseho
 /**
  * Household member repository - handles household member data operations via Supabase
  */
-export class MemberRepository extends BaseRepository<
-  Member,
-  CreateMemberDto,
-  Partial<Member>
-> {
+export class MemberRepository extends BaseRepository<Member, CreateMemberDto, Partial<Member>> {
   constructor() {
     super(supabase, 'members');
   }
@@ -122,9 +122,13 @@ export class MemberRepository extends BaseRepository<
     // Populate emails using the database function
     const membersWithEmails = await Promise.all(
       membersResponse.data.map(async (member) => {
+        if (!member.user_id) {
+          return { ...member, email: undefined };
+        }
+
         const emailResponse = await this.execute<string>(async () => {
           return await supabase.rpc('get_email_by_user_id', {
-            lookup_user_id: member.user_id,
+            lookup_user_id: member.user_id!,
           });
         });
 

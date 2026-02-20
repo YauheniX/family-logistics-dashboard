@@ -41,6 +41,10 @@ alter table if exists public.households
 alter table if exists public.members rename to family_members;
 alter table if exists public.households rename to families;
 
+-- Rename column back
+alter table if exists public.family_members
+  rename column household_id to family_id;
+
 -- Update foreign keys after table rename
 alter table if exists public.family_members
   drop constraint if exists family_members_family_id_fkey,

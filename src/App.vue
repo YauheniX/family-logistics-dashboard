@@ -114,7 +114,7 @@ initTheme();
 // Initialize household store (mock mode for now)
 onMounted(() => {
   const userId = authStore.user?.id;
-  const email = authStore.user?.email;
+  const email = authStore.user?.email ?? null;
   if (userId) {
     householdStore.ensureDefaultHouseholdForUser(userId, email).finally(() => {
       householdStore.initializeForUser(userId);
@@ -127,7 +127,7 @@ watch(
   () => authStore.user?.id,
   (userId, prevUserId) => {
     if (userId && !prevUserId) {
-      const email = authStore.user?.email;
+      const email = authStore.user?.email ?? null;
       householdStore.ensureDefaultHouseholdForUser(userId, email).finally(() => {
         householdStore.initializeForUser(userId);
       });

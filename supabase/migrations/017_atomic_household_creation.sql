@@ -10,7 +10,6 @@
 
 create or replace function create_household_with_owner(
   p_name text,
-  p_creator_user_id uuid,
   p_creator_display_name text default null
 )
 returns jsonb
@@ -23,7 +22,16 @@ declare
   v_member_id uuid;
   v_slug text;
   v_display_name text;
+  v_creator_user_id uuid;
 begin
+  -- Get authenticated user ID
+  v_creator_user_id := auth.uid();
+  
+  if v_creator_user_id is null then
+    raise exception 'Authentication required'
+      using errcode = 'P0001';
+  end if;
+
   -- Validate inputs
   if p_name is null or char_length(trim(p_name)) < 1 then
     raise exception 'Household name is required'
@@ -35,39 +43,35 @@ begin
       using errcode = 'P0001';
   end if;
 
-  if p_creator_user_id is null then
-    raise exception 'Creator user ID is required'
-      using errcode = 'P0001';
-  end if;
-
-  -- Verify the creator user exists
-  if not exists(select 1 from auth.users where id = p_creator_user_id) then
-    raise exception 'Creator user does not exist'
-      using errcode = 'P0001';
-  end if;
-
   -- Generate a unique slug
   v_slug := generate_household_slug(p_name);
 
   -- Get display name for the owner member
-  -- Use provided name, or fall back to user profile, or email prefix
+  -- Use provided name, or fall back to user profile, or email prefix, or generate from user ID
   if p_creator_display_name is not null and char_length(trim(p_creator_display_name)) > 0 then
     v_display_name := trim(p_creator_display_name);
   else
     -- Try to get from user_profiles
     select display_name into v_display_name
     from user_profiles
-    where id = p_creator_user_id;
+    where id = v_creator_user_id;
     
-    -- If still null, use email prefix
-    if v_display_name is null then
+    -- Check if still null or empty
+    if v_display_name is null or char_length(trim(v_display_name)) = 0 then
+      -- Try email prefix
       select split_part(email, '@', 1) into v_display_name
       from auth.users
-      where id = p_creator_user_id;
+      where id = v_creator_user_id;
+      
+      -- Final fallback: generate from user ID
+      if v_display_name is null or char_length(trim(v_display_name)) = 0 then
+        v_display_name := 'user_' || substring(v_creator_user_id::text from 1 for 8);
+      end if;
     end if;
   end if;
 
-  -- Start atomic transaction
+  -- Insert household and owner member within function scope
+  -- Atomicity provided by being within a single PL/pgSQL function body
   -- Insert household
   insert into households (
     name,
@@ -77,7 +81,7 @@ begin
   ) values (
     trim(p_name),
     v_slug,
-    p_creator_user_id,
+    v_creator_user_id,
     true
   )
   returning id into v_household_id;
@@ -91,7 +95,7 @@ begin
     is_active
   ) values (
     v_household_id,
-    p_creator_user_id,
+    v_creator_user_id,
     'owner',
     v_display_name,
     true
@@ -124,10 +128,14 @@ begin
 end;
 $$;
 
-comment on function create_household_with_owner(text, uuid, text) is
+comment on function create_household_with_owner(text, text) is
   'Atomically create a household and add the creator as owner in a single transaction. Prevents orphaned household records.';
 
 -- ─── Grant Permissions ────────────────────────────────────────
 
+-- Revoke from public and anon for security
+revoke execute on function create_household_with_owner(text, text) from public;
+revoke execute on function create_household_with_owner(text, text) from anon;
+
 -- Allow authenticated users to call this function
-grant execute on function create_household_with_owner(text, uuid, text) to authenticated;
+grant execute on function create_household_with_owner(text, text) to authenticated;

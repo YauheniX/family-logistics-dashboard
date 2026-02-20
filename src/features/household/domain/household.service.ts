@@ -1,11 +1,5 @@
 import { householdRepository, memberRepository } from '../infrastructure/household.factory';
-import type {
-  Household,
-  CreateHouseholdDto,
-  UpdateHouseholdDto,
-  Member,
-  CreateMemberDto,
-} from '../../shared/domain/entities';
+import type { Household, UpdateHouseholdDto, Member } from '../../shared/domain/entities';
 import type { ApiResponse } from '../../shared/domain/repository.interface';
 
 /**
