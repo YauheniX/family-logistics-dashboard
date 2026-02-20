@@ -1,6 +1,7 @@
 {
-  "terminal.integrated.env.windows": {
-    "PATH": "${env:ProgramFiles}\\Docker\\Docker\\resources\\bin;${env:PATH}"
-  },
-  "docker.dockerPath": "${env:ProgramFiles}\\Docker\\Docker\\resources\\bin\\docker.exe"
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "GitHub.copilot-chat",
+  "[vue]": {
+    "editor.defaultFormatter": "GitHub.copilot-chat"
+  }
 }
