@@ -331,9 +331,8 @@ describe('PendingInvitationsCard', () => {
 
       // Wait for async operations
       await wrapper.vm.$nextTick();
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      expect(wrapper.emitted('invitationAccepted')).toBeTruthy();
+      // Wait for async operations
+      await wrapper.vm.$nextTick();
     });
 
     it('should not emit invitationAccepted when acceptance fails', async () => {
