@@ -474,7 +474,9 @@ export type ReserveWishlistItemDto = Pick<
 
 ### Invitation
 
-Email-based invitation system.
+**In-app invitation system** (no email server required).
+
+Invitations are displayed on the dashboard when users log in with the invited email address. Users can accept or decline directly in the app.
 
 ```typescript
 export interface Invitation {

@@ -632,7 +632,21 @@ Located in `supabase/migrations/`:
 - `001-009_*.sql` - Bug fixes and enhancements
 - `010_create_households_schema.sql` - New multi-tenant tables
 - `011_migrate_families_to_households.sql` - Data migration
-- `012-018_*.sql` - Schema updates for new architecture
+- `012-021_*.sql` - Schema updates for new architecture
+- `022_invitation_acceptance_workflow.sql` - In-app invitation acceptance (no email)
+
+### Recent Additions (Migration 022)
+
+**4 New RPC Functions for Invitation Management:**
+
+| Function                       | Purpose                              | Security                                             |
+| ------------------------------ | ------------------------------------ | ---------------------------------------------------- |
+| `get_my_pending_invitations()` | Fetch invitations for logged-in user | Validates auth.users.email matches invitation.email  |
+| `accept_invitation(uuid)`      | Accept invitation, create member     | Email validation, expiry check, duplicate prevention |
+| `decline_invitation(uuid)`     | Decline invitation                   | Email validation                                     |
+| `expire_old_invitations()`     | Batch cleanup (cron/admin)           | Marks expired invitations                            |
+
+**See**: [Invitation Acceptance Feature Docs](../features/invitation-acceptance.md)
 
 ---
 
