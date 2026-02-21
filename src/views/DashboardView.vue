@@ -11,6 +11,9 @@
       </div>
     </BaseCard>
 
+    <!-- Pending Invitations -->
+    <PendingInvitationsCard @invitation-accepted="handleInvitationAccepted" />
+
     <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
       <BaseCard>
         <div class="p-5">
@@ -154,6 +157,7 @@ import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
+import PendingInvitationsCard from '@/components/invitations/PendingInvitationsCard.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useHouseholdEntityStore } from '@/features/household/presentation/household.store';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
@@ -186,6 +190,13 @@ async function loadDashboardData(userId: string) {
   // when the user belongs to many households
   for (const household of householdEntityStore.households) {
     await shoppingStore.loadLists(household.id);
+  }
+}
+
+function handleInvitationAccepted() {
+  // Reload households when user accepts an invitation
+  if (authStore.user?.id) {
+    householdEntityStore.loadHouseholds(authStore.user.id);
   }
 }
 

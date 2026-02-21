@@ -112,9 +112,14 @@ The system implements a hierarchical role-based access control (RBAC) system wit
 
 **Notes:**
 
+- **In-app invitation system** - No email server required (Migration 022)
+- Users see pending invitations on dashboard when logged in with invited email
 - Invitations expire after 7 days by default
 - Invitation acceptance creates member record with specified role
 - Only one pending invitation per email per household
+- Admin must manually share invitation details with invitee (email/SMS/chat)
+
+**See**: [Invitation Acceptance Feature](../features/invitation-acceptance.md)
 
 ---
 
