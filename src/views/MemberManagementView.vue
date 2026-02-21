@@ -141,7 +141,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';
@@ -154,14 +154,11 @@ import { useMembers } from '@/composables/useMembers';
 import type { Member } from '@/features/shared/domain/entities';
 
 const route = useRoute();
-const router = useRouter();
 const householdEntityStore = useHouseholdEntityStore();
 const householdStore = useHouseholdStore();
 const {
-  members: householdMembers,
   loading: membersLoading,
   isOwnerOrAdmin,
-  fetchMembers,
   createChild,
   inviteMember: sendInvitation,
   removeMember: deleteHouseholdMember,

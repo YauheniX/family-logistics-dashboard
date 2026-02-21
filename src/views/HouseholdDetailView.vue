@@ -234,18 +234,6 @@ const isOwner = computed(() => {
   );
 });
 
-const isOwnerOrAdmin = computed(() => {
-  const userId = authStore.user?.id;
-  const household = householdEntityStore.currentHousehold;
-
-  if (!userId || !household) return false;
-  if (household.created_by === userId) return true;
-
-  return householdEntityStore.members.some(
-    (member) => member.user_id === userId && (member.role === 'owner' || member.role === 'admin'),
-  );
-});
-
 const getInitials = (name: string): string => {
   const parts = name.trim().split(/[\s@]+/);
   if (parts.length >= 2) {
