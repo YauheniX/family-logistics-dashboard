@@ -26,9 +26,9 @@ declare
   v_user_email text;
 begin
   -- Get current user's email
-  select email into v_user_email
-  from auth.users
-  where id = auth.uid();
+  select au.email into v_user_email
+  from auth.users au
+  where au.id = auth.uid();
 
   if v_user_email is null then
     raise exception 'User not found'
@@ -73,9 +73,9 @@ declare
   v_member_id uuid;
 begin
   -- Get current user's email
-  select email into v_user_email
-  from auth.users
-  where id = auth.uid();
+  select au.email into v_user_email
+  from auth.users au
+  where au.id = auth.uid();
 
   if v_user_email is null then
     raise exception 'User not found'
@@ -176,9 +176,9 @@ declare
   v_user_email text;
 begin
   -- Get current user's email
-  select email into v_user_email
-  from auth.users
-  where id = auth.uid();
+  select au.email into v_user_email
+  from auth.users au
+  where au.id = auth.uid();
 
   if v_user_email is null then
     raise exception 'User not found'
