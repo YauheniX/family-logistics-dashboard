@@ -8,6 +8,21 @@
 
 ---
 
+## 📚 Documentation
+
+**Complete documentation available in [`/docs`](docs/README.md)**
+
+**Quick Links**:
+
+- [⚡ Quickstart (5 min)](docs/getting-started/quickstart.md) - Get running in 5 minutes
+- [🏗️ Architecture](docs/architecture/overview.md) - System design and patterns
+- [🗄️ Database Schema](docs/backend/database-schema.md) - Complete database structure
+- [🎯 Domain Model](docs/domain/overview.md) - Core entities and relationships
+
+⚠️ **Note**: The `/wiki` folder contains **outdated documentation**. Use `/docs` instead.
+
+---
+
 ## 🎯 What Is This?
 
 A **Family Planner** system with:
@@ -46,7 +61,24 @@ A **Family Planner** system with:
 
 ---
 
-## 🤝 Contributing
+## � For AI Agents & Contributors
+
+**Working with AI coding assistants (GitHub Copilot, Cursor, Cline)?**
+
+👉 **Start here**: [**AGENTS.md**](AGENTS.md)
+
+All AI agent instructions are maintained in a **single source of truth** (see AGENTS.md for details).
+
+**Key Rules**:
+
+- ✅ Use `households` (not `families`)
+- ✅ Follow repository pattern
+- ✅ Maintain 70%+ test coverage
+- ✅ Update `/docs/` when changing architecture
+
+---
+
+## �🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/my-feature`
