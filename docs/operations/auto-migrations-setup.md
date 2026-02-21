@@ -126,20 +126,33 @@ You should see new migrations (e.g., `019_security_hardening`).
 
 ### Test the Workflow
 
+#### Method 1: Manual Trigger (workflow_dispatch)
+
 ```bash
-# Method 1: Touch a migration file to trigger workflow
+# Trigger the workflow manually without changes
+# Go to: GitHub → Actions → "Auto-Apply Supabase Migrations"
+# Click: "Run workflow" button → select branch → Run
+```
+
+#### Method 2: Create PR with Migration Changes (Recommended)
+
+```bash
+# Create feature branch
+git checkout -b test/migration-workflow
+
+# Touch or edit a migration file
 touch supabase/migrations/019_security_hardening.sql
 git add supabase/migrations/
 git commit -m "test: trigger migration workflow"
-git push origin main
+git push origin test/migration-workflow
 
-# Method 2: Make actual migration change (recommended)
-# Edit or create a migration file, then commit and push
+# Open PR on GitHub
+# Merge PR to main → workflow runs automatically
 
-# Check: GitHub → Actions → should show migration workflow running
+# Check: GitHub → Actions → should show "Auto-Apply Supabase Migrations" running
 ```
 
-**Note:** Empty commits won't trigger the workflow due to the `paths` filter.
+**Note:** Direct pushes to main will also trigger the workflow, but the recommended flow is to use PRs for better code review.
 
 ### Apply Migration 019 (Security Hardening)
 

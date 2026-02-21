@@ -36,7 +36,9 @@ A comprehensive security audit was performed on the Supabase database layer for 
 
 Functions using `SECURITY DEFINER` without `SET search_path` are vulnerable to search path injection attacks. An attacker can create malicious functions in their own schema that get executed with elevated privileges.
 
-### Affected Functions (18 total)
+### Affected Functions (22 total)
+
+**Note:** Two functions (items 3-4) already have `search_path` set but need documentation clarification.
 
 #### Schema.sql
 
@@ -472,18 +474,33 @@ Comprehensive index coverage for all RLS policy predicates. No missing indexes d
 
 ### Rollback Plan
 
-If issues arise, run:
+**Warning:** This migration contains DDL changes that cannot be rolled back with a simple `ROLLBACK` statement. DDL commands (CREATE, ALTER, DROP) are auto-committed in PostgreSQL.
+
+To revert migration 019, create a new forward migration (e.g., `020_revert_security_hardening.sql`):
 
 ```sql
--- Rollback to migration 018
+-- 020_revert_security_hardening.sql (NOT RECOMMENDED)
 BEGIN;
-  -- Functions will revert to previous versions
-  -- Policies will revert to IN (SELECT ...) patterns
-  -- Email columns will return to text type
-ROLLBACK;
+
+-- 1. Convert email columns back to text
+alter table invitations alter column email type text using email::text;
+alter table wishlist_items alter column reserved_by_email type text using reserved_by_email::text;
+
+-- 2. Drop security indexes
+drop index if exists idx_members_unique_user_per_household;
+drop index if exists idx_members_household_role_active;
+drop index if exists idx_invitations_household_user;
+
+-- 3. Recreate old RLS policies (from migration 018)
+-- ... (recreate old policy definitions)
+
+-- 4. Recreate functions without search_path (NOT RECOMMENDED - security risk)
+-- ... (DO NOT do this - it re-introduces vulnerabilities)
+
+COMMIT;
 ```
 
-**Note:** This migration is idempotent and can be safely re-run.
+**Important:** Migration 019 contains critical security fixes. Reverting it will re-introduce vulnerabilities (CWE-427, performance issues). Only revert if absolutely necessary for production issues, and do not remove the `SET search_path` statements.
 
 ---
 

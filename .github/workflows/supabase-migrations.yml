@@ -29,20 +29,36 @@ jobs:
         run: |
           echo "🔍 Scanning migrations for security issues..."
 
-          # Check for SECURITY DEFINER without search_path
-          if git diff HEAD~1 HEAD -- supabase/migrations/ | grep -i "security definer" | grep -v "set search_path"; then
-            echo "::warning::⚠️  Found SECURITY DEFINER without SET search_path"
-            echo "::warning::Review migration for security vulnerabilities"
-          fi
+          # Extract changed migrations to temp file
+          DIFF_TEXT=$(git diff HEAD~1 HEAD -- supabase/migrations/)
 
-          # Check for IN (SELECT) patterns
-          if git diff HEAD~1 HEAD -- supabase/migrations/ | grep -E "IN\s*\(\s*SELECT"; then
+          # Check for SECURITY DEFINER functions and verify search_path
+          # Strategy: For each changed migration file, extract function blocks and check
+          CHANGED_MIGRATIONS=$(git diff --name-only HEAD~1 HEAD -- supabase/migrations/*.sql)
+          
+          HAS_SECURITY_ISSUE=false
+          for migration in $CHANGED_MIGRATIONS; do
+            echo "Checking $migration..."
+            
+            # Extract content and look for SECURITY DEFINER functions without search_path
+            if git show HEAD:$migration | grep -Pzo '(?si)create\s+(or\s+replace\s+)?function.*?security\s+definer.*?\$\$;' | grep -Pzv 'set\s+search_path'; then
+              echo "::warning::⚠️  $migration may contain SECURITY DEFINER without SET search_path"
+              HAS_SECURITY_ISSUE=true
+            fi
+          done
+
+          # Check for IN (SELECT) patterns in RLS policies
+          if echo "$DIFF_TEXT" | grep -E "IN\s*\(\s*SELECT"; then
             echo "::warning::⚠️  Found IN (SELECT ...) - consider using EXISTS for better performance"
           fi
 
           # Check for email columns without citext
-          if git diff HEAD~1 HEAD -- supabase/migrations/ | grep -i "email.*text" | grep -v "citext"; then
+          if echo "$DIFF_TEXT" | grep -i "email.*text" | grep -v "citext"; then
             echo "::warning::⚠️  Found email column using TEXT - should use CITEXT"
+          fi
+
+          if [ "$HAS_SECURITY_ISSUE" = true ]; then
+            echo "::warning::Please manually review SECURITY DEFINER functions in changed migrations"
           fi
 
           echo "✅ Security scan complete"
@@ -83,7 +99,7 @@ jobs:
         if: steps.detect-changes.outputs.has_changes == 'true'
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 1.178.2
 
       - name: Apply migrations to Supabase (Production)
         if: steps.detect-changes.outputs.has_changes == 'true'
@@ -134,7 +150,7 @@ jobs:
   apply-migrations-staging:
     name: Apply to Staging (Optional)
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     needs: security-scan
 
     steps:

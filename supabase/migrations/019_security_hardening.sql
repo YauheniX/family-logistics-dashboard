@@ -325,8 +325,8 @@ begin
   -- Update reservation fields
   update wishlist_items
   set is_reserved = p_reserved,
-      reserved_by_email = p_email,
-      reserved_by_name = p_name,
+      reserved_by_email = case when p_reserved then p_email else null end,
+      reserved_by_name = case when p_reserved then p_name else null end,
       reserved_at = case when p_reserved then now() else null end
   where id = p_item_id;
 end;
@@ -353,8 +353,8 @@ begin
       );
     end if;
   elsif (TG_OP = 'UPDATE' and old.status IS DISTINCT FROM new.status) then
-    -- Only log if migrated fields are populated
-    if new.household_id is not null then
+    -- Only log if migrated fields are populated and user is authenticated
+    if new.household_id is not null and auth.uid() is not null then
       perform log_activity(
         new.household_id,
         get_member_id(new.household_id, auth.uid()),
