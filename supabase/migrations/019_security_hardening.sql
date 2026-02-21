@@ -943,3 +943,4 @@ begin
   raise notice '  5. Added performance indexes for RLS predicates';
   raise notice '  6. Verified RPC functions have proper permission checks';
 end $$;
+
