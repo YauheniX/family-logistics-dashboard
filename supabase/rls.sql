@@ -262,35 +262,113 @@ create policy "wishlist_items_delete"
 -- ═════════════════════════════════════════════════════════════
 -- This function allows anonymous users to reserve items on
 -- public wishlists without needing to log in. It restricts
--- updates to only is_reserved and reserved_by_email fields.
+-- updates to only is_reserved, reserved_by_email, and 
+-- reserved_by_name fields.
+-- 
+-- Returns a JSON object with the reservation_code when reserving.
 -- ═════════════════════════════════════════════════════════════
 
 create or replace function reserve_wishlist_item(
   p_item_id uuid,
   p_reserved boolean,
-  p_email text default null
+  p_email text default null,
+  p_name text default null,
+  p_code text default null
 )
-returns void
+returns jsonb
 language plpgsql
 security definer
+set search_path = public
 as $$
+declare
+  v_code text;
+  v_wishlist_user_id uuid;
+  v_is_owner boolean := false;
 begin
+  -- Check if caller is the wishlist owner
+  select w.user_id into v_wishlist_user_id
+  from wishlist_items wi
+  join wishlists w on w.id = wi.wishlist_id
+  where wi.id = p_item_id;
+  
+  if v_wishlist_user_id is not null and auth.uid() = v_wishlist_user_id then
+    v_is_owner := true;
+  end if;
+
   -- Verify the item belongs to a public wishlist
   if not exists (
     select 1
     from wishlist_items wi
     join wishlists w on w.id = wi.wishlist_id
     where wi.id = p_item_id
-      and w.is_public = true
+      and w.visibility = 'public'
   ) then
     raise exception 'Item not found or wishlist is not public';
   end if;
 
-  -- Update only the reservation fields
+  -- If unreserving, validate code (unless owner)
+  if not p_reserved and not v_is_owner then
+    if p_code is null then
+      raise exception 'Reservation code is required to unreserve';
+    end if;
+    
+    if not exists (
+      select 1 from wishlist_items
+      where id = p_item_id 
+        and reservation_code = p_code
+        and is_reserved = true
+    ) then
+      raise exception 'Invalid reservation code';
+    end if;
+  end if;
+
+  -- If reserving, generate a 4-digit code
+  if p_reserved then
+    -- Input validation
+    if p_email is not null then
+      if not (p_email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$') then
+        raise exception 'Invalid email format';
+      end if;
+      if char_length(p_email) > 255 then
+        raise exception 'Email too long (max 255 characters)';
+      end if;
+    end if;
+    
+    if p_name is not null then
+      -- Note: SQL injection is already prevented by parameterization.
+      -- XSS should be handled via proper output encoding, not by
+      -- blacklisting characters here. We only enforce length limits.
+      if char_length(p_name) > 100 then
+        raise exception 'Name too long (max 100 characters)';
+      end if;
+    end if;
+    
+    -- Generate 4-digit code using cryptographically secure randomness
+    v_code := lpad(
+      (
+        (get_byte(gen_random_bytes(2), 0) * 256)
+        + get_byte(gen_random_bytes(2), 1)
+      % 10000
+      )::text,
+      4,
+      '0'
+    );
+  end if;
+
+  -- Update reservation fields
   update wishlist_items
   set is_reserved = p_reserved,
-      reserved_by_email = p_email
+      reserved_by_email = case when p_reserved then p_email else null end,
+      reserved_by_name = case when p_reserved then p_name else null end,
+      reserved_at = case when p_reserved then now() else null end,
+      reservation_code = case when p_reserved then v_code else null end
   where id = p_item_id;
+
+  -- Return the code when reserving
+  return jsonb_build_object(
+    'success', true,
+    'reservation_code', v_code
+  );
 end;
 $$;
 

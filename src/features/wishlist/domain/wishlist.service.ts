@@ -105,8 +105,13 @@ export class WishlistService {
 
   /**
    * Toggle reservation on an item (public access, no auth required)
+   * Returns reservation_code when reserving
    */
-  async reserveItem(id: string, email?: string): Promise<ApiResponse<WishlistItem>> {
+  async reserveItem(
+    id: string,
+    name?: string,
+    code?: string,
+  ): Promise<ApiResponse<WishlistItem & { reservation_code?: string }>> {
     const itemResponse = await wishlistItemRepository.findById(id);
     if (itemResponse.error || !itemResponse.data) {
       return itemResponse;
@@ -115,7 +120,9 @@ export class WishlistService {
     const isReserved = !itemResponse.data.is_reserved;
     return await wishlistItemRepository.reserveItem(id, {
       is_reserved: isReserved,
-      reserved_by_email: isReserved ? (email ?? null) : null,
+      reserved_by_email: null,
+      reserved_by_name: isReserved ? (name ?? null) : null,
+      reservation_code: code, // Pass code when unreserving
     });
   }
 }

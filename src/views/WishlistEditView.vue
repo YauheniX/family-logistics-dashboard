@@ -58,16 +58,17 @@
       >
         <BaseCard v-for="item in wishlistStore.items" :key="item.id" :padding="false">
           <div
-            class="aspect-square bg-neutral-100 dark:bg-neutral-700 rounded-t-card flex items-center justify-center overflow-hidden"
+            class="aspect-square bg-neutral-100 dark:bg-neutral-700 rounded-t-card flex items-center justify-center overflow-hidden relative"
           >
             <img
-              v-if="item.image_url"
-              :src="item.image_url"
+              v-show="item.image_url && !failedImages.has(item.id)"
+              :src="item.image_url || ''"
               :alt="item.title"
               class="w-full h-full object-cover"
+              @error="failedImages.add(item.id)"
             />
             <svg
-              v-else
+              v-show="!item.image_url || failedImages.has(item.id)"
               class="w-16 h-16 text-neutral-400 dark:text-neutral-500"
               fill="none"
               stroke="currentColor"
@@ -103,7 +104,9 @@
               >
                 {{ item.price }} {{ item.currency }}
               </p>
-              <BaseBadge v-if="item.is_reserved" variant="success"> Reserved </BaseBadge>
+              <BaseBadge v-if="item.is_reserved" variant="success">
+                Reserved{{ item.reserved_by_name ? ` by ${item.reserved_by_name}` : '' }}
+              </BaseBadge>
             </div>
             <a
               v-if="safeUrl(item.link)"
@@ -115,6 +118,14 @@
               View link →
             </a>
             <div class="flex gap-2 pt-2">
+              <BaseButton
+                v-if="item.is_reserved"
+                class="flex-1 text-sm"
+                variant="tertiary"
+                @click="handleOwnerUnreserve(item.id)"
+              >
+                Unreserve
+              </BaseButton>
               <BaseButton class="flex-1 text-sm" variant="ghost" @click="startEditItem(item)">
                 Edit
               </BaseButton>
@@ -159,19 +170,43 @@
         <BaseInput v-model="itemForm.description" label="Description" placeholder="Optional" />
         <div class="grid gap-4 md:grid-cols-2">
           <BaseInput v-model="itemForm.link" label="Link" type="url" placeholder="https://..." />
-          <BaseInput
-            v-model="itemForm.image_url"
-            label="Image URL"
-            type="url"
-            placeholder="https://..."
-          />
+          <div class="space-y-2">
+            <BaseInput
+              v-model="itemForm.image_url"
+              label="Image URL"
+              type="url"
+              placeholder="https://example.com/image.jpg"
+            />
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">
+              💡 Right-click an image → "Copy image address" to get the URL
+            </p>
+            <div
+              v-if="itemForm.image_url"
+              class="aspect-square max-w-[200px] bg-neutral-100 dark:bg-neutral-700 rounded-lg flex items-center justify-center overflow-hidden border border-neutral-200 dark:border-neutral-600"
+            >
+              <img
+                :src="itemForm.image_url"
+                alt="Preview"
+                class="w-full h-full object-cover"
+                @error="imageLoadError = true"
+                @load="imageLoadError = false"
+              />
+            </div>
+            <p
+              v-if="imageLoadError && itemForm.image_url"
+              class="text-xs text-red-600 dark:text-red-400"
+            >
+              ⚠️ Unable to load image. Check the URL is correct and publicly accessible.
+            </p>
+          </div>
         </div>
         <div class="grid gap-4 md:grid-cols-2">
           <BaseInput
-            v-model.number="itemForm.price"
             label="Price"
             type="number"
             placeholder="0.00"
+            :model-value="itemForm.price ?? ''"
+            @update:model-value="itemForm.price = $event ? Number($event) : null"
           />
           <BaseInput v-model="itemForm.currency" label="Currency" placeholder="USD" />
         </div>
@@ -204,6 +239,8 @@ const editTitle = ref('');
 const editDescription = ref('');
 const editIsPublic = ref(false);
 const editingItemId = ref<string | null>(null);
+const imageLoadError = ref(false);
+const failedImages = reactive(new Set<string>());
 
 const itemForm = reactive({
   title: '',
@@ -280,6 +317,7 @@ const resetItemForm = () => {
   itemForm.image_url = '';
   itemForm.priority = 'medium';
   editingItemId.value = null;
+  imageLoadError.value = false;
 };
 
 const startEditItem = (item: WishlistItem) => {
@@ -291,10 +329,19 @@ const startEditItem = (item: WishlistItem) => {
   itemForm.currency = item.currency;
   itemForm.image_url = item.image_url ?? '';
   itemForm.priority = item.priority;
+  imageLoadError.value = false;
 };
 
 const cancelEditItem = () => {
   resetItemForm();
+};
+
+const handleOwnerUnreserve = async (itemId: string) => {
+  // Owners can unreserve without a code
+  const result = await wishlistStore.reserveItem(itemId, undefined, undefined);
+  if (result) {
+    useToastStore().success('Item unreserved successfully!');
+  }
 };
 
 const handleSaveItem = async () => {

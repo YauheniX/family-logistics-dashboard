@@ -110,7 +110,10 @@ export class MockWishlistItemRepository extends MockRepository<
   /**
    * Reserve or unreserve an item (public access)
    */
-  async reserveItem(id: string, dto: ReserveWishlistItemDto): Promise<ApiResponse<WishlistItem>> {
+  async reserveItem(
+    id: string,
+    dto: ReserveWishlistItemDto,
+  ): Promise<ApiResponse<WishlistItem & { reservation_code?: string }>> {
     try {
       const data = await this.loadAll();
       const index = data.findIndex((record) => record.id === id);
@@ -122,16 +125,29 @@ export class MockWishlistItemRepository extends MockRepository<
         };
       }
 
+      // Generate code when reserving
+      let generatedCode: string | undefined;
+      if (dto.is_reserved) {
+        generatedCode = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+      }
+
       const updated = {
         ...data[index],
         ...dto,
+        reservation_code: dto.is_reserved ? generatedCode : null,
         updated_at: new Date().toISOString(),
       };
 
       data[index] = updated;
       await this.saveAll(data);
 
-      return { data: updated, error: null };
+      return {
+        data: {
+          ...updated,
+          reservation_code: generatedCode, // Return code when reserving
+        },
+        error: null,
+      };
     } catch (error) {
       return {
         data: null,

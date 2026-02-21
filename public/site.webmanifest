@@ -1,6 +1,6 @@
 {
-  "name": "Family Connect",
-  "short_name": "Fam App",
+  "name": "Family Dashboard",
+  "short_name": "FamBoard",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
