@@ -259,7 +259,7 @@ begin
        where household_id = new.household_id
          and role = 'owner'
          and is_active = true
-         and id != new.id  -- Exclude the current row for updates
+         and id != new.id
     ) then
       raise exception 'Household already has an active owner'
         using errcode = 'P0001',
