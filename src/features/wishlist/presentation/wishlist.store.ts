@@ -208,9 +208,12 @@ export const useWishlistStore = defineStore('wishlist', () => {
       return null;
     }
     if (response.data) {
-      const { reservation_code, ...item } = response.data;
-      items.value = items.value.map((i) => (i.id === id ? item : i));
-      return { item, code: reservation_code };
+      const updatedItem: WishlistItem = {
+        ...response.data,
+        reservation_code: response.data.reservation_code ?? null,
+      };
+      items.value = items.value.map((i) => (i.id === id ? updatedItem : i));
+      return { item: updatedItem, code: response.data.reservation_code };
     }
     return null;
   }

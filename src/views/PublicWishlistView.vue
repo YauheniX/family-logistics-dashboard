@@ -184,18 +184,20 @@
             id="unreserve-code"
             v-model="unreserveCode"
             type="text"
+            inputmode="numeric"
             class="input text-center text-2xl tracking-widest"
             placeholder="0000"
             maxlength="4"
             pattern="[0-9]{4}"
+            @input="unreserveCode = unreserveCode.replace(/\D/g, '').slice(0, 4)"
           />
         </div>
         <div class="flex gap-3">
           <BaseButton
             variant="primary"
             type="button"
+            :disabled="!/^\d{4}$/.test(unreserveCode)"
             @click="handleUnreserve"
-            :disabled="unreserveCode.length !== 4"
           >
             Confirm Unreserve
           </BaseButton>

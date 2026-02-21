@@ -261,9 +261,9 @@ create policy "wishlist_items_delete"
 -- PUBLIC WISHLIST RESERVATION FUNCTION
 -- ═════════════════════════════════════════════════════════════
 -- This function allows anonymous users to reserve items on
--- public wishlists without needing to log in. It restricts
--- updates to only is_reserved, reserved_by_email, and 
--- reserved_by_name fields.
+-- public wishlists without needing to log in. It updates
+-- is_reserved, reserved_by_name, reserved_at, and reservation_code
+-- fields.
 -- 
 -- Returns a JSON object with the reservation_code when reserving.
 -- ═════════════════════════════════════════════════════════════
@@ -284,9 +284,11 @@ declare
   v_code text;
   v_wishlist_user_id uuid;
   v_is_owner boolean := false;
+  v_wishlist_is_public boolean := false;
 begin
-  -- Check if caller is the wishlist owner
-  select w.user_id into v_wishlist_user_id
+  -- Check if caller is owner and verify the item belongs to a public wishlist
+  select w.user_id, (w.visibility = 'public')
+    into v_wishlist_user_id, v_wishlist_is_public
   from wishlist_items wi
   join wishlists w on w.id = wi.wishlist_id
   where wi.id = p_item_id;
@@ -295,14 +297,8 @@ begin
     v_is_owner := true;
   end if;
 
-  -- Verify the item belongs to a public wishlist
-  if not exists (
-    select 1
-    from wishlist_items wi
-    join wishlists w on w.id = wi.wishlist_id
-    where wi.id = p_item_id
-      and w.visibility = 'public'
-  ) then
+  -- Verify the wishlist is public
+  if not v_wishlist_is_public then
     raise exception 'Item not found or wishlist is not public';
   end if;
 
@@ -344,15 +340,17 @@ begin
     end if;
     
     -- Generate 4-digit code using cryptographically secure randomness
-    v_code := lpad(
-      (
-        (get_byte(gen_random_bytes(2), 0) * 256)
-        + get_byte(gen_random_bytes(2), 1)
-      % 10000
-      )::text,
-      4,
-      '0'
-    );
+    declare
+      v_random_bytes bytea := gen_random_bytes(2);
+    begin
+      v_code := lpad(
+        (
+          ((get_byte(v_random_bytes, 0) * 256 + get_byte(v_random_bytes, 1)) % 10000)
+        )::text,
+        4,
+        '0'
+      );
+    end;
   end if;
 
   -- Update reservation fields

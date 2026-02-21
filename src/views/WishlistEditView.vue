@@ -340,7 +340,7 @@ const handleOwnerUnreserve = async (itemId: string) => {
   // Owners can unreserve without a code
   const result = await wishlistStore.reserveItem(itemId, undefined, undefined);
   if (result) {
-    useToastStore().success('Item unreserved successfully!');
+    toastStore.success('Item unreserved successfully!');
   }
 };
 

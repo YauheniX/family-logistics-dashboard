@@ -101,7 +101,6 @@ export class WishlistItemRepository extends BaseRepository<
       const { data: rpcData, error: rpcError } = await this.supabase.rpc('reserve_wishlist_item', {
         p_item_id: id,
         p_reserved: dto.is_reserved,
-
         p_name: dto.reserved_by_name || null,
         p_code: dto.reservation_code || null,
       });
@@ -117,13 +116,27 @@ export class WishlistItemRepository extends BaseRepository<
         .single();
 
       if (itemResponse.error) throw itemResponse.error;
+      if (!itemResponse.data) throw new Error('Item not found');
 
-      // Return item with the reservation code from RPC response
+      // Extract reservation code from RPC jsonb response (if present)
+      let codeFromRpc: string | undefined;
+      if (
+        rpcData !== null &&
+        rpcData !== undefined &&
+        typeof rpcData === 'object' &&
+        'reservation_code' in rpcData
+      ) {
+        const code = (rpcData as Record<string, unknown>).reservation_code;
+        codeFromRpc = code ? String(code) : undefined;
+      }
+
+      const item = itemResponse.data as unknown as WishlistItem;
+      // Return the item with reservation_code property available
       return {
         data: {
-          ...itemResponse.data,
-          reservation_code: rpcData?.reservation_code || undefined,
-        },
+          ...item,
+          reservation_code: codeFromRpc || item.reservation_code,
+        } as WishlistItem & { reservation_code?: string },
         error: null,
       };
     });

@@ -40,6 +40,9 @@ const mockItem = {
   priority: 'high' as const,
   is_reserved: false,
   reserved_by_email: null,
+  reserved_by_name: null,
+  reserved_at: null,
+  reservation_code: null,
   created_at: '2024-01-01T00:00:00Z',
 };
 
@@ -437,7 +440,7 @@ describe('Wishlist Store', () => {
 
     const store = useWishlistStore();
     store.items = [mockItem];
-    const result = await store.reserveItem('wi1', 'gift@test.com');
+    const result = await store.reserveItem('wi1', 'Gift Giver');
 
     expect(result).toBeNull();
     expect(store.items[0].is_reserved).toBe(false);

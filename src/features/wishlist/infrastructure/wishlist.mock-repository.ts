@@ -125,27 +125,38 @@ export class MockWishlistItemRepository extends MockRepository<
         };
       }
 
-      // Generate code when reserving
-      let generatedCode: string | undefined;
-      if (dto.is_reserved) {
-        generatedCode = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+      const currentItem = data[index];
+
+      // Validate reservation code when unreserving
+      if (!dto.is_reserved && currentItem.reservation_code) {
+        if (!dto.reservation_code || dto.reservation_code !== currentItem.reservation_code) {
+          return {
+            data: null,
+            error: { message: 'Invalid reservation code' },
+          };
+        }
       }
 
-      const updated = {
+      // Generate code when reserving
+      const generatedCode: string | null = dto.is_reserved
+        ? String(Math.floor(Math.random() * 10000)).padStart(4, '0')
+        : null;
+
+      const updated: WishlistItem = {
         ...data[index],
         ...dto,
-        reservation_code: dto.is_reserved ? generatedCode : null,
-        updated_at: new Date().toISOString(),
+        reservation_code: generatedCode,
       };
 
       data[index] = updated;
       await this.saveAll(data);
 
+      // Return with reservation_code available
       return {
         data: {
           ...updated,
-          reservation_code: generatedCode, // Return code when reserving
-        },
+          reservation_code: generatedCode || updated.reservation_code,
+        } as WishlistItem & { reservation_code?: string },
         error: null,
       };
     } catch (error) {

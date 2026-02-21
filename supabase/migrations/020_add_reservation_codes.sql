@@ -18,8 +18,7 @@ comment on column wishlist_items.reservation_code is '4-digit code required to u
 
 -- ─── 2. Update Reserve Function with Code Support ─────────
 
-drop function if exists reserve_wishlist_item(uuid, boolean, text, text);
-
+drop function if exists reserve_wishlist_item(uuid, boolean, text, text, text);
 create or replace function reserve_wishlist_item(
   p_item_id uuid,
   p_reserved boolean,
@@ -36,9 +35,11 @@ declare
   v_code text;
   v_wishlist_user_id uuid;
   v_is_owner boolean := false;
+  v_wishlist_is_public boolean := false;
 begin
-  -- Check if caller is the wishlist owner
-  select w.user_id into v_wishlist_user_id
+  -- Check if caller is owner and verify the item belongs to a public wishlist
+  select w.user_id, coalesce(w.is_public, false) or (w.visibility = 'public')
+    into v_wishlist_user_id, v_wishlist_is_public
   from wishlist_items wi
   join wishlists w on w.id = wi.wishlist_id
   where wi.id = p_item_id;
@@ -47,14 +48,8 @@ begin
     v_is_owner := true;
   end if;
 
-  -- Verify the item belongs to a public wishlist
-  if not exists (
-    select 1
-    from wishlist_items wi
-    join wishlists w on w.id = wi.wishlist_id
-    where wi.id = p_item_id
-      and (w.is_public = true or w.visibility = 'public')
-  ) then
+  -- Verify the wishlist is public
+  if not v_wishlist_is_public then
     raise exception 'Item not found or wishlist is not public';
   end if;
 
@@ -87,12 +82,14 @@ begin
     end if;
     
     if p_name is not null then
-      if p_name ~ '[<>"\\/]' then
-        raise exception 'Name contains invalid characters';
-      end if;
       if char_length(p_name) > 100 then
         raise exception 'Name too long (max 100 characters)';
-    -- Generate 4-digit code using cryptographically secure randomness (pgcrypto)
+      end if;
+    end if;
+  end if;
+
+  -- Generate 4-digit code when reserving
+  if p_reserved then
     v_code := lpad(
       (
         ('x' || substr(encode(gen_random_bytes(2), 'hex'), 1, 4))::bit(16)::int
@@ -101,9 +98,6 @@ begin
       4,
       '0'
     );
-    
-    -- Generate 4-digit code
-    v_code := lpad(floor(random() * 10000)::text, 4, '0');
   end if;
 
   -- Update reservation fields

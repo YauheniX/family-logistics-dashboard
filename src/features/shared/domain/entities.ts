@@ -218,11 +218,6 @@ export type ReserveWishlistItemDto = Pick<
   reservation_code?: string; // For unreserving
 };
 
-export interface ReservationResponse {
-  item: WishlistItem;
-  reservation_code?: string; // Returned when reserving
-}
-
 // ─── Dashboard Stats ─────────────────────────────────────
 export interface DashboardStats {
   activeLists: number;
