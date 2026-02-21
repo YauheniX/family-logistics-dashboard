@@ -40,6 +40,9 @@ const mockItem = {
   priority: 'high' as const,
   is_reserved: false,
   reserved_by_email: null,
+  reserved_by_name: null,
+  reserved_at: null,
+  reservation_code: null,
   created_at: '2024-01-01T00:00:00Z',
 };
 
@@ -406,7 +409,12 @@ describe('Wishlist Store', () => {
 
   it('reserves an item successfully', async () => {
     const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
-    const reservedItem = { ...mockItem, is_reserved: true, reserved_by_email: 'gift@test.com' };
+    const reservedItem = {
+      ...mockItem,
+      is_reserved: true,
+      reserved_by_name: 'Gift Giver',
+      reservation_code: '1234',
+    };
     vi.mocked(wishlistService.reserveItem).mockResolvedValue({
       data: reservedItem,
       error: null,
@@ -414,11 +422,13 @@ describe('Wishlist Store', () => {
 
     const store = useWishlistStore();
     store.items = [mockItem];
-    const result = await store.reserveItem('wi1', 'gift@test.com');
+    const result = await store.reserveItem('wi1', 'Gift Giver');
 
-    expect(result).toEqual(reservedItem);
+    expect(result?.item.is_reserved).toBe(true);
+    expect(result?.item.reserved_by_name).toBe('Gift Giver');
+    expect(result?.code).toBe('1234');
     expect(store.items[0].is_reserved).toBe(true);
-    expect(store.items[0].reserved_by_email).toBe('gift@test.com');
+    expect(store.items[0].reserved_by_name).toBe('Gift Giver');
   });
 
   it('handles reserveItem error', async () => {
@@ -430,7 +440,7 @@ describe('Wishlist Store', () => {
 
     const store = useWishlistStore();
     store.items = [mockItem];
-    const result = await store.reserveItem('wi1', 'gift@test.com');
+    const result = await store.reserveItem('wi1', 'Gift Giver');
 
     expect(result).toBeNull();
     expect(store.items[0].is_reserved).toBe(false);

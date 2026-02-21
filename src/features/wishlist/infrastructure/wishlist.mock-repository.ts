@@ -110,7 +110,10 @@ export class MockWishlistItemRepository extends MockRepository<
   /**
    * Reserve or unreserve an item (public access)
    */
-  async reserveItem(id: string, dto: ReserveWishlistItemDto): Promise<ApiResponse<WishlistItem>> {
+  async reserveItem(
+    id: string,
+    dto: ReserveWishlistItemDto,
+  ): Promise<ApiResponse<WishlistItem & { reservation_code?: string }>> {
     try {
       const data = await this.loadAll();
       const index = data.findIndex((record) => record.id === id);
@@ -122,16 +125,40 @@ export class MockWishlistItemRepository extends MockRepository<
         };
       }
 
-      const updated = {
+      const currentItem = data[index];
+
+      // Validate reservation code when unreserving
+      if (!dto.is_reserved && currentItem.reservation_code) {
+        if (!dto.reservation_code || dto.reservation_code !== currentItem.reservation_code) {
+          return {
+            data: null,
+            error: { message: 'Invalid reservation code' },
+          };
+        }
+      }
+
+      // Generate code when reserving
+      const generatedCode: string | null = dto.is_reserved
+        ? String(Math.floor(Math.random() * 10000)).padStart(4, '0')
+        : null;
+
+      const updated: WishlistItem = {
         ...data[index],
         ...dto,
-        updated_at: new Date().toISOString(),
+        reservation_code: generatedCode,
       };
 
       data[index] = updated;
       await this.saveAll(data);
 
-      return { data: updated, error: null };
+      // Return with reservation_code available
+      return {
+        data: {
+          ...updated,
+          reservation_code: generatedCode || updated.reservation_code,
+        } as WishlistItem & { reservation_code?: string },
+        error: null,
+      };
     } catch (error) {
       return {
         data: null,

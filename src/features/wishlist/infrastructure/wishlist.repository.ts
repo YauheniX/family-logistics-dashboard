@@ -90,17 +90,55 @@ export class WishlistItemRepository extends BaseRepository<
 
   /**
    * Reserve or unreserve an item (public access, no auth required)
+   * Returns the item and reservation_code (when reserving)
    */
-  async reserveItem(id: string, dto: ReserveWishlistItemDto): Promise<ApiResponse<WishlistItem>> {
+  async reserveItem(
+    id: string,
+    dto: ReserveWishlistItemDto,
+  ): Promise<ApiResponse<WishlistItem & { reservation_code?: string }>> {
     return this.query(async () => {
-      return await this.supabase
+      // Call the RPC function to update reservation
+      const { data: rpcData, error: rpcError } = await this.supabase.rpc('reserve_wishlist_item', {
+        p_item_id: id,
+        p_reserved: dto.is_reserved,
+        p_name: dto.reserved_by_name || null,
+        p_code: dto.reservation_code || null,
+      });
+
+      if (rpcError) throw rpcError;
+
+      // Fetch and return the updated item
+      const itemResponse = await this.supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(this.tableName as any)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .update(dto as any)
-        .eq('id', id)
         .select()
+        .eq('id', id)
         .single();
+
+      if (itemResponse.error) throw itemResponse.error;
+      if (!itemResponse.data) throw new Error('Item not found');
+
+      // Extract reservation code from RPC jsonb response (if present)
+      let codeFromRpc: string | undefined;
+      if (
+        rpcData !== null &&
+        rpcData !== undefined &&
+        typeof rpcData === 'object' &&
+        'reservation_code' in rpcData
+      ) {
+        const code = (rpcData as Record<string, unknown>).reservation_code;
+        codeFromRpc = code ? String(code) : undefined;
+      }
+
+      const item = itemResponse.data as unknown as WishlistItem;
+      // Return the item with reservation_code property available
+      return {
+        data: {
+          ...item,
+          reservation_code: codeFromRpc || item.reservation_code,
+        } as WishlistItem & { reservation_code?: string },
+        error: null,
+      };
     });
   }
 }

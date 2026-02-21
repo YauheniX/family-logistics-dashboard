@@ -195,17 +195,27 @@ export const useWishlistStore = defineStore('wishlist', () => {
 
   /**
    * Toggle reservation on an item (public access, no auth required)
+   * Returns reservation_code when reserving
    */
-  async function reserveItem(id: string, email?: string) {
-    const response = await wishlistService.reserveItem(id, email);
+  async function reserveItem(
+    id: string,
+    name?: string,
+    code?: string,
+  ): Promise<{ item: WishlistItem; code?: string } | null> {
+    const response = await wishlistService.reserveItem(id, name, code);
     if (response.error) {
       useToastStore().error(`Failed to update reservation: ${response.error.message}`);
       return null;
     }
     if (response.data) {
-      items.value = items.value.map((i) => (i.id === id ? response.data! : i));
+      const updatedItem: WishlistItem = {
+        ...response.data,
+        reservation_code: response.data.reservation_code ?? null,
+      };
+      items.value = items.value.map((i) => (i.id === id ? updatedItem : i));
+      return { item: updatedItem, code: response.data.reservation_code };
     }
-    return response.data;
+    return null;
   }
 
   return {

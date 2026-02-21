@@ -22,16 +22,17 @@
       >
         <BaseCard v-for="item in wishlistStore.items" :key="item.id" :padding="false">
           <div
-            class="aspect-square bg-neutral-100 dark:bg-neutral-700 rounded-t-card flex items-center justify-center overflow-hidden"
+            class="aspect-square bg-neutral-100 dark:bg-neutral-700 rounded-t-card flex items-center justify-center overflow-hidden relative"
           >
             <img
-              v-if="item.image_url"
-              :src="item.image_url"
+              v-show="item.image_url && !failedImages.has(item.id)"
+              :src="item.image_url || ''"
               :alt="item.title"
               class="w-full h-full object-cover"
+              @error="failedImages.add(item.id)"
             />
             <svg
-              v-else
+              v-show="!item.image_url || failedImages.has(item.id)"
               class="w-16 h-16 text-neutral-400 dark:text-neutral-500"
               fill="none"
               stroke="currentColor"
@@ -77,12 +78,12 @@
             </a>
             <div v-if="item.is_reserved" class="pt-2 space-y-2">
               <BaseBadge variant="warning" class="w-full text-center block">
-                Reserved{{ item.reserved_by_email ? ` by ${item.reserved_by_email}` : '' }}
+                Reserved{{ item.reserved_by_name ? ` by ${item.reserved_by_name}` : '' }}
               </BaseBadge>
               <BaseButton
                 class="w-full text-sm"
                 variant="tertiary"
-                @click="handleUnreserve(item.id)"
+                @click="startUnreserve(item.id)"
               >
                 Unreserve
               </BaseButton>
@@ -124,10 +125,10 @@
           Optionally enter your name so the wishlist owner knows who reserved this item.
         </p>
         <div>
-          <label class="label" for="reserve-email">Your Name (optional)</label>
+          <label class="label" for="reserve-name">Your Name (optional)</label>
           <input
-            id="reserve-email"
-            v-model="reserveEmail"
+            id="reserve-name"
+            v-model="reserveName"
             type="text"
             class="input"
             placeholder="Your name"
@@ -143,11 +144,72 @@
         </div>
       </div>
     </ModalDialog>
+
+    <!-- Show Reservation Code Modal -->
+    <ModalDialog
+      :open="showCodeModal"
+      title="Reservation Confirmed!"
+      @close="showCodeModal = false"
+    >
+      <div class="space-y-4">
+        <p class="text-sm text-neutral-600 dark:text-neutral-400">
+          Save this 4-digit code. You'll need it to unreserve this item later.
+        </p>
+        <div
+          class="bg-primary-50 dark:bg-primary-900/20 border-2 border-primary-500 rounded-lg p-6 text-center"
+        >
+          <p class="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">Your Code</p>
+          <p class="text-4xl font-bold text-primary-600 dark:text-primary-400 tracking-widest">
+            {{ generatedCode }}
+          </p>
+        </div>
+        <div class="flex gap-3">
+          <BaseButton variant="primary" type="button" @click="copyCode"> 📋 Copy Code </BaseButton>
+          <BaseButton variant="ghost" type="button" @click="showCodeModal = false">
+            Done
+          </BaseButton>
+        </div>
+      </div>
+    </ModalDialog>
+
+    <!-- Unreserve Modal -->
+    <ModalDialog :open="showUnreserveModal" title="Unreserve Item" @close="cancelUnreserve">
+      <div class="space-y-4">
+        <p class="text-sm text-neutral-600 dark:text-neutral-400">
+          Enter the 4-digit code you received when reserving this item.
+        </p>
+        <div>
+          <label class="label" for="unreserve-code">Reservation Code</label>
+          <input
+            id="unreserve-code"
+            v-model="unreserveCode"
+            type="text"
+            inputmode="numeric"
+            class="input text-center text-2xl tracking-widest"
+            placeholder="0000"
+            maxlength="4"
+            pattern="[0-9]{4}"
+            @input="unreserveCode = unreserveCode.replace(/\D/g, '').slice(0, 4)"
+          />
+        </div>
+        <div class="flex gap-3">
+          <BaseButton
+            variant="primary"
+            type="button"
+            :disabled="!/^\d{4}$/.test(unreserveCode)"
+            @click="handleUnreserve"
+          >
+            Confirm Unreserve
+          </BaseButton>
+          <BaseButton variant="ghost" type="button" @click="cancelUnreserve"> Cancel </BaseButton>
+        </div>
+      </div>
+    </ModalDialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
@@ -164,8 +226,14 @@ const wishlistStore = useWishlistStore();
 const toastStore = useToastStore();
 
 const showReserveModal = ref(false);
-const reserveEmail = ref('');
+const showUnreserveModal = ref(false);
+const showCodeModal = ref(false);
+const reserveName = ref('');
+const unreserveCode = ref('');
 const reservingItemId = ref<string | null>(null);
+const unreservingItemId = ref<string | null>(null);
+const generatedCode = ref<string | null>(null);
+const failedImages = reactive(new Set<string>());
 
 const priorityVariant = (priority: ItemPriority): 'danger' | 'warning' | 'neutral' => {
   switch (priority) {
@@ -197,7 +265,7 @@ onMounted(async () => {
 
 const startReserve = (itemId: string) => {
   reservingItemId.value = itemId;
-  reserveEmail.value = '';
+  reserveName.value = '';
   showReserveModal.value = true;
 };
 
@@ -205,20 +273,67 @@ const handleReserve = async () => {
   if (!reservingItemId.value) return;
   const result = await wishlistStore.reserveItem(
     reservingItemId.value,
-    reserveEmail.value.trim() || undefined,
+    reserveName.value.trim() || undefined,
   );
   if (result) {
-    toastStore.success('Item reserved successfully!');
     showReserveModal.value = false;
     reservingItemId.value = null;
-    reserveEmail.value = '';
+    reserveName.value = '';
+
+    // Show the generated code
+    if (result.code) {
+      generatedCode.value = result.code;
+      showCodeModal.value = true;
+    } else {
+      toastStore.success('Item reserved successfully!');
+    }
   }
 };
 
-const handleUnreserve = async (itemId: string) => {
-  const result = await wishlistStore.reserveItem(itemId);
+const copyCode = async () => {
+  if (!generatedCode.value) return;
+
+  if (!navigator.clipboard || !navigator.clipboard.writeText) {
+    toastStore.error('Clipboard is not available in this browser. Please copy the code manually.');
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(generatedCode.value);
+    toastStore.success('Code copied to clipboard!');
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Failed to copy code to clipboard', error);
+    toastStore.error('Failed to copy code to clipboard. Please copy it manually.');
+  }
+};
+
+const startUnreserve = (itemId: string) => {
+  unreservingItemId.value = itemId;
+  unreserveCode.value = '';
+  showUnreserveModal.value = true;
+};
+
+const handleUnreserve = async () => {
+  if (!unreservingItemId.value || unreserveCode.value.length !== 4) return;
+
+  const result = await wishlistStore.reserveItem(
+    unreservingItemId.value,
+    undefined,
+    unreserveCode.value,
+  );
+
   if (result) {
     toastStore.success('Item unreserved successfully!');
+    showUnreserveModal.value = false;
+    unreservingItemId.value = null;
+    unreserveCode.value = '';
   }
+};
+
+const cancelUnreserve = () => {
+  showUnreserveModal.value = false;
+  unreservingItemId.value = null;
+  unreserveCode.value = '';
 };
 </script>

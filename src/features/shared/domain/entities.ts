@@ -195,8 +195,9 @@ export interface WishlistItem {
   priority: ItemPriority;
   is_reserved: boolean;
   reserved_by_email: string | null;
-  reserved_by_name: string | null; // New field
-  reserved_at: string | null; // New field
+  reserved_by_name: string | null;
+  reserved_at: string | null;
+  reservation_code: string | null;
   created_at: string;
 }
 
@@ -213,7 +214,9 @@ export type UpdateWishlistItemDto = Partial<
 export type ReserveWishlistItemDto = Pick<
   WishlistItem,
   'is_reserved' | 'reserved_by_email' | 'reserved_by_name'
->;
+> & {
+  reservation_code?: string; // For unreserving
+};
 
 // ─── Dashboard Stats ─────────────────────────────────────
 export interface DashboardStats {
