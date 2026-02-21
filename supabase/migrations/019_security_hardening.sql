@@ -253,8 +253,6 @@ begin
       from households
      where id = new.household_id
      for update;
-
-    -- Check if an active owner already exists for this household
     if exists (
       select 1
         from members
