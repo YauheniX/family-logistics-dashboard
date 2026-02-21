@@ -83,6 +83,176 @@ if (user.role === 'admin') {
 
 ---
 
+## Database Security Rules
+
+**CRITICAL:** Follow these rules when writing SQL migrations or database functions.
+
+### 1. SECURITY DEFINER Functions
+
+**ALWAYS** add `SET search_path = public` to prevent search path injection attacks (CWE-427).
+
+```sql
+-- ✅ Good - protected against injection
+create or replace function user_is_household_member(p_household_id uuid, p_user_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public  -- 🔒 REQUIRED
+as $$
+  select exists (select 1 from members where household_id = p_household_id and user_id = p_user_id);
+$$;
+
+-- ❌ Bad - vulnerable to search path injection
+create or replace function user_is_household_member(p_household_id uuid, p_user_id uuid)
+returns boolean
+language sql
+security definer  -- Missing SET search_path!
+stable
+as $$
+  select exists (select 1 from members where household_id = p_household_id and user_id = p_user_id);
+$$;
+```
+
+**If function needs auth.users access:**
+
+```sql
+set search_path = public, auth  -- Explicit schema list
+```
+
+### 2. RLS Policies - Use EXISTS, Not IN
+
+**ALWAYS** use `EXISTS` instead of `IN (SELECT ...)` for better performance (3-10x faster).
+
+```sql
+-- ✅ Good - EXISTS pattern (fast, short-circuits)
+create policy "households_select"
+  on households for select
+  using (
+    exists (
+      select 1 from members
+      where household_id = households.id
+        and user_id = auth.uid()
+        and is_active = true
+    )
+  );
+
+-- ❌ Bad - IN pattern (slow, materializes all results)
+create policy "households_select"
+  on households for select
+  using (
+    id in (
+      select household_id from members
+      where user_id = auth.uid()
+        and is_active = true
+    )
+  );
+```
+
+### 3. Email Columns - Use CITEXT
+
+**ALWAYS** use `citext` type for email addresses (case-insensitive).
+
+```sql
+-- ✅ Good - case-insensitive email
+alter table invitations
+  add column email citext not null;
+
+-- ❌ Bad - case-sensitive, causes duplicates
+alter table invitations
+  add column email text not null;
+```
+
+### 4. RPC Functions - Validate Permissions
+
+**ALWAYS** validate caller permissions using `has_min_role()` or explicit role checks.
+
+```sql
+-- ✅ Good - validates permission
+create or replace function invite_member(p_household_id uuid, p_email text)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  -- Permission check using role hierarchy
+  if not has_min_role(p_household_id, auth.uid(), 'admin') then
+    raise exception 'Only owner or admin can invite members';
+  end if;
+
+  -- ... rest of function
+end;
+$$;
+
+-- ❌ Bad - no permission validation
+create or replace function invite_member(p_household_id uuid, p_email text)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  -- Missing permission check!
+  insert into invitations ...
+end;
+$$;
+```
+
+### 5. Partial Unique Indexes
+
+**USE** partial indexes when uniqueness applies only to non-NULL values.
+
+```sql
+-- ✅ Good - partial unique index (excludes NULL user_id for soft members)
+create unique index idx_members_unique_user_per_household
+  on members(household_id, user_id)
+  where user_id is not null;
+
+-- ❌ Bad - standard unique constraint (allows multiple NULLs incorrectly)
+alter table members
+  add constraint members_unique_user_per_household unique (household_id, user_id);
+```
+
+### 6. Index All RLS Predicates
+
+**ALWAYS** create indexes on columns used in RLS policy WHERE clauses.
+
+```sql
+-- ✅ Good - indexed predicate columns
+create index idx_members_household_id on members(household_id);
+create index idx_members_user_id on members(user_id) where user_id is not null;
+create index idx_members_is_active on members(is_active) where is_active = true;
+
+-- For complex RLS policies, use composite indexes:
+create index idx_members_household_role_active
+  on members(household_id, role, is_active)
+  where is_active = true;
+```
+
+### 7. Migration File Placement
+
+**DO NOT** place utility/debugging SQL in `supabase/migrations/`.
+
+```plaintext
+✅ Good:
+supabase/migrations/019_security_hardening.sql  ← Actual migrations
+scripts/db/check-migration-state.sql            ← Utility scripts
+
+❌ Bad:
+supabase/migrations/check-migration-state.sql   ← Wrong location
+```
+
+### 8. Security Audit Reference
+
+**READ** before creating database code:
+
+- `/docs/backend/security-audit-report.md` - Comprehensive security guide
+- `/docs/backend/vulnerability-list.md` - Quick vulnerability reference
+- `/docs/backend/security-hardening-guide.md` - Implementation patterns
+
+---
+
 ## Role Hierarchy
 
 ```
@@ -115,10 +285,14 @@ Public  → Anonymous (public wishlists only)
 - Domain Model: `/docs/domain/overview.md`
 - Database Schema: `/docs/backend/database-schema.md`
 - RBAC Permissions: `/docs/architecture/rbac-permissions.md`
+- **Security:** `/docs/backend/security-audit-report.md` ⚠️ READ BEFORE WRITING SQL
+- **Security Quick Ref:** `/docs/backend/vulnerability-list.md`
 
 ---
 
 ## Common Mistakes to Avoid
+
+### Application Layer
 
 1. ❌ Creating data without `household_id`
 2. ❌ Using legacy `families` table
@@ -127,9 +301,20 @@ Public  → Anonymous (public wishlists only)
 5. ❌ Inventing features not in domain
 6. ❌ Skipping tests
 
+### Database Layer (SQL/Migrations)
+
+7. ❌ SECURITY DEFINER without `SET search_path = public`
+8. ❌ RLS policies using `IN (SELECT ...)` instead of `EXISTS`
+9. ❌ Email columns using `text` instead of `citext`
+10. ❌ RPC functions without permission validation
+11. ❌ Missing indexes on RLS predicate columns
+12. ❌ Utility SQL files in `migrations/` directory
+
 ---
 
 ## Pull Request Checklist
+
+### Application Code
 
 - [ ] Tests pass (npm test)
 - [ ] Coverage ≥ 70%
@@ -138,3 +323,13 @@ Public  → Anonymous (public wishlists only)
 - [ ] Documentation updated
 - [ ] No legacy `families` references
 - [ ] All data scoped to household
+
+### Database Code (if SQL changes)
+
+- [ ] All SECURITY DEFINER functions have `SET search_path = public`
+- [ ] RLS policies use `EXISTS` not `IN (SELECT ...)`
+- [ ] Email columns use `citext` type
+- [ ] RPC functions validate permissions with `has_min_role()`
+- [ ] All RLS predicate columns are indexed
+- [ ] Migration files numbered sequentially (000-999)
+- [ ] Utility scripts in `scripts/db/` not `migrations/`
