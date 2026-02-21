@@ -35,7 +35,7 @@ jobs:
           # Check for SECURITY DEFINER functions and verify search_path
           # Strategy: For each changed migration file, extract function blocks and check
           CHANGED_MIGRATIONS=$(git diff --name-only HEAD~1 HEAD -- supabase/migrations/*.sql)
-          
+
           HAS_SECURITY_ISSUE=false
           for migration in $CHANGED_MIGRATIONS; do
             echo "Checking $migration..."
