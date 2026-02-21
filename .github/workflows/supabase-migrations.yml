@@ -1,0 +1,162 @@
+name: Auto-Apply Supabase Migrations
+
+# Triggers when PR is merged to main
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'supabase/migrations/**/*.sql'
+  workflow_dispatch: # Manual trigger option
+
+# Uncomment to require manual approval before applying migrations
+# environment:
+#   name: production
+#   url: https://app.supabase.com/project/${{ secrets.SUPABASE_PROJECT_ID }}
+
+jobs:
+  # Security check before applying migrations
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Scan for unsafe patterns
+        run: |
+          echo "🔍 Scanning migrations for security issues..."
+          
+          # Check for SECURITY DEFINER without search_path
+          if git diff HEAD~1 HEAD -- supabase/migrations/ | grep -i "security definer" | grep -v "set search_path"; then
+            echo "::warning::⚠️  Found SECURITY DEFINER without SET search_path"
+            echo "::warning::Review migration for security vulnerabilities"
+          fi
+          
+          # Check for IN (SELECT) patterns
+          if git diff HEAD~1 HEAD -- supabase/migrations/ | grep -E "IN\s*\(\s*SELECT"; then
+            echo "::warning::⚠️  Found IN (SELECT ...) - consider using EXISTS for better performance"
+          fi
+          
+          # Check for email columns without citext
+          if git diff HEAD~1 HEAD -- supabase/migrations/ | grep -i "email.*text" | grep -v "citext"; then
+            echo "::warning::⚠️  Found email column using TEXT - should use CITEXT"
+          fi
+          
+          echo "✅ Security scan complete"
+
+  apply-migrations:
+    name: Apply Database Migrations
+    runs-on: ubuntu-latest
+    needs: security-scan
+    
+    # Only run if migrations were changed
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # Need 2 commits to detect changes
+
+      - name: Detect changed migrations
+        id: detect-changes
+        run: |
+          echo "Checking for migration changes..."
+          
+          # Get list of changed migration files
+          CHANGED_MIGRATIONS=$(git diff --name-only HEAD~1 HEAD | grep 'supabase/migrations/.*\.sql' || true)
+          
+          if [ -z "$CHANGED_MIGRATIONS" ]; then
+            echo "No migration files changed"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "Migration files changed:"
+            echo "$CHANGED_MIGRATIONS"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            
+            # Save changed files for later use
+            echo "$CHANGED_MIGRATIONS" > changed_migrations.txt
+          fi
+
+      - name: Setup Supabase CLI
+        if: steps.detect-changes.outputs.has_changes == 'true'
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Apply migrations to Supabase (Production)
+        if: steps.detect-changes.outputs.has_changes == 'true'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.PRODUCTION_DB_PASSWORD }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+        run: |
+          echo "🔄 Applying migrations to production database..."
+          
+          # Link to production project
+          supabase link --project-ref $SUPABASE_PROJECT_ID
+          
+          # Apply all pending migrations
+          supabase db push --password $SUPABASE_DB_PASSWORD
+          
+          echo "✅ Migrations applied successfully"
+
+      - name: Verify migration success
+        if: steps.detect-changes.outputs.has_changes == 'true'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+        run: |
+          echo "🔍 Verifying migration status..."
+          
+          # List all migrations to confirm
+          supabase migration list
+          
+          echo "✅ Verification complete"
+
+      - name: Notify on success
+        if: steps.detect-changes.outputs.has_changes == 'true' && success()
+        run: |
+          echo "::notice::✅ Database migrations applied successfully to production"
+          cat changed_migrations.txt | while read file; do
+            echo "::notice::  - Applied: $file"
+          done
+
+      - name: Notify on failure
+        if: steps.detect-changes.outputs.has_changes == 'true' && failure()
+        run: |
+          echo "::error::❌ Failed to apply database migrations"
+          echo "::error::Please check the logs and apply migrations manually"
+          exit 1
+
+  # Optional: Apply to staging environment first
+  apply-migrations-staging:
+    name: Apply to Staging (Optional)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Apply to staging
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_STAGING_PROJECT_ID: ${{ secrets.SUPABASE_STAGING_PROJECT_ID }}
+          SUPABASE_STAGING_DB_PASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
+        run: |
+          echo "🔄 Applying migrations to staging..."
+          
+          if [ -n "$SUPABASE_STAGING_PROJECT_ID" ]; then
+            supabase link --project-ref $SUPABASE_STAGING_PROJECT_ID
+            supabase db push --password $SUPABASE_STAGING_DB_PASSWORD
+            echo "✅ Staging migrations applied"
+          else
+            echo "⚠️  No staging environment configured, skipping"
+          fi
