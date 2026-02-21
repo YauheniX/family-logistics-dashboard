@@ -120,16 +120,15 @@ jobs:
           echo "📊 Checking migration status..."
           supabase migration list || true
 
-          # Apply pending migrations (non-interactive with --include-all)
+          # Mark migrations 016-018 as applied (already in production)
+          echo "🔧 Syncing migration history..."
+          for migration in 016_finalize_household_rename 016_finalize_household_rename_rollback 017_atomic_household_creation 018_copy_avatar_to_members; do
+            echo "y" | supabase migration repair --status applied --version "$migration" 2>/dev/null || echo "  ⚠️  $migration sync skipped"
+          done
+
+          # Apply only new migrations
           echo "🚀 Applying new migrations..."
-          echo "y" | supabase db push --password $SUPABASE_DB_PASSWORD --include-all || {
-            echo "⚠️  Some migrations may have already been applied"
-            echo "Attempting to apply only new migrations..."
-            
-            # If push fails, try to repair migration tracking
-            supabase migration repair --status applied || true
-            echo "y" | supabase db push --password $SUPABASE_DB_PASSWORD --include-all
-          }
+          echo "y" | supabase db push --password $SUPABASE_DB_PASSWORD
 
           echo "✅ Migrations applied successfully"
 
