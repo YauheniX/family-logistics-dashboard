@@ -243,7 +243,6 @@ security definer
 set search_path = public
 as $$
 begin
-  -- Only enforce when inserting an owner
   if new.role = 'owner' and new.is_active = true then
     -- Serialize concurrent owner creations for the same household
     perform 1
