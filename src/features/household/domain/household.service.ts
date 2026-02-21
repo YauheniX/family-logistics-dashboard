@@ -62,10 +62,10 @@ export class HouseholdService {
   }
 
   /**
-   * Remove a member
+   * Remove a member (soft delete)
    */
   async removeMember(memberId: string): Promise<ApiResponse<void>> {
-    return await memberRepository.delete(memberId);
+    return await memberRepository.softDelete(memberId);
   }
 }
 

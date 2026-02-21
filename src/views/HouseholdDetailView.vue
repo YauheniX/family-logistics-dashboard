@@ -2,7 +2,11 @@
   <div v-if="householdEntityStore.currentHousehold" class="space-y-6">
     <BaseCard>
       <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
+        <div v-if="hasMultipleHouseholds">
+          <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Household</p>
+          <HouseholdSwitcher />
+        </div>
+        <div v-else>
           <p class="text-sm text-neutral-500 dark:text-neutral-400">Household</p>
           <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
             {{ householdEntityStore.currentHousehold.name }}
@@ -15,7 +19,6 @@
           <BaseButton v-if="isOwner" variant="danger" @click="showDeleteModal = true">
             Delete Household
           </BaseButton>
-          <BaseButton variant="ghost" @click="router.push('/households')"> ← Back </BaseButton>
         </div>
       </div>
     </BaseCard>
@@ -35,15 +38,33 @@
             :key="member.id"
             class="flex items-center gap-3 p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800"
           >
+            <!-- Avatar with image/emoji/initials -->
             <div
+              v-if="isImageUrl(member.avatar_url)"
+              class="h-10 w-10 rounded-full overflow-hidden flex-shrink-0"
+            >
+              <img
+                :src="member.avatar_url || ''"
+                :alt="member.display_name || member.email || ''"
+                class="h-full w-full object-cover"
+              />
+            </div>
+            <div
+              v-else-if="isEmoji(member.avatar_url)"
+              class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-2xl bg-white dark:bg-neutral-700"
+            >
+              {{ member.avatar_url }}
+            </div>
+            <div
+              v-else
               class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
               :style="{
                 backgroundColor: getAvatarColor(
-                  member.display_name || member.email || member.user_id,
+                  member.display_name || member.email || member.user_id || 'User',
                 ),
               }"
             >
-              {{ getInitials(member.display_name || member.email || member.user_id) }}
+              {{ getInitials(member.display_name || member.email || member.user_id || 'User') }}
             </div>
             <div class="flex-1">
               <p class="font-medium text-neutral-800 dark:text-neutral-200">
@@ -53,13 +74,6 @@
                 {{ member.role }}
               </BaseBadge>
             </div>
-            <BaseButton
-              v-if="member.role !== 'owner'"
-              variant="danger"
-              @click="householdEntityStore.removeMember(member.id)"
-            >
-              Remove
-            </BaseButton>
           </li>
           <p
             v-if="!householdEntityStore.members.length"
@@ -185,16 +199,21 @@ import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import ModalDialog from '@/components/shared/ModalDialog.vue';
+import HouseholdSwitcher from '@/components/layout/HouseholdSwitcher.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useHouseholdEntityStore } from '@/features/household/presentation/household.store';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
+import { useHouseholdStore } from '@/stores/household';
 
 const props = defineProps<{ id: string }>();
 
 const authStore = useAuthStore();
 const householdEntityStore = useHouseholdEntityStore();
+const householdStore = useHouseholdStore();
 const shoppingStore = useShoppingStore();
 const router = useRouter();
+
+const hasMultipleHouseholds = computed(() => householdStore.households.length > 1);
 
 const showInviteModal = ref(false);
 const showCreateListModal = ref(false);
@@ -212,6 +231,18 @@ const isOwner = computed(() => {
 
   return householdEntityStore.members.some(
     (member) => member.user_id === userId && member.role === 'owner',
+  );
+});
+
+const isOwnerOrAdmin = computed(() => {
+  const userId = authStore.user?.id;
+  const household = householdEntityStore.currentHousehold;
+
+  if (!userId || !household) return false;
+  if (household.created_by === userId) return true;
+
+  return householdEntityStore.members.some(
+    (member) => member.user_id === userId && (member.role === 'owner' || member.role === 'admin'),
   );
 });
 
@@ -236,6 +267,18 @@ const getAvatarColor = (name: string): string => {
   ];
   const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   return colors[hash % colors.length];
+};
+
+const isImageUrl = (url: string | null | undefined): boolean => {
+  if (!url) return false;
+  const trimmed = url.trim();
+  return trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('/');
+};
+
+const isEmoji = (value: string | null | undefined): boolean => {
+  if (!value) return false;
+  const trimmed = value.trim();
+  return trimmed.length <= 4 && !isImageUrl(trimmed);
 };
 
 onMounted(async () => {
