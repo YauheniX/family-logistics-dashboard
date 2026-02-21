@@ -11,9 +11,14 @@
 alter table wishlist_items
   add column if not exists reservation_code text;
 
+-- Drop constraint if it exists, then recreate (for idempotency)
+alter table wishlist_items
+  drop constraint if exists wishlist_items_reservation_code_format;
+
 alter table wishlist_items
   add constraint wishlist_items_reservation_code_format
   check (reservation_code ~ '^\d{4}$' or reservation_code is null);
+  
 comment on column wishlist_items.reservation_code is '4-digit code required to unreserve (owner can unreserve without code)';
 
 -- ─── 2. Update Reserve Function with Code Support ─────────
@@ -92,7 +97,7 @@ begin
   if p_reserved then
     v_code := lpad(
       (
-        ('x' || substr(encode(gen_random_bytes(2), 'hex'), 1, 4))::bit(16)::int
+        ('x' || substr(encode(extensions.gen_random_bytes(2), 'hex'), 1, 4))::bit(16)::int
         % 10000
       )::text,
       4,

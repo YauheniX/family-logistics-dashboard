@@ -341,7 +341,7 @@ begin
     
     -- Generate 4-digit code using cryptographically secure randomness
     declare
-      v_random_bytes bytea := gen_random_bytes(2);
+      v_random_bytes bytea := extensions.gen_random_bytes(2);
     begin
       v_code := lpad(
         (

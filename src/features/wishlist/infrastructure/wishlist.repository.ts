@@ -101,6 +101,7 @@ export class WishlistItemRepository extends BaseRepository<
       const { data: rpcData, error: rpcError } = await this.supabase.rpc('reserve_wishlist_item', {
         p_item_id: id,
         p_reserved: dto.is_reserved,
+        p_email: dto.reserved_by_email || null,
         p_name: dto.reserved_by_name || null,
         p_code: dto.reservation_code || null,
       });
