@@ -110,6 +110,9 @@ jobs:
         run: |
           echo "🔄 Applying migrations to production database..."
 
+          # Temporarily set major_version to 15 for CLI compatibility (production is PG 17)
+          sed -i 's/major_version = 17/major_version = 15/' supabase/config.toml
+
           # Link to production project
           supabase link --project-ref $SUPABASE_PROJECT_ID
 
@@ -190,6 +193,9 @@ jobs:
           SUPABASE_STAGING_DB_PASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
         run: |
           echo "🔄 Applying migrations to staging..."
+
+          # Temporarily set major_version to 15 for CLI compatibility (production is PG 17)
+          sed -i 's/major_version = 17/major_version = 15/' supabase/config.toml
 
           if [ -n "$SUPABASE_STAGING_PROJECT_ID" ]; then
             supabase link --project-ref $SUPABASE_STAGING_PROJECT_ID
