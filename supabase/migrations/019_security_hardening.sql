@@ -217,8 +217,6 @@ begin
   if p_household_id is null then
     raise exception 'household_id cannot be null in activity logs';
   end if;
-
-  -- Note: p_member_id can be null for system actions or external reservations
   
   insert into activity_logs (
     household_id,
