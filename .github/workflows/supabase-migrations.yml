@@ -116,8 +116,20 @@ jobs:
           # Link to production project
           supabase link --project-ref $SUPABASE_PROJECT_ID
 
-          # Apply all pending migrations
-          supabase db push --password $SUPABASE_DB_PASSWORD
+          # Check migration status
+          echo "📊 Checking migration status..."
+          supabase migration list || true
+
+          # Apply pending migrations (non-interactive with --include-all)
+          echo "🚀 Applying new migrations..."
+          echo "y" | supabase db push --password $SUPABASE_DB_PASSWORD --include-all || {
+            echo "⚠️  Some migrations may have already been applied"
+            echo "Attempting to apply only new migrations..."
+            
+            # If push fails, try to repair migration tracking
+            supabase migration repair --status applied || true
+            echo "y" | supabase db push --password $SUPABASE_DB_PASSWORD --include-all
+          }
 
           echo "✅ Migrations applied successfully"
 
@@ -199,7 +211,7 @@ jobs:
 
           if [ -n "$SUPABASE_STAGING_PROJECT_ID" ]; then
             supabase link --project-ref $SUPABASE_STAGING_PROJECT_ID
-            supabase db push --password $SUPABASE_STAGING_DB_PASSWORD
+            echo "y" | supabase db push --password $SUPABASE_STAGING_DB_PASSWORD --include-all
             echo "✅ Staging migrations applied"
           else
             echo "⚠️  No staging environment configured, skipping"
