@@ -234,7 +234,7 @@ create index idx_members_household_role_active
 
 **DO NOT** place utility/debugging SQL in `supabase/migrations/`.
 
-```
+```plaintext
 ✅ Good:
 supabase/migrations/019_security_hardening.sql  ← Actual migrations
 scripts/db/check-migration-state.sql            ← Utility scripts

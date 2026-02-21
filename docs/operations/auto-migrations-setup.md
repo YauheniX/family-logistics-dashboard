@@ -118,7 +118,7 @@ You should see new migrations (e.g., `019_security_hardening`).
 ❌ Files outside `supabase/migrations/`  
 ❌ Non-SQL files  
 ❌ Migration already applied  
-❌ Security scan finds issues
+⚠️ Security scan emits warnings (does not block)
 
 ---
 
@@ -127,12 +127,19 @@ You should see new migrations (e.g., `019_security_hardening`).
 ### Test the Workflow
 
 ```bash
-# Create empty commit to trigger workflow
-git commit --allow-empty -m "test: migration workflow"
+# Method 1: Touch a migration file to trigger workflow
+touch supabase/migrations/019_security_hardening.sql
+git add supabase/migrations/
+git commit -m "test: trigger migration workflow"
 git push origin main
 
-# Check: GitHub → Actions → should show "No migrations changed"
+# Method 2: Make actual migration change (recommended)
+# Edit or create a migration file, then commit and push
+
+# Check: GitHub → Actions → should show migration workflow running
 ```
+
+**Note:** Empty commits won't trigger the workflow due to the `paths` filter.
 
 ### Apply Migration 019 (Security Hardening)
 
@@ -265,7 +272,7 @@ git log -1 --name-only | grep migrations
 
 ---
 
-## �️ Workflow Customization
+## ⚙️ Workflow Customization
 
 ### Enable Manual Approval (Recommended for Production)
 

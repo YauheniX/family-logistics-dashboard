@@ -105,7 +105,7 @@ begin
   values (
     new.id,
     coalesce(new.raw_user_meta_data ->> 'full_name', new.raw_user_meta_data ->> 'name', split_part(new.email, '@', 1)),
-    coalesce(new.raw_user_meta_data ->> 'avatar_url', null)
+    new.raw_user_meta_data ->> 'avatar_url'
   );
   return new;
 end;
@@ -610,7 +610,20 @@ drop policy if exists "members_delete" on members;
 create policy "members_delete"
   on members for delete
   using (
-    public.is_owner_of_household(members.household_id)
+    -- Non-owners can delete themselves (leave household)
+    (user_id = auth.uid() and role <> 'owner')
+    or
+    -- Owner/admin can delete OTHER members (not themselves)
+    (
+      members.user_id <> auth.uid()
+      and exists (
+        select 1 from members m
+        where m.household_id = members.household_id
+          and m.user_id = auth.uid()
+          and m.role in ('owner', 'admin')
+          and m.is_active = true
+      )
+    )
   );
 
 -- Invitations policies

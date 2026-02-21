@@ -314,7 +314,7 @@ Utility/debugging SQL files were placed in `supabase/migrations/` directory. The
 
 **Directory Structure:**
 
-```
+```plaintext
 supabase/
   migrations/        ← Only numbered migrations (000-019)
 scripts/

@@ -28,30 +28,30 @@ jobs:
       - name: Scan for unsafe patterns
         run: |
           echo "🔍 Scanning migrations for security issues..."
-          
+
           # Check for SECURITY DEFINER without search_path
           if git diff HEAD~1 HEAD -- supabase/migrations/ | grep -i "security definer" | grep -v "set search_path"; then
             echo "::warning::⚠️  Found SECURITY DEFINER without SET search_path"
             echo "::warning::Review migration for security vulnerabilities"
           fi
-          
+
           # Check for IN (SELECT) patterns
           if git diff HEAD~1 HEAD -- supabase/migrations/ | grep -E "IN\s*\(\s*SELECT"; then
             echo "::warning::⚠️  Found IN (SELECT ...) - consider using EXISTS for better performance"
           fi
-          
+
           # Check for email columns without citext
           if git diff HEAD~1 HEAD -- supabase/migrations/ | grep -i "email.*text" | grep -v "citext"; then
             echo "::warning::⚠️  Found email column using TEXT - should use CITEXT"
           fi
-          
+
           echo "✅ Security scan complete"
 
   apply-migrations:
     name: Apply Database Migrations
     runs-on: ubuntu-latest
     needs: security-scan
-    
+
     # Only run if migrations were changed
     steps:
       - name: Checkout code
@@ -63,10 +63,10 @@ jobs:
         id: detect-changes
         run: |
           echo "Checking for migration changes..."
-          
+
           # Get list of changed migration files
           CHANGED_MIGRATIONS=$(git diff --name-only HEAD~1 HEAD | grep 'supabase/migrations/.*\.sql' || true)
-          
+
           if [ -z "$CHANGED_MIGRATIONS" ]; then
             echo "No migration files changed"
             echo "has_changes=false" >> $GITHUB_OUTPUT
@@ -93,13 +93,13 @@ jobs:
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
         run: |
           echo "🔄 Applying migrations to production database..."
-          
+
           # Link to production project
           supabase link --project-ref $SUPABASE_PROJECT_ID
-          
+
           # Apply all pending migrations
           supabase db push --password $SUPABASE_DB_PASSWORD
-          
+
           echo "✅ Migrations applied successfully"
 
       - name: Verify migration success
@@ -109,10 +109,10 @@ jobs:
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
         run: |
           echo "🔍 Verifying migration status..."
-          
+
           # List all migrations to confirm
           supabase migration list
-          
+
           echo "✅ Verification complete"
 
       - name: Notify on success
@@ -135,24 +135,46 @@ jobs:
     name: Apply to Staging (Optional)
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-    
+    needs: security-scan
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect migration changes
+        id: detect-changes-staging
+        run: |
+          echo "🔍 Detecting migration changes..."
+
+          # Get list of changed SQL files in migrations folder
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD -- supabase/migrations/*.sql || echo "")
+
+          if [ -n "$CHANGED_FILES" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "📝 Changed migrations:"
+            echo "$CHANGED_FILES"
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "✅ No migration changes detected"
+          fi
 
       - name: Setup Supabase CLI
+        if: steps.detect-changes-staging.outputs.has_changes == 'true'
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 1.178.2
 
       - name: Apply to staging
+        if: steps.detect-changes-staging.outputs.has_changes == 'true'
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_STAGING_PROJECT_ID: ${{ secrets.SUPABASE_STAGING_PROJECT_ID }}
           SUPABASE_STAGING_DB_PASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
         run: |
           echo "🔄 Applying migrations to staging..."
-          
+
           if [ -n "$SUPABASE_STAGING_PROJECT_ID" ]; then
             supabase link --project-ref $SUPABASE_STAGING_PROJECT_ID
             supabase db push --password $SUPABASE_STAGING_DB_PASSWORD
