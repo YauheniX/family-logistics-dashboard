@@ -214,7 +214,6 @@ security definer
 set search_path = public
 as $$
 begin
-  -- Validate that household_id is not null (required field)
   if p_household_id is null then
     raise exception 'household_id cannot be null in activity logs';
   end if;
