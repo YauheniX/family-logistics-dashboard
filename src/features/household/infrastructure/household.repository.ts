@@ -37,7 +37,10 @@ export class HouseholdRepository extends BaseRepository<
     // Fetch households user is a member of via members
     const membershipsResponse = await this.execute<{ household_id: string }[]>(async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return await (supabase.from('members') as any).select('household_id').eq('user_id', userId);
+      return await (supabase.from('members') as any)
+        .select('household_id')
+        .eq('user_id', userId)
+        .eq('is_active', true);
     });
 
     if (membershipsResponse.error) {
@@ -112,7 +115,7 @@ export class MemberRepository extends BaseRepository<Member, CreateMemberDto, Pa
    */
   async findByHouseholdId(householdId: string): Promise<ApiResponse<Member[]>> {
     const membersResponse = await this.findAll((builder) =>
-      builder.eq('household_id', householdId).order('joined_at'),
+      builder.eq('household_id', householdId).eq('is_active', true).order('joined_at'),
     );
 
     if (membersResponse.error || !membersResponse.data) {
@@ -219,5 +222,19 @@ export class MemberRepository extends BaseRepository<Member, CreateMemberDto, Pa
       },
       error: null,
     };
+  }
+
+  /**
+   * Soft delete a member by setting is_active to false
+   * Uses soft delete pattern instead of hard DELETE to preserve data integrity
+   */
+  async softDelete(memberId: string): Promise<ApiResponse<void>> {
+    const response = await this.update(memberId, { is_active: false } as Partial<Member>);
+
+    if (response.error) {
+      return { data: null, error: response.error };
+    }
+
+    return { data: null, error: null };
   }
 }

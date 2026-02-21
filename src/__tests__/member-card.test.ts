@@ -160,7 +160,7 @@ describe('MemberCard', () => {
   it('shows remove button for non-owner members', () => {
     const member = createMember({ role: 'member' });
     const wrapper = mount(MemberCard, {
-      props: { member },
+      props: { member, canManage: true },
       global: globalConfig,
     });
 
@@ -172,7 +172,7 @@ describe('MemberCard', () => {
   it('emits remove event when remove button is clicked', async () => {
     const member = createMember({ role: 'member', id: 'remove-me' });
     const wrapper = mount(MemberCard, {
-      props: { member },
+      props: { member, canManage: true },
       global: globalConfig,
     });
 

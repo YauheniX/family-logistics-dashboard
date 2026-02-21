@@ -6,13 +6,23 @@
     <div class="flex items-start gap-4">
       <!-- Avatar -->
       <div class="relative flex-shrink-0">
+        <!-- Image Avatar (URL) -->
         <div
-          v-if="member.avatar_url"
+          v-if="isImageUrl"
           class="h-16 w-16 rounded-full overflow-hidden border-2"
           :class="avatarBorderClass"
         >
           <img :src="member.avatar_url" :alt="memberName" class="h-full w-full object-cover" />
         </div>
+        <!-- Emoji Avatar -->
+        <div
+          v-else-if="isEmoji"
+          class="flex h-16 w-16 items-center justify-center rounded-full text-3xl border-2 bg-white dark:bg-neutral-800"
+          :class="avatarBorderClass"
+        >
+          {{ member.avatar_url }}
+        </div>
+        <!-- Initials Fallback -->
         <div
           v-else
           class="flex h-16 w-16 items-center justify-center rounded-full text-lg font-bold text-white border-2"
@@ -95,6 +105,7 @@ import type { Member } from '@/features/shared/domain/entities';
 
 interface Props {
   member: Member;
+  canManage?: boolean; // Whether current user can manage members (owner/admin)
 }
 
 const props = defineProps<Props>();
@@ -115,6 +126,22 @@ const initials = computed(() => {
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
   return name.substring(0, 2).toUpperCase();
+});
+
+// Check if avatar_url is a valid image URL
+const isImageUrl = computed(() => {
+  if (!props.member.avatar_url) return false;
+  const url = props.member.avatar_url.trim();
+  // Check if it starts with http://, https://, or /
+  return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/');
+});
+
+// Check if avatar_url is an emoji (short string, typically 1-4 chars for emojis)
+const isEmoji = computed(() => {
+  if (!props.member.avatar_url) return false;
+  const value = props.member.avatar_url.trim();
+  // Emojis are typically 1-4 characters and don't start with http/https or /
+  return value.length <= 4 && !isImageUrl.value;
 });
 
 // Determine role type
@@ -254,14 +281,14 @@ const avatarColor = computed(() => {
 });
 
 const canEdit = computed(() => {
-  // TODO: Implement proper permission checks when auth context is available,
-  // e.g. isOwner || isAdmin || isSelf, based on the current authenticated user.
-  // Until then, deny edits by default to avoid overexposing edit capabilities.
-  return false;
+  // Only show edit button if user has management permissions
+  // and the member is not the owner (owner can't be edited in this view)
+  return props.canManage === true && props.member.role !== 'owner';
 });
 
 const canRemove = computed(() => {
-  // Cannot remove owner
-  return props.member.role !== 'owner';
+  // Only show remove button if user has management permissions
+  // and the member is not the owner (owner can't be removed)
+  return props.canManage === true && props.member.role !== 'owner';
 });
 </script>

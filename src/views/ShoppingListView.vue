@@ -17,6 +17,7 @@
           </div>
           <div class="flex items-center gap-2">
             <BaseButton variant="ghost" @click="showEditListModal = true">✏️ Edit List</BaseButton>
+            <BaseButton variant="danger" @click="showDeleteModal = true">🗑️ Delete</BaseButton>
             <BaseButton variant="primary" @click="showItemForm = true"> + Add Item </BaseButton>
           </div>
         </div>
@@ -166,6 +167,25 @@
         </div>
       </form>
     </ModalDialog>
+
+    <!-- Delete Confirmation Modal -->
+    <ModalDialog
+      :open="showDeleteModal"
+      title="Delete Shopping List"
+      @close="showDeleteModal = false"
+    >
+      <div class="space-y-4">
+        <p class="text-sm text-neutral-600 dark:text-neutral-300">
+          Are you sure you want to delete
+          <span class="font-semibold">{{ shoppingStore.currentList?.title }}</span
+          >? This action cannot be undone.
+        </p>
+        <div class="flex gap-3">
+          <BaseButton variant="danger" @click="handleDeleteList">Delete</BaseButton>
+          <BaseButton variant="ghost" @click="showDeleteModal = false">Cancel</BaseButton>
+        </div>
+      </div>
+    </ModalDialog>
   </div>
   <LoadingState v-else message="Loading shopping list..." />
 </template>
@@ -186,7 +206,7 @@ import type { ShoppingItem } from '@/features/shared/domain/entities';
 
 const props = defineProps<{ listId: string }>();
 
-const _router = useRouter();
+const router = useRouter();
 const authStore = useAuthStore();
 const shoppingStore = useShoppingStore();
 
@@ -194,6 +214,7 @@ const showPurchased = ref(true);
 const showOnlyMine = ref(false);
 const showAddItemForm = ref(false);
 const showEditListModal = ref(false);
+const showDeleteModal = ref(false);
 const editingItemId = ref<string | null>(null);
 const newItemTitle = ref('');
 const newItemQuantity = ref(1);
@@ -282,5 +303,17 @@ const handleUpdateList = async () => {
     description: editListDescription.value.trim() || null,
   });
   showEditListModal.value = false;
+};
+
+const handleDeleteList = async () => {
+  const householdId = shoppingStore.currentList?.household_id;
+  await shoppingStore.removeList(props.listId);
+  showDeleteModal.value = false;
+  // Navigate back to household detail or shopping index
+  if (householdId) {
+    router.push({ name: 'household-detail', params: { id: householdId } });
+  } else {
+    router.push({ name: 'shopping' });
+  }
 };
 </script>

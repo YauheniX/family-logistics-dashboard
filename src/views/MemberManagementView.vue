@@ -41,6 +41,7 @@
         v-for="member in displayMembers"
         :key="member.id"
         :member="member"
+        :can-manage="isOwnerOrAdmin"
         @remove="handleRemoveMember"
         @edit="handleEditMember"
       />
@@ -140,7 +141,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';
@@ -153,6 +154,7 @@ import { useMembers } from '@/composables/useMembers';
 import type { Member } from '@/features/shared/domain/entities';
 
 const route = useRoute();
+const router = useRouter();
 const householdEntityStore = useHouseholdEntityStore();
 const householdStore = useHouseholdStore();
 const {
@@ -181,11 +183,8 @@ const householdId = computed(() => {
 
 // Sort members: owner first, then adults, then children, then viewers
 const displayMembers = computed(() => {
-  // If a household is selected, always use its members (even if empty);
-  // otherwise, fall back to the legacy household store members.
-  const memberList = householdStore.currentHousehold
-    ? [...householdMembers.value]
-    : [...householdEntityStore.members];
+  // Always use householdEntityStore.members for consistency with household detail view
+  const memberList = [...householdEntityStore.members];
 
   const roleOrder: Record<string, number> = {
     owner: 0,
@@ -203,13 +202,7 @@ const displayMembers = computed(() => {
 });
 
 onMounted(async () => {
-  // Prefer household-based loading when a current household is available
-  if (householdStore.currentHousehold?.id) {
-    await fetchMembers();
-    return;
-  }
-
-  // Migration fallback: load via householdEntityStore when no household context is present
+  // Always load via householdEntityStore for consistency
   if (householdId.value) {
     await householdEntityStore.loadHousehold(householdId.value);
   }
@@ -222,7 +215,9 @@ const handleAddChild = async (childData: { name: string; birthday: string; avata
 
   if (result) {
     // Refresh member list after successful creation
-    await fetchMembers();
+    if (householdId.value) {
+      await householdEntityStore.loadHousehold(householdId.value);
+    }
   }
 };
 
@@ -247,6 +242,10 @@ const confirmRemove = async () => {
   if (memberToRemove.value) {
     const success = await deleteHouseholdMember(memberToRemove.value);
     if (success) {
+      // Reload household to refresh member list
+      if (householdId.value) {
+        await householdEntityStore.loadHousehold(householdId.value);
+      }
       memberToRemove.value = null;
       showRemoveModal.value = false;
     }
