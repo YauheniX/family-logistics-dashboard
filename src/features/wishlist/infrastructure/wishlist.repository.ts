@@ -39,12 +39,50 @@ export class WishlistRepository extends BaseRepository<
     }
     const userId = userIdResponse.data;
 
+    // Get member_id and household_id from user's member record
+    // If dto already provides these, use them; otherwise query for them
+    let memberId = dto.member_id;
+    let householdId = dto.household_id;
+
+    if (!memberId || !householdId) {
+      // Query members table directly (not through this.execute since it's not in the typed schema)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: memberData, error: memberError } = await (supabase as any)
+        .from('members')
+        .select('id, household_id')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .order('joined_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (memberError || !memberData) {
+        return {
+          data: null,
+          error: {
+            message: 'User must belong to a household to create wishlists',
+            code: memberError?.code,
+            details: memberError?.details,
+          },
+        };
+      }
+
+      memberId = memberData.id;
+      householdId = memberData.household_id;
+    }
+
+    // Map visibility from legacy is_public to new visibility enum
+    const visibility = dto.visibility || (dto.is_public ? 'public' : 'private');
+
     return await this.execute(async () => {
       return await supabase
         .from('wishlists')
         .insert({
           ...dto,
           user_id: userId,
+          member_id: memberId,
+          household_id: householdId,
+          visibility,
         })
         .select()
         .single();
