@@ -1,15 +1,15 @@
 <template>
   <div
-    class="glass-card p-4 rounded-2xl transition-all hover:shadow-lg border-2"
+    class="glass-card p-3 sm:p-4 rounded-2xl transition-all hover:shadow-lg border-2"
     :class="cardBorderClass"
   >
-    <div class="flex items-start gap-4">
+    <div class="flex items-start gap-3 sm:gap-4">
       <!-- Avatar -->
       <Avatar
         :avatar-url="member.avatar_url"
         :name="memberName"
         :role="member.role"
-        :size="64"
+        :size="56"
         :show-role-badge="false"
       />
 

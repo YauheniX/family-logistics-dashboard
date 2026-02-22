@@ -1,22 +1,30 @@
 <template>
   <div v-if="householdEntityStore.currentHousehold" class="space-y-6">
     <BaseCard>
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div v-if="hasMultipleHouseholds">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div v-if="hasMultipleHouseholds" class="min-w-0">
           <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Household</p>
           <HouseholdSwitcher />
         </div>
-        <div v-else>
+        <div v-else class="min-w-0">
           <p class="text-sm text-neutral-500 dark:text-neutral-400">Household</p>
-          <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+          <h2 class="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
             {{ householdEntityStore.currentHousehold.name }}
           </h2>
         </div>
-        <div class="flex flex-wrap gap-2">
-          <BaseButton @click="router.push({ name: 'member-management', params: { id: props.id } })">
+        <div class="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
+          <BaseButton
+            class="w-full xs:w-auto"
+            @click="router.push({ name: 'member-management', params: { id: props.id } })"
+          >
             👥 Manage Members
           </BaseButton>
-          <BaseButton v-if="isOwner" variant="danger" @click="showDeleteModal = true">
+          <BaseButton
+            v-if="isOwner"
+            variant="danger"
+            class="w-full xs:w-auto"
+            @click="showDeleteModal = true"
+          >
             Delete Household
           </BaseButton>
         </div>

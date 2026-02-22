@@ -1,10 +1,10 @@
 <template>
   <div v-if="wishlistStore.currentWishlist" class="space-y-6">
     <BaseCard>
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div class="min-w-0">
           <p class="text-sm text-neutral-500 dark:text-neutral-400">Wishlist</p>
-          <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
+          <h2 class="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
             {{ wishlistStore.currentWishlist.title }}
           </h2>
           <p
@@ -14,15 +14,18 @@
             {{ wishlistStore.currentWishlist.description }}
           </p>
         </div>
-        <div class="flex flex-wrap gap-2">
+        <div class="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
           <BaseButton
             v-if="wishlistStore.currentWishlist.is_public"
             variant="ghost"
+            class="w-full xs:w-auto"
             @click="copyPublicLink"
           >
             📋 Copy Public Link
           </BaseButton>
-          <BaseButton variant="ghost" @click="$router.push('/wishlists')">← Back</BaseButton>
+          <BaseButton variant="ghost" class="w-full xs:w-auto" @click="$router.push('/wishlists')"
+            >← Back</BaseButton
+          >
         </div>
       </div>
     </BaseCard>

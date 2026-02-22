@@ -11,26 +11,26 @@
       <main class="flex-1 pb-16 lg:pb-0">
         <header
           v-if="showShell"
-          class="flex items-center justify-between gap-3 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-3 md:px-6 md:py-4"
+          class="flex items-center justify-between gap-2 sm:gap-3 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 sm:px-4 py-2.5 sm:py-3 md:px-6 md:py-4"
         >
-          <div class="flex min-w-0 items-center gap-2 md:gap-3">
+          <div class="flex min-w-0 items-center gap-2 md:gap-3 flex-1">
             <!-- Household Switcher (Desktop) -->
             <div class="hidden md:block">
               <HouseholdSwitcher />
             </div>
 
             <h1
-              class="truncate text-lg font-semibold text-neutral-900 dark:text-neutral-50 md:text-xl"
+              class="truncate text-base sm:text-lg font-semibold text-neutral-900 dark:text-neutral-50 md:text-xl"
             >
               {{ pageTitle }}
             </h1>
           </div>
 
-          <div class="flex items-center gap-2 md:gap-3">
+          <div class="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
             <BaseButton
               variant="ghost"
               aria-label="Report a problem"
-              class="hidden sm:inline-flex"
+              class="hidden lg:inline-flex"
               @click="reportModalOpen = true"
             >
               Report a problem
@@ -39,9 +39,9 @@
               <ThemeToggle />
             </div>
             <div
-              class="flex items-center gap-2 border-l border-neutral-200 dark:border-neutral-700 pl-2 md:gap-3 md:pl-3"
+              class="flex items-center gap-1.5 sm:gap-2 border-l border-neutral-200 dark:border-neutral-700 pl-1.5 sm:pl-2 md:gap-3 md:pl-3"
             >
-              <div class="hidden md:block text-right">
+              <div class="hidden lg:block text-right">
                 <p class="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
                   {{ displayNameOrEmail }}
                 </p>
@@ -54,7 +54,9 @@
                 :show-role-badge="false"
               />
 
-              <BaseButton variant="ghost" @click="logout">Logout</BaseButton>
+              <BaseButton variant="ghost" class="text-sm px-2 sm:px-3" @click="logout"
+                >Logout</BaseButton
+              >
             </div>
           </div>
         </header>
@@ -67,7 +69,7 @@
           <Breadcrumbs />
         </div>
 
-        <section class="p-4 md:p-6">
+        <section class="p-3 sm:p-4 md:p-6">
           <RouterView />
         </section>
       </main>

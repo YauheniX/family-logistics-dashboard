@@ -4,6 +4,10 @@ module.exports = {
   content: ['./index.html', './src/**/*.{vue,ts,tsx,js,jsx}'],
   darkMode: 'class',
   theme: {
+    screens: {
+      xs: '475px',
+      ...defaultTheme.screens,
+    },
     extend: {
       fontFamily: {
         sans: ['Inter', 'Poppins', ...defaultTheme.fontFamily.sans],

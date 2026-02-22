@@ -2,28 +2,33 @@
   <div class="space-y-6">
     <!-- Header -->
     <BaseCard>
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p class="text-sm text-neutral-500 dark:text-neutral-400">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div class="min-w-0">
+          <p class="text-sm text-neutral-500 dark:text-neutral-400 truncate">
             {{
               householdStore.currentHousehold?.name ||
               householdEntityStore.currentHousehold?.name ||
               'Household'
             }}
           </p>
-          <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+          <h2 class="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
             Household Members
           </h2>
         </div>
-        <div v-if="isOwnerOrAdmin" class="flex flex-wrap gap-2">
+        <div v-if="isOwnerOrAdmin" class="flex flex-col xs:flex-row gap-2">
           <BaseButton
             variant="primary"
             :disabled="membersLoading"
+            class="w-full xs:w-auto"
             @click="showAddChildModal = true"
           >
             👶 Add Child
           </BaseButton>
-          <BaseButton :disabled="membersLoading" @click="showInviteMemberModal = true">
+          <BaseButton
+            :disabled="membersLoading"
+            class="w-full xs:w-auto"
+            @click="showInviteMemberModal = true"
+          >
             ➕ Invite Member
           </BaseButton>
         </div>

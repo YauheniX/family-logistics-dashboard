@@ -18,7 +18,7 @@
         v-for="item in navItems"
         :key="item.to"
         :to="item.to"
-        class="flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-colors min-w-0"
+        class="flex flex-col items-center gap-0.5 px-1.5 sm:px-2.5 py-1 rounded-lg transition-colors min-w-0"
         :class="
           isActive(item.name)
             ? 'text-primary-600 dark:text-primary-400'
@@ -27,12 +27,14 @@
         :aria-label="item.label"
       >
         <span class="text-xl" aria-hidden="true">{{ item.emoji }}</span>
-        <span class="text-xs font-medium truncate max-w-[60px]">{{ item.label }}</span>
+        <span class="text-[10px] sm:text-xs font-medium truncate max-w-[70px] sm:max-w-[80px]">{{
+          item.label
+        }}</span>
       </RouterLink>
 
       <!-- More Menu -->
       <button
-        class="flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-colors"
+        class="flex flex-col items-center gap-0.5 px-1.5 sm:px-2.5 py-1 rounded-lg transition-colors"
         :class="
           showMoreMenu
             ? 'text-primary-600 dark:text-primary-400'
@@ -43,7 +45,7 @@
         @click="toggleMoreMenu"
       >
         <span class="text-xl" aria-hidden="true">⋯</span>
-        <span class="text-xs font-medium">More</span>
+        <span class="text-[10px] sm:text-xs font-medium">More</span>
       </button>
     </div>
 
