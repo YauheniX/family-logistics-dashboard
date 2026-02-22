@@ -47,18 +47,12 @@
                 </p>
               </div>
               <!-- User Avatar -->
-              <div
-                class="flex h-8 w-8 items-center justify-center rounded-full bg-primary-500 text-white text-sm font-semibold overflow-hidden"
-                :title="displayNameOrEmail"
-              >
-                <img
-                  v-if="userAvatarUrl"
-                  :src="userAvatarUrl"
-                  :alt="`${displayNameOrEmail} avatar`"
-                  class="h-full w-full object-cover"
-                />
-                <span v-else>{{ userInitial }}</span>
-              </div>
+              <Avatar
+                :avatar-url="userAvatarUrl"
+                :name="displayNameOrEmail"
+                :size="32"
+                :show-role-badge="false"
+              />
 
               <BaseButton variant="ghost" @click="logout">Logout</BaseButton>
             </div>
@@ -100,6 +94,7 @@ import ToastContainer from '@/components/shared/ToastContainer.vue';
 import ThemeToggle from '@/components/shared/ThemeToggle.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import ReportProblemModal from '@/components/shared/ReportProblemModal.vue';
+import Avatar from '@/components/shared/Avatar.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useHouseholdStore } from '@/stores/household';
 import { useTheme } from '@/composables/useTheme';
@@ -173,19 +168,6 @@ const userAvatarUrl = computed(() => {
   });
 
   return result;
-});
-
-const userInitial = computed(() => {
-  if (userDisplayName.value) {
-    const names = userDisplayName.value.split(' ');
-    return names
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  }
-  const email = authStore.user?.email;
-  return email ? email.charAt(0).toUpperCase() : '?';
 });
 
 const displayNameOrEmail = computed(() => {

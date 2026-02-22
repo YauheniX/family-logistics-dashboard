@@ -25,6 +25,7 @@
               :src="profileForm.avatarUrl"
               :alt="profileForm.name || 'User avatar'"
               class="h-full w-full object-cover"
+              referrerpolicy="no-referrer"
             />
           </div>
           <div

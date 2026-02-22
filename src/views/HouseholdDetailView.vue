@@ -38,34 +38,13 @@
             :key="member.id"
             class="flex items-center gap-3 p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800"
           >
-            <!-- Avatar with image/emoji/initials -->
-            <div
-              v-if="isImageUrl(member.avatar_url)"
-              class="h-10 w-10 rounded-full overflow-hidden flex-shrink-0"
-            >
-              <img
-                :src="member.avatar_url || ''"
-                :alt="member.display_name || member.email || ''"
-                class="h-full w-full object-cover"
-              />
-            </div>
-            <div
-              v-else-if="isEmoji(member.avatar_url)"
-              class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-2xl bg-white dark:bg-neutral-700"
-            >
-              {{ member.avatar_url }}
-            </div>
-            <div
-              v-else
-              class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
-              :style="{
-                backgroundColor: getAvatarColor(
-                  member.display_name || member.email || member.user_id || 'User',
-                ),
-              }"
-            >
-              {{ getInitials(member.display_name || member.email || member.user_id || 'User') }}
-            </div>
+            <!-- Avatar -->
+            <Avatar
+              :avatar-url="member.avatar_url"
+              :name="member.display_name || member.email || member.user_id || 'User'"
+              :role="member.role"
+              :size="40"
+            />
             <div class="flex-1">
               <p class="font-medium text-neutral-800 dark:text-neutral-200">
                 {{ member.display_name || member.email || member.user_id }}
@@ -200,6 +179,7 @@ import BaseBadge from '@/components/shared/BaseBadge.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import ModalDialog from '@/components/shared/ModalDialog.vue';
 import HouseholdSwitcher from '@/components/layout/HouseholdSwitcher.vue';
+import Avatar from '@/components/shared/Avatar.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useHouseholdEntityStore } from '@/features/household/presentation/household.store';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
@@ -233,41 +213,6 @@ const isOwner = computed(() => {
     (member) => member.user_id === userId && member.role === 'owner',
   );
 });
-
-const getInitials = (name: string): string => {
-  const parts = name.trim().split(/[\s@]+/);
-  if (parts.length >= 2) {
-    return (parts[0][0] + parts[1][0]).toUpperCase();
-  }
-  return name.substring(0, 2).toUpperCase();
-};
-
-const getAvatarColor = (name: string): string => {
-  const colors = [
-    '#3B82F6', // blue
-    '#8B5CF6', // purple
-    '#EC4899', // pink
-    '#10B981', // green
-    '#F59E0B', // amber
-    '#EF4444', // red
-    '#06B6D4', // cyan
-    '#6366F1', // indigo
-  ];
-  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return colors[hash % colors.length];
-};
-
-const isImageUrl = (url: string | null | undefined): boolean => {
-  if (!url) return false;
-  const trimmed = url.trim();
-  return trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('/');
-};
-
-const isEmoji = (value: string | null | undefined): boolean => {
-  if (!value) return false;
-  const trimmed = value.trim();
-  return trimmed.length <= 4 && !isImageUrl(trimmed);
-};
 
 onMounted(async () => {
   await householdEntityStore.loadHousehold(props.id);

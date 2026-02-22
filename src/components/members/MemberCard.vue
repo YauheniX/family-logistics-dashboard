@@ -5,43 +5,7 @@
   >
     <div class="flex items-start gap-4">
       <!-- Avatar -->
-      <div class="relative flex-shrink-0">
-        <!-- Image Avatar (URL) -->
-        <div
-          v-if="isImageUrl"
-          class="h-16 w-16 rounded-full overflow-hidden border-2"
-          :class="avatarBorderClass"
-        >
-          <img :src="member.avatar_url" :alt="memberName" class="h-full w-full object-cover" />
-        </div>
-        <!-- Emoji Avatar -->
-        <div
-          v-else-if="isEmoji"
-          class="flex h-16 w-16 items-center justify-center rounded-full text-3xl border-2 bg-white dark:bg-neutral-800"
-          :class="avatarBorderClass"
-        >
-          {{ member.avatar_url }}
-        </div>
-        <!-- Initials Fallback -->
-        <div
-          v-else
-          class="flex h-16 w-16 items-center justify-center rounded-full text-lg font-bold text-white border-2"
-          :class="avatarBorderClass"
-          :style="{ backgroundColor: avatarColor }"
-        >
-          {{ initials }}
-        </div>
-        <!-- Role Badge Overlay -->
-        <div class="absolute -bottom-1 -right-1">
-          <span
-            class="inline-flex h-6 w-6 items-center justify-center rounded-full text-xs border-2 border-white dark:border-neutral-800"
-            :class="roleIconClass"
-            :title="roleLabel"
-          >
-            {{ roleIcon }}
-          </span>
-        </div>
-      </div>
+      <Avatar :avatar-url="member.avatar_url" :name="memberName" :role="member.role" :size="64" />
 
       <!-- Info -->
       <div class="flex-1 min-w-0">
@@ -100,6 +64,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import Avatar from '@/components/shared/Avatar.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
 import type { Member } from '@/features/shared/domain/entities';
 
@@ -117,31 +82,6 @@ defineEmits<{
 
 const memberName = computed(() => {
   return props.member.display_name || props.member.email || 'Unknown Member';
-});
-
-const initials = computed(() => {
-  const name = memberName.value;
-  const parts = name.trim().split(/[\s@]+/);
-  if (parts.length >= 2) {
-    return (parts[0][0] + parts[1][0]).toUpperCase();
-  }
-  return name.substring(0, 2).toUpperCase();
-});
-
-// Check if avatar_url is a valid image URL
-const isImageUrl = computed(() => {
-  if (!props.member.avatar_url) return false;
-  const url = props.member.avatar_url.trim();
-  // Check if it starts with http://, https://, or /
-  return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/');
-});
-
-// Check if avatar_url is an emoji (short string, typically 1-4 chars for emojis)
-const isEmoji = computed(() => {
-  if (!props.member.avatar_url) return false;
-  const value = props.member.avatar_url.trim();
-  // Emojis are typically 1-4 characters and don't start with http/https or /
-  return value.length <= 4 && !isImageUrl.value;
 });
 
 // Determine role type
@@ -185,18 +125,7 @@ const age = computed(() => {
   return calculatedAge;
 });
 
-// Role-based styling
-const roleIcon = computed(() => {
-  const icons: Record<string, string> = {
-    owner: '👑',
-    admin: '⭐',
-    member: '👤',
-    child: '👶',
-    viewer: '👀',
-  };
-  return icons[props.member.role] || '👤';
-});
-
+// Role label for badge
 const roleLabel = computed(() => {
   const labels: Record<string, string> = {
     owner: 'Owner',
@@ -225,19 +154,6 @@ const badgeClass = computed(() => {
   return '';
 });
 
-const roleIconClass = computed(() => {
-  if (isChild.value) {
-    return 'bg-green-500 dark:bg-green-600';
-  }
-  if (isViewer.value) {
-    return 'bg-purple-500 dark:bg-purple-600';
-  }
-  if (isOwner.value) {
-    return 'bg-yellow-500 dark:bg-yellow-600';
-  }
-  return 'bg-blue-500 dark:bg-blue-600';
-});
-
 const cardBorderClass = computed(() => {
   if (isChild.value) {
     return 'border-green-200 dark:border-green-800 hover:border-green-300 dark:hover:border-green-700';
@@ -249,35 +165,6 @@ const cardBorderClass = computed(() => {
     return 'border-yellow-200 dark:border-yellow-800 hover:border-yellow-300 dark:hover:border-yellow-700';
   }
   return 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600';
-});
-
-const avatarBorderClass = computed(() => {
-  if (isChild.value) {
-    return 'border-green-300 dark:border-green-600';
-  }
-  if (isViewer.value) {
-    return 'border-purple-300 dark:border-purple-600';
-  }
-  if (isOwner.value) {
-    return 'border-yellow-400 dark:border-yellow-500';
-  }
-  return 'border-neutral-300 dark:border-neutral-600';
-});
-
-const avatarColor = computed(() => {
-  const name = memberName.value;
-  const colors = [
-    '#3B82F6', // blue
-    '#8B5CF6', // purple
-    '#EC4899', // pink
-    '#10B981', // green
-    '#F59E0B', // amber
-    '#EF4444', // red
-    '#06B6D4', // cyan
-    '#6366F1', // indigo
-  ];
-  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return colors[hash % colors.length];
 });
 
 const canEdit = computed(() => {
