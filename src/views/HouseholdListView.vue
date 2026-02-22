@@ -1,17 +1,19 @@
 <template>
   <div class="space-y-6">
     <BaseCard>
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div class="min-w-0">
           <p class="text-sm text-neutral-500 dark:text-neutral-400">Households</p>
-          <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+          <h2 class="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
             My Households
           </h2>
           <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
             Manage your household groups and their shopping lists.
           </p>
         </div>
-        <BaseButton @click="showCreateModal = true"> ➕ Create Household </BaseButton>
+        <BaseButton class="w-full sm:w-auto" @click="showCreateModal = true">
+          ➕ Create Household
+        </BaseButton>
       </div>
     </BaseCard>
 

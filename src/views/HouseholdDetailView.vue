@@ -1,22 +1,30 @@
 <template>
   <div v-if="householdEntityStore.currentHousehold" class="space-y-6">
     <BaseCard>
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div v-if="hasMultipleHouseholds">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div v-if="hasMultipleHouseholds" class="min-w-0">
           <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Household</p>
           <HouseholdSwitcher />
         </div>
-        <div v-else>
+        <div v-else class="min-w-0">
           <p class="text-sm text-neutral-500 dark:text-neutral-400">Household</p>
-          <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+          <h2 class="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
             {{ householdEntityStore.currentHousehold.name }}
           </h2>
         </div>
-        <div class="flex flex-wrap gap-2">
-          <BaseButton @click="router.push({ name: 'member-management', params: { id: props.id } })">
+        <div class="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
+          <BaseButton
+            class="w-full xs:w-auto"
+            @click="router.push({ name: 'member-management', params: { id: props.id } })"
+          >
             👥 Manage Members
           </BaseButton>
-          <BaseButton v-if="isOwner" variant="danger" @click="showDeleteModal = true">
+          <BaseButton
+            v-if="isOwner"
+            variant="danger"
+            class="w-full xs:w-auto"
+            @click="showDeleteModal = true"
+          >
             Delete Household
           </BaseButton>
         </div>
@@ -172,7 +180,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
@@ -215,10 +223,24 @@ const isOwner = computed(() => {
   );
 });
 
+const loadHouseholdData = async (householdId: string) => {
+  await householdEntityStore.loadHousehold(householdId);
+  await shoppingStore.loadLists(householdId);
+};
+
 onMounted(async () => {
-  await householdEntityStore.loadHousehold(props.id);
-  await shoppingStore.loadLists(props.id);
+  await loadHouseholdData(props.id);
 });
+
+// Watch for route param changes (when switching households)
+watch(
+  () => props.id,
+  async (newId) => {
+    if (newId) {
+      await loadHouseholdData(newId);
+    }
+  },
+);
 
 const handleInvite = async () => {
   if (!inviteEmail.value.trim()) return;
@@ -279,4 +301,18 @@ const confirmDelete = async () => {
     console.error('Failed to delete household');
   }
 };
+
+// Watch for household changes and navigate to the new household detail page
+watch(
+  () => householdStore.currentHousehold,
+  async (newHousehold, oldHousehold) => {
+    // Only navigate if household actually changed and it's different from current route
+    if (newHousehold && oldHousehold && newHousehold.id !== oldHousehold.id) {
+      if (newHousehold.id !== props.id) {
+        // Navigate to the new household's detail page
+        await router.push({ name: 'household-detail', params: { id: newHousehold.id } });
+      }
+    }
+  },
+);
 </script>

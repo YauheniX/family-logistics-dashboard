@@ -2,10 +2,10 @@
   <div v-if="shoppingStore.currentList" class="space-y-6">
     <BaseCard>
       <template #header>
-        <div class="flex flex-wrap items-center justify-between gap-4">
-          <div>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div class="min-w-0">
             <p class="text-sm text-neutral-500 dark:text-neutral-400">Shopping List</p>
-            <h2 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
+            <h2 class="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
               {{ shoppingStore.currentList.title }}
             </h2>
             <p
@@ -15,10 +15,18 @@
               {{ shoppingStore.currentList.description }}
             </p>
           </div>
-          <div class="flex items-center gap-2">
-            <BaseButton variant="ghost" @click="showEditListModal = true">✏️ Edit List</BaseButton>
-            <BaseButton variant="danger" @click="showDeleteModal = true">🗑️ Delete</BaseButton>
-            <BaseButton variant="primary" @click="showItemForm = true"> + Add Item </BaseButton>
+          <div
+            class="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 w-full sm:w-auto"
+          >
+            <BaseButton variant="ghost" class="w-full xs:w-auto" @click="showEditListModal = true"
+              >✏️ Edit List</BaseButton
+            >
+            <BaseButton variant="danger" class="w-full xs:w-auto" @click="showDeleteModal = true"
+              >🗑️ Delete</BaseButton
+            >
+            <BaseButton variant="primary" class="w-full xs:w-auto" @click="showAddItemForm = true">
+              + Add Item
+            </BaseButton>
           </div>
         </div>
       </template>
@@ -191,7 +199,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
@@ -202,6 +210,7 @@ import LoadingState from '@/components/shared/LoadingState.vue';
 import ModalDialog from '@/components/shared/ModalDialog.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
+import { useHouseholdStore } from '@/stores/household';
 import type { ShoppingItem } from '@/features/shared/domain/entities';
 
 const props = defineProps<{ listId: string }>();
@@ -209,6 +218,7 @@ const props = defineProps<{ listId: string }>();
 const router = useRouter();
 const authStore = useAuthStore();
 const shoppingStore = useShoppingStore();
+const householdStore = useHouseholdStore();
 
 const showPurchased = ref(true);
 const showOnlyMine = ref(false);
@@ -316,4 +326,23 @@ const handleDeleteList = async () => {
     router.push({ name: 'shopping' });
   }
 };
+
+// Watch for household changes and redirect if the list doesn't belong to the new household
+watch(
+  () => householdStore.currentHousehold,
+  async (newHousehold) => {
+    // Wait for loading to complete before checking
+    if (shoppingStore.loading) return;
+
+    if (newHousehold && shoppingStore.currentList) {
+      // If the current list doesn't belong to the new household, redirect to shopping index
+      if (shoppingStore.currentList.household_id !== newHousehold.id) {
+        router.push({ name: 'shopping' });
+      }
+    } else if (newHousehold && props.listId && !shoppingStore.currentList) {
+      // If household changed and we have a listId but no current list loaded, redirect
+      router.push({ name: 'shopping' });
+    }
+  },
+);
 </script>

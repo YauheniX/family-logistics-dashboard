@@ -5,6 +5,9 @@ module.exports = {
   darkMode: 'class',
   theme: {
     extend: {
+      screens: {
+        xs: '475px',
+      },
       fontFamily: {
         sans: ['Inter', 'Poppins', ...defaultTheme.fontFamily.sans],
       },

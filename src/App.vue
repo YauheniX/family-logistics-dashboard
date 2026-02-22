@@ -11,35 +11,49 @@
       <main class="flex-1 pb-16 lg:pb-0">
         <header
           v-if="showShell"
-          class="flex items-center justify-between gap-3 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-3 md:px-6 md:py-4"
+          class="flex items-center justify-between gap-2 sm:gap-3 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 sm:px-4 py-2.5 sm:py-3 md:px-6 md:py-4"
         >
-          <div class="flex min-w-0 items-center gap-2 md:gap-3">
-            <!-- Household Switcher (Desktop) -->
-            <div class="hidden md:block">
-              <HouseholdSwitcher />
-            </div>
+          <div class="flex min-w-0 items-center gap-2 md:gap-3 flex-1">
+            <!-- Logo -->
+            <RouterLink to="/" class="flex-shrink-0" aria-label="Go to home">
+              <img src="/icon.svg" alt="Logo" class="h-8 w-8" />
+            </RouterLink>
 
             <h1
-              class="truncate text-lg font-semibold text-neutral-900 dark:text-neutral-50 md:text-xl"
+              class="hidden md:block truncate font-semibold text-neutral-900 dark:text-neutral-50 md:text-xl"
             >
               {{ pageTitle }}
             </h1>
+            <HouseholdSwitcher />
           </div>
 
-          <div class="flex items-center gap-2 md:gap-3">
+          <div class="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
             <BaseButton
               variant="ghost"
               aria-label="Report a problem"
               class="hidden sm:inline-flex"
               @click="reportModalOpen = true"
             >
-              Report a problem
+              <svg
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
+                />
+              </svg>
             </BaseButton>
             <div class="hidden sm:block">
               <ThemeToggle />
             </div>
             <div
-              class="flex items-center gap-2 border-l border-neutral-200 dark:border-neutral-700 pl-2 md:gap-3 md:pl-3"
+              class="flex items-center gap-1.5 sm:gap-2 border-l border-neutral-200 dark:border-neutral-700 pl-1.5 sm:pl-2 md:gap-3 md:pl-3"
             >
               <div class="hidden md:block text-right">
                 <p class="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
@@ -54,7 +68,9 @@
                 :show-role-badge="false"
               />
 
-              <BaseButton variant="ghost" @click="logout">Logout</BaseButton>
+              <BaseButton variant="ghost" class="text-sm px-2 sm:px-3" @click="logout"
+                >Logout</BaseButton
+              >
             </div>
           </div>
         </header>
@@ -67,7 +83,7 @@
           <Breadcrumbs />
         </div>
 
-        <section class="p-4 md:p-6">
+        <section class="p-3 sm:p-4 md:p-6">
           <RouterView />
         </section>
       </main>
@@ -85,7 +101,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, onMounted } from 'vue';
-import { RouterView, useRoute, useRouter } from 'vue-router';
+import { RouterView, RouterLink, useRoute, useRouter } from 'vue-router';
 import SidebarNav from '@/components/layout/SidebarNav.vue';
 import BottomNav from '@/components/layout/BottomNav.vue';
 import Breadcrumbs from '@/components/layout/Breadcrumbs.vue';

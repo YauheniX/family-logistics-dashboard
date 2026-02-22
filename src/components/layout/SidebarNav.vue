@@ -134,7 +134,6 @@ const householdStore = useHouseholdStore();
 const currentHousehold = computed(() => householdStore.currentHousehold);
 
 const items = computed(() => [
-  { name: 'dashboard', label: 'Home', to: '/', emoji: '🏠' },
   {
     name: 'household-list',
     label: 'Manage Household',
