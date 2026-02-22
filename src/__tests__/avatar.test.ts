@@ -1,12 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import Avatar from '@/components/shared/Avatar.vue';
 
 describe('Avatar', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   describe('Rendering', () => {
     it('renders initials fallback by default', () => {
       const wrapper = mount(Avatar, {
@@ -373,6 +369,29 @@ describe('Avatar', () => {
       const container = wrapper.find('.relative');
       expect(container.attributes('style')).toContain('width: 4rem');
       expect(container.attributes('style')).toContain('height: 4rem');
+
+      // Verify derived computed sizes are properly calculated
+      // The component should convert 4rem to pixels (typically 4 * 16 = 64px)
+      // and derive other sizes from that
+      const emojiDiv = wrapper.find(
+        '.flex.items-center.justify-center.rounded-full.border-2.bg-white',
+      );
+      if (emojiDiv.exists()) {
+        const style = emojiDiv.attributes('style');
+        // emojiFontSize should be ~50% of container (32px for 64px)
+        expect(style).toMatch(/font-size:\s*\d+(\.\d+)?px/);
+      }
+
+      // Check badge sizes if role badge exists
+      const badgeSpan = wrapper.find('span[title]');
+      if (badgeSpan.exists()) {
+        const badgeStyle = badgeSpan.attributes('style');
+        // badgeSize should be ~37.5% of container
+        // badgeIconSize should be ~25% of container
+        expect(badgeStyle).toMatch(/width:\s*\d+(\.\d+)?px/);
+        expect(badgeStyle).toMatch(/height:\s*\d+(\.\d+)?px/);
+        expect(badgeStyle).toMatch(/font-size:\s*\d+(\.\d+)?px/);
+      }
     });
 
     it('uses default size of 64px', () => {

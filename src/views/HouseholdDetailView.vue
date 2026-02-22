@@ -44,6 +44,7 @@
               :name="member.display_name || member.email || member.user_id || 'User'"
               :role="member.role"
               :size="40"
+              :show-role-badge="false"
             />
             <div class="flex-1">
               <p class="font-medium text-neutral-800 dark:text-neutral-200">

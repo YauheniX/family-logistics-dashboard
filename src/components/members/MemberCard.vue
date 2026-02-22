@@ -5,7 +5,13 @@
   >
     <div class="flex items-start gap-4">
       <!-- Avatar -->
-      <Avatar :avatar-url="member.avatar_url" :name="memberName" :role="member.role" :size="64" />
+      <Avatar
+        :avatar-url="member.avatar_url"
+        :name="memberName"
+        :role="member.role"
+        :size="64"
+        :show-role-badge="false"
+      />
 
       <!-- Info -->
       <div class="flex-1 min-w-0">
@@ -66,6 +72,7 @@
 import { computed } from 'vue';
 import Avatar from '@/components/shared/Avatar.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
+import { getRoleLabel } from '@/utils/roleUtils';
 import type { Member } from '@/features/shared/domain/entities';
 
 interface Props {
@@ -125,17 +132,8 @@ const age = computed(() => {
   return calculatedAge;
 });
 
-// Role label for badge
-const roleLabel = computed(() => {
-  const labels: Record<string, string> = {
-    owner: 'Owner',
-    admin: 'Admin',
-    member: 'Member',
-    child: 'Child',
-    viewer: 'Viewer',
-  };
-  return labels[props.member.role] || 'Member';
-});
+// Role label for badge using shared utility
+const roleLabel = computed(() => getRoleLabel(props.member.role));
 
 const badgeVariant = computed(() => {
   if (isOwner.value) return 'primary';

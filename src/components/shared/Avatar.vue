@@ -87,6 +87,12 @@
  * ```
  */
 import { computed, ref, watch } from 'vue';
+import {
+  getRoleLabel,
+  getRoleIcon,
+  getRoleBadgeClass,
+  getRoleBorderClass,
+} from '@/utils/roleUtils';
 
 interface Props {
   /** Avatar URL (can be Google Auth URL, emoji, or null) */
@@ -94,7 +100,7 @@ interface Props {
   /** User's name (used for initials and color generation) */
   name: string;
   /** User's role (determines badge icon and colors) */
-  role?: 'owner' | 'admin' | 'member' | 'child' | 'viewer' | string;
+  role?: 'owner' | 'admin' | 'member' | 'child' | 'viewer' | (string & {});
   /** Avatar size (number in pixels or CSS string like '64px' or '4rem') */
   size?: string | number;
   /** Whether to show the role badge overlay */
@@ -136,9 +142,25 @@ const numericSize = computed(() => {
   if (typeof props.size === 'number') {
     return props.size;
   }
-  // Try to extract numeric value from string like "64px" or "4rem"
-  const match = props.size.match(/^(\d+(?:\.\d+)?)/);
-  return match ? parseFloat(match[1]) : 64;
+  // Extract numeric value and unit from string like "64px" or "4rem"
+  const match = props.size.match(/^(\d+(?:\.\d+)?)(\w*)/);
+  if (!match) return 64;
+
+  const value = parseFloat(match[1]);
+  const unit = match[2] || 'px';
+
+  // Convert rem/em to pixels
+  if (unit === 'rem') {
+    const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize || '16');
+    return value * rootFontSize;
+  } else if (unit === 'em') {
+    // For em units, use root font size as fallback since we don't have element context
+    const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize || '16');
+    return value * rootFontSize;
+  }
+
+  // Default to pixels
+  return value;
 });
 
 const emojiFontSize = computed(() => {
@@ -181,15 +203,23 @@ const isImageUrl = computed(() => {
 const isEmoji = computed(() => {
   if (!props.avatarUrl) return false;
   const value = props.avatarUrl.trim();
-  // Emojis are typically 1-4 characters and don't start with http/https or /
-  // Also check for common emoji patterns (Unicode emoji ranges)
-  return (
-    value.length <= 4 &&
-    !value.startsWith('http://') &&
-    !value.startsWith('https://') &&
-    !value.startsWith('/') &&
-    /[\p{Emoji}\p{Emoji_Component}]/u.test(value)
-  );
+
+  // URLs are not emojis
+  if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('/')) {
+    return false;
+  }
+
+  // Use Intl.Segmenter to count grapheme clusters (user-perceived characters)
+  // This handles ZWJ sequences correctly (e.g., 👨‍👩‍👧‍👦 counts as 1)
+  const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
+  const segments = Array.from(segmenter.segment(value));
+
+  // Emojis are typically 1-4 grapheme clusters
+  if (segments.length > 4) return false;
+
+  // Check if at least one character has Emoji_Presentation property
+  // This excludes plain ASCII digits and symbols that can be emoji-ified with variation selectors
+  return /\p{Emoji_Presentation}/u.test(value);
 });
 
 // Generate initials from name
@@ -221,56 +251,9 @@ const avatarColor = computed(() => {
   return colors[hash % colors.length];
 });
 
-// Role-based styling
-const isChild = computed(() => props.role === 'child');
-const isViewer = computed(() => props.role === 'viewer');
-const isOwner = computed(() => props.role === 'owner');
-
-const roleIcon = computed(() => {
-  const icons: Record<string, string> = {
-    owner: '👑',
-    admin: '⭐',
-    member: '👤',
-    child: '👶',
-    viewer: '👀',
-  };
-  return icons[props.role] || '👤';
-});
-
-const roleLabel = computed(() => {
-  const labels: Record<string, string> = {
-    owner: 'Owner',
-    admin: 'Admin',
-    member: 'Member',
-    child: 'Child',
-    viewer: 'Viewer',
-  };
-  return labels[props.role] || 'Member';
-});
-
-const roleIconClass = computed(() => {
-  if (isChild.value) {
-    return 'bg-green-500 dark:bg-green-600';
-  }
-  if (isViewer.value) {
-    return 'bg-purple-500 dark:bg-purple-600';
-  }
-  if (isOwner.value) {
-    return 'bg-yellow-500 dark:bg-yellow-600';
-  }
-  return 'bg-blue-500 dark:bg-blue-600';
-});
-
-const avatarBorderClass = computed(() => {
-  if (isChild.value) {
-    return 'border-green-300 dark:border-green-600';
-  }
-  if (isViewer.value) {
-    return 'border-purple-300 dark:border-purple-600';
-  }
-  if (isOwner.value) {
-    return 'border-yellow-400 dark:border-yellow-500';
-  }
-  return 'border-neutral-300 dark:border-neutral-600';
-});
+// Role-based styling using shared utilities
+const roleIcon = computed(() => getRoleIcon(props.role));
+const roleLabel = computed(() => getRoleLabel(props.role));
+const roleIconClass = computed(() => getRoleBadgeClass(props.role));
+const avatarBorderClass = computed(() => getRoleBorderClass(props.role));
 </script>
