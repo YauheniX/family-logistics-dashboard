@@ -197,7 +197,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseInput from '@/components/shared/BaseInput.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
@@ -249,19 +249,6 @@ const themeOptions = [
   },
 ];
 
-const userInitials = computed(() => {
-  const email = authStore.user?.email || '';
-  if (profileForm.value.name) {
-    const names = profileForm.value.name.split(' ');
-    return names
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  }
-  return email.slice(0, 2).toUpperCase();
-});
-
 const handleAvatarUpload = () => {
   toastStore.info('Avatar upload feature coming soon!');
 };
@@ -300,7 +287,7 @@ const handleSaveProfile = async () => {
       await loadUserProfile(authStore.user.id);
       toastStore.success('Profile updated successfully!');
     }
-  } catch (err) {
+  } catch {
     toastStore.error('An unexpected error occurred');
   } finally {
     saving.value = false;
