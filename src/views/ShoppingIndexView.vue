@@ -116,7 +116,7 @@ watch(
       await shoppingStore.loadLists(newHousehold.id);
     } else {
       // Clear lists if no household selected
-      shoppingStore.lists = [];
+      shoppingStore.clearLists();
     }
   },
 );

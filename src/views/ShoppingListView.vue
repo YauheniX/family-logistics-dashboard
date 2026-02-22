@@ -331,13 +331,16 @@ const handleDeleteList = async () => {
 watch(
   () => householdStore.currentHousehold,
   async (newHousehold) => {
+    // Wait for loading to complete before checking
+    if (shoppingStore.loading) return;
+
     if (newHousehold && shoppingStore.currentList) {
       // If the current list doesn't belong to the new household, redirect to shopping index
       if (shoppingStore.currentList.household_id !== newHousehold.id) {
         router.push({ name: 'shopping' });
       }
-    } else if (newHousehold) {
-      // If household changed but no current list, redirect to shopping index
+    } else if (newHousehold && props.listId && !shoppingStore.currentList) {
+      // If household changed and we have a listId but no current list loaded, redirect
       router.push({ name: 'shopping' });
     }
   },

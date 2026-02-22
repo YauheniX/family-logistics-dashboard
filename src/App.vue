@@ -20,14 +20,11 @@
             </RouterLink>
 
             <h1
-              class="hidden md:bloc truncate text-base sm:text-lg font-semibold text-neutral-900 dark:text-neutral-50 md:text-xl"
+              class="hidden md:block truncate font-semibold text-neutral-900 dark:text-neutral-50 md:text-xl"
             >
               {{ pageTitle }}
             </h1>
-            <!-- Household Switcher (Desktop) -->
-            <div>
-              <HouseholdSwitcher />
-            </div>
+            <HouseholdSwitcher />
           </div>
 
           <div class="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">

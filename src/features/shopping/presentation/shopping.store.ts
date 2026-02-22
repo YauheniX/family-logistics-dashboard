@@ -38,6 +38,10 @@ export const useShoppingStore = defineStore('shopping', () => {
 
   // ─── List Actions ───────────────────────────────────────
 
+  function clearLists() {
+    lists.value = [];
+  }
+
   async function loadLists(householdId: string) {
     loading.value = true;
     error.value = null;
@@ -214,6 +218,7 @@ export const useShoppingStore = defineStore('shopping', () => {
     purchasedItems,
     unpurchasedItems,
     // List Actions
+    clearLists,
     loadLists,
     loadList,
     createList,
