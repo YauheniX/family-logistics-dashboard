@@ -6,7 +6,10 @@
         <BaseButton variant="primary" @click="showCreateListModal = true"> + New List </BaseButton>
       </div>
 
-      <div v-if="!currentHousehold" class="text-sm text-neutral-500 dark:text-neutral-400">
+      <div
+        v-if="!householdStore.currentHousehold"
+        class="text-sm text-neutral-500 dark:text-neutral-400"
+      >
         No household selected. Please select a household to view shopping lists.
       </div>
 
@@ -62,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
@@ -76,13 +79,12 @@ const router = useRouter();
 const householdStore = useHouseholdStore();
 const shoppingStore = useShoppingStore();
 
-const currentHousehold = householdStore.currentHousehold;
-
 const showCreateListModal = ref(false);
 const newListTitle = ref('');
 const newListDescription = ref('');
 
 const handleCreateList = async () => {
+  const currentHousehold = householdStore.currentHousehold;
   if (!newListTitle.value.trim() || !currentHousehold?.id) return;
   const result = await shoppingStore.createList({
     household_id: String(currentHousehold.id),
@@ -100,8 +102,22 @@ const handleCreateList = async () => {
 };
 
 onMounted(async () => {
-  if (currentHousehold && currentHousehold.id) {
+  const currentHousehold = householdStore.currentHousehold;
+  if (currentHousehold?.id) {
     await shoppingStore.loadLists(currentHousehold.id);
   }
 });
+
+// Watch for household changes and reload lists
+watch(
+  () => householdStore.currentHousehold,
+  async (newHousehold) => {
+    if (newHousehold?.id) {
+      await shoppingStore.loadLists(newHousehold.id);
+    } else {
+      // Clear lists if no household selected
+      shoppingStore.lists = [];
+    }
+  },
+);
 </script>

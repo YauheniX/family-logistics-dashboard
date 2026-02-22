@@ -180,7 +180,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
@@ -223,10 +223,24 @@ const isOwner = computed(() => {
   );
 });
 
+const loadHouseholdData = async (householdId: string) => {
+  await householdEntityStore.loadHousehold(householdId);
+  await shoppingStore.loadLists(householdId);
+};
+
 onMounted(async () => {
-  await householdEntityStore.loadHousehold(props.id);
-  await shoppingStore.loadLists(props.id);
+  await loadHouseholdData(props.id);
 });
+
+// Watch for route param changes (when switching households)
+watch(
+  () => props.id,
+  async (newId) => {
+    if (newId) {
+      await loadHouseholdData(newId);
+    }
+  },
+);
 
 const handleInvite = async () => {
   if (!inviteEmail.value.trim()) return;
@@ -287,4 +301,18 @@ const confirmDelete = async () => {
     console.error('Failed to delete household');
   }
 };
+
+// Watch for household changes and navigate to the new household detail page
+watch(
+  () => householdStore.currentHousehold,
+  async (newHousehold, oldHousehold) => {
+    // Only navigate if household actually changed and it's different from current route
+    if (newHousehold && oldHousehold && newHousehold.id !== oldHousehold.id) {
+      if (newHousehold.id !== props.id) {
+        // Navigate to the new household's detail page
+        await router.push({ name: 'household-detail', params: { id: newHousehold.id } });
+      }
+    }
+  },
+);
 </script>

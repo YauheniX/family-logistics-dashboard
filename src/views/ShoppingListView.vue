@@ -24,7 +24,7 @@
             <BaseButton variant="danger" class="w-full xs:w-auto" @click="showDeleteModal = true"
               >🗑️ Delete</BaseButton
             >
-            <BaseButton variant="primary" class="w-full xs:w-auto" @click="showItemForm = true">
+            <BaseButton variant="primary" class="w-full xs:w-auto" @click="showAddItemForm = true">
               + Add Item
             </BaseButton>
           </div>
@@ -199,7 +199,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
@@ -210,6 +210,7 @@ import LoadingState from '@/components/shared/LoadingState.vue';
 import ModalDialog from '@/components/shared/ModalDialog.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
+import { useHouseholdStore } from '@/stores/household';
 import type { ShoppingItem } from '@/features/shared/domain/entities';
 
 const props = defineProps<{ listId: string }>();
@@ -217,6 +218,7 @@ const props = defineProps<{ listId: string }>();
 const router = useRouter();
 const authStore = useAuthStore();
 const shoppingStore = useShoppingStore();
+const householdStore = useHouseholdStore();
 
 const showPurchased = ref(true);
 const showOnlyMine = ref(false);
@@ -324,4 +326,20 @@ const handleDeleteList = async () => {
     router.push({ name: 'shopping' });
   }
 };
+
+// Watch for household changes and redirect if the list doesn't belong to the new household
+watch(
+  () => householdStore.currentHousehold,
+  async (newHousehold) => {
+    if (newHousehold && shoppingStore.currentList) {
+      // If the current list doesn't belong to the new household, redirect to shopping index
+      if (shoppingStore.currentList.household_id !== newHousehold.id) {
+        router.push({ name: 'shopping' });
+      }
+    } else if (newHousehold) {
+      // If household changed but no current list, redirect to shopping index
+      router.push({ name: 'shopping' });
+    }
+  },
+);
 </script>

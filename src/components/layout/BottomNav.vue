@@ -9,14 +9,14 @@
 
   <!-- Mobile Bottom Navigation (visible only on mobile) -->
   <nav
-    class="fixed bottom-0 left-0 right-0 z-40 lg:hidden border-t border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-2 py-2 safe-area-inset-bottom"
+    class="fixed bottom-0 left-0 right-0 z-40 lg:hidden border-t border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-2 py-2 safe-area-inset-bottom mobile-nav"
     role="navigation"
     aria-label="Mobile navigation"
   >
     <div class="flex items-center justify-around">
       <RouterLink
         v-for="item in navItems"
-        :key="item.to"
+        :key="item.name"
         :to="item.to"
         class="flex flex-col items-center gap-0.5 px-1.5 sm:px-2.5 py-1 rounded-lg transition-colors min-w-0"
         :class="
@@ -57,7 +57,7 @@
       <div class="py-2">
         <RouterLink
           v-for="item in moreItems"
-          :key="item.to"
+          :key="item.name"
           :to="item.to"
           class="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700"
           :class="
@@ -94,7 +94,6 @@ interface NavItem {
 
 // Primary navigation items (always visible)
 const navItems = computed<NavItem[]>(() => [
-  { name: 'dashboard', label: 'Home', to: '/', emoji: '🏠' },
   {
     name: 'household-list',
     label: 'Manage',
@@ -127,5 +126,12 @@ function closeMoreMenu() {
 /* Support for safe area insets (iPhone notch, etc.) */
 .safe-area-inset-bottom {
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+/* Ensure nav stays fixed on mobile devices */
+.mobile-nav {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
 }
 </style>
