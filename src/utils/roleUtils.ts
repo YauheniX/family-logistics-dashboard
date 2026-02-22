@@ -5,9 +5,9 @@
  * across the application.
  */
 
-export type Role = 'owner' | 'admin' | 'member' | 'child' | 'viewer';
+import type { MemberRole } from '@/features/shared/domain/entities';
 
-export const ROLE_LABELS: Record<string, string> = {
+export const ROLE_LABELS: Record<MemberRole, string> = {
   owner: 'Owner',
   admin: 'Admin',
   member: 'Member',
@@ -15,7 +15,7 @@ export const ROLE_LABELS: Record<string, string> = {
   viewer: 'Viewer',
 };
 
-export const ROLE_ICONS: Record<string, string> = {
+export const ROLE_ICONS: Record<MemberRole, string> = {
   owner: '👑',
   admin: '⭐',
   member: '👤',
@@ -38,32 +38,32 @@ export const ROLE_STYLES = {
     child: 'border-green-300 dark:border-green-600',
     viewer: 'border-purple-300 dark:border-purple-600',
   },
-} as const;
+} as const satisfies Record<'badge' | 'border', Record<MemberRole, string>>;
 
 /**
  * Get the display label for a role
  */
 export function getRoleLabel(role: string): string {
-  return ROLE_LABELS[role] || 'Member';
+  return ROLE_LABELS[role as MemberRole] || 'Member';
 }
 
 /**
  * Get the emoji icon for a role
  */
 export function getRoleIcon(role: string): string {
-  return ROLE_ICONS[role] || '👤';
+  return ROLE_ICONS[role as MemberRole] || '👤';
 }
 
 /**
  * Get the badge background class for a role
  */
 export function getRoleBadgeClass(role: string): string {
-  return ROLE_STYLES.badge[role as Role] || ROLE_STYLES.badge.member;
+  return ROLE_STYLES.badge[role as MemberRole] || ROLE_STYLES.badge.member;
 }
 
 /**
  * Get the border class for a role
  */
 export function getRoleBorderClass(role: string): string {
-  return ROLE_STYLES.border[role as Role] || ROLE_STYLES.border.member;
+  return ROLE_STYLES.border[role as MemberRole] || ROLE_STYLES.border.member;
 }

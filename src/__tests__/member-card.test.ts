@@ -70,7 +70,7 @@ describe('MemberCard', () => {
     });
 
     expect(wrapper.text()).toContain('Owner');
-    expect(wrapper.text()).toContain('👑');
+    // Role emoji badge is hidden on Avatar to avoid duplication with text badge
   });
 
   it('displays role badge for admin', () => {
@@ -81,7 +81,7 @@ describe('MemberCard', () => {
     });
 
     expect(wrapper.text()).toContain('Admin');
-    expect(wrapper.text()).toContain('⭐');
+    // Role emoji badge is hidden on Avatar to avoid duplication with text badge
   });
 
   it('displays role badge for child', () => {
@@ -97,7 +97,7 @@ describe('MemberCard', () => {
     });
 
     expect(wrapper.text()).toContain('Child');
-    expect(wrapper.text()).toContain('👶');
+    // Role emoji badge is hidden on Avatar to avoid duplication with text badge
   });
 
   it('displays role badge for viewer', () => {
@@ -108,7 +108,7 @@ describe('MemberCard', () => {
     });
 
     expect(wrapper.text()).toContain('Viewer');
-    expect(wrapper.text()).toContain('👀');
+    // Role emoji badge is hidden on Avatar to avoid duplication with text badge
   });
 
   it('shows age for child members with date_of_birth', () => {

@@ -320,6 +320,9 @@ onMounted(async () => {
         // Profile doesn't exist yet, use email as default
         profileForm.value.name = authStore.user.email?.split('@')[0] || '';
       }
+    } catch {
+      // Handle exceptions from repository
+      toastStore.error('Failed to load profile. Please refresh the page.');
     } finally {
       loading.value = false;
     }

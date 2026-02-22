@@ -43,27 +43,15 @@ export class UserProfileRepository extends BaseRepository<
   }
 
   /**
-   * Save user profile (upsert - insert or update)
-   * Checks if profile exists and inserts or updates accordingly
+   * Save user profile (atomic upsert)
+   * Uses database upsert to avoid race conditions
    */
   async saveProfile(userId: string, dto: UpdateUserProfileDto): Promise<ApiResponse<UserProfile>> {
-    // First check if profile exists
-    const existingProfile = await this.findById(userId);
-
-    if (existingProfile.error && existingProfile.error.message !== 'No rows found') {
-      return existingProfile;
-    }
-
-    if (existingProfile.data) {
-      // Profile exists, update it
-      return this.update(userId, dto);
-    } else {
-      // Profile doesn't exist, create it
-      return this.create({
-        id: userId,
-        display_name: dto.display_name || '',
-        avatar_url: dto.avatar_url || null,
-      });
-    }
+    // Use atomic upsert to avoid TOCTOU race conditions
+    return this.upsert({
+      id: userId,
+      display_name: dto.display_name || '',
+      avatar_url: dto.avatar_url || null,
+    } as Partial<UserProfile>);
   }
 }

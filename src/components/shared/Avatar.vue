@@ -217,9 +217,9 @@ const isEmoji = computed(() => {
   // Emojis are typically 1-4 grapheme clusters
   if (segments.length > 4) return false;
 
-  // Check if at least one character has Emoji_Presentation property
-  // This excludes plain ASCII digits and symbols that can be emoji-ified with variation selectors
-  return /\p{Emoji_Presentation}/u.test(value);
+  // Use Extended_Pictographic which includes emoji with variation selectors and ZWJ sequences
+  // This pattern matches emoji with optional variation selector (U+FE0F) and ZWJ sequences
+  return /^\p{Extended_Pictographic}(\u{FE0F}|\u{200D}\p{Extended_Pictographic})*$/u.test(value);
 });
 
 // Generate initials from name
@@ -228,11 +228,22 @@ const initials = computed(() => {
   if (!name) return '?';
 
   const parts = name.split(/[\s@]+/).filter((part) => part.length > 0);
+  const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
 
   if (parts.length >= 2) {
-    return (parts[0][0] + parts[1][0]).toUpperCase();
+    // Get first grapheme from first two parts
+    const firstGrapheme = Array.from(segmenter.segment(parts[0]))[0]?.segment || '';
+    const secondGrapheme = Array.from(segmenter.segment(parts[1]))[0]?.segment || '';
+    return (firstGrapheme + secondGrapheme).toUpperCase();
   }
-  return name.substring(0, 2).toUpperCase();
+
+  // Get first two graphemes from single part
+  const graphemes = Array.from(segmenter.segment(name));
+  const initials = graphemes
+    .slice(0, 2)
+    .map((g) => g.segment)
+    .join('');
+  return initials.toUpperCase();
 });
 
 // Generate consistent color from name hash
@@ -247,7 +258,8 @@ const avatarColor = computed(() => {
     '#06B6D4', // cyan
     '#6366F1', // indigo
   ];
-  const hash = props.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  // Use multiplicative rolling hash to avoid anagram collisions
+  const hash = props.name.split('').reduce((acc, char) => (acc * 31 + char.charCodeAt(0)) >>> 0, 0);
   return colors[hash % colors.length];
 });
 
