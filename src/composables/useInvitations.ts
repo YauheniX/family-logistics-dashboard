@@ -42,7 +42,8 @@ export function useInvitations(): UseInvitationsReturn {
 
     try {
       // Type assertion needed: custom RPC function not in generated types
-      const { data, error: rpcError } = await supabase.rpc('get_my_pending_invitations');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error: rpcError } = await (supabase as any).rpc('get_my_pending_invitations');
 
       if (rpcError) {
         error.value = {

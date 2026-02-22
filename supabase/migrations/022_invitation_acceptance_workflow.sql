@@ -41,7 +41,7 @@ begin
     i.id,
     i.household_id,
     h.name as household_name,
-    i.email,
+    i.email::text,
     i.role,
     m.display_name as invited_by_name,
     i.expires_at,
