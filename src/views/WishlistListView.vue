@@ -32,7 +32,13 @@
       >
         <div
           class="flex-1 p-4 cursor-pointer"
+          tabindex="0"
+          role="button"
           @click="$router.push({ name: 'wishlist-edit', params: { id: wishlist.id } })"
+          @keydown.enter="$router.push({ name: 'wishlist-edit', params: { id: wishlist.id } })"
+          @keydown.space.prevent="
+            $router.push({ name: 'wishlist-edit', params: { id: wishlist.id } })
+          "
         >
           <!-- Preview Image -->
           <div
@@ -129,6 +135,8 @@ import ModalDialog from '@/components/shared/ModalDialog.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
 import { wishlistService } from '@/features/wishlist/domain/wishlist.service';
+import { isValidUrl } from '@/utils/validation';
+import { fetchLinkPreview } from '@/composables/useLinkPreview';
 
 const authStore = useAuthStore();
 const wishlistStore = useWishlistStore();
@@ -163,41 +171,64 @@ const handleDelete = async (wishlistId: string) => {
   await wishlistStore.removeWishlist(wishlistId);
 };
 
-// Load first item's link for each wishlist and fetch screenshot
+/**
+ * Load first item's link for each wishlist and fetch screenshot
+ * Parallelizes API calls for better performance
+ */
 const loadWishlistPreviews = async () => {
   const urls: Record<string, string> = {};
   const images: Record<string, string> = {};
 
-  for (const wishlist of wishlistStore.wishlists) {
+  // Step 1: Fetch all wishlist items in parallel
+  const itemFetches = wishlistStore.wishlists.map(async (wishlist) => {
     try {
       const response = await wishlistService.getWishlistItems(wishlist.id);
       if (response.data && response.data.length > 0) {
         // Find first item with a valid link
-        const itemWithLink = response.data.find((item) => item.link && item.link.trim());
+        const itemWithLink = response.data.find(
+          (item) => item.link && item.link.trim() && isValidUrl(item.link),
+        );
         if (itemWithLink?.link) {
-          urls[wishlist.id] = itemWithLink.link;
-
-          // Fetch screenshot from Microlink API
-          try {
-            const microlinkResponse = await fetch(
-              `https://api.microlink.io/?url=${encodeURIComponent(itemWithLink.link)}&screenshot=true&meta=false&viewport.width=400&viewport.height=300&viewport.deviceScaleFactor=1`,
-            );
-
-            if (microlinkResponse.ok) {
-              const data = await microlinkResponse.json();
-              if (data.status === 'success' && data.data?.screenshot?.url) {
-                images[wishlist.id] = data.data.screenshot.url;
-              }
-            }
-          } catch (error) {
-            console.warn(`Failed to fetch screenshot for wishlist ${wishlist.id}`, error);
-          }
+          return { wishlistId: wishlist.id, url: itemWithLink.link };
         }
       }
     } catch (error) {
       // Silently fail for individual wishlists
       console.warn(`Failed to load items for wishlist ${wishlist.id}`, error);
     }
+    return null;
+  });
+
+  const wishlistUrls = (await Promise.all(itemFetches)).filter((item) => item !== null);
+
+  // Step 2: Fetch all link previews in parallel (uses cache automatically)
+  const previewFetches = wishlistUrls.map(async ({ wishlistId, url }) => {
+    urls[wishlistId] = url;
+
+    try {
+      // fetchLinkPreview handles caching internally
+      const preview = await fetchLinkPreview(url, {
+        screenshot: true,
+        meta: false,
+        viewportWidth: 400,
+        viewportHeight: 300,
+        deviceScaleFactor: 1,
+      });
+
+      if (preview?.image) {
+        return { wishlistId, image: preview.image };
+      }
+    } catch (error) {
+      console.warn(`Failed to fetch screenshot for wishlist ${wishlistId}`, error);
+    }
+    return null;
+  });
+
+  const previewResults = (await Promise.all(previewFetches)).filter((item) => item !== null);
+
+  // Step 3: Update state with results
+  for (const { wishlistId, image } of previewResults) {
+    images[wishlistId] = image;
   }
 
   previewUrls.value = urls;

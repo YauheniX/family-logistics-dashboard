@@ -72,19 +72,13 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue';
 import { isValidUrl } from '@/utils/validation';
-
-interface LinkPreviewData {
-  title: string;
-  description: string;
-  image: string;
-  domain: string;
-  url: string;
-}
-
-interface CachedPreview {
-  data: LinkPreviewData;
-  timestamp: number;
-}
+import {
+  type LinkPreviewData,
+  getCachedPreview,
+  needsCacheRefresh,
+  extractDomain,
+  fetchLinkPreview,
+} from '@/composables/useLinkPreview';
 
 interface Props {
   url: string;
@@ -92,17 +86,7 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const CACHE_KEY_PREFIX = 'link_preview_';
-const CACHE_EXPIRATION_DAYS = 7;
-const API_ENDPOINT = 'https://api.microlink.io';
-const SCREENSHOT_CONFIG = {
-  screenshot: 'true',
-  meta: 'true',
-  'viewport.width': '480',
-  'viewport.height': '480',
-  'viewport.deviceScaleFactor': '2',
-  'viewport.isMobile': 'true',
-};
+const MAX_RETRIES = 3;
 
 const preview = ref<LinkPreviewData | null>(null);
 const cachedPreview = ref<LinkPreviewData | null>(null);
@@ -110,78 +94,9 @@ const isLoading = ref(false);
 const error = ref(false);
 const imageError = ref(false);
 const isMounted = ref(false);
+const imageRetryCounts = new Map<string, number>();
 
 const isValidLink = computed(() => isValidUrl(props.url));
-
-/**
- * Extract domain from URL
- */
-function extractDomain(url: string): string {
-  try {
-    const urlObj = new URL(url);
-    return urlObj.hostname;
-  } catch {
-    return '';
-  }
-}
-
-/**
- * Get cache key for a URL
- */
-function getCacheKey(url: string): string {
-  return `${CACHE_KEY_PREFIX}${btoa(url)}`;
-}
-
-/**
- * Check if cached data is expired (older than 7 days)
- */
-function isCacheExpired(timestamp: number): boolean {
-  const expirationMs = CACHE_EXPIRATION_DAYS * 24 * 60 * 60 * 1000;
-  return Date.now() - timestamp > expirationMs;
-}
-
-/**
- * Get cached preview from localStorage
- */
-function getCachedPreview(url: string): LinkPreviewData | null {
-  try {
-    const cached = localStorage.getItem(getCacheKey(url));
-    if (!cached) return null;
-
-    const parsedCache: CachedPreview = JSON.parse(cached);
-    return parsedCache.data;
-  } catch (err) {
-    console.error('Failed to read cache:', err);
-    return null;
-  }
-}
-
-/**
- * Check if cache needs refresh (background refresh for expired data)
- */
-function needsCacheRefresh(url: string): boolean {
-  try {
-    const cached = localStorage.getItem(getCacheKey(url));
-    if (!cached) return true;
-
-    const parsedCache: CachedPreview = JSON.parse(cached);
-    return isCacheExpired(parsedCache.timestamp);
-  } catch {
-    return true;
-  }
-}
-
-/**
- * Save preview to localStorage cache
- */
-function saveCachePreview(url: string, data: LinkPreviewData): void {
-  try {
-    const cacheData: CachedPreview = { data, timestamp: Date.now() };
-    localStorage.setItem(getCacheKey(url), JSON.stringify(cacheData));
-  } catch (err) {
-    console.error('Failed to save cache:', err);
-  }
-}
 
 /**
  * Fetch preview from Microlink API with screenshot
@@ -193,47 +108,36 @@ async function fetchPreview(url: string, silent = false): Promise<void> {
   }
 
   try {
-    // Build API URL with parameters
-    const params = new URLSearchParams({
-      url: url,
-      ...SCREENSHOT_CONFIG,
-    });
-    const response = await fetch(`${API_ENDPOINT}?${params.toString()}`);
-
-    if (!response.ok) {
-      // Silently fail for rate limits (429 = Too Many Requests)
-      if (response.status === 429 && isMounted.value) {
-        error.value = true;
-      }
-      return;
-    }
-
-    const result = await response.json();
+    // Force fresh fetch (skip cache) when called from handleImageError
+    const previewData = await fetchLinkPreview(
+      url,
+      {
+        screenshot: true,
+        meta: true,
+        viewportWidth: 480,
+        viewportHeight: 480,
+        deviceScaleFactor: 2,
+        isMobile: true,
+      },
+      { force: true }, // Always force fresh API call
+    );
 
     // Check if component is still mounted before updating state
     if (!isMounted.value) return;
 
-    // Validate response structure
-    if (result.status !== 'success' || !result.data) {
+    if (!previewData) {
       if (isMounted.value) error.value = true;
       return;
     }
 
-    const { data } = result;
-    const previewData: LinkPreviewData = {
-      title: data.title || '',
-      description: data.description || '',
-      image: data.screenshot?.url || data.image?.url || '',
-      domain: extractDomain(data.url || url),
-      url: data.url || url,
-    };
-
     preview.value = previewData;
-    cachedPreview.value = previewData;
+    // Do NOT set cachedPreview.value here - it should only be set when loading from cache
+    // This prevents infinite re-fetch loops in handleImageError()
 
-    // Save to cache and reset error state
-    saveCachePreview(url, previewData);
     imageError.value = false;
+
+    // Reset retry count on successful fetch
+    imageRetryCounts.delete(url);
   } catch {
     // Silently fail - graceful degradation
     if (isMounted.value) error.value = true;
@@ -253,6 +157,17 @@ async function handleImageError(): Promise<void> {
 
   // Only re-fetch if showing cached data (avoid infinite loops)
   if (cachedPreview.value) {
+    // Check retry count for this URL
+    const retryCount = imageRetryCounts.get(props.url) || 0;
+
+    if (retryCount >= MAX_RETRIES) {
+      // Max retries reached, stop trying
+      return;
+    }
+
+    // Increment retry count
+    imageRetryCounts.set(props.url, retryCount + 1);
+
     await fetchPreview(props.url, false);
   }
 }
@@ -282,13 +197,23 @@ async function loadPreview(): Promise<void> {
   } else {
     // No cache available - fetch fresh data
     cachedPreview.value = null;
+    // Reset retry count when loading fresh
+    imageRetryCounts.delete(props.url);
     await fetchPreview(props.url, false);
   }
 }
 
-// Watch for URL prop changes
-watch(() => props.url, loadPreview, { immediate: true });
+// Watch for URL changes
+watch(
+  () => props.url,
+  () => {
+    if (isValidLink.value) {
+      loadPreview();
+    }
+  },
+);
 
+// Lifecycle hooks
 onMounted(() => {
   isMounted.value = true;
   loadPreview();

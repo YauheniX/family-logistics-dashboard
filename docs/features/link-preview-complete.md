@@ -13,7 +13,6 @@
 - [Error Recovery](#-error-recovery-system)
 - [Caching Strategy](#-caching-strategy)
 - [API Integration](#-api-integration)
-- [Configuration](#-configuration)
 - [Testing](#-testing)
 - [Troubleshooting](#-troubleshooting)
 - [Performance](#-performance)
@@ -40,7 +39,7 @@ import LinkPreview from '@/components/shared/LinkPreview.vue';
 
 ### Free Tier Limits
 
-- **50 requests/day per IP** (no authentication needed)
+- **50 requests/day per IP** (no authentication needed, as of February 2026)
 - **CORS enabled** - works directly from browser
 - **No rate limit errors** for basic usage
 
@@ -510,7 +509,7 @@ const invalidUrls = ['', 'not-a-url', 'javascript:alert(1)', 'ftp://example.com'
 1. Verify URL is valid (http/https only)
 2. Check browser console for API errors
 3. Test URL at [https://api.microlink.io/?url=YOUR_URL](https://api.microlink.io)
-4. Check daily rate limit (50 requests/day for free tier)
+4. Check daily rate limit (50 requests/day for free tier, as of February 2026)
 
 ### Broken Images
 
@@ -705,11 +704,11 @@ None - fixed layout
 
 ## 🎯 API Limits Reference
 
-| Plan  | Requests/Hour | Requests/Day  | Price  |
-| ----- | ------------- | ------------- | ------ |
-| Free  | 60            | 50/day per IP | $0     |
-| Basic | 1,000         | ~24,000       | $19/mo |
-| Pro   | 10,000        | ~240,000      | $99/mo |
+| Plan  | Requests/Hour          | Requests/Day                        | Price  |
+| ----- | ---------------------- | ----------------------------------- | ------ |
+| Free  | N/A (daily limit only) | 50/day per IP (as of February 2026) | $0     |
+| Basic | 1,000                  | ~24,000                             | $19/mo |
+| Pro   | 10,000                 | ~240,000                            | $99/mo |
 
 **Tip**: With 7-day caching, free tier is usually sufficient for small/medium apps!
 
@@ -727,7 +726,7 @@ Before deploying:
 - [ ] Mobile responsive tested
 - [ ] Cache working (check localStorage)
 - [ ] Error states tested (invalid URLs)
-- [ ] Rate limits understood (50/day free tier)
+- [ ] Rate limits understood (50/day free tier, as of February 2026)
 
 ---
 
@@ -761,5 +760,3 @@ Before deploying:
 Part of the Family Logistics Dashboard project.
 
 ---
-
-**Happy previewing! 🎉**

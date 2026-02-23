@@ -1,6 +1,9 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi, afterEach, afterAll } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import LinkPreview from '@/components/shared/LinkPreview.vue';
+
+// Save original fetch for restoration
+const originalFetch = global.fetch;
 
 // Mock fetch
 global.fetch = vi.fn();
@@ -11,6 +14,20 @@ describe('LinkPreview', () => {
   beforeEach(() => {
     // Reset mocks
     vi.clearAllMocks();
+
+    // Setup default fetch mock (tests can override this)
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        status: 'success',
+        data: {
+          title: 'Default Title',
+          description: 'Default Description',
+          screenshot: { url: 'https://cdn.example.com/default.jpg' },
+          url: 'https://example.com',
+        },
+      }),
+    } as Response);
 
     // Mock localStorage
     localStorageMock = {};
@@ -32,6 +49,11 @@ describe('LinkPreview', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  afterAll(() => {
+    // Restore original fetch
+    global.fetch = originalFetch;
   });
 
   // ─── URL Validation ─────────────────────────────────────────

@@ -263,7 +263,6 @@ const startEditItem = (item: WishlistItem) => {
   itemForm.price = item.price;
   itemForm.currency = item.currency;
   itemForm.priority = item.priority;
-  itemForm.priority = item.priority;
 };
 
 const cancelEditItem = () => {

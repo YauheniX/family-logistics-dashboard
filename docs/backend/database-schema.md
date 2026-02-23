@@ -2,7 +2,7 @@
 
 Complete database schema documentation for the Family Logistics Dashboard.
 
-**Last Updated**: February 21, 2026  
+**Last Updated**: February 23, 2026  
 **Database**: PostgreSQL (via Supabase)  
 **Schema Version**: Current (families-based, migrating to households)
 
@@ -361,7 +361,6 @@ create table if not exists wishlist_items (
 - Reservation tracked by email only
 - Price and currency for gift planning
 - External link to product page
-- Image URL for visual reference
 
 **Relationships**:
 
