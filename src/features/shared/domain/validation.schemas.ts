@@ -74,7 +74,6 @@ export const WishlistItemFormSchema = z.object({
   link: z.string().url('Invalid URL').nullable().optional(),
   price: z.number().min(0, 'Price must be positive').nullable().optional(),
   currency: z.string().length(3, 'Currency must be 3 characters (e.g., USD)').default('USD'),
-  image_url: z.string().url('Invalid URL').nullable().optional(),
   priority: ItemPrioritySchema.default('medium'),
 });
 export type WishlistItemFormData = z.infer<typeof WishlistItemFormSchema>;

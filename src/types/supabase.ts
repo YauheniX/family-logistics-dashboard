@@ -414,7 +414,6 @@ export type Database = {
           currency: string;
           description: string | null;
           id: string;
-          image_url: string | null;
           is_reserved: boolean;
           link: string | null;
           price: number | null;
@@ -430,7 +429,6 @@ export type Database = {
           currency?: string;
           description?: string | null;
           id?: string;
-          image_url?: string | null;
           is_reserved?: boolean;
           link?: string | null;
           price?: number | null;
@@ -446,7 +444,6 @@ export type Database = {
           currency?: string;
           description?: string | null;
           id?: string;
-          image_url?: string | null;
           is_reserved?: boolean;
           link?: string | null;
           price?: number | null;

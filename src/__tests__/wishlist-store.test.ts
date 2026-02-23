@@ -36,7 +36,6 @@ const mockItem = {
   link: null,
   price: 99.99,
   currency: 'USD',
-  image_url: null,
   priority: 'high' as const,
   is_reserved: false,
   reserved_by_email: null,
@@ -374,7 +373,7 @@ describe('Wishlist Store', () => {
       link: null,
       price: 99.99,
       currency: 'USD',
-      image_url: null,
+
       priority: 'high',
     });
 
@@ -397,7 +396,6 @@ describe('Wishlist Store', () => {
       link: null,
       price: 99.99,
       currency: 'USD',
-      image_url: null,
       priority: 'high',
     });
 

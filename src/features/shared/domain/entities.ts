@@ -191,7 +191,6 @@ export interface WishlistItem {
   link: string | null;
   price: number | null;
   currency: string;
-  image_url: string | null;
   priority: ItemPriority;
   is_reserved: boolean;
   reserved_by_email: string | null;
@@ -203,13 +202,10 @@ export interface WishlistItem {
 
 export type CreateWishlistItemDto = Pick<
   WishlistItem,
-  'wishlist_id' | 'title' | 'description' | 'link' | 'price' | 'currency' | 'image_url' | 'priority'
+  'wishlist_id' | 'title' | 'description' | 'link' | 'price' | 'currency' | 'priority'
 >;
 export type UpdateWishlistItemDto = Partial<
-  Pick<
-    WishlistItem,
-    'title' | 'description' | 'link' | 'price' | 'currency' | 'image_url' | 'priority'
-  >
+  Pick<WishlistItem, 'title' | 'description' | 'link' | 'price' | 'currency' | 'priority'>
 >;
 export type ReserveWishlistItemDto = Pick<
   WishlistItem,

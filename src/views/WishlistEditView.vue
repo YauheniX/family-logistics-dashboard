@@ -60,31 +60,7 @@
         class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
       >
         <BaseCard v-for="item in wishlistStore.items" :key="item.id" :padding="false">
-          <div
-            class="aspect-square bg-neutral-100 dark:bg-neutral-700 rounded-t-card flex items-center justify-center overflow-hidden relative"
-          >
-            <img
-              v-show="item.image_url && !failedImages.has(item.id)"
-              :src="item.image_url || ''"
-              :alt="item.title"
-              class="w-full h-full object-cover"
-              @error="failedImages.add(item.id)"
-            />
-            <svg
-              v-show="!item.image_url || failedImages.has(item.id)"
-              class="w-16 h-16 text-neutral-400 dark:text-neutral-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="1.5"
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-          </div>
+          <LinkPreview v-if="safeUrl(item.link)" :url="safeUrl(item.link)!" />
           <div class="p-3 space-y-2">
             <div class="flex items-start justify-between gap-2">
               <h4 class="font-medium text-neutral-900 dark:text-neutral-50 line-clamp-2">
@@ -111,15 +87,6 @@
                 Reserved{{ item.reserved_by_name ? ` by ${item.reserved_by_name}` : '' }}
               </BaseBadge>
             </div>
-            <a
-              v-if="safeUrl(item.link)"
-              :href="safeUrl(item.link)"
-              target="_blank"
-              rel="noreferrer"
-              class="text-xs text-primary-600 dark:text-primary-400 hover:underline block"
-            >
-              View link →
-            </a>
             <div class="flex gap-2 pt-2">
               <BaseButton
                 v-if="item.is_reserved"
@@ -171,38 +138,7 @@
           </div>
         </div>
         <BaseInput v-model="itemForm.description" label="Description" placeholder="Optional" />
-        <div class="grid gap-4 md:grid-cols-2">
-          <BaseInput v-model="itemForm.link" label="Link" type="url" placeholder="https://..." />
-          <div class="space-y-2">
-            <BaseInput
-              v-model="itemForm.image_url"
-              label="Image URL"
-              type="url"
-              placeholder="https://example.com/image.jpg"
-            />
-            <p class="text-xs text-neutral-500 dark:text-neutral-400">
-              💡 Right-click an image → "Copy image address" to get the URL
-            </p>
-            <div
-              v-if="itemForm.image_url"
-              class="aspect-square max-w-[200px] bg-neutral-100 dark:bg-neutral-700 rounded-lg flex items-center justify-center overflow-hidden border border-neutral-200 dark:border-neutral-600"
-            >
-              <img
-                :src="itemForm.image_url"
-                alt="Preview"
-                class="w-full h-full object-cover"
-                @error="imageLoadError = true"
-                @load="imageLoadError = false"
-              />
-            </div>
-            <p
-              v-if="imageLoadError && itemForm.image_url"
-              class="text-xs text-red-600 dark:text-red-400"
-            >
-              ⚠️ Unable to load image. Check the URL is correct and publicly accessible.
-            </p>
-          </div>
-        </div>
+        <BaseInput v-model="itemForm.link" label="Link" type="url" placeholder="https://..." />
         <div class="grid gap-4 md:grid-cols-2">
           <BaseInput
             label="Price"
@@ -229,6 +165,7 @@ import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
 import BaseInput from '@/components/shared/BaseInput.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
+import LinkPreview from '@/components/shared/LinkPreview.vue';
 import { useToastStore } from '@/stores/toast';
 import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
 import type { ItemPriority, WishlistItem } from '@/features/shared/domain/entities';
@@ -242,8 +179,6 @@ const editTitle = ref('');
 const editDescription = ref('');
 const editIsPublic = ref(false);
 const editingItemId = ref<string | null>(null);
-const imageLoadError = ref(false);
-const failedImages = reactive(new Set<string>());
 
 const itemForm = reactive({
   title: '',
@@ -251,7 +186,6 @@ const itemForm = reactive({
   link: '',
   price: null as number | null,
   currency: 'USD',
-  image_url: '',
   priority: 'medium' as ItemPriority,
 });
 
@@ -317,10 +251,8 @@ const resetItemForm = () => {
   itemForm.link = '';
   itemForm.price = null;
   itemForm.currency = 'USD';
-  itemForm.image_url = '';
   itemForm.priority = 'medium';
   editingItemId.value = null;
-  imageLoadError.value = false;
 };
 
 const startEditItem = (item: WishlistItem) => {
@@ -330,9 +262,7 @@ const startEditItem = (item: WishlistItem) => {
   itemForm.link = item.link ?? '';
   itemForm.price = item.price;
   itemForm.currency = item.currency;
-  itemForm.image_url = item.image_url ?? '';
   itemForm.priority = item.priority;
-  imageLoadError.value = false;
 };
 
 const cancelEditItem = () => {
@@ -356,7 +286,6 @@ const handleSaveItem = async () => {
     link: itemForm.link.trim() || null,
     price: itemForm.price,
     currency: itemForm.currency || 'USD',
-    image_url: itemForm.image_url.trim() || null,
     priority: itemForm.priority,
   };
 

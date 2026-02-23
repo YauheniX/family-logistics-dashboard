@@ -87,7 +87,6 @@ create table if not exists wishlist_items (
   link              text,
   price             numeric(10, 2),
   currency          text not null default 'USD',
-  image_url         text,
   priority          text not null default 'medium' check (priority in ('low', 'medium', 'high')),
   is_reserved       boolean not null default false,
   reserved_by_email text,

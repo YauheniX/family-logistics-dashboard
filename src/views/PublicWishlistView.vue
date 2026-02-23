@@ -21,31 +21,7 @@
         class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
       >
         <BaseCard v-for="item in wishlistStore.items" :key="item.id" :padding="false">
-          <div
-            class="aspect-square bg-neutral-100 dark:bg-neutral-700 rounded-t-card flex items-center justify-center overflow-hidden relative"
-          >
-            <img
-              v-show="item.image_url && !failedImages.has(item.id)"
-              :src="item.image_url || ''"
-              :alt="item.title"
-              class="w-full h-full object-cover"
-              @error="failedImages.add(item.id)"
-            />
-            <svg
-              v-show="!item.image_url || failedImages.has(item.id)"
-              class="w-16 h-16 text-neutral-400 dark:text-neutral-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="1.5"
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-          </div>
+          <LinkPreview v-if="safeUrl(item.link)" :url="safeUrl(item.link)!" />
           <div class="p-3 space-y-2">
             <div class="flex items-start justify-between gap-2">
               <h4 class="font-medium text-neutral-900 dark:text-neutral-50 line-clamp-2">
@@ -67,15 +43,6 @@
             >
               {{ item.price }} {{ item.currency }}
             </p>
-            <a
-              v-if="safeUrl(item.link)"
-              :href="safeUrl(item.link)"
-              target="_blank"
-              rel="noreferrer"
-              class="text-xs text-primary-600 dark:text-primary-400 hover:underline block"
-            >
-              View link →
-            </a>
             <div v-if="item.is_reserved" class="pt-2 space-y-2">
               <BaseBadge variant="warning" class="w-full text-center block">
                 Reserved{{ item.reserved_by_name ? ` by ${item.reserved_by_name}` : '' }}
@@ -209,13 +176,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import ModalDialog from '@/components/shared/ModalDialog.vue';
+import LinkPreview from '@/components/shared/LinkPreview.vue';
 import { useToastStore } from '@/stores/toast';
 import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
 import type { ItemPriority } from '@/features/shared/domain/entities';
@@ -233,7 +201,6 @@ const unreserveCode = ref('');
 const reservingItemId = ref<string | null>(null);
 const unreservingItemId = ref<string | null>(null);
 const generatedCode = ref<string | null>(null);
-const failedImages = reactive(new Set<string>());
 
 const priorityVariant = (priority: ItemPriority): 'danger' | 'warning' | 'neutral' => {
   switch (priority) {
