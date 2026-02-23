@@ -20,7 +20,7 @@ The domain model represents the core business entities and their relationships. 
 
 ### Entity Hierarchy
 
-```
+```text
 User (Supabase Auth)
   │
   ├─── UserProfile (extended profile)
@@ -269,7 +269,7 @@ export type UpdateShoppingListDto = Partial<Pick<ShoppingList, 'title' | 'descri
 
 **Status Transitions**:
 
-```
+```text
 active ──────> archived
   ^                │
   └────────────────┘ (can unarchive)
@@ -416,7 +416,6 @@ export interface WishlistItem {
   link: string | null; // Product URL
   price: number | null; // Price (nullable)
   currency: string; // Currency code (ISO 4217)
-  image_url: string | null; // Image URL
   priority: ItemPriority; // low | medium | high
   is_reserved: boolean; // Reservation status
   reserved_by_email: string | null; // Reserver email
@@ -446,14 +445,11 @@ export type ItemPriority = 'low' | 'medium' | 'high';
 ```typescript
 export type CreateWishlistItemDto = Pick<
   WishlistItem,
-  'wishlist_id' | 'title' | 'description' | 'link' | 'price' | 'currency' | 'image_url' | 'priority'
+  'wishlist_id' | 'title' | 'description' | 'link' | 'price' | 'currency' | 'priority'
 >;
 
 export type UpdateWishlistItemDto = Partial<
-  Pick<
-    WishlistItem,
-    'title' | 'description' | 'link' | 'price' | 'currency' | 'image_url' | 'priority'
-  >
+  Pick<WishlistItem, 'title' | 'description' | 'link' | 'price' | 'currency' | 'priority'>
 >;
 
 export type ReserveWishlistItemDto = Pick<
@@ -585,7 +581,7 @@ if (!result.success) {
 
 ## Type Safety Flow
 
-```
+```text
 Database (PostgreSQL)
     ↓
 database.types.ts (generated)

@@ -25,7 +25,7 @@ The application uses **PostgreSQL** via Supabase with:
 
 ## Entity Relationship Diagram
 
-```
+```text
 ┌─────────────────┐
 │   auth.users    │ (Supabase Auth - managed)
 │  ────────────   │
@@ -107,7 +107,6 @@ The application uses **PostgreSQL** via Supabase with:
 │  link                │
 │  price               │
 │  currency            │
-│  image_url           │
 │  priority            │
 │  is_reserved         │
 │  reserved_by_email   │
@@ -341,7 +340,6 @@ create table if not exists wishlist_items (
   link              text,
   price             numeric(10, 2),
   currency          text not null default 'USD',
-  image_url         text,
   priority          text not null default 'medium' check (priority in ('low', 'medium', 'high')),
   is_reserved       boolean not null default false,
   reserved_by_email text,
@@ -573,11 +571,7 @@ insert into storage.buckets (id, name, public)
 values ('wishlist-images', 'wishlist-images', true);
 ```
 
-**Usage**:
-
-- Upload via Supabase Storage API
-- Returns public URL for `image_url` column
-- Cleanup on wishlist item deletion (manual or via edge function)
+**Note**: The `image_url` field has been removed from wishlist items (as of 2026-02-23). The storage bucket may be deprecated in the future.
 
 ---
 
@@ -661,6 +655,7 @@ Located in `supabase/migrations/`:
    ```
 
 2. Apply RLS:
+
    ```bash
    docker exec -i supabase_db_family-logistics-dashboard psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/rls.sql
    ```

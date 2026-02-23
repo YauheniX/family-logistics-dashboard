@@ -161,7 +161,6 @@ describe('Validation Schemas', () => {
         link: 'https://example.com/headphones',
         price: 99.99,
         currency: 'USD',
-        image_url: 'https://example.com/img.png',
         priority: 'high',
       });
       expect(result.success).toBe(true);
@@ -182,7 +181,6 @@ describe('Validation Schemas', () => {
         description: null,
         link: null,
         price: null,
-        image_url: null,
       });
       expect(result.success).toBe(true);
     });
@@ -220,14 +218,6 @@ describe('Validation Schemas', () => {
       const result = WishlistItemFormSchema.safeParse({
         title: 'Headphones',
         priority: 'urgent',
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects invalid image URL', () => {
-      const result = WishlistItemFormSchema.safeParse({
-        title: 'Headphones',
-        image_url: 'not-a-url',
       });
       expect(result.success).toBe(false);
     });
