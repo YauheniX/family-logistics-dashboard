@@ -29,15 +29,23 @@ drop policy if exists "family_members_delete" on family_members;
 -- These policies reference user_is_family_member/user_is_family_owner
 
 drop policy if exists "shopping_lists_select" on shopping_lists;
+drop policy if exists "shopping_lists_select_v2" on shopping_lists;
 drop policy if exists "shopping_lists_insert" on shopping_lists;
+drop policy if exists "shopping_lists_insert_v2" on shopping_lists;
 drop policy if exists "shopping_lists_update" on shopping_lists;
+drop policy if exists "shopping_lists_update_v2" on shopping_lists;
 drop policy if exists "shopping_lists_delete" on shopping_lists;
+drop policy if exists "shopping_lists_delete_v2" on shopping_lists;
 
 -- Drop legacy shopping items policies
 drop policy if exists "shopping_items_select" on shopping_items;
+drop policy if exists "shopping_items_select_v2" on shopping_items;
 drop policy if exists "shopping_items_insert" on shopping_items;
+drop policy if exists "shopping_items_insert_v2" on shopping_items;
 drop policy if exists "shopping_items_update" on shopping_items;
+drop policy if exists "shopping_items_update_v2" on shopping_items;
 drop policy if exists "shopping_items_delete" on shopping_items;
+drop policy if exists "shopping_items_delete_v2" on shopping_items;
 
 -- ─── 3. Drop Constraints and Foreign Keys ────────────────────
 
