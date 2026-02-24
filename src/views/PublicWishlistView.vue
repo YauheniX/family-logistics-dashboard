@@ -43,7 +43,9 @@
             >
               {{ item.price }} {{ item.currency }}
             </p>
-            <div v-if="item.is_reserved" class="pt-2 space-y-2">
+          </div>
+          <template #footer>
+            <div v-if="item.is_reserved" class="space-y-2">
               <BaseBadge variant="warning" class="w-full text-center block">
                 Reserved{{ item.reserved_by_name ? ` by ${item.reserved_by_name}` : '' }}
               </BaseBadge>
@@ -55,12 +57,15 @@
                 Unreserve
               </BaseButton>
             </div>
-            <div v-else class="pt-2">
-              <BaseButton class="w-full text-sm" variant="secondary" @click="startReserve(item.id)">
-                Reserve This
-              </BaseButton>
-            </div>
-          </div>
+            <BaseButton
+              v-else
+              class="w-full text-sm"
+              variant="secondary"
+              @click="startReserve(item.id)"
+            >
+              Reserve This
+            </BaseButton>
+          </template>
         </BaseCard>
       </div>
 

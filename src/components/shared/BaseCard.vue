@@ -3,10 +3,13 @@
     <div v-if="$slots.header" class="border-b border-neutral-200 dark:border-neutral-700 p-4">
       <slot name="header" />
     </div>
-    <div :class="contentClasses">
+    <div :class="contentClasses" class="flex-1">
       <slot />
     </div>
-    <div v-if="$slots.footer" class="border-t border-neutral-200 dark:border-neutral-700 p-4">
+    <div
+      v-if="$slots.footer"
+      class="border-t border-neutral-200 dark:border-neutral-700 p-4 mt-auto"
+    >
       <slot name="footer" />
     </div>
   </div>
@@ -26,7 +29,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const cardClasses = computed(() => {
-  const base = 'glass-card';
+  const base = 'glass-card flex flex-col h-full';
   const hoverEffect = props.hover ? 'transition-shadow hover:shadow-lg cursor-pointer' : '';
   return [base, hoverEffect].filter(Boolean).join(' ');
 });
