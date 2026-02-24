@@ -2,8 +2,13 @@
 -- Household Shopping & Wishlist Planner - Database Schema
 -- ============================================================
 
--- Enable UUID extension
+-- Create extensions schema for security best practices
+create schema if not exists extensions;
+grant usage on schema extensions to authenticated, anon;
+
+-- Enable extensions
 create extension if not exists "uuid-ossp";
+create extension if not exists citext schema extensions;
 
 -- ─── User Profiles ──────────────────────────────────────────
 create table if not exists user_profiles (

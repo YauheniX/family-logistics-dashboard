@@ -153,10 +153,12 @@ create policy "households_select"
 
 **ALWAYS** use `citext` type for email addresses (case-insensitive).
 
+> **Note**: The `citext` extension is in the `extensions` schema. Use `extensions.citext` or ensure `extensions` is in your search_path.
+
 ```sql
--- ✅ Good - case-insensitive email
+-- ✅ Good - case-insensitive email (reference full schema path)
 alter table invitations
-  add column email citext not null;
+  add column email extensions.citext not null;
 
 -- ❌ Bad - case-sensitive, causes duplicates
 alter table invitations
