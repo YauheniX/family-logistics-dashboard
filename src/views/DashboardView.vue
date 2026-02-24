@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
@@ -117,6 +117,9 @@ const wishlistStore = useWishlistStore();
 const router = useRouter();
 const { userDisplayName, userAvatarUrl: profileAvatarUrl } = useUserProfile();
 
+// Track last loaded household to prevent duplicate loads
+const lastLoadedHouseholdId = ref<string | null>(null);
+
 const userName = computed(() => {
   const profile = resolveUserProfile(
     {
@@ -137,17 +140,23 @@ async function loadDashboardData(userId: string) {
     wishlistStore.loadWishlists(userId),
   ]);
 
-  // Load shopping lists sequentially to avoid excessive concurrent requests
-  // when the user belongs to many households
-  for (const household of householdEntityStore.households) {
-    await shoppingStore.loadLists(household.id);
+  // Load shopping lists for current household if one is selected
+  // The watcher handles subsequent household switches
+  const currentHouseholdId = householdStore.currentHousehold?.id;
+  if (currentHouseholdId && currentHouseholdId !== lastLoadedHouseholdId.value) {
+    lastLoadedHouseholdId.value = currentHouseholdId;
+    await shoppingStore.loadLists(currentHouseholdId);
   }
 }
 
-function handleInvitationAccepted() {
+async function handleInvitationAccepted() {
   // Reload households when user accepts an invitation
   if (authStore.user?.id) {
-    householdEntityStore.loadHouseholds(authStore.user.id);
+    try {
+      await householdEntityStore.loadHouseholds(authStore.user.id);
+    } catch (error) {
+      console.error('Failed to reload households after invitation acceptance:', error);
+    }
   }
 }
 
@@ -163,8 +172,9 @@ watch(
 watch(
   () => householdStore.currentHousehold?.id,
   async (householdId) => {
-    if (householdId) {
-      // Reload shopping lists for the new household
+    // Only reload if switching to a different household
+    if (householdId && householdId !== lastLoadedHouseholdId.value) {
+      lastLoadedHouseholdId.value = householdId;
       await shoppingStore.loadLists(householdId);
     }
   },

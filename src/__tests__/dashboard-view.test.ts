@@ -36,44 +36,50 @@ vi.mock('@/features/wishlist/presentation/wishlist.store', () => ({
   }),
 }));
 
+// Helper to mount DashboardView with consistent setup
+function mountDashboard() {
+  const pinia = createPinia();
+  const router = createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      { path: '/', component: { template: '<div />' } },
+      { path: '/households', component: { template: '<div />' } },
+    ],
+  });
+
+  setActivePinia(pinia);
+
+  const wrapper = mount(DashboardView, {
+    global: {
+      plugins: [pinia, router],
+      stubs: {
+        RouterLink: true,
+        BaseCard: true,
+        BaseBadge: true,
+        EmptyState: true,
+        LoadingState: true,
+        PendingInvitationsCard: true,
+      },
+    },
+  });
+
+  const householdStore = useHouseholdStore();
+  const shoppingStore = useShoppingStore();
+
+  // Mock loadLists to prevent real service calls
+  const loadListsSpy = vi.spyOn(shoppingStore, 'loadLists').mockResolvedValue(undefined);
+
+  return { wrapper, householdStore, shoppingStore, loadListsSpy };
+}
+
 describe('DashboardView', () => {
-  let router: ReturnType<typeof createRouter>;
-
   beforeEach(() => {
-    setActivePinia(createPinia());
     vi.clearAllMocks();
-
-    // Create a minimal router for testing
-    router = createRouter({
-      history: createMemoryHistory(),
-      routes: [
-        { path: '/', component: { template: '<div />' } },
-        { path: '/households', component: { template: '<div />' } },
-      ],
-    });
   });
 
   describe('Household Switching', () => {
     it('should reload shopping lists when household is switched', async () => {
-      const wrapper = mount(DashboardView, {
-        global: {
-          plugins: [createPinia(), router],
-          stubs: {
-            RouterLink: true,
-            BaseCard: true,
-            BaseBadge: true,
-            EmptyState: true,
-            LoadingState: true,
-            PendingInvitationsCard: true,
-          },
-        },
-      });
-
-      const householdStore = useHouseholdStore();
-      const shoppingStore = useShoppingStore();
-
-      // Spy on loadLists method
-      const loadListsSpy = vi.spyOn(shoppingStore, 'loadLists');
+      const { wrapper, householdStore, loadListsSpy } = mountDashboard();
 
       // Simulate switching to household 'h1'
       householdStore.setCurrentHousehold({
@@ -108,25 +114,7 @@ describe('DashboardView', () => {
     });
 
     it('should not reload shopping lists when household is cleared', async () => {
-      const wrapper = mount(DashboardView, {
-        global: {
-          plugins: [createPinia(), router],
-          stubs: {
-            RouterLink: true,
-            BaseCard: true,
-            BaseBadge: true,
-            EmptyState: true,
-            LoadingState: true,
-            PendingInvitationsCard: true,
-          },
-        },
-      });
-
-      const householdStore = useHouseholdStore();
-      const shoppingStore = useShoppingStore();
-
-      // Spy on loadLists method
-      const loadListsSpy = vi.spyOn(shoppingStore, 'loadLists');
+      const { wrapper, householdStore, loadListsSpy } = mountDashboard();
 
       // Set a household first
       householdStore.setCurrentHousehold({
@@ -154,25 +142,7 @@ describe('DashboardView', () => {
     });
 
     it('should handle sequential household switches correctly', async () => {
-      const wrapper = mount(DashboardView, {
-        global: {
-          plugins: [createPinia(), router],
-          stubs: {
-            RouterLink: true,
-            BaseCard: true,
-            BaseBadge: true,
-            EmptyState: true,
-            LoadingState: true,
-            PendingInvitationsCard: true,
-          },
-        },
-      });
-
-      const householdStore = useHouseholdStore();
-      const shoppingStore = useShoppingStore();
-
-      // Spy on loadLists method
-      const loadListsSpy = vi.spyOn(shoppingStore, 'loadLists');
+      const { wrapper, householdStore, loadListsSpy } = mountDashboard();
 
       // Switch to household 1
       householdStore.setCurrentHousehold({
