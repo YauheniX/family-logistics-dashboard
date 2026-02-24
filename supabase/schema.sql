@@ -180,6 +180,7 @@ create index if not exists idx_wishlists_user_id on wishlists (user_id);
 create index if not exists idx_wishlists_member_id on wishlists (member_id) where member_id is not null;
 create index if not exists idx_wishlists_household_id on wishlists (household_id) where household_id is not null;
 create index if not exists idx_wishlists_share_slug on wishlists (share_slug);
+create index if not exists idx_wishlists_visibility on wishlists (visibility);
 create index if not exists idx_wishlist_items_wishlist_id on wishlist_items (wishlist_id);
 
 -- ─── Household Helper Functions ─────────────────────────────

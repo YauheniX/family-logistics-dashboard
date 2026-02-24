@@ -12,6 +12,16 @@ import type {
 import type { ApiResponse } from '../../shared/domain/repository.interface';
 
 /**
+ * Add computed is_public property based on visibility for frontend compatibility
+ */
+function addIsPublic<T extends { visibility?: string }>(wishlist: T): T & { is_public: boolean } {
+  return {
+    ...wishlist,
+    is_public: wishlist.visibility === 'public',
+  };
+}
+
+/**
  * Wishlist repository - handles wishlist data operations via Supabase
  */
 export class WishlistRepository extends BaseRepository<
@@ -27,9 +37,14 @@ export class WishlistRepository extends BaseRepository<
    * Find wishlists by user ID
    */
   async findByUserId(userId: string): Promise<ApiResponse<Wishlist[]>> {
-    return this.findAll((builder) =>
+    const result = await this.findAll((builder) =>
       builder.eq('user_id', userId).order('created_at', { ascending: false }),
     );
+    // Add is_public computed property for frontend compatibility
+    if (result.data) {
+      return { ...result, data: result.data.map(addIsPublic) };
+    }
+    return result;
   }
 
   async create(dto: CreateWishlistDto & { share_slug: string }): Promise<ApiResponse<Wishlist>> {
@@ -93,15 +108,21 @@ export class WishlistRepository extends BaseRepository<
    * Find a wishlist by its share slug (public access, no auth required)
    */
   async findBySlug(slug: string): Promise<ApiResponse<Wishlist>> {
-    return this.query(async () => {
+    const result = await this.query(async () => {
       return await this.supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(this.tableName as any)
         .select('*')
         .eq('share_slug', slug)
-        .eq('is_public', true)
+        .eq('visibility', 'public')
         .single();
     });
+
+    // Add is_public computed property for frontend compatibility
+    if (result.data) {
+      return { data: addIsPublic(result.data), error: null };
+    }
+    return { data: null, error: result.error };
   }
 }
 

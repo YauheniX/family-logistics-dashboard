@@ -305,13 +305,14 @@ create policy "shopping_items_delete"
 -- SELECT:
 -- - owner can see their wishlists
 -- - household members can see household wishlists with visibility 'household' or 'public'
--- - public wishlists visible via share_slug (anonymous access handled by SECURITY DEFINER function)
+-- - anyone can see public wishlists (for share links)
 create policy "wishlists_select"
   on wishlists for select
   using (
-    user_id = (select auth.uid())
+    visibility = 'public'
+    or user_id = (select auth.uid())
     or (
-      visibility in ('household', 'public')
+      visibility = 'household'
       and exists (
         select 1 from members
         where household_id = wishlists.household_id
