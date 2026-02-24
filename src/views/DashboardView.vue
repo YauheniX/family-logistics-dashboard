@@ -143,9 +143,24 @@ async function loadDashboardData(userId: string) {
   // Load shopping lists for current household if one is selected
   // The watcher handles subsequent household switches
   const currentHouseholdId = householdStore.currentHousehold?.id;
-  if (currentHouseholdId && currentHouseholdId !== lastLoadedHouseholdId.value) {
-    lastLoadedHouseholdId.value = currentHouseholdId;
+
+  // Clear tracking if household is deselected
+  if (!currentHouseholdId) {
+    lastLoadedHouseholdId.value = null;
+    return;
+  }
+
+  // Skip if already loaded
+  if (currentHouseholdId === lastLoadedHouseholdId.value) {
+    return;
+  }
+
+  // Only update tracking after successful load
+  try {
     await shoppingStore.loadLists(currentHouseholdId);
+    lastLoadedHouseholdId.value = currentHouseholdId;
+  } catch (error) {
+    console.error('Failed to load shopping lists:', error);
   }
 }
 
@@ -171,11 +186,24 @@ watch(
 // Watch for household switches
 watch(
   () => householdStore.currentHousehold?.id,
-  async (householdId) => {
-    // Only reload if switching to a different household
-    if (householdId && householdId !== lastLoadedHouseholdId.value) {
-      lastLoadedHouseholdId.value = householdId;
-      await shoppingStore.loadLists(householdId);
+  async (currentHouseholdId) => {
+    // Clear tracking if household is deselected
+    if (!currentHouseholdId) {
+      lastLoadedHouseholdId.value = null;
+      return;
+    }
+
+    // Skip if already loaded
+    if (currentHouseholdId === lastLoadedHouseholdId.value) {
+      return;
+    }
+
+    // Only update tracking after successful load
+    try {
+      await shoppingStore.loadLists(currentHouseholdId);
+      lastLoadedHouseholdId.value = currentHouseholdId;
+    } catch (error) {
+      console.error('Failed to load shopping lists:', error);
     }
   },
 );

@@ -37,7 +37,7 @@ vi.mock('@/features/wishlist/presentation/wishlist.store', () => ({
 }));
 
 // Helper to mount DashboardView with consistent setup
-function mountDashboard() {
+async function mountDashboard() {
   const pinia = createPinia();
   const router = createRouter({
     history: createMemoryHistory(),
@@ -69,6 +69,13 @@ function mountDashboard() {
   // Mock loadLists to prevent real service calls
   const loadListsSpy = vi.spyOn(shoppingStore, 'loadLists').mockResolvedValue(undefined);
 
+  // Wait for initial mount side effects to complete
+  await flushPromises();
+  await nextTick();
+
+  // Clear any calls from initial mount
+  loadListsSpy.mockClear();
+
   return { wrapper, householdStore, shoppingStore, loadListsSpy };
 }
 
@@ -79,7 +86,7 @@ describe('DashboardView', () => {
 
   describe('Household Switching', () => {
     it('should reload shopping lists when household is switched', async () => {
-      const { wrapper, householdStore, loadListsSpy } = mountDashboard();
+      const { wrapper, householdStore, loadListsSpy } = await mountDashboard();
 
       // Simulate switching to household 'h1'
       householdStore.setCurrentHousehold({
@@ -114,7 +121,7 @@ describe('DashboardView', () => {
     });
 
     it('should not reload shopping lists when household is cleared', async () => {
-      const { wrapper, householdStore, loadListsSpy } = mountDashboard();
+      const { wrapper, householdStore, loadListsSpy } = await mountDashboard();
 
       // Set a household first
       householdStore.setCurrentHousehold({
@@ -142,7 +149,7 @@ describe('DashboardView', () => {
     });
 
     it('should handle sequential household switches correctly', async () => {
-      const { wrapper, householdStore, loadListsSpy } = mountDashboard();
+      const { wrapper, householdStore, loadListsSpy } = await mountDashboard();
 
       // Switch to household 1
       householdStore.setCurrentHousehold({
