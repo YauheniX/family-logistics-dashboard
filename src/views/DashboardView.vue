@@ -14,64 +14,9 @@
     <!-- Pending Invitations -->
     <PendingInvitationsCard @invitation-accepted="handleInvitationAccepted" />
 
-    <div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-      <BaseCard>
-        <div class="p-5">
-          <p class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Active Lists</p>
-          <p class="mt-2 text-4xl font-bold text-primary-600 dark:text-primary-400">
-            {{ activeListCount }}
-          </p>
-        </div>
-      </BaseCard>
-      <BaseCard>
-        <div class="p-5">
-          <p class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Items to Buy</p>
-          <p class="mt-2 text-4xl font-bold text-primary-600 dark:text-primary-400">
-            {{ itemsToBuyCount }}
-          </p>
-        </div>
-      </BaseCard>
-      <BaseCard>
-        <div class="p-5">
-          <p class="text-sm font-medium text-neutral-600 dark:text-neutral-400">
-            Reserved Wishlist Items
-          </p>
-          <p class="mt-2 text-4xl font-bold text-primary-600 dark:text-primary-400">
-            {{ reservedItemsCount }}
-          </p>
-        </div>
-      </BaseCard>
-    </div>
-
     <LoadingState v-if="householdEntityStore.loading" message="Loading your data..." />
 
     <template v-else>
-      <!-- My Households -->
-      <BaseCard :padding="false">
-        <div class="p-5">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-              My Households
-            </h3>
-            <RouterLink to="/households" class="btn-ghost text-sm">View All</RouterLink>
-          </div>
-          <div v-if="householdEntityStore.households.length" class="mt-3 space-y-2">
-            <RouterLink
-              v-for="household in householdEntityStore.households"
-              :key="household.id"
-              :to="{ name: 'household-detail', params: { id: household.id } }"
-              class="flex items-center justify-between rounded-lg border border-neutral-200 dark:border-neutral-700 p-3 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
-            >
-              <p class="font-medium text-neutral-800 dark:text-neutral-200">{{ household.name }}</p>
-              <span class="text-xs text-neutral-500 dark:text-neutral-400">View →</span>
-            </RouterLink>
-          </div>
-          <p v-else class="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
-            No households yet.
-          </p>
-        </div>
-      </BaseCard>
-
       <!-- Active Shopping Lists -->
       <BaseCard :padding="false">
         <div class="p-5">
@@ -79,9 +24,7 @@
             <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
               Active Shopping Lists
             </h3>
-            <span class="text-sm text-neutral-600 dark:text-neutral-400"
-              >{{ activeListCount }} lists · {{ itemsToBuyCount }} items to buy</span
-            >
+            <RouterLink to="/shopping" class="btn-ghost text-sm">View All</RouterLink>
           </div>
           <div v-if="allActiveLists.length" class="mt-3 space-y-2">
             <RouterLink
@@ -151,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
@@ -159,26 +102,37 @@ import EmptyState from '@/components/shared/EmptyState.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import PendingInvitationsCard from '@/components/invitations/PendingInvitationsCard.vue';
 import { useAuthStore } from '@/stores/auth';
+import { useHouseholdStore } from '@/stores/household';
 import { useHouseholdEntityStore } from '@/features/household/presentation/household.store';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
 import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
+import { useUserProfile } from '@/composables/useUserProfile';
+import { resolveUserProfile } from '@/utils/profileResolver';
 
 const authStore = useAuthStore();
+const householdStore = useHouseholdStore();
 const householdEntityStore = useHouseholdEntityStore();
 const shoppingStore = useShoppingStore();
 const wishlistStore = useWishlistStore();
 const router = useRouter();
+const { userDisplayName, userAvatarUrl: profileAvatarUrl } = useUserProfile();
+
+// Track last loaded household to prevent duplicate loads
+const lastLoadedHouseholdId = ref<string | null>(null);
 
 const userName = computed(() => {
-  const email = authStore.user?.email;
-  return email ? email.split('@')[0] : 'there';
+  const profile = resolveUserProfile(
+    {
+      display_name: userDisplayName.value,
+      avatar_url: profileAvatarUrl.value,
+    },
+    authStore.user,
+    authStore.user?.email,
+  );
+  return profile.name;
 });
 
 const allActiveLists = computed(() => shoppingStore.lists.filter((l) => l.status === 'active'));
-
-const activeListCount = computed(() => allActiveLists.value.length);
-const itemsToBuyCount = computed(() => shoppingStore.unpurchasedItems.length);
-const reservedItemsCount = computed(() => wishlistStore.reservedItems.length);
 
 async function loadDashboardData(userId: string) {
   await Promise.all([
@@ -186,25 +140,77 @@ async function loadDashboardData(userId: string) {
     wishlistStore.loadWishlists(userId),
   ]);
 
-  // Load shopping lists sequentially to avoid excessive concurrent requests
-  // when the user belongs to many households
-  for (const household of householdEntityStore.households) {
-    await shoppingStore.loadLists(household.id);
+  // Load shopping lists for current household if one is selected
+  // The watcher handles subsequent household switches
+  const currentHouseholdId = householdStore.currentHousehold?.id;
+
+  // Clear tracking if household is deselected
+  if (!currentHouseholdId) {
+    lastLoadedHouseholdId.value = null;
+    return;
+  }
+
+  // Skip if already loaded
+  if (currentHouseholdId === lastLoadedHouseholdId.value) {
+    return;
+  }
+
+  // Only update tracking after successful load
+  try {
+    await shoppingStore.loadLists(currentHouseholdId);
+    lastLoadedHouseholdId.value = currentHouseholdId;
+  } catch (error) {
+    console.error('Failed to load shopping lists:', error);
   }
 }
 
-function handleInvitationAccepted() {
+async function handleInvitationAccepted() {
   // Reload households when user accepts an invitation
   if (authStore.user?.id) {
-    householdEntityStore.loadHouseholds(authStore.user.id);
+    try {
+      await householdEntityStore.loadHouseholds(authStore.user.id);
+    } catch (error) {
+      console.error('Failed to reload households after invitation acceptance:', error);
+    }
   }
 }
 
 watch(
   () => authStore.user?.id,
-  (userId) => {
-    if (userId) loadDashboardData(userId);
+  async (userId) => {
+    if (userId) {
+      try {
+        await loadDashboardData(userId);
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+      }
+    }
   },
   { immediate: true },
+);
+
+// Watch for household switches
+watch(
+  () => householdStore.currentHousehold?.id,
+  async (currentHouseholdId) => {
+    // Clear tracking if household is deselected
+    if (!currentHouseholdId) {
+      lastLoadedHouseholdId.value = null;
+      return;
+    }
+
+    // Skip if already loaded
+    if (currentHouseholdId === lastLoadedHouseholdId.value) {
+      return;
+    }
+
+    // Only update tracking after successful load
+    try {
+      await shoppingStore.loadLists(currentHouseholdId);
+      lastLoadedHouseholdId.value = currentHouseholdId;
+    } catch (error) {
+      console.error('Failed to load shopping lists:', error);
+    }
+  },
 );
 </script>

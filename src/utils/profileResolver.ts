@@ -23,6 +23,19 @@ export interface ResolvedProfile {
 }
 
 /**
+ * Auth user with OAuth metadata (flexible type for compatibility)
+ */
+export interface AuthUserLike {
+  email?: string | null;
+  user_metadata?: {
+    full_name?: string;
+    name?: string;
+    avatar_url?: string;
+    [key: string]: unknown;
+  };
+}
+
+/**
  * Extract email prefix (part before @)
  */
 function getEmailPrefix(email?: string | null): string {
@@ -35,7 +48,7 @@ function getEmailPrefix(email?: string | null): string {
  * Resolve user profile with consistent fallback logic
  *
  * @param profile - User profile from user_profiles table
- * @param authUser - Auth user with OAuth metadata
+ * @param authUser - Auth user with OAuth metadata (allows Supabase User or AuthUser)
  * @param email - User's email (fallback for name)
  * @returns Resolved profile with name and avatar
  *
@@ -52,7 +65,7 @@ function getEmailPrefix(email?: string | null): string {
  */
 export function resolveUserProfile(
   profile?: UserProfileInput | null,
-  authUser?: AuthUser | null,
+  authUser?: AuthUserLike | AuthUser | null,
   email?: string | null,
 ): ResolvedProfile {
   const googleName = authUser?.user_metadata?.full_name || authUser?.user_metadata?.name;
