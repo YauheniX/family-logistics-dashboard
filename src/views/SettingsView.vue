@@ -18,7 +18,7 @@
         <!-- Avatar Upload -->
         <div class="flex items-center gap-4">
           <Avatar
-            :avatar-url="profileForm.avatarUrl"
+            :avatar-url="resolvedAvatar"
             :name="profileForm.name || authStore.user?.email || 'User'"
             :size="80"
             :show-role-badge="false"
@@ -197,7 +197,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseInput from '@/components/shared/BaseInput.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
@@ -207,6 +207,7 @@ import { useToastStore } from '@/stores/toast';
 import { useTheme } from '@/composables/useTheme';
 import { useUserProfile } from '@/composables/useUserProfile';
 import { UserProfileRepository } from '@/features/shared/infrastructure/user-profile.repository';
+import { resolveUserProfile } from '@/utils/profileResolver';
 
 const authStore = useAuthStore();
 const toastStore = useToastStore();
@@ -248,6 +249,19 @@ const themeOptions = [
     description: 'Follow your system preference',
   },
 ];
+
+// Resolve avatar with Google fallback
+const resolvedAvatar = computed(() => {
+  const resolved = resolveUserProfile(
+    {
+      display_name: profileForm.value.name,
+      avatar_url: profileForm.value.avatarUrl,
+    },
+    authStore.user,
+    authStore.user?.email,
+  );
+  return resolved.avatar;
+});
 
 const handleAvatarUpload = () => {
   toastStore.info('Avatar upload feature coming soon!');

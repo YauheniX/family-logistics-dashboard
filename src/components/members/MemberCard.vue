@@ -6,7 +6,7 @@
     <div class="flex items-start gap-3 sm:gap-4">
       <!-- Avatar -->
       <Avatar
-        :avatar-url="member.avatar_url"
+        :avatar-url="resolvedProfile.avatar"
         :name="memberName"
         :role="member.role"
         :size="56"

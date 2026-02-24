@@ -55,21 +55,12 @@ export function resolveUserProfile(
   authUser?: AuthUser | null,
   email?: string | null,
 ): ResolvedProfile {
-  // Name resolution priority:
-  // 1. Local profile display_name (user can customize this)
-  // 2. Google OAuth full_name or name
-  // 3. Email prefix
   const googleName = authUser?.user_metadata?.full_name || authUser?.user_metadata?.name;
   const name = profile?.display_name || googleName || getEmailPrefix(email || authUser?.email);
 
-  // Avatar resolution priority:
-  // 1. Local profile avatar_url (user uploaded or selected)
-  //    - If explicitly set to null, respect that (user cleared avatar)
-  //    - If undefined, fall back to Google avatar
-  // 2. Google OAuth avatar_url
-  // 3. null (component should show default/initials)
   const googleAvatar = authUser?.user_metadata?.avatar_url;
-  const avatar = profile?.avatar_url !== undefined ? profile?.avatar_url : googleAvatar || null;
+  const localAvatar = profile?.avatar_url;
+  const avatar = isValidAvatarUrl(localAvatar) ? localAvatar! : googleAvatar || null;
 
   return {
     name, // getEmailPrefix already guarantees non-empty string
@@ -92,10 +83,14 @@ export function resolveUserProfile(
  * ```
  */
 export function resolveMemberProfile(member: Member): ResolvedProfile {
-  // For members, we only have member table data
-  // No OAuth metadata available at member level
-  const name = member.display_name || member.email || 'Unknown Member';
-  const avatar = member.avatar_url || null;
+  // Name fallback: member name → user_profiles name (Google OAuth) → email → default
+  const profileName = member.user_profiles?.display_name;
+  const name = profileName || member.display_name || member.email || 'Unknown Member';
+
+  // Avatar fallback: member avatar_url → user_profiles avatar (from Google) → null
+  const localAvatar = member.avatar_url;
+  const profileAvatar = member.user_profiles?.avatar_url;
+  const avatar = isValidAvatarUrl(localAvatar) ? localAvatar! : profileAvatar || null;
 
   return { name, avatar };
 }

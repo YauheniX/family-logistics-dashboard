@@ -6,6 +6,7 @@ import type {
   UpdateHouseholdDto,
   Member,
   CreateMemberDto,
+  Invitation,
 } from '../../shared/domain/entities';
 import type { ApiResponse } from '../../shared/domain/repository.interface';
 
@@ -114,17 +115,16 @@ export class MemberRepository extends BaseRepository<Member, CreateMemberDto, Pa
    * Find members by household ID with email populated
    */
   async findByHouseholdId(householdId: string): Promise<ApiResponse<Member[]>> {
-    const membersResponse = await this.findAll((builder) =>
-      builder.eq('household_id', householdId).eq('is_active', true).order('joined_at'),
-    );
+    // Use getMembersWithProfiles which includes user_profiles join for Google name/avatar fallback
+    const response = await this.getMembersWithProfiles(householdId);
 
-    if (membersResponse.error || !membersResponse.data) {
-      return membersResponse;
+    if (response.error || !response.data) {
+      return response;
     }
 
     // Populate emails using the database function
     const membersWithEmails = await Promise.all(
-      membersResponse.data.map(async (member) => {
+      response.data.map(async (member) => {
         if (!member.user_id) {
           return { ...member, email: undefined };
         }
@@ -143,6 +143,101 @@ export class MemberRepository extends BaseRepository<Member, CreateMemberDto, Pa
     );
 
     return { data: membersWithEmails, error: null };
+  }
+
+  /**
+   * Find members by household ID with user_profiles joined for Google avatar fallback
+   * Includes user_profiles.avatar_url for OAuth avatar fallback
+   */
+  async getMembersWithProfiles(householdId: string): Promise<ApiResponse<Member[]>> {
+    // First, get all members
+    const membersResponse = await this.findAll((builder) =>
+      builder.eq('household_id', householdId).eq('is_active', true).order('joined_at'),
+    );
+
+    if (membersResponse.error || !membersResponse.data) {
+      return membersResponse;
+    }
+
+    // Get user IDs that we need to fetch profiles for
+    const userIds = membersResponse.data
+      .map((m) => m.user_id)
+      .filter((id): id is string => id !== null);
+
+    if (userIds.length === 0) {
+      // No user IDs to fetch profiles for (all soft members)
+      return membersResponse;
+    }
+
+    // Fetch user profiles for those user IDs
+    const profilesResponse = await this.execute<
+      Array<{ id: string; display_name: string; avatar_url: string | null }>
+    >(async () => {
+      return await supabase
+        .from('user_profiles')
+        .select('id, display_name, avatar_url')
+        .in('id', userIds);
+    });
+
+    // Merge profiles into members
+    const profilesMap = new Map(
+      (profilesResponse.data || []).map((p) => [
+        p.id,
+        { display_name: p.display_name, avatar_url: p.avatar_url },
+      ]),
+    );
+
+    const membersWithProfiles = membersResponse.data.map((member) => ({
+      ...member,
+      user_profiles: member.user_id ? profilesMap.get(member.user_id) : undefined,
+    }));
+
+    return { data: membersWithProfiles, error: null };
+  }
+
+  /**
+   * Create a child member (soft member without user account)
+   * Uses the database RPC function for proper validation and defaults
+   */
+  async createChild(
+    householdId: string,
+    name: string,
+    dateOfBirth: string,
+    avatarUrl?: string | null,
+  ): Promise<ApiResponse<string>> {
+    const response = await this.execute<string>(async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return await (supabase.rpc as any)('create_child_member', {
+        p_household_id: householdId,
+        p_name: name,
+        p_date_of_birth: dateOfBirth,
+        p_avatar_url: avatarUrl ?? null,
+      });
+    });
+
+    return response;
+  }
+
+  /**
+   * Send invitation to join household via email
+   * Uses the database RPC function to create invitation with token
+   * Returns the invitation ID
+   */
+  async sendInvitation(
+    householdId: string,
+    email: string,
+    role: string = 'member',
+  ): Promise<ApiResponse<string>> {
+    const response = await this.execute<string>(async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return await (supabase.rpc as any)('invite_member', {
+        p_household_id: householdId,
+        p_email: email,
+        p_role: role,
+      });
+    });
+
+    return response;
   }
 
   /**
@@ -236,5 +331,19 @@ export class MemberRepository extends BaseRepository<Member, CreateMemberDto, Pa
     }
 
     return { data: null, error: null };
+  }
+
+  /**
+   * Get an invitation by ID
+   */
+  async getInvitationById(invitationId: string): Promise<ApiResponse<Invitation>> {
+    return this.query(async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return await (supabase as any)
+        .from('invitations')
+        .select('*')
+        .eq('id', invitationId)
+        .single();
+    });
   }
 }

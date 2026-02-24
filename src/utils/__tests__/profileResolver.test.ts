@@ -103,10 +103,10 @@ describe('profileResolver', () => {
       expect(result.avatar).toBe('/uploads/avatar.jpg');
     });
 
-    it('respects explicitly cleared avatar (null) without falling back', () => {
+    it('falls back to Google avatar when local avatar is null (from database)', () => {
       const profile: UserProfileInput = {
         display_name: 'Test User',
-        avatar_url: null,
+        avatar_url: null, // Database returns null when avatar not set
       };
       const authUser: AuthUser = {
         id: '1',
@@ -118,7 +118,7 @@ describe('profileResolver', () => {
 
       const result = resolveUserProfile(profile, authUser, 'test@example.com');
 
-      expect(result.avatar).toBeNull();
+      expect(result.avatar).toBe('https://google.com/avatar.jpg');
     });
 
     it('falls back to Google avatar when local avatar is undefined', () => {
@@ -297,6 +297,52 @@ describe('profileResolver', () => {
       const result = resolveMemberProfile(member);
 
       expect(result.avatar).toBeNull();
+    });
+
+    it('falls back to user_profile avatar when member avatar is null', () => {
+      const member: Member = {
+        id: '1',
+        household_id: 'h1',
+        user_id: 'u1',
+        role: 'member',
+        display_name: 'Jane Doe',
+        date_of_birth: null,
+        avatar_url: null,
+        is_active: true,
+        joined_at: new Date().toISOString(),
+        invited_by: null,
+        metadata: {},
+        user_profiles: {
+          avatar_url: 'https://google.com/photo.jpg',
+        },
+      };
+
+      const result = resolveMemberProfile(member);
+
+      expect(result.avatar).toBe('https://google.com/photo.jpg');
+    });
+
+    it('prioritizes member avatar over user_profile avatar', () => {
+      const member: Member = {
+        id: '1',
+        household_id: 'h1',
+        user_id: 'u1',
+        role: 'member',
+        display_name: 'Jane Doe',
+        date_of_birth: null,
+        avatar_url: '/uploads/custom.jpg',
+        is_active: true,
+        joined_at: new Date().toISOString(),
+        invited_by: null,
+        metadata: {},
+        user_profiles: {
+          avatar_url: 'https://google.com/photo.jpg',
+        },
+      };
+
+      const result = resolveMemberProfile(member);
+
+      expect(result.avatar).toBe('/uploads/custom.jpg');
     });
   });
 

@@ -4,6 +4,19 @@ import { useMembers } from '@/composables/useMembers';
 import { useHouseholdStore } from '@/stores/household';
 import { useToastStore } from '@/stores/toast';
 
+// Mock the factory to return real repositories (not mocks) so we can test with mocked Supabase
+vi.mock('@/features/household/infrastructure/household.factory', async () => {
+  const actual = await vi.importActual<
+    typeof import('@/features/household/infrastructure/household.factory')
+  >('@/features/household/infrastructure/household.factory');
+  const { MemberRepository } =
+    await import('@/features/household/infrastructure/household.repository');
+  return {
+    ...actual,
+    memberRepository: new MemberRepository(),
+  };
+});
+
 // Mock the Supabase client
 vi.mock('@/features/shared/infrastructure/supabase.client', () => {
   // Chainable query builder - fresh instance per from() call
@@ -12,8 +25,20 @@ vi.mock('@/features/shared/infrastructure/supabase.client', () => {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       order: vi.fn().mockResolvedValue({ data: [], error: null }),
-      single: vi.fn().mockResolvedValue({ data: null, error: null }),
-      update: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({
+        data: {
+          id: 'm-2',
+          household_id: 'hh-1',
+          user_id: 'user-2',
+          role: 'member',
+          display_name: 'Test Member',
+          is_active: false,
+          joined_at: '2024-01-01T00:00:00Z',
+          created_at: '2024-01-01T00:00:00Z',
+        },
+        error: null,
+      }),
+      update: vi.fn().mockReturnThis(), // Returns this so .eq() can be chained
       delete: vi.fn().mockReturnThis(),
     };
     return builder;
@@ -386,22 +411,26 @@ describe('useMembers', () => {
         role: 'owner',
       });
 
+      // Set up the mock to return success for update operation
       const supabase = await getMockedSupabase();
-
-      // Mock the update (soft delete) call: from('members').update({is_active:false}).eq('id',...)
-      // The from() call returns a fresh builder each time
-      supabase.from = vi.fn().mockImplementation(() => {
-        const builder = {
-          select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockReturnThis(),
-          order: vi.fn().mockResolvedValue({ data: [], error: null }),
-          single: vi.fn().mockResolvedValue({ data: null, error: null }),
-          update: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: null, error: null }),
-          }),
-        };
-        return builder;
-      });
+      const successBuilder = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        update: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: {
+            id: 'm-2',
+            household_id: 'hh-1',
+            user_id: 'user-2',
+            role: 'member',
+            display_name: 'Test Member',
+            is_active: false,
+            joined_at: '2024-01-01T00:00:00Z',
+          },
+          error: null,
+        }),
+      };
+      supabase.from = vi.fn().mockReturnValue(successBuilder);
 
       const { removeMember } = useMembers();
 
@@ -411,23 +440,26 @@ describe('useMembers', () => {
     });
 
     it('should handle soft delete error', async () => {
-      const supabase = await getMockedSupabase();
-
-      supabase.from = vi.fn().mockImplementation(() => {
-        const builder = {
-          select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockReturnThis(),
-          order: vi.fn().mockResolvedValue({ data: [], error: null }),
-          single: vi.fn().mockResolvedValue({ data: null, error: null }),
-          update: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({
-              data: null,
-              error: { message: 'Permission denied', code: '42501', details: null },
-            }),
-          }),
-        };
-        return builder;
+      const householdStore = useHouseholdStore();
+      householdStore.setCurrentHousehold({
+        id: 'hh-1',
+        name: 'Test House',
+        slug: 'test-house',
+        role: 'owner',
       });
+
+      // Get the mocked supabase and override from() to return an error builder
+      const supabase = await getMockedSupabase();
+      const errorBuilder = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        update: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: null,
+          error: { message: 'Permission denied', code: '42501', details: null },
+        }),
+      };
+      supabase.from = vi.fn().mockReturnValue(errorBuilder);
 
       const { removeMember, error } = useMembers();
 
