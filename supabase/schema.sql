@@ -201,8 +201,9 @@ begin
   values (
     new.id,
     coalesce(new.raw_user_meta_data ->> 'full_name', new.raw_user_meta_data ->> 'name', split_part(new.email, '@', 1)),
-    coalesce(new.raw_user_meta_data ->> 'avatar_url', null)
-  );
+    new.raw_user_meta_data ->> 'avatar_url'
+  )
+  on conflict (id) do nothing;  -- Don't overwrite existing profiles
   return new;
 end;
 $$;
