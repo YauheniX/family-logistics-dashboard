@@ -15,6 +15,75 @@ create table if not exists user_profiles (
 
 comment on table user_profiles is 'Extended user profile linked to auth.users';
 
+-- ─── Households ─────────────────────────────────────────────
+-- NOTE: Migration 010_create_households_schema.sql adds additional features
+-- like auto_generate_household_slug trigger and constraints
+create table if not exists households (
+  id               uuid primary key default uuid_generate_v4(),
+  name             text not null,
+  slug             text not null unique,
+  created_by       uuid not null references auth.users on delete restrict,
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now(),
+  is_active        boolean not null default true,
+  settings         jsonb not null default '{}'::jsonb,
+  
+  constraint households_name_length check (char_length(name) between 1 and 100),
+  constraint households_slug_format check (slug ~ '^[a-z0-9-]+$')
+);
+
+comment on table households is 'Multi-tenant household (replaces families)';
+comment on column households.slug is 'URL-friendly unique identifier for the household';
+comment on column households.settings is 'Household-specific settings (timezone, currency, etc.)';
+
+-- ─── Members ────────────────────────────────────────────────
+create table if not exists members (
+  id               uuid primary key default uuid_generate_v4(),
+  household_id     uuid not null references households on delete cascade,
+  user_id          uuid references auth.users on delete set null,
+  role             text not null default 'member' 
+    check (role in ('owner', 'admin', 'member', 'child', 'viewer')),
+  display_name     text not null,
+  date_of_birth    date,
+  avatar_url       text,
+  is_active        boolean not null default true,
+  joined_at        timestamptz not null default now(),
+  invited_by       uuid references members(id) on delete set null,
+  metadata         jsonb not null default '{}'::jsonb,
+  
+  constraint members_name_length check (char_length(display_name) between 1 and 100),
+  constraint members_unique_user_per_household unique (household_id, user_id),
+  constraint members_child_dob check (role != 'child' or date_of_birth is not null)
+);
+
+comment on table members is 'Household members with optional user accounts (supports soft members)';
+comment on column members.user_id is 'NULL for soft members (children without accounts)';
+comment on column members.role is 'Role-based permissions: owner > admin > member > child > viewer';
+comment on column members.date_of_birth is 'Required for child role (age verification)';
+
+-- ─── Invitations ────────────────────────────────────────────
+create table if not exists invitations (
+  id               uuid primary key default uuid_generate_v4(),
+  household_id     uuid not null references households on delete cascade,
+  email            text not null,
+  role             text not null default 'member' 
+    check (role in ('admin', 'member', 'viewer')),
+  invited_by       uuid not null references members(id) on delete cascade,
+  status           text not null default 'pending' 
+    check (status in ('pending', 'accepted', 'declined', 'expired')),
+  token            text not null unique,
+  expires_at       timestamptz not null,
+  created_at       timestamptz not null default now(),
+  accepted_at      timestamptz,
+  
+  constraint invitations_email_format 
+    check (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$')
+);
+
+comment on table invitations is 'Pending invitations to join households';
+comment on column invitations.token is 'Secure random token for invitation acceptance';
+comment on column invitations.expires_at is 'Invitation expiration timestamp (typically 7 days)';
+
 -- ─── Shopping Lists ─────────────────────────────────────────
 create table if not exists shopping_lists (
   id          uuid primary key default uuid_generate_v4(),
@@ -49,16 +118,23 @@ comment on table shopping_items is 'Items in a shopping list';
 
 -- ─── Wishlists ──────────────────────────────────────────────
 create table if not exists wishlists (
-  id          uuid primary key default uuid_generate_v4(),
-  user_id     uuid not null default auth.uid() references auth.users on delete cascade,
-  title       text not null,
-  description text,
-  is_public   boolean not null default false,
-  share_slug  text not null unique,
-  created_at  timestamptz not null default now()
+  id            uuid primary key default uuid_generate_v4(),
+  user_id       uuid not null default auth.uid() references auth.users on delete cascade,
+  member_id     uuid references members on delete cascade,
+  household_id  uuid references households on delete cascade,
+  title         text not null,
+  description   text,
+  is_public     boolean not null default false,
+  visibility    text check (visibility in ('private', 'household', 'public')),
+  share_slug    text not null unique,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz default now()
 );
 
 comment on table wishlists is 'Personal wishlists that can be publicly shared';
+comment on column wishlists.member_id is 'Owner member (can be soft member without account)';
+comment on column wishlists.household_id is 'Household context for the wishlist';
+comment on column wishlists.visibility is 'private (owner+admins), household (all members), public (share link)';
 
 -- ─── Wishlist Items ─────────────────────────────────────────
 create table if not exists wishlist_items (
@@ -85,9 +161,19 @@ comment on column wishlist_items.reservation_code is '4-digit code required to u
 
 -- ─── Indexes ────────────────────────────────────────────────
 
+create index if not exists idx_households_created_by on households (created_by);
+create index if not exists idx_households_slug on households (slug);
+create index if not exists idx_members_household_id on members (household_id);
+create index if not exists idx_members_user_id on members (user_id) where user_id is not null;
+create index if not exists idx_members_is_active on members (is_active) where is_active = true;
+create index if not exists idx_invitations_household_id on invitations (household_id);
+create index if not exists idx_invitations_email on invitations (email);
+create index if not exists idx_invitations_token on invitations (token);
 create index if not exists idx_shopping_lists_household_id on shopping_lists (household_id);
 create index if not exists idx_shopping_items_list_id on shopping_items (list_id);
 create index if not exists idx_wishlists_user_id on wishlists (user_id);
+create index if not exists idx_wishlists_member_id on wishlists (member_id) where member_id is not null;
+create index if not exists idx_wishlists_household_id on wishlists (household_id) where household_id is not null;
 create index if not exists idx_wishlists_share_slug on wishlists (share_slug);
 create index if not exists idx_wishlist_items_wishlist_id on wishlist_items (wishlist_id);
 
@@ -234,6 +320,79 @@ begin
   end if;
   return (select email from auth.users where id = lookup_user_id limit 1);
 end;
+$$;
+
+-- ─── RLS Helper Functions (avoid recursion) ─────────────────
+-- These functions are used by RLS policies to avoid infinite recursion
+-- when policies on "members" need to check membership in subqueries.
+
+-- Return caller's role in a household (or null if not a member)
+create or replace function get_my_member_role(p_household_id uuid)
+returns text
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select role
+  from members
+  where household_id = p_household_id
+    and user_id = auth.uid()
+    and is_active = true
+  limit 1;
+$$;
+
+-- Is caller an active member of a household?
+create or replace function is_active_member_of_household(p_household_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from members
+    where household_id = p_household_id
+      and user_id = auth.uid()
+      and is_active = true
+  );
+$$;
+
+-- Is caller the owner of a household?
+create or replace function is_owner_of_household(p_household_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from members
+    where household_id = p_household_id
+      and user_id = auth.uid()
+      and role = 'owner'
+      and is_active = true
+  );
+$$;
+
+-- Is caller an owner or admin of a household?
+create or replace function is_owner_or_admin_of_household(p_household_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from members
+    where household_id = p_household_id
+      and user_id = auth.uid()
+      and role in ('owner', 'admin')
+      and is_active = true
+  );
 $$;
 
 -- ─── Auto-create user profile on signup ─────────────────────

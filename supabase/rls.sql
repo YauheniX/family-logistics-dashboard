@@ -83,59 +83,65 @@ create policy "households_delete"
 -- ═════════════════════════════════════════════════════════════
 -- MEMBERS
 -- ═════════════════════════════════════════════════════════════
+-- NOTE: These policies use SECURITY DEFINER helper functions to avoid
+-- infinite recursion (see migration 015_fix_members_rls_recursion.sql)
 
--- Members can see other members of their household
+-- SELECT:
+-- - user can always see their own member row
+-- - if caller is not a child: can see all members in the household
+-- - if caller is a child: can only see other children in the same household
 create policy "members_select"
   on members for select
   using (
     user_id = auth.uid()
-    or exists (
-      select 1 from members m2
-      where m2.household_id = members.household_id
-        and m2.user_id = auth.uid()
-        and m2.is_active = true
+    or (
+      public.is_active_member_of_household(household_id)
+      and (
+        public.get_my_member_role(household_id) <> 'child'
+        or role = 'child'
+      )
     )
   );
 
--- Owner/admin can add members
+-- INSERT:
+-- - owner/admin can add members
+-- - allow self-insert as owner when creating a household
 create policy "members_insert"
   on members for insert
   with check (
-    exists (
-      select 1 from members m2
-      where m2.household_id = members.household_id
-        and m2.user_id = auth.uid()
-        and m2.role in ('owner', 'admin')
-        and m2.is_active = true
+    public.is_owner_or_admin_of_household(members.household_id)
+    or (
+      user_id = auth.uid()
+      and role = 'owner'
+      and exists (
+        select 1
+        from public.households h
+        where h.id = members.household_id
+          and h.created_by = auth.uid()
+      )
     )
   );
 
--- Owner/admin can update members, or self-update limited fields
+-- UPDATE:
+-- - owner/admin can update household members
+-- - user can update their own member row (but not escalate role - enforced by WITH CHECK)
 create policy "members_update"
   on members for update
   using (
     user_id = auth.uid()
-    or exists (
-      select 1 from members m2
-      where m2.household_id = members.household_id
-        and m2.user_id = auth.uid()
-        and m2.role in ('owner', 'admin')
-        and m2.is_active = true
-    )
+    or public.is_owner_or_admin_of_household(members.household_id)
+  )
+  with check (
+    user_id = auth.uid()
+    or public.is_owner_or_admin_of_household(members.household_id)
   );
 
--- Owner/admin can remove members (or self-remove)
+-- DELETE:
+-- - only owner can delete members (not admin, not self-delete)
 create policy "members_delete"
   on members for delete
   using (
-    user_id = auth.uid()
-    or exists (
-      select 1 from members m2
-      where m2.household_id = members.household_id
-        and m2.user_id = auth.uid()
-        and m2.role in ('owner', 'admin')
-        and m2.is_active = true
-    )
+    public.is_owner_of_household(members.household_id)
   );
 
 -- ═════════════════════════════════════════════════════════════

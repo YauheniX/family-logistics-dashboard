@@ -43,7 +43,7 @@ export interface Database {
         Insert: {
           id?: string;
           name: string;
-          slug: string;
+          slug?: string;
           created_by: string;
           created_at?: string;
           updated_at?: string;
@@ -180,29 +180,41 @@ export interface Database {
         Row: {
           id: string;
           user_id: string;
+          member_id: string | null;
+          household_id: string | null;
           title: string;
           description: string | null;
           is_public: boolean;
+          visibility: 'private' | 'household' | 'public';
           share_slug: string;
           created_at: string;
+          updated_at: string | null;
         };
         Insert: {
           id?: string;
           user_id?: string;
+          member_id?: string | null;
+          household_id?: string | null;
           title: string;
           description?: string | null;
           is_public?: boolean;
+          visibility?: 'private' | 'household' | 'public';
           share_slug: string;
           created_at?: string;
+          updated_at?: string | null;
         };
         Update: {
           id?: string;
           user_id?: string;
+          member_id?: string | null;
+          household_id?: string | null;
           title?: string;
           description?: string | null;
           is_public?: boolean;
+          visibility?: 'private' | 'household' | 'public';
           share_slug?: string;
           created_at?: string;
+          updated_at?: string | null;
         };
         Relationships: [];
       };
@@ -268,7 +280,7 @@ export interface Database {
           p_household_id: string;
           p_user_id: string;
         };
-        Returns: string;
+        Returns: 'owner' | 'admin' | 'member' | 'child' | 'viewer' | null;
       };
       has_min_role: {
         Args: {
