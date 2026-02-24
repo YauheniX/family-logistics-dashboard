@@ -29,77 +29,113 @@ export interface Database {
         };
         Relationships: [];
       };
-      families: {
+      households: {
         Row: {
           id: string;
           name: string;
+          slug: string;
           created_by: string;
           created_at: string;
+          updated_at: string;
+          is_active: boolean;
+          settings: Json;
         };
         Insert: {
           id?: string;
           name: string;
+          slug: string;
           created_by: string;
           created_at?: string;
+          updated_at?: string;
+          is_active?: boolean;
+          settings?: Json;
         };
         Update: {
           id?: string;
           name?: string;
+          slug?: string;
           created_by?: string;
           created_at?: string;
+          updated_at?: string;
+          is_active?: boolean;
+          settings?: Json;
         };
         Relationships: [];
       };
-      family_members: {
+      members: {
         Row: {
           id: string;
-          family_id: string;
-          user_id: string;
-          role: 'owner' | 'member';
+          household_id: string;
+          user_id: string | null;
+          role: 'owner' | 'admin' | 'member' | 'child' | 'viewer';
+          display_name: string;
+          date_of_birth: string | null;
+          avatar_url: string | null;
+          is_active: boolean;
           joined_at: string;
+          invited_by: string | null;
+          metadata: Json;
         };
         Insert: {
           id?: string;
-          family_id: string;
-          user_id: string;
-          role?: 'owner' | 'member';
+          household_id: string;
+          user_id?: string | null;
+          role?: 'owner' | 'admin' | 'member' | 'child' | 'viewer';
+          display_name: string;
+          date_of_birth?: string | null;
+          avatar_url?: string | null;
+          is_active?: boolean;
           joined_at?: string;
+          invited_by?: string | null;
+          metadata?: Json;
         };
         Update: {
           id?: string;
-          family_id?: string;
-          user_id?: string;
-          role?: 'owner' | 'member';
+          household_id?: string;
+          user_id?: string | null;
+          role?: 'owner' | 'admin' | 'member' | 'child' | 'viewer';
+          display_name?: string;
+          date_of_birth?: string | null;
+          avatar_url?: string | null;
+          is_active?: boolean;
           joined_at?: string;
+          invited_by?: string | null;
+          metadata?: Json;
         };
         Relationships: [];
       };
       shopping_lists: {
         Row: {
           id: string;
-          family_id: string;
+          household_id: string;
           title: string;
           description: string | null;
           created_by: string;
+          created_by_member_id: string | null;
           created_at: string;
+          updated_at: string | null;
           status: 'active' | 'archived';
         };
         Insert: {
           id?: string;
-          family_id: string;
+          household_id: string;
           title: string;
           description?: string | null;
           created_by?: string;
+          created_by_member_id?: string | null;
           created_at?: string;
+          updated_at?: string | null;
           status?: 'active' | 'archived';
         };
         Update: {
           id?: string;
-          family_id?: string;
+          household_id?: string;
           title?: string;
           description?: string | null;
           created_by?: string;
+          created_by_member_id?: string | null;
           created_at?: string;
+          updated_at?: string | null;
           status?: 'active' | 'archived';
         };
         Relationships: [];
@@ -220,17 +256,25 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
-      user_is_family_member: {
+      user_is_household_member: {
         Args: {
-          p_family_id: string;
+          p_household_id: string;
           p_user_id: string;
         };
         Returns: boolean;
       };
-      user_is_family_owner: {
+      get_member_role: {
         Args: {
-          p_family_id: string;
+          p_household_id: string;
           p_user_id: string;
+        };
+        Returns: string;
+      };
+      has_min_role: {
+        Args: {
+          p_household_id: string;
+          p_user_id: string;
+          p_required_role: string;
         };
         Returns: boolean;
       };
@@ -251,8 +295,9 @@ export interface Database {
           p_item_id: string;
           p_reserved: boolean;
           p_email?: string | null;
+          p_name?: string | null;
         };
-        Returns: void;
+        Returns: Json;
       };
     };
     Enums: {

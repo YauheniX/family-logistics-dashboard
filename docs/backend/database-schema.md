@@ -2,9 +2,9 @@
 
 Complete database schema documentation for the Family Logistics Dashboard.
 
-**Last Updated**: February 23, 2026  
+**Last Updated**: February 24, 2026  
 **Database**: PostgreSQL (via Supabase)  
-**Schema Version**: Current (families-based, migrating to households)
+**Schema Version**: Current (households-based)
 
 ---
 
@@ -45,14 +45,16 @@ The application uses **PostgreSQL** via Supabase with:
 
 
 ┌──────────────────────┐         ┌─────────────────────┐
-│    families          │◄────────│  family_members     │
+│    households        │◄────────│  members            │
 │  ─────────────────   │  1:N    │  ────────────────   │
 │  id (PK)             │         │  id (PK)            │
-│  name                │         │  family_id (FK)     │
-│  created_by (FK)     │         │  user_id (FK)       │
-│  created_at          │         │  role               │
-└──────────┬───────────┘         │  joined_at          │
-           │                     └─────────────────────┘
+│  name                │         │  household_id (FK)  │
+│  slug (unique)       │         │  user_id (FK)       │
+│  created_by (FK)     │         │  role               │
+│  created_at          │         │  display_name       │
+│  is_active           │         │  is_active          │
+│  settings            │         │  joined_at          │
+└──────────┬───────────┘         └─────────────────────┘
            │
            │ 1:N
            ▼
@@ -60,7 +62,7 @@ The application uses **PostgreSQL** via Supabase with:
 │  shopping_lists      │
 │  ─────────────────   │
 │  id (PK)             │
-│  family_id (FK)      │
+│  household_id (FK)   │
 │  title               │
 │  description         │
 │  created_by (FK)     │
@@ -145,90 +147,109 @@ create table if not exists user_profiles (
 
 ---
 
-### 2. families
+### 2. households
 
-Family groups that contain members and shopping lists.
+Household groups that contain members and shopping lists.
 
 ```sql
-create table if not exists families (
-  id          uuid primary key default uuid_generate_v4(),
-  name        text not null,
-  created_by  uuid not null references auth.users on delete cascade,
-  created_at  timestamptz not null default now()
+create table if not exists households (
+  id               uuid primary key default uuid_generate_v4(),
+  name             text not null,
+  slug             text not null unique,
+  created_by       uuid not null references auth.users on delete restrict,
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now(),
+  is_active        boolean not null default true,
+  settings         jsonb not null default '{}'::jsonb,
+
+  constraint households_name_length check (char_length(name) between 1 and 100),
+  constraint households_slug_format check (slug ~ '^[a-z0-9-]+$')
 );
 ```
 
-**Purpose**: Top-level organizational unit for grouping family members.
+**Purpose**: Top-level organizational unit for grouping household members.
 
 **Key Points**:
 
 - Creator becomes owner automatically
-- Deleting a family cascades to members and shopping lists
+- Uses URL-friendly `slug` for identification
+- Supports `settings` JSON for household preferences
+- `is_active` flag for soft deletes
 
 **Relationships**:
 
 - `created_by` → `auth.users.id` (N:1)
-- Has many `family_members`
+- Has many `members`
 - Has many `shopping_lists`
-
-**Status**: 🔄 Being migrated to `households` table (see [Migration Guide](../migration/families-to-households.md))
+- Has many `invitations`
 
 ---
 
-### 3. family_members
+### 3. members
 
-Members of a family with role-based access.
+Members of a household with role-based access.
 
 ```sql
-create table if not exists family_members (
-  id          uuid primary key default uuid_generate_v4(),
-  family_id   uuid not null references families on delete cascade,
-  user_id     uuid not null references auth.users on delete cascade,
-  role        text not null default 'member' check (role in ('owner', 'member')),
-  joined_at   timestamptz not null default now(),
-  unique (family_id, user_id)
+create table if not exists members (
+  id               uuid primary key default uuid_generate_v4(),
+  household_id     uuid not null references households on delete cascade,
+  user_id          uuid references auth.users on delete set null,
+  role             text not null default 'member'
+    check (role in ('owner', 'admin', 'member', 'child', 'viewer')),
+  display_name     text not null,
+  date_of_birth    date,
+  avatar_url       text,
+  is_active        boolean not null default true,
+  joined_at        timestamptz not null default now(),
+  invited_by       uuid references members(id) on delete set null,
+  metadata         jsonb not null default '{}'::jsonb
 );
 ```
 
-**Purpose**: Maps users to families with roles.
+**Purpose**: Maps users to households with roles and supports "soft members" (children without accounts).
 
-**Roles**:
+**Roles** (hierarchical):
 
-- `owner` - Full control, cannot be removed
+- `owner` - Full control, cannot be removed (only one per household)
+- `admin` - Can manage members and all content
 - `member` - Can create/edit content
+- `child` - Limited access, no invites (requires date_of_birth)
+- `viewer` - Read-only access
 
 **Key Points**:
 
-- One user can belong to multiple families
-- One user can only have one role per family (unique constraint)
-- `user_id` is required (cannot add members without accounts)
+- `user_id` is nullable for "soft members" (children without accounts)
+- One user can belong to multiple households
+- `is_active` flag for soft removal without deleting history
+- `invited_by` tracks who invited this member
 
 **Relationships**:
 
-- `family_id` → `families.id` (N:1, CASCADE)
-- `user_id` → `auth.users.id` (N:1, CASCADE)
-
-**Status**: 🔄 Being replaced by `members` table with nullable `user_id`
+- `household_id` → `households.id` (N:1, CASCADE)
+- `user_id` → `auth.users.id` (N:1, SET NULL)
+- `invited_by` → `members.id` (N:1, SET NULL)
 
 ---
 
 ### 4. shopping_lists
 
-Shared shopping lists within a family.
+Shared shopping lists within a household.
 
 ```sql
 create table if not exists shopping_lists (
-  id          uuid primary key default uuid_generate_v4(),
-  family_id   uuid not null references families on delete cascade,
-  title       text not null,
-  description text,
-  created_by  uuid not null default auth.uid() references auth.users on delete cascade,
-  created_at  timestamptz not null default now(),
-  status      text not null default 'active' check (status in ('active', 'archived'))
+  id                   uuid primary key default uuid_generate_v4(),
+  household_id         uuid not null references households on delete cascade,
+  title                text not null,
+  description          text,
+  created_by           uuid not null default auth.uid() references auth.users on delete cascade,
+  created_by_member_id uuid references members on delete cascade,
+  created_at           timestamptz not null default now(),
+  updated_at           timestamptz default now(),
+  status               text not null default 'active' check (status in ('active', 'archived'))
 );
 ```
 
-**Purpose**: Shared shopping lists for family collaboration.
+**Purpose**: Shared shopping lists for household collaboration.
 
 **Status Values**:
 
@@ -237,14 +258,15 @@ create table if not exists shopping_lists (
 
 **Key Points**:
 
-- Tied to a family (all members can view)
-- Creator tracked via `created_by`
+- Tied to a household (all members can view)
+- Creator tracked via `created_by` and `created_by_member_id`
 - Can be archived but not deleted (soft delete)
 
 **Relationships**:
 
-- `family_id` → `families.id` (N:1, CASCADE)
+- `household_id` → `households.id` (N:1, CASCADE)
 - `created_by` → `auth.users.id` (N:1, CASCADE)
+- `created_by_member_id` → `members.id` (N:1, CASCADE)
 - Has many `shopping_items`
 
 ---

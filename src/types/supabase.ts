@@ -56,66 +56,12 @@ export type Database = {
           },
         ];
       };
-      families: {
-        Row: {
-          created_at: string;
-          created_by: string;
-          id: string;
-          name: string;
-        };
-        Insert: {
-          created_at?: string;
-          created_by: string;
-          id?: string;
-          name: string;
-        };
-        Update: {
-          created_at?: string;
-          created_by?: string;
-          id?: string;
-          name?: string;
-        };
-        Relationships: [];
-      };
-      family_members: {
-        Row: {
-          family_id: string;
-          id: string;
-          joined_at: string;
-          role: string;
-          user_id: string;
-        };
-        Insert: {
-          family_id: string;
-          id?: string;
-          joined_at?: string;
-          role?: string;
-          user_id: string;
-        };
-        Update: {
-          family_id?: string;
-          id?: string;
-          joined_at?: string;
-          role?: string;
-          user_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'family_members_family_id_fkey';
-            columns: ['family_id'];
-            isOneToOne: false;
-            referencedRelation: 'families';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
       households: {
         Row: {
           created_at: string;
           created_by: string;
           id: string;
           is_active: boolean;
-          migrated_from_family_id: string | null;
           name: string;
           settings: Json;
           slug: string;
@@ -126,7 +72,6 @@ export type Database = {
           created_by: string;
           id?: string;
           is_active?: boolean;
-          migrated_from_family_id?: string | null;
           name: string;
           settings?: Json;
           slug: string;
@@ -137,7 +82,6 @@ export type Database = {
           created_by?: string;
           id?: string;
           is_active?: boolean;
-          migrated_from_family_id?: string | null;
           name?: string;
           settings?: Json;
           slug?: string;
@@ -210,7 +154,6 @@ export type Database = {
           is_active: boolean;
           joined_at: string;
           metadata: Json;
-          migrated_from_family_member_id: string | null;
           role: string;
           user_id: string | null;
         };
@@ -224,7 +167,6 @@ export type Database = {
           is_active?: boolean;
           joined_at?: string;
           metadata?: Json;
-          migrated_from_family_member_id?: string | null;
           role?: string;
           user_id?: string | null;
         };
@@ -238,7 +180,6 @@ export type Database = {
           is_active?: boolean;
           joined_at?: string;
           metadata?: Json;
-          migrated_from_family_member_id?: string | null;
           role?: string;
           user_id?: string | null;
         };
@@ -332,8 +273,7 @@ export type Database = {
           created_by: string;
           created_by_member_id: string | null;
           description: string | null;
-          family_id: string;
-          household_id: string | null;
+          household_id: string;
           id: string;
           status: string;
           title: string;
@@ -344,8 +284,7 @@ export type Database = {
           created_by?: string;
           created_by_member_id?: string | null;
           description?: string | null;
-          family_id: string;
-          household_id?: string | null;
+          household_id: string;
           id?: string;
           status?: string;
           title: string;
@@ -356,8 +295,7 @@ export type Database = {
           created_by?: string;
           created_by_member_id?: string | null;
           description?: string | null;
-          family_id?: string;
-          household_id?: string | null;
+          household_id?: string;
           id?: string;
           status?: string;
           title?: string;
@@ -369,13 +307,6 @@ export type Database = {
             columns: ['created_by_member_id'];
             isOneToOne: false;
             referencedRelation: 'members';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'shopping_lists_family_id_fkey';
-            columns: ['family_id'];
-            isOneToOne: false;
-            referencedRelation: 'families';
             referencedColumns: ['id'];
           },
           {
@@ -610,14 +541,6 @@ export type Database = {
           p_reserved: boolean;
         };
         Returns: undefined;
-      };
-      user_is_family_member: {
-        Args: { p_family_id: string; p_user_id: string };
-        Returns: boolean;
-      };
-      user_is_family_owner: {
-        Args: { p_family_id: string; p_user_id: string };
-        Returns: boolean;
       };
       user_is_household_member: {
         Args: { p_household_id: string; p_user_id: string };

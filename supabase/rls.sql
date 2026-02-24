@@ -1,13 +1,14 @@
 -- ============================================================
--- Family Shopping & Wishlist Planner - Row Level Security
+-- Household Shopping & Wishlist Planner - Row Level Security
 -- ============================================================
 -- Enable RLS on all tables, then define policies.
 -- ============================================================
 
 -- ─── Enable RLS ─────────────────────────────────────────────
 alter table user_profiles    enable row level security;
-alter table families         enable row level security;
-alter table family_members   enable row level security;
+alter table households       enable row level security;
+alter table members          enable row level security;
+alter table invitations      enable row level security;
 alter table shopping_lists   enable row level security;
 alter table shopping_items   enable row level security;
 alter table wishlists        enable row level security;
@@ -33,157 +34,237 @@ create policy "user_profiles_update"
   using (id = auth.uid());
 
 -- ═════════════════════════════════════════════════════════════
--- FAMILIES
+-- HOUSEHOLDS
 -- ═════════════════════════════════════════════════════════════
 
--- A user can see families they belong to
-create policy "families_select"
-  on families for select
+-- Users can see households they belong to
+create policy "households_select"
+  on households for select
   using (
-    created_by = auth.uid()
-    or user_is_family_member(id, auth.uid())
-  );
-
--- Any authenticated user can create a family
-create policy "families_insert"
-  on families for insert
-  with check (auth.uid() is not null);
-
--- Only family owner can update family details
-create policy "families_update"
-  on families for update
-  using (user_is_family_owner(id, auth.uid()));
-
--- Only family owner can delete the family
-create policy "families_delete"
-  on families for delete
-  using (
-    created_by = auth.uid()
-    or user_is_family_owner(id, auth.uid())
-  );
-
--- ═════════════════════════════════════════════════════════════
--- FAMILY MEMBERS
--- ═════════════════════════════════════════════════════════════
-
--- Members can see other members of their family
-create policy "family_members_select"
-  on family_members for select
-  using (
-    user_id = auth.uid()
-    or user_is_family_member(family_id, auth.uid())
-  );
-
--- Only family owner can add members
-create policy "family_members_insert"
-  on family_members for insert
-  with check (
-    user_is_family_owner(family_id, auth.uid())
-    or (
-      user_id = auth.uid()
-      and role = 'owner'
-      and exists (
-        select 1 from families f
-        where f.id = family_id
-          and f.created_by = auth.uid()
-      )
+    exists (
+      select 1 from members
+      where household_id = households.id
+        and user_id = auth.uid()
+        and is_active = true
     )
   );
 
--- Only family owner can remove members (or self-remove)
-create policy "family_members_delete"
-  on family_members for delete
+-- Any authenticated user can create a household
+create policy "households_insert"
+  on households for insert
+  with check (auth.uid() is not null);
+
+-- Only owner/admin can update household details
+create policy "households_update"
+  on households for update
   using (
-    user_is_family_owner(family_id, auth.uid())
-    or user_id = auth.uid()
+    exists (
+      select 1 from members
+      where household_id = households.id
+        and user_id = auth.uid()
+        and role in ('owner', 'admin')
+        and is_active = true
+    )
+  );
+
+-- Only owner can delete household
+create policy "households_delete"
+  on households for delete
+  using (
+    exists (
+      select 1 from members
+      where household_id = households.id
+        and user_id = auth.uid()
+        and role = 'owner'
+        and is_active = true
+    )
+  );
+
+-- ═════════════════════════════════════════════════════════════
+-- MEMBERS
+-- ═════════════════════════════════════════════════════════════
+
+-- Members can see other members of their household
+create policy "members_select"
+  on members for select
+  using (
+    user_id = auth.uid()
+    or exists (
+      select 1 from members m2
+      where m2.household_id = members.household_id
+        and m2.user_id = auth.uid()
+        and m2.is_active = true
+    )
+  );
+
+-- Owner/admin can add members
+create policy "members_insert"
+  on members for insert
+  with check (
+    exists (
+      select 1 from members m2
+      where m2.household_id = members.household_id
+        and m2.user_id = auth.uid()
+        and m2.role in ('owner', 'admin')
+        and m2.is_active = true
+    )
+  );
+
+-- Owner/admin can update members, or self-update limited fields
+create policy "members_update"
+  on members for update
+  using (
+    user_id = auth.uid()
+    or exists (
+      select 1 from members m2
+      where m2.household_id = members.household_id
+        and m2.user_id = auth.uid()
+        and m2.role in ('owner', 'admin')
+        and m2.is_active = true
+    )
+  );
+
+-- Owner/admin can remove members (or self-remove)
+create policy "members_delete"
+  on members for delete
+  using (
+    user_id = auth.uid()
+    or exists (
+      select 1 from members m2
+      where m2.household_id = members.household_id
+        and m2.user_id = auth.uid()
+        and m2.role in ('owner', 'admin')
+        and m2.is_active = true
+    )
+  );
+
+-- ═════════════════════════════════════════════════════════════
+-- INVITATIONS
+-- ═════════════════════════════════════════════════════════════
+
+-- Users can see invitations for their households or sent to their email
+create policy "invitations_select"
+  on invitations for select
+  using (
+    email = (select auth.jwt() ->> 'email')
+    or exists (
+      select 1 from members
+      where household_id = invitations.household_id
+        and user_id = auth.uid()
+        and role in ('owner', 'admin')
+        and is_active = true
+    )
   );
 
 -- ═════════════════════════════════════════════════════════════
 -- SHOPPING LISTS
 -- ═════════════════════════════════════════════════════════════
 
--- Accessible only if user belongs to that family
+-- Accessible only if user is a household member
 create policy "shopping_lists_select"
   on shopping_lists for select
   using (
-    user_is_family_member(family_id, auth.uid())
+    exists (
+      select 1 from members
+      where household_id = shopping_lists.household_id
+        and user_id = auth.uid()
+        and is_active = true
+    )
   );
 
--- Any family member can create a list
+-- Any household member can create a list
 create policy "shopping_lists_insert"
   on shopping_lists for insert
   with check (
-    created_by = auth.uid()
-    user_is_family_member(family_id, auth.uid())
+    exists (
+      select 1 from members
+      where household_id = shopping_lists.household_id
+        and user_id = auth.uid()
+        and is_active = true
+    )
+  );
 
--- Any family member can update a list (e.g., archive it)
+-- Any household member can update a list
 create policy "shopping_lists_update"
   on shopping_lists for update
   using (
-    created_by = auth.uid()
-    or user_is_family_member(family_id, auth.uid())
+    exists (
+      select 1 from members
+      where household_id = shopping_lists.household_id
+        and user_id = auth.uid()
+        and is_active = true
+    )
   );
 
--- Only list creator or family owner can delete a list
+-- Only list creator or owner/admin can delete a list
 create policy "shopping_lists_delete"
   on shopping_lists for delete
-    user_is_family_member(family_id, auth.uid())
+  using (
+    created_by = auth.uid()
+    or exists (
+      select 1 from members
+      where household_id = shopping_lists.household_id
+        and user_id = auth.uid()
+        and role in ('owner', 'admin')
+        and is_active = true
+    )
   );
-
 
 -- ═════════════════════════════════════════════════════════════
 -- SHOPPING ITEMS
 -- ═════════════════════════════════════════════════════════════
 
--- Accessible only if list belongs to a family the user is in
+-- Accessible only if list belongs to user's household
 create policy "shopping_items_select"
   on shopping_items for select
   using (
     exists (
       select 1 from shopping_lists sl
-      where sl.id = list_id
-        and user_is_family_member(sl.family_id, auth.uid())
+      join members m on m.household_id = sl.household_id
+      where sl.id = shopping_items.list_id
+        and m.user_id = auth.uid()
+        and m.is_active = true
     )
   );
 
--- Any family member can add items
+-- Any household member can add items
 create policy "shopping_items_insert"
   on shopping_items for insert
   with check (
-    -- Normal case: user is a member of the list's family
     exists (
       select 1 from shopping_lists sl
-      where sl.id = list_id
-        and user_is_family_member(sl.family_id, auth.uid())
-    )
-    -- Or the inserting user is recorded on the row
-    or added_by = auth.uid()
-    -- User must be a member of the list's family at insert time
-    exists (
-      select 1 from shopping_lists sl
-      where sl.id = list_id
-        and user_is_family_member(sl.family_id, auth.uid())
-    )
-      where sl.id = list_id
-        and user_is_family_member(sl.family_id, auth.uid())
-    )
-    or added_by = auth.uid()
-    or exists (
-      select 1 from shopping_lists sl
-      where sl.id = list_id
-        and sl.created_by = auth.uid()
+      join members m on m.household_id = sl.household_id
+      where sl.id = shopping_items.list_id
+        and m.user_id = auth.uid()
+        and m.is_active = true
     )
   );
 
--- Item creator or family owner can delete items
+-- Any household member can update items (mark as purchased, etc)
+create policy "shopping_items_update"
+  on shopping_items for update
+  using (
+    exists (
+      select 1 from shopping_lists sl
+      join members m on m.household_id = sl.household_id
+      where sl.id = shopping_items.list_id
+        and m.user_id = auth.uid()
+        and m.is_active = true
+    )
+  );
+
+-- Item creator or owner/admin can delete items
 create policy "shopping_items_delete"
   on shopping_items for delete
   using (
     added_by = auth.uid()
     or exists (
       select 1 from shopping_lists sl
-      where sl.id = list_id
-        and user_is_family_owner(sl.family_id, auth.uid())
+      join members m on m.household_id = sl.household_id
+      where sl.id = shopping_items.list_id
+        and m.user_id = auth.uid()
+        and m.role in ('owner', 'admin')
+        and m.is_active = true
     )
   );
 

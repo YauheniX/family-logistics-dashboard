@@ -15,40 +15,22 @@ create table if not exists user_profiles (
 
 comment on table user_profiles is 'Extended user profile linked to auth.users';
 
--- ─── Families ───────────────────────────────────────────────
-create table if not exists families (
-  id          uuid primary key default uuid_generate_v4(),
-  name        text not null,
-  created_by  uuid not null references auth.users on delete cascade,
-  created_at  timestamptz not null default now()
-);
-
-comment on table families is 'Family groups that contain members and shared shopping lists';
-
--- ─── Family Members ─────────────────────────────────────────
-create table if not exists family_members (
-  id          uuid primary key default uuid_generate_v4(),
-  family_id   uuid not null references families on delete cascade,
-  user_id     uuid not null references auth.users on delete cascade,
-  role        text not null default 'member' check (role in ('owner', 'member')),
-  joined_at   timestamptz not null default now(),
-  unique (family_id, user_id)
-);
-
-comment on table family_members is 'Members of a family with role-based access';
-
 -- ─── Shopping Lists ─────────────────────────────────────────
 create table if not exists shopping_lists (
   id          uuid primary key default uuid_generate_v4(),
-  family_id   uuid not null references families on delete cascade,
+  household_id uuid not null references households on delete cascade,
   title       text not null,
   description text,
   created_by  uuid not null default auth.uid() references auth.users on delete cascade,
+  created_by_member_id uuid references members on delete cascade,
   created_at  timestamptz not null default now(),
+  updated_at  timestamptz default now(),
   status      text not null default 'active' check (status in ('active', 'archived'))
 );
 
-comment on table shopping_lists is 'Shared shopping lists within a family';
+comment on table shopping_lists is 'Shared shopping lists within a household';
+comment on column shopping_lists.household_id is 'References households table (required)';
+comment on column shopping_lists.created_by_member_id is 'References members table (replaces created_by user reference)';
 
 -- ─── Shopping Items ─────────────────────────────────────────
 create table if not exists shopping_items (
@@ -103,48 +85,13 @@ comment on column wishlist_items.reservation_code is '4-digit code required to u
 
 -- ─── Indexes ────────────────────────────────────────────────
 
-create index if not exists idx_family_members_user_id on family_members (user_id);
-create index if not exists idx_family_members_family_id on family_members (family_id);
-create index if not exists idx_shopping_lists_family_id on shopping_lists (family_id);
+create index if not exists idx_shopping_lists_household_id on shopping_lists (household_id);
 create index if not exists idx_shopping_items_list_id on shopping_items (list_id);
 create index if not exists idx_wishlists_user_id on wishlists (user_id);
 create index if not exists idx_wishlists_share_slug on wishlists (share_slug);
 create index if not exists idx_wishlist_items_wishlist_id on wishlist_items (wishlist_id);
 
--- ─── Helper Functions ───────────────────────────────────────
-
--- Check if a user belongs to a specific family
-create or replace function user_is_family_member(p_family_id uuid, p_user_id uuid)
-returns boolean
-language sql
-security definer
-stable
-set search_path = public
-as $$
-  select exists (
-    select 1 from family_members
-    where family_id = p_family_id
-      and user_id = p_user_id
-  );
-$$;
-
--- Check if a user is the owner of a specific family
-create or replace function user_is_family_owner(p_family_id uuid, p_user_id uuid)
-returns boolean
-language sql
-security definer
-stable
-set search_path = public
-as $$
-  select exists (
-    select 1 from family_members
-    where family_id = p_family_id
-      and user_id = p_user_id
-      and role = 'owner'
-  );
-$$;
-
--- ─── Household Helper Functions (New Schema) ───────────────
+-- ─── Household Helper Functions ─────────────────────────────
 
 -- Check if a user belongs to a specific household
 create or replace function user_is_household_member(p_household_id uuid, p_user_id uuid)
