@@ -9,8 +9,21 @@ import type {
   UpdateHouseholdDto,
   Member,
   CreateMemberDto,
+  Invitation,
 } from '../../shared/domain/entities';
 import type { ApiResponse } from '../../shared/domain/repository.interface';
+
+/**
+ * Mock invitation interface for type safety
+ */
+interface MockInvitation {
+  id: string;
+  household_id: string;
+  email: string;
+  role: string;
+  status: string;
+  created_at: string;
+}
 
 export class MockHouseholdRepository extends MockRepository<
   Household,
@@ -147,7 +160,7 @@ export class MockMemberRepository extends MockRepository<Member, CreateMemberDto
       // with an empty user_profiles object
       const membersWithProfiles = filtered.map((m) => ({
         ...m,
-        user_profiles: m.user_id ? { avatar_url: null } : undefined,
+        user_profiles: m.user_id ? { display_name: null, avatar_url: null } : undefined,
       }));
 
       return { data: membersWithProfiles, error: null };
@@ -210,15 +223,17 @@ export class MockMemberRepository extends MockRepository<Member, CreateMemberDto
       const invitationId = `invite-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
       // Store invitation in mock storage
-      const invitations = (await this.storage.get<any[]>('table:mock_invitations')) || [];
-      invitations.push({
+      const invitations =
+        (await this.storage.get<MockInvitation[]>('table:mock_invitations')) || [];
+      const newInvitation: MockInvitation = {
         id: invitationId,
         household_id: householdId,
         email,
         role,
         status: 'pending',
         created_at: new Date().toISOString(),
-      });
+      };
+      invitations.push(newInvitation);
       await this.storage.set('table:mock_invitations', invitations);
 
       return { data: invitationId, error: null };
@@ -227,6 +242,33 @@ export class MockMemberRepository extends MockRepository<Member, CreateMemberDto
         data: null,
         error: {
           message: error instanceof Error ? error.message : 'Failed to send invitation',
+        },
+      };
+    }
+  }
+
+  /**
+   * Get an invitation by ID (mock version)
+   */
+  async getInvitationById(invitationId: string): Promise<ApiResponse<Invitation>> {
+    try {
+      const invitations =
+        (await this.storage.get<MockInvitation[]>('table:mock_invitations')) || [];
+      const invitation = invitations.find((inv) => inv.id === invitationId);
+
+      if (!invitation) {
+        return {
+          data: null,
+          error: { message: 'Invitation not found' },
+        };
+      }
+
+      return { data: invitation as unknown as Invitation, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: {
+          message: error instanceof Error ? error.message : 'Failed to get invitation',
         },
       };
     }

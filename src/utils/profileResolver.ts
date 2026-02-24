@@ -55,18 +55,9 @@ export function resolveUserProfile(
   authUser?: AuthUser | null,
   email?: string | null,
 ): ResolvedProfile {
-  // Name resolution priority:
-  // 1. Local profile display_name (user can customize this)
-  // 2. Google OAuth full_name or name
-  // 3. Email prefix
   const googleName = authUser?.user_metadata?.full_name || authUser?.user_metadata?.name;
   const name = profile?.display_name || googleName || getEmailPrefix(email || authUser?.email);
 
-  // Avatar resolution priority:
-  // 1. Local profile avatar_url (user uploaded or selected)
-  //    - Only use if it's a non-empty string (valid URL)
-  // 2. Google OAuth avatar_url (fallback when local avatar is null/empty)
-  // 3. null (component should show default/initials)
   const googleAvatar = authUser?.user_metadata?.avatar_url;
   const localAvatar = profile?.avatar_url;
   const avatar = isValidAvatarUrl(localAvatar) ? localAvatar! : googleAvatar || null;
@@ -92,8 +83,9 @@ export function resolveUserProfile(
  * ```
  */
 export function resolveMemberProfile(member: Member): ResolvedProfile {
-  // Name fallback: member name → email → default
-  const name = member.display_name || member.email || 'Unknown Member';
+  // Name fallback: member name → user_profiles name (Google OAuth) → email → default
+  const profileName = member.user_profiles?.display_name;
+  const name = profileName || member.display_name || member.email || 'Unknown Member';
 
   // Avatar fallback: member avatar_url → user_profiles avatar (from Google) → null
   const localAvatar = member.avatar_url;

@@ -1,6 +1,5 @@
 import { ref, computed } from 'vue';
 import { memberRepository } from '@/features/household/infrastructure/household.factory';
-import { supabase } from '@/features/shared/infrastructure/supabase.client';
 import { useHouseholdStore } from '@/stores/household';
 import { useToastStore } from '@/stores/toast';
 import type { Member, Invitation } from '@/features/shared/domain/entities';
@@ -165,23 +164,18 @@ export function useMembers(): UseMembersReturn {
         return null;
       }
 
-      // Fetch the newly created invitation by ID
+      // Fetch the newly created invitation by ID using repository
       const invitationId = response.data!;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: invitation, error: fetchError } = await (supabase as any)
-        .from('invitations')
-        .select('*')
-        .eq('id', invitationId)
-        .single();
+      const invitationResponse = await memberRepository.getInvitationById(invitationId);
 
-      if (fetchError || !invitation) {
+      if (invitationResponse.error || !invitationResponse.data) {
         // Fallback: just show success message
         toastStore.success(`Invitation sent to ${email}! 📧`);
         return null;
       }
 
       toastStore.success(`Invitation sent to ${email}! 📧`);
-      return invitation as Invitation;
+      return invitationResponse.data as Invitation;
     } catch (err) {
       error.value = {
         message: err instanceof Error ? err.message : 'Failed to send invitation',

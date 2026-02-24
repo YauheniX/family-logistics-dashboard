@@ -411,6 +411,27 @@ describe('useMembers', () => {
         role: 'owner',
       });
 
+      // Set up the mock to return success for update operation
+      const supabase = await getMockedSupabase();
+      const successBuilder = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        update: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: {
+            id: 'm-2',
+            household_id: 'hh-1',
+            user_id: 'user-2',
+            role: 'member',
+            display_name: 'Test Member',
+            is_active: false,
+            joined_at: '2024-01-01T00:00:00Z',
+          },
+          error: null,
+        }),
+      };
+      supabase.from = vi.fn().mockReturnValue(successBuilder);
+
       const { removeMember } = useMembers();
 
       const result = await removeMember('m-2');
@@ -427,12 +448,18 @@ describe('useMembers', () => {
         role: 'owner',
       });
 
-      // Get the mocked supabase and make update return an error
+      // Get the mocked supabase and override from() to return an error builder
       const supabase = await getMockedSupabase();
-      supabase.__fromBuilder!.single = vi.fn().mockResolvedValue({
-        data: null,
-        error: { message: 'Permission denied', code: '42501', details: null },
-      });
+      const errorBuilder = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        update: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: null,
+          error: { message: 'Permission denied', code: '42501', details: null },
+        }),
+      };
+      supabase.from = vi.fn().mockReturnValue(errorBuilder);
 
       const { removeMember, error } = useMembers();
 
