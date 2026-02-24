@@ -73,6 +73,7 @@ import { computed } from 'vue';
 import Avatar from '@/components/shared/Avatar.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
 import { getRoleLabel } from '@/utils/roleUtils';
+import { resolveMemberProfile } from '@/utils/profileResolver';
 import type { Member } from '@/features/shared/domain/entities';
 
 interface Props {
@@ -87,9 +88,8 @@ defineEmits<{
   (e: 'edit', member: Member): void;
 }>();
 
-const memberName = computed(() => {
-  return props.member.display_name || props.member.email || 'Unknown Member';
-});
+const resolvedProfile = computed(() => resolveMemberProfile(props.member));
+const memberName = computed(() => resolvedProfile.value.name);
 
 // Determine role type
 const isChild = computed(() => props.member.role === 'child');

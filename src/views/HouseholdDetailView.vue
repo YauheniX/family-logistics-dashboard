@@ -49,14 +49,14 @@
             <!-- Avatar -->
             <Avatar
               :avatar-url="member.avatar_url"
-              :name="member.display_name || member.email || member.user_id || 'User'"
+              :name="getMemberName(member)"
               :role="member.role"
               :size="40"
               :show-role-badge="false"
             />
             <div class="flex-1">
               <p class="font-medium text-neutral-800 dark:text-neutral-200">
-                {{ member.display_name || member.email || member.user_id }}
+                {{ getMemberName(member) }}
               </p>
               <BaseBadge :variant="member.role === 'owner' ? 'primary' : 'neutral'">
                 {{ member.role }}
@@ -193,6 +193,8 @@ import { useAuthStore } from '@/stores/auth';
 import { useHouseholdEntityStore } from '@/features/household/presentation/household.store';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
 import { useHouseholdStore } from '@/stores/household';
+import { resolveMemberProfile } from '@/utils/profileResolver';
+import type { Member } from '@/features/shared/domain/entities';
 
 const props = defineProps<{ id: string }>();
 
@@ -203,6 +205,12 @@ const shoppingStore = useShoppingStore();
 const router = useRouter();
 
 const hasMultipleHouseholds = computed(() => householdStore.households.length > 1);
+
+// Helper to resolve member display names
+const getMemberName = (member: Member) => {
+  const resolved = resolveMemberProfile(member);
+  return resolved.name;
+};
 
 const showInviteModal = ref(false);
 const showCreateListModal = ref(false);

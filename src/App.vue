@@ -115,6 +115,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useHouseholdStore } from '@/stores/household';
 import { useTheme } from '@/composables/useTheme';
 import { useUserProfile } from '@/composables/useUserProfile';
+import { resolveUserProfile } from '@/utils/profileResolver';
 
 const authStore = useAuthStore();
 const householdStore = useHouseholdStore();
@@ -171,30 +172,20 @@ watch(
 
 const showShell = computed(() => Boolean(route.meta.requiresAuth));
 
-const userAvatarUrl = computed(() => {
-  // Prefer profile avatar from user_profiles table, fallback to OAuth avatar
-  const profileAvatar = profileAvatarUrl.value;
-  const oauthAvatar = authStore.user?.user_metadata?.avatar_url;
-  const result = profileAvatar || oauthAvatar || null;
-
-  console.log('[App.vue] userAvatarUrl computed:', {
-    profileAvatar,
-    oauthAvatar,
-    result,
-  });
-
-  return result;
+// Resolve user profile with consistent fallback logic
+const resolvedProfile = computed(() => {
+  return resolveUserProfile(
+    {
+      display_name: userDisplayName.value,
+      avatar_url: profileAvatarUrl.value,
+    },
+    authStore.user,
+    authStore.user?.email,
+  );
 });
 
-const displayNameOrEmail = computed(() => {
-  const result = userDisplayName.value || authStore.user?.email || 'User';
-  console.log('[App.vue] displayNameOrEmail computed:', {
-    userDisplayName: userDisplayName.value,
-    userEmail: authStore.user?.email,
-    result,
-  });
-  return result;
-});
+const userAvatarUrl = computed(() => resolvedProfile.value.avatar);
+const displayNameOrEmail = computed(() => resolvedProfile.value.name);
 
 watch(
   () => route.fullPath,
