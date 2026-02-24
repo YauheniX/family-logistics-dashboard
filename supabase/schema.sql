@@ -342,7 +342,7 @@ as $$
   select role
   from members
   where household_id = p_household_id
-    and user_id = auth.uid()
+    and user_id = (select auth.uid())
     and is_active = true
   limit 1;
 $$;
@@ -359,7 +359,7 @@ as $$
     select 1
     from members
     where household_id = p_household_id
-      and user_id = auth.uid()
+      and user_id = (select auth.uid())
       and is_active = true
   );
 $$;
@@ -376,7 +376,7 @@ as $$
     select 1
     from members
     where household_id = p_household_id
-      and user_id = auth.uid()
+      and user_id = (select auth.uid())
       and role = 'owner'
       and is_active = true
   );
@@ -394,7 +394,7 @@ as $$
     select 1
     from members
     where household_id = p_household_id
-      and user_id = auth.uid()
+      and user_id = (select auth.uid())
       and role in ('owner', 'admin')
       and is_active = true
   );
