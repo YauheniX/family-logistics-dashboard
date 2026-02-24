@@ -146,6 +146,73 @@ export class MemberRepository extends BaseRepository<Member, CreateMemberDto, Pa
   }
 
   /**
+   * Find members by household ID with user_profiles joined for Google avatar fallback
+   * Includes user_profiles.avatar_url for OAuth avatar fallback
+   */
+  async getMembersWithProfiles(householdId: string): Promise<ApiResponse<Member[]>> {
+    const response = await this.execute<Member[]>(async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return await (supabase.from('members') as any)
+        .select(
+          `
+          *,
+          user_profiles!user_id(avatar_url)
+        `,
+        )
+        .eq('household_id', householdId)
+        .eq('is_active', true)
+        .order('joined_at');
+    });
+
+    return response;
+  }
+
+  /**
+   * Create a child member (soft member without user account)
+   * Uses the database RPC function for proper validation and defaults
+   */
+  async createChild(
+    householdId: string,
+    name: string,
+    dateOfBirth: string,
+    avatarUrl?: string | null,
+  ): Promise<ApiResponse<string>> {
+    const response = await this.execute<string>(async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return await (supabase.rpc as any)('create_child_member', {
+        p_household_id: householdId,
+        p_name: name,
+        p_date_of_birth: dateOfBirth,
+        p_avatar_url: avatarUrl ?? null,
+      });
+    });
+
+    return response;
+  }
+
+  /**
+   * Send invitation to join household via email
+   * Uses the database RPC function to create invitation with token
+   * Returns the invitation ID
+   */
+  async sendInvitation(
+    householdId: string,
+    email: string,
+    role: string = 'member',
+  ): Promise<ApiResponse<string>> {
+    const response = await this.execute<string>(async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return await (supabase.rpc as any)('invite_member', {
+        p_household_id: householdId,
+        p_email: email,
+        p_role: role,
+      });
+    });
+
+    return response;
+  }
+
+  /**
    * Invite a member by email
    */
   async inviteByEmail(

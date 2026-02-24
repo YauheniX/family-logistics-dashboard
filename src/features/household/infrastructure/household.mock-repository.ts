@@ -136,6 +136,127 @@ export class MockMemberRepository extends MockRepository<Member, CreateMemberDto
   }
 
   /**
+   * Get members with their profile data (includes user_profiles join)
+   */
+  async getMembersWithProfiles(householdId: string): Promise<ApiResponse<Member[]>> {
+    try {
+      const members = await this.loadAll();
+      const filtered = members.filter((m) => m.household_id === householdId && m.is_active);
+
+      // In mock mode, we don't have real user_profiles, so just return members
+      // with an empty user_profiles object
+      const membersWithProfiles = filtered.map((m) => ({
+        ...m,
+        user_profiles: m.user_id ? { avatar_url: null } : undefined,
+      }));
+
+      return { data: membersWithProfiles, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: {
+          message: error instanceof Error ? error.message : 'Failed to fetch members with profiles',
+        },
+      };
+    }
+  }
+
+  /**
+   * Create a child member (mock version of create_child_member RPC)
+   */
+  async createChild(
+    householdId: string,
+    name: string,
+    dateOfBirth: string | null,
+    avatarUrl: string | null,
+  ): Promise<ApiResponse<string>> {
+    try {
+      const newMember: CreateMemberDto = {
+        household_id: householdId,
+        user_id: null, // Children don't have user accounts
+        role: 'child',
+        display_name: name,
+        date_of_birth: dateOfBirth,
+        avatar_url: avatarUrl,
+      };
+
+      const result = await this.create(newMember);
+
+      if (result.error || !result.data) {
+        return { data: null, error: result.error };
+      }
+
+      return { data: result.data.id, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: {
+          message: error instanceof Error ? error.message : 'Failed to create child member',
+        },
+      };
+    }
+  }
+
+  /**
+   * Send an invitation to join the household (mock version of invite_member RPC)
+   */
+  async sendInvitation(
+    householdId: string,
+    email: string,
+    role: string,
+  ): Promise<ApiResponse<string>> {
+    try {
+      // In mock mode, generate a mock invitation ID
+      const invitationId = `invite-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+      // Store invitation in mock storage
+      const invitations = (await this.storage.get<any[]>('table:mock_invitations')) || [];
+      invitations.push({
+        id: invitationId,
+        household_id: householdId,
+        email,
+        role,
+        status: 'pending',
+        created_at: new Date().toISOString(),
+      });
+      await this.storage.set('table:mock_invitations', invitations);
+
+      return { data: invitationId, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: {
+          message: error instanceof Error ? error.message : 'Failed to send invitation',
+        },
+      };
+    }
+  }
+
+  /**
+   * Soft delete a member by marking them as inactive
+   */
+  async softDelete(memberId: string): Promise<ApiResponse<void>> {
+    try {
+      // For mock mode, just call update without checking if member exists
+      // This allows tests to mock the Supabase client behavior
+      const updateResult = await this.update(memberId, { is_active: false });
+
+      if (updateResult.error) {
+        return { data: null, error: updateResult.error };
+      }
+
+      return { data: null, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: {
+          message: error instanceof Error ? error.message : 'Failed to delete member',
+        },
+      };
+    }
+  }
+
+  /**
    * Invite a member by email (mock version)
    */
   async inviteByEmail(

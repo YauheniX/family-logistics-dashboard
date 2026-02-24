@@ -65,16 +65,11 @@ export function resolveUserProfile(
   // Avatar resolution priority:
   // 1. Local profile avatar_url (user uploaded or selected)
   //    - Only use if it's a non-empty string (valid URL)
-  //    - If explicitly set to null, treat as "cleared" and do NOT fall back to Google
-  // 2. Google OAuth avatar_url (only when local avatar is not defined at all)
+  // 2. Google OAuth avatar_url (fallback when local avatar is null/empty)
   // 3. null (component should show default/initials)
   const googleAvatar = authUser?.user_metadata?.avatar_url;
   const localAvatar = profile?.avatar_url;
-  const avatar = isValidAvatarUrl(localAvatar)
-    ? localAvatar!
-    : profile?.avatar_url !== undefined
-      ? null
-      : googleAvatar || null;
+  const avatar = isValidAvatarUrl(localAvatar) ? localAvatar! : googleAvatar || null;
 
   return {
     name, // getEmailPrefix already guarantees non-empty string

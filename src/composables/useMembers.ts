@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue';
+import { memberRepository } from '@/features/household/infrastructure/household.factory';
 import { supabase } from '@/features/shared/infrastructure/supabase.client';
 import { useHouseholdStore } from '@/stores/household';
 import { useToastStore } from '@/stores/toast';
@@ -44,29 +45,19 @@ export function useMembers(): UseMembersReturn {
     error.value = null;
 
     try {
-      const { data, error: queryError } = await supabase
-        .from('members')
-        .select(
-          `
-          *,
-          user_profiles!user_id(avatar_url)
-        `,
-        )
-        .eq('household_id', householdId)
-        .eq('is_active', true)
-        .order('joined_at');
+      const response = await memberRepository.getMembersWithProfiles(householdId);
 
-      if (queryError) {
+      if (response.error) {
         error.value = {
-          message: queryError.message,
-          code: queryError.code,
-          details: queryError.details,
+          message: response.error.message,
+          code: response.error.code,
+          details: response.error.details,
         };
         toastStore.error('Failed to load members');
         return;
       }
 
-      members.value = (data ?? []) as unknown as Member[];
+      members.value = response.data ?? [];
     } catch (err) {
       error.value = {
         message: err instanceof Error ? err.message : 'Failed to load members',
@@ -100,41 +91,38 @@ export function useMembers(): UseMembersReturn {
     error.value = null;
 
     try {
-      const { data: memberId, error: rpcError } = await supabase.rpc('create_child_member', {
-        p_household_id: householdId,
-        p_name: data.name,
-        p_date_of_birth: data.birthday,
-        p_avatar_url: data.avatar ?? null,
-      });
+      const response = await memberRepository.createChild(
+        householdId,
+        data.name,
+        data.birthday,
+        data.avatar ?? null,
+      );
 
-      if (rpcError) {
+      if (response.error) {
         error.value = {
-          message: rpcError.message,
-          code: rpcError.code,
-          details: rpcError.details,
+          message: response.error.message,
+          code: response.error.code,
+          details: response.error.details,
         };
-        toastStore.error(`Failed to add child: ${rpcError.message}`);
+        toastStore.error(`Failed to add child: ${response.error.message}`);
         return null;
       }
 
-      // Fetch the created member
-      const { data: newMember, error: fetchError } = await supabase
-        .from('members')
-        .select('*')
-        .eq('id', memberId)
-        .single();
+      // Fetch the newly created member by ID
+      const memberId = response.data!;
+      const memberResult = await memberRepository.findById(memberId);
 
-      if (fetchError || !newMember) {
-        // Member was created but couldn't be fetched directly; refresh the full list
+      if (memberResult.error || !memberResult.data) {
+        // Fallback: refresh the list
         await fetchMembers();
         toastStore.success(`${data.name} has been added to the family! 👶`);
         return null;
       }
 
-      // Refresh the full list to avoid race conditions with concurrent operations
+      // Refresh the full list to show the new child
       await fetchMembers();
       toastStore.success(`${data.name} has been added to the family! 👶`);
-      return newMember as unknown as Member;
+      return memberResult.data;
     } catch (err) {
       error.value = {
         message: err instanceof Error ? err.message : 'Failed to add child',
@@ -165,36 +153,35 @@ export function useMembers(): UseMembersReturn {
     error.value = null;
 
     try {
-      const { data: invitationId, error: rpcError } = await supabase.rpc('invite_member', {
-        p_household_id: householdId,
-        p_email: email,
-        p_role: role,
-      });
+      const response = await memberRepository.sendInvitation(householdId, email, role);
 
-      if (rpcError) {
+      if (response.error) {
         error.value = {
-          message: rpcError.message,
-          code: rpcError.code,
-          details: rpcError.details,
+          message: response.error.message,
+          code: response.error.code,
+          details: response.error.details,
         };
-        toastStore.error(`Failed to invite member: ${rpcError.message}`);
+        toastStore.error(`Failed to invite member: ${response.error.message}`);
         return null;
       }
 
-      // Fetch the created invitation
-      const { data: invitation, error: fetchError } = await supabase
+      // Fetch the newly created invitation by ID
+      const invitationId = response.data!;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: invitation, error: fetchError } = await (supabase as any)
         .from('invitations')
         .select('*')
         .eq('id', invitationId)
         .single();
 
       if (fetchError || !invitation) {
+        // Fallback: just show success message
         toastStore.success(`Invitation sent to ${email}! 📧`);
         return null;
       }
 
       toastStore.success(`Invitation sent to ${email}! 📧`);
-      return invitation as unknown as Invitation;
+      return invitation as Invitation;
     } catch (err) {
       error.value = {
         message: err instanceof Error ? err.message : 'Failed to send invitation',
@@ -207,29 +194,31 @@ export function useMembers(): UseMembersReturn {
   }
 
   /**
-   * Remove a member from the current household
+   * Remove a member from the current household (soft delete)
    */
   async function removeMember(memberId: string): Promise<boolean> {
+    if (!isOwnerOrAdmin.value) {
+      toastStore.error('Only owners and admins can remove members');
+      return false;
+    }
+
     loading.value = true;
     error.value = null;
 
     try {
-      const { error: updateError } = await supabase
-        .from('members')
-        .update({ is_active: false })
-        .eq('id', memberId);
+      const response = await memberRepository.softDelete(memberId);
 
-      if (updateError) {
+      if (response.error) {
         error.value = {
-          message: updateError.message,
-          code: updateError.code,
-          details: updateError.details,
+          message: response.error.message,
+          code: response.error.code,
+          details: response.error.details,
         };
-        toastStore.error(`Failed to remove member: ${updateError.message}`);
+        toastStore.error('Failed to remove member');
         return false;
       }
 
-      // Refresh the full list to stay consistent
+      // Refresh list after removal
       await fetchMembers();
       toastStore.success('Member removed successfully');
       return true;
