@@ -86,6 +86,12 @@ security definer
 set search_path = public, auth
 as $$
 begin
+  -- Only allow authenticated users to run diagnostics
+  -- This function returns sensitive data (emails) so restrict access
+  if auth.uid() is null then
+    raise exception 'Authentication required';
+  end if;
+
   -- Check for auth.users without user_profiles
   return query
   select 

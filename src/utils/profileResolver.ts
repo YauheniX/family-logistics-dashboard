@@ -12,7 +12,7 @@
 import type { AuthUser } from '@/features/auth';
 import type { Member } from '@/features/shared/domain/entities';
 
-export interface UserProfile {
+export interface UserProfileInput {
   display_name?: string | null;
   avatar_url?: string | null;
 }
@@ -51,7 +51,7 @@ function getEmailPrefix(email?: string | null): string {
  * ```
  */
 export function resolveUserProfile(
-  profile?: UserProfile | null,
+  profile?: UserProfileInput | null,
   authUser?: AuthUser | null,
   email?: string | null,
 ): ResolvedProfile {
@@ -92,7 +92,7 @@ export function resolveUserProfile(
 export function resolveMemberProfile(member: Member): ResolvedProfile {
   // For members, we only have member table data
   // No OAuth metadata available at member level
-  const name = member.display_name || member.email;
+  const name = member.display_name || member.email || 'Unknown Member';
   const avatar = member.avatar_url || null;
 
   return { name, avatar };

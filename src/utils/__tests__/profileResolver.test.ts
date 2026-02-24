@@ -4,7 +4,7 @@ import {
   resolveMemberProfile,
   getInitials,
   isValidAvatarUrl,
-  type UserProfile,
+  type UserProfileInput,
 } from '../profileResolver';
 import type { AuthUser } from '@/features/auth';
 import type { Member } from '@/features/shared/domain/entities';
@@ -12,7 +12,7 @@ import type { Member } from '@/features/shared/domain/entities';
 describe('profileResolver', () => {
   describe('resolveUserProfile', () => {
     it('prioritizes local profile name over Google name', () => {
-      const profile: UserProfile = {
+      const profile: UserProfileInput = {
         display_name: 'Local Name',
         avatar_url: null,
       };
@@ -30,7 +30,7 @@ describe('profileResolver', () => {
     });
 
     it('falls back to Google name when local profile name is empty', () => {
-      const profile: UserProfile = {
+      const profile: UserProfileInput = {
         display_name: null,
         avatar_url: null,
       };
@@ -48,7 +48,7 @@ describe('profileResolver', () => {
     });
 
     it('falls back to email prefix when both profile and Google name are empty', () => {
-      const profile: UserProfile = {
+      const profile: UserProfileInput = {
         display_name: null,
         avatar_url: null,
       };
@@ -64,7 +64,7 @@ describe('profileResolver', () => {
     });
 
     it('uses email from parameter when authUser email is unavailable', () => {
-      const profile: UserProfile = {
+      const profile: UserProfileInput = {
         display_name: null,
         avatar_url: null,
       };
@@ -86,7 +86,7 @@ describe('profileResolver', () => {
     });
 
     it('prioritizes local profile avatar over Google avatar', () => {
-      const profile: UserProfile = {
+      const profile: UserProfileInput = {
         display_name: 'Test User',
         avatar_url: '/uploads/avatar.jpg',
       };
@@ -104,7 +104,7 @@ describe('profileResolver', () => {
     });
 
     it('falls back to Google avatar when local avatar is null', () => {
-      const profile: UserProfile = {
+      const profile: UserProfileInput = {
         display_name: 'Test User',
         avatar_url: null,
       };
@@ -122,7 +122,7 @@ describe('profileResolver', () => {
     });
 
     it('returns null avatar when both sources are empty', () => {
-      const profile: UserProfile = {
+      const profile: UserProfileInput = {
         display_name: 'Test User',
         avatar_url: null,
       };
@@ -154,7 +154,7 @@ describe('profileResolver', () => {
     });
 
     it('handles missing authUser gracefully', () => {
-      const profile: UserProfile = {
+      const profile: UserProfileInput = {
         display_name: 'Local User',
         avatar_url: '/avatar.jpg',
       };
@@ -166,7 +166,7 @@ describe('profileResolver', () => {
     });
 
     it('prefers user_metadata.full_name over user_metadata.name', () => {
-      const profile: UserProfile = { display_name: null, avatar_url: null };
+      const profile: UserProfileInput = { display_name: null, avatar_url: null };
       const authUser: AuthUser = {
         id: '1',
         email: 'test@example.com',
@@ -182,7 +182,7 @@ describe('profileResolver', () => {
     });
 
     it('falls back to user_metadata.name if full_name is missing', () => {
-      const profile: UserProfile = { display_name: null, avatar_url: null };
+      const profile: UserProfileInput = { display_name: null, avatar_url: null };
       const authUser: AuthUser = {
         id: '1',
         email: 'test@example.com',
