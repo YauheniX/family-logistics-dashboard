@@ -3,7 +3,8 @@
  * These types represent the actual database structure
  */
 
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+import type { Json } from '@/types/supabase';
+export type { Json };
 
 export interface Database {
   public: {

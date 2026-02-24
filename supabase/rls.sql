@@ -481,6 +481,17 @@ begin
       end if;
     end if;
     
+    -- Check if item is already reserved (prevent overwriting)
+    if exists (
+      select 1 from wishlist_items
+      where id = p_item_id and is_reserved = true
+    ) then
+      return jsonb_build_object(
+        'success', false,
+        'error', 'already_reserved'
+      );
+    end if;
+
     -- Generate 4-digit code using cryptographically secure randomness
     declare
       v_random_bytes bytea := extensions.gen_random_bytes(2);
@@ -495,14 +506,32 @@ begin
     end;
   end if;
 
-  -- Update reservation fields
-  update wishlist_items
-  set is_reserved = p_reserved,
-      reserved_by_email = case when p_reserved then p_email else null end,
-      reserved_by_name = case when p_reserved then p_name else null end,
-      reserved_at = case when p_reserved then now() else null end,
-      reservation_code = case when p_reserved then v_code else null end
-  where id = p_item_id;
+  -- Update reservation fields (with atomic guard for reservations)
+  if p_reserved then
+    update wishlist_items
+    set is_reserved = true,
+        reserved_by_email = p_email,
+        reserved_by_name = p_name,
+        reserved_at = now(),
+        reservation_code = v_code
+    where id = p_item_id
+      and is_reserved = false;  -- Atomic guard against race conditions
+    
+    if not found then
+      return jsonb_build_object(
+        'success', false,
+        'error', 'already_reserved'
+      );
+    end if;
+  else
+    update wishlist_items
+    set is_reserved = false,
+        reserved_by_email = null,
+        reserved_by_name = null,
+        reserved_at = null,
+        reservation_code = null
+    where id = p_item_id;
+  end if;
 
   -- Return the code when reserving
   return jsonb_build_object(

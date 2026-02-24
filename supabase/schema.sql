@@ -77,7 +77,7 @@ create table if not exists invitations (
   accepted_at      timestamptz,
   
   constraint invitations_email_format 
-    check (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$')
+    check (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
 );
 
 comment on table invitations is 'Pending invitations to join households';
