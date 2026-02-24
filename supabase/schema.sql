@@ -225,14 +225,19 @@ begin
     else 0
   end;
   
+  -- Fail-closed: reject invalid required_role instead of silently allowing access
   v_required_hierarchy := case p_required_role
     when 'owner' then 5
     when 'admin' then 4
     when 'member' then 3
     when 'child' then 2
     when 'viewer' then 1
-    else 0
+    else null  -- Invalid role should fail
   end;
+  
+  if v_required_hierarchy is null then
+    raise exception 'Invalid required_role: %. Must be one of: owner, admin, member, child, viewer', p_required_role;
+  end if;
   
   return v_role_hierarchy >= v_required_hierarchy;
 end;
