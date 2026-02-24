@@ -115,8 +115,7 @@ end;
 $$;
 
 comment on function check_profile_consistency is 
-  'Diagnostic function to check for profile data inconsistencies. ' ||
-  'Run periodically to identify and fix data issues.';
+  'Diagnostic function to check for profile data inconsistencies. Run periodically to identify and fix data issues.';
 
 -- ============================================================
 -- 5. Grant necessary permissions
