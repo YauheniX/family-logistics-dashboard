@@ -177,8 +177,14 @@ async function handleInvitationAccepted() {
 
 watch(
   () => authStore.user?.id,
-  (userId) => {
-    if (userId) loadDashboardData(userId);
+  async (userId) => {
+    if (userId) {
+      try {
+        await loadDashboardData(userId);
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+      }
+    }
   },
   { immediate: true },
 );
