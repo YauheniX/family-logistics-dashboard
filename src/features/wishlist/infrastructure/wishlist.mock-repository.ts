@@ -53,7 +53,9 @@ export class MockWishlistRepository extends MockRepository<
   async findBySlug(slug: string): Promise<ApiResponse<Wishlist>> {
     try {
       const wishlists = await this.loadAll();
-      const wishlist = wishlists.find((w) => w.share_slug === slug && w.is_public);
+      const wishlist = wishlists.find(
+        (w) => w.share_slug === slug && (w.visibility === 'public' || w.is_public),
+      );
 
       if (!wishlist) {
         return {
