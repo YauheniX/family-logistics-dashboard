@@ -64,12 +64,17 @@ export function resolveUserProfile(
 
   // Avatar resolution priority:
   // 1. Local profile avatar_url (user uploaded or selected)
-  //    - If explicitly set to null, respect that (user cleared avatar)
-  //    - If undefined, fall back to Google avatar
-  // 2. Google OAuth avatar_url
+  //    - Only use if it's a non-empty string (valid URL)
+  //    - If explicitly set to null, treat as "cleared" and do NOT fall back to Google
+  // 2. Google OAuth avatar_url (only when local avatar is not defined at all)
   // 3. null (component should show default/initials)
   const googleAvatar = authUser?.user_metadata?.avatar_url;
-  const avatar = profile?.avatar_url !== undefined ? profile?.avatar_url : googleAvatar || null;
+  const localAvatar = profile?.avatar_url;
+  const avatar = isValidAvatarUrl(localAvatar)
+    ? localAvatar!
+    : profile?.avatar_url !== undefined
+      ? null
+      : googleAvatar || null;
 
   return {
     name, // getEmailPrefix already guarantees non-empty string
@@ -92,10 +97,13 @@ export function resolveUserProfile(
  * ```
  */
 export function resolveMemberProfile(member: Member): ResolvedProfile {
-  // For members, we only have member table data
-  // No OAuth metadata available at member level
+  // Name fallback: member name → email → default
   const name = member.display_name || member.email || 'Unknown Member';
-  const avatar = member.avatar_url || null;
+
+  // Avatar fallback: member avatar_url → user_profiles avatar (from Google) → null
+  const localAvatar = member.avatar_url;
+  const profileAvatar = member.user_profiles?.avatar_url;
+  const avatar = isValidAvatarUrl(localAvatar) ? localAvatar! : profileAvatar || null;
 
   return { name, avatar };
 }

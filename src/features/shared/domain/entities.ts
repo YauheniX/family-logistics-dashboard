@@ -54,6 +54,7 @@ export interface Member {
 
   // Populated fields (not in DB)
   email?: string;
+  user_profiles?: { avatar_url: string | null };
 }
 
 export type CreateMemberDto = Pick<

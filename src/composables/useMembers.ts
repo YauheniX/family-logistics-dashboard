@@ -46,7 +46,12 @@ export function useMembers(): UseMembersReturn {
     try {
       const { data, error: queryError } = await supabase
         .from('members')
-        .select('*')
+        .select(
+          `
+          *,
+          user_profiles!user_id(avatar_url)
+        `,
+        )
         .eq('household_id', householdId)
         .eq('is_active', true)
         .order('joined_at');
