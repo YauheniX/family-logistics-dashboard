@@ -60,9 +60,7 @@ comment on function handle_new_user is
 -- ============================================================
 
 comment on table user_profiles is 
-  'User profiles with customizable display names and avatars. ' ||
-  'Local profile data takes priority over OAuth metadata. ' ||
-  'Use resolveUserProfile() utility in frontend for consistent display.';
+  'User profiles with customizable display names and avatars. Local profile data takes priority over OAuth metadata. Use resolveUserProfile() utility in frontend for consistent display.';
 
 comment on column user_profiles.display_name is 
   'User''s display name. Can be customized by user. Takes priority over OAuth metadata.';
