@@ -149,12 +149,13 @@ This documentation is **actively maintained** and reflects the **current state**
 
 **Use `/docs/` as the single source of truth.**
 
-### Migration In Progress
+### Schema Migration Complete
 
-The application is currently migrating from `families` schema to `households` schema:
+The migration from `families` to `households` schema is complete:
 
-- See [Migration Guide](migration/families-to-households.md) for details
-- See [Migration Progress](migration/migration-progress.md) for current status
+- ✅ Legacy `families` and `family_members` tables have been removed
+- ✅ All data now uses `households` and `members` tables
+- ✅ `shopping_lists` now uses `household_id` (not `family_id`)
 
 ---
 

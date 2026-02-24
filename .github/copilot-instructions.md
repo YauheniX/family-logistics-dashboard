@@ -8,7 +8,7 @@
 ## Core Rules
 
 1. **Household is the tenant** - All data must belong to a household
-2. **Use `households` not `families`** - Migration in progress
+2. **Use `households` not `families`** - Legacy schema has been removed
 3. **Follow repository pattern** - Don't access Supabase directly
 4. **Maintain 70%+ test coverage** - Required by CI
 5. **Update `/docs/` when architecture changes**
@@ -54,9 +54,9 @@ const lists = await repo.findAll();
 .from('households')
 .from('members')
 
-// ❌ Bad - legacy schema (being phased out)
-.from('families')
-.from('family_members')
+// ❌ Bad - these tables no longer exist
+// .from('families')     ← REMOVED
+// .from('family_members') ← REMOVED
 ```
 
 ### 3. Repository Pattern

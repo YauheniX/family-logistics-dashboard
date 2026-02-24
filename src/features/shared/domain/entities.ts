@@ -31,7 +31,6 @@ export interface Household {
   updated_at: string;
   is_active: boolean;
   settings: Record<string, unknown>;
-  migrated_from_family_id?: string | null;
 }
 
 export type CreateHouseholdDto = Pick<Household, 'name'>;
@@ -50,7 +49,6 @@ export interface Member {
   joined_at: string;
   invited_by: string | null;
   metadata: Record<string, unknown>;
-  migrated_from_family_member_id?: string | null;
 
   // Populated fields (not in DB)
   email?: string;

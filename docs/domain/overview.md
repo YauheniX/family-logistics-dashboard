@@ -60,7 +60,7 @@ export interface UserProfile {
 **Relationships**:
 
 - 1:1 with `auth.users`
-- 1:N with `families` (via family_members)
+- 1:N with `households` (via members)
 - 1:N with `wishlists`
 
 **Business Rules**:
@@ -78,34 +78,11 @@ export type UpdateUserProfileDto = Partial<Pick<UserProfile, 'display_name' | 'a
 
 ---
 
-## 2. Family (Current) / Household (Future)
+## 2. Household
 
 Multi-user groups for collaboration.
 
-### Current: Family
-
-```typescript
-export interface Family {
-  id: string; // UUID
-  name: string; // Family name
-  created_by: string; // Creator user_id
-  created_at: string; // ISO timestamp
-}
-```
-
-**Relationships**:
-
-- N:1 with `auth.users` (creator)
-- 1:N with `family_members`
-- 1:N with `shopping_lists`
-
-**Business Rules**:
-
-- Creator automatically becomes owner
-- Name required (1-100 chars)
-- Cannot be deleted if has shopping lists with items
-
-### Future: Household
+### Household
 
 ```typescript
 export interface Household {
@@ -117,16 +94,27 @@ export interface Household {
   updated_at: string; // ISO timestamp
   is_active: boolean; // Soft delete flag
   settings: Record<string, unknown>; // Household settings (JSONB)
-  migrated_from_family_id?: string | null; // Migration tracking
 }
 ```
 
-**New Features**:
+**Features**:
 
 - Unique slug for URLs
 - Soft delete via `is_active`
 - Settings for customization
-- Migration tracking
+
+**Relationships**:
+
+- N:1 with `auth.users` (creator)
+- 1:N with `members`
+- 1:N with `shopping_lists`
+- 1:N with `invitations`
+
+**Business Rules**:
+
+- Creator automatically becomes owner
+- Name required (1-100 chars)
+- Cannot be deleted if has shopping lists with items
 
 **DTOs**:
 
@@ -137,40 +125,18 @@ export type UpdateHouseholdDto = Partial<Pick<Household, 'name' | 'settings'>>;
 
 ---
 
-## 3. FamilyMember (Current) / Member (Future)
+## 3. Member
 
-Membership in a family/household with roles.
+Membership in a household with roles.
 
-### Current: FamilyMember
-
-```typescript
-export interface FamilyMember {
-  id: string; // UUID
-  family_id: string; // FK to families
-  user_id: string; // FK to auth.users (required)
-  role: 'owner' | 'member'; // Role
-  joined_at: string; // ISO timestamp
-}
-```
-
-**Roles**:
-
-- `owner` - Full control, cannot be removed
-- `member` - Can create/edit content
-
-**Limitations**:
-
-- ❌ No support for members without accounts (children)
-- ❌ Limited role granularity
-
-### Future: Member
+### Member
 
 ```typescript
 export interface Member {
   id: string; // UUID
   household_id: string; // FK to households
-  user_id: string | null; // FK to auth.users (nullable!)
-  role: MemberRole; // Enhanced roles
+  user_id: string | null; // FK to auth.users (nullable for soft members)
+  role: MemberRole; // Member role
   display_name: string; // Member display name
   date_of_birth: string | null; // Date of birth (ISO date)
   avatar_url: string | null; // Member avatar
@@ -178,7 +144,6 @@ export interface Member {
   joined_at: string; // ISO timestamp
   invited_by: string | null; // FK to member who invited
   metadata: Record<string, unknown>; // Custom data (JSONB)
-  migrated_from_family_member_id?: string | null;
 
   // Populated fields (not in DB)
   email?: string; // User email (if has account)
