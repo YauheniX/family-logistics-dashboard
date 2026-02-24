@@ -162,6 +162,30 @@ create policy "invitations_select"
     )
   );
 
+-- INSERT:
+-- - only owner/admin of household can create invitations
+create policy "invitations_insert"
+  on invitations for insert
+  with check (
+    public.is_owner_or_admin_of_household(invitations.household_id)
+  );
+
+-- UPDATE:
+-- - only owner/admin can update invitations (e.g., resend, cancel)
+create policy "invitations_update"
+  on invitations for update
+  using (
+    public.is_owner_or_admin_of_household(invitations.household_id)
+  );
+
+-- DELETE:
+-- - only owner/admin can delete invitations
+create policy "invitations_delete"
+  on invitations for delete
+  using (
+    public.is_owner_or_admin_of_household(invitations.household_id)
+  );
+
 -- ═════════════════════════════════════════════════════════════
 -- SHOPPING LISTS
 -- ═════════════════════════════════════════════════════════════
@@ -278,6 +302,25 @@ create policy "shopping_items_delete"
 -- WISHLISTS
 -- ═════════════════════════════════════════════════════════════
 
+-- SELECT:
+-- - owner can see their wishlists
+-- - household members can see household wishlists with visibility 'household' or 'public'
+-- - public wishlists visible via share_slug (anonymous access handled by SECURITY DEFINER function)
+create policy "wishlists_select"
+  on wishlists for select
+  using (
+    user_id = auth.uid()
+    or (
+      visibility in ('household', 'public')
+      and exists (
+        select 1 from members
+        where household_id = wishlists.household_id
+          and user_id = auth.uid()
+          and is_active = true
+      )
+    )
+  );
+
 -- Authenticated users can create their own wishlists
 create policy "wishlists_insert"
   on wishlists for insert
@@ -297,14 +340,26 @@ create policy "wishlists_delete"
 -- WISHLIST ITEMS
 -- ═════════════════════════════════════════════════════════════
 
--- Readable if owner or wishlist is public
+-- Readable if owner or wishlist is public/household
 create policy "wishlist_items_select"
   on wishlist_items for select
   using (
     exists (
       select 1 from wishlists w
       where w.id = wishlist_id
-        and (w.user_id = auth.uid() or w.is_public = true)
+        and (
+          w.user_id = auth.uid()
+          or w.visibility = 'public'
+          or (
+            w.visibility = 'household'
+            and exists (
+              select 1 from members
+              where household_id = w.household_id
+                and user_id = auth.uid()
+                and is_active = true
+            )
+          )
+        )
     )
   );
 

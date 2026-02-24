@@ -1,5 +1,5 @@
 -- ============================================================
--- Family Shopping & Wishlist Planner - Database Schema
+-- Household Shopping & Wishlist Planner - Database Schema
 -- ============================================================
 
 -- Enable UUID extension
@@ -124,8 +124,7 @@ create table if not exists wishlists (
   household_id  uuid references households on delete cascade,
   title         text not null,
   description   text,
-  is_public     boolean not null default false,
-  visibility    text check (visibility in ('private', 'household', 'public')),
+  visibility    text not null default 'private' check (visibility in ('private', 'household', 'public')),
   share_slug    text not null unique,
   created_at    timestamptz not null default now(),
   updated_at    timestamptz default now()
@@ -166,6 +165,7 @@ create index if not exists idx_households_slug on households (slug);
 create index if not exists idx_members_household_id on members (household_id);
 create index if not exists idx_members_user_id on members (user_id) where user_id is not null;
 create index if not exists idx_members_is_active on members (is_active) where is_active = true;
+create index if not exists idx_members_household_user_active on members (household_id, user_id, is_active) where is_active = true;
 create index if not exists idx_invitations_household_id on invitations (household_id);
 create index if not exists idx_invitations_email on invitations (email);
 create index if not exists idx_invitations_token on invitations (token);

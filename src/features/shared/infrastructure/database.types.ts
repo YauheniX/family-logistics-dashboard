@@ -184,7 +184,6 @@ export interface Database {
           household_id: string | null;
           title: string;
           description: string | null;
-          is_public: boolean;
           visibility: 'private' | 'household' | 'public';
           share_slug: string;
           created_at: string;
@@ -197,7 +196,6 @@ export interface Database {
           household_id?: string | null;
           title: string;
           description?: string | null;
-          is_public?: boolean;
           visibility?: 'private' | 'household' | 'public';
           share_slug: string;
           created_at?: string;
@@ -210,7 +208,6 @@ export interface Database {
           household_id?: string | null;
           title?: string;
           description?: string | null;
-          is_public?: boolean;
           visibility?: 'private' | 'household' | 'public';
           share_slug?: string;
           created_at?: string;
@@ -231,6 +228,9 @@ export interface Database {
           priority: 'low' | 'medium' | 'high';
           is_reserved: boolean;
           reserved_by_email: string | null;
+          reserved_by_name: string | null;
+          reserved_at: string | null;
+          reservation_code: string | null;
           created_at: string;
         };
         Insert: {
@@ -245,6 +245,9 @@ export interface Database {
           priority?: 'low' | 'medium' | 'high';
           is_reserved?: boolean;
           reserved_by_email?: string | null;
+          reserved_by_name?: string | null;
+          reserved_at?: string | null;
+          reservation_code?: string | null;
           created_at?: string;
         };
         Update: {
@@ -259,6 +262,9 @@ export interface Database {
           priority?: 'low' | 'medium' | 'high';
           is_reserved?: boolean;
           reserved_by_email?: string | null;
+          reserved_by_name?: string | null;
+          reserved_at?: string | null;
+          reservation_code?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -308,6 +314,7 @@ export interface Database {
           p_reserved: boolean;
           p_email?: string | null;
           p_name?: string | null;
+          p_code?: string | null;
         };
         Returns: Json;
       };
