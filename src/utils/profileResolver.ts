@@ -64,13 +64,15 @@ export function resolveUserProfile(
 
   // Avatar resolution priority:
   // 1. Local profile avatar_url (user uploaded or selected)
+  //    - If explicitly set to null, respect that (user cleared avatar)
+  //    - If undefined, fall back to Google avatar
   // 2. Google OAuth avatar_url
   // 3. null (component should show default/initials)
   const googleAvatar = authUser?.user_metadata?.avatar_url;
-  const avatar = profile?.avatar_url || googleAvatar || null;
+  const avatar = profile?.avatar_url !== undefined ? profile?.avatar_url : googleAvatar || null;
 
   return {
-    name: name || 'User', // Final fallback
+    name, // getEmailPrefix already guarantees non-empty string
     avatar,
   };
 }
@@ -127,7 +129,8 @@ export function getInitials(name?: string | null): string {
 }
 
 /**
- * Check if an avatar URL is valid (not empty or placeholder)
+ * Check if an avatar URL is present (not empty or whitespace-only)
+ * Note: This only checks for a non-empty string, not URL format validity
  */
 export function isValidAvatarUrl(url?: string | null): boolean {
   return Boolean(url && url.trim() !== '');

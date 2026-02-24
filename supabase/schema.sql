@@ -144,6 +144,100 @@ as $$
   );
 $$;
 
+-- ─── Household Helper Functions (New Schema) ───────────────
+
+-- Check if a user belongs to a specific household
+create or replace function user_is_household_member(p_household_id uuid, p_user_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1 from members
+    where household_id = p_household_id
+      and user_id = p_user_id
+      and is_active = true
+  );
+$$;
+
+-- Get member ID for a user in a household
+create or replace function get_member_id(p_household_id uuid, p_user_id uuid)
+returns uuid
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select id from members
+  where household_id = p_household_id
+    and user_id = p_user_id
+    and is_active = true
+  limit 1;
+$$;
+
+-- Get member role for a user in a household
+create or replace function get_member_role(p_household_id uuid, p_user_id uuid)
+returns text
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select role from members
+  where household_id = p_household_id
+    and user_id = p_user_id
+    and is_active = true
+  limit 1;
+$$;
+
+-- Check if user has at least the specified role in a household
+create or replace function has_min_role(
+  p_household_id uuid,
+  p_user_id uuid,
+  p_required_role text
+)
+returns boolean
+language plpgsql
+security definer
+stable
+set search_path = public
+as $$
+declare
+  v_role text;
+  v_role_hierarchy integer;
+  v_required_hierarchy integer;
+begin
+  -- Role hierarchy: owner=5, admin=4, member=3, child=2, viewer=1
+  v_role := get_member_role(p_household_id, p_user_id);
+  
+  if v_role is null then
+    return false;
+  end if;
+  
+  v_role_hierarchy := case v_role
+    when 'owner' then 5
+    when 'admin' then 4
+    when 'member' then 3
+    when 'child' then 2
+    when 'viewer' then 1
+    else 0
+  end;
+  
+  v_required_hierarchy := case p_required_role
+    when 'owner' then 5
+    when 'admin' then 4
+    when 'member' then 3
+    when 'child' then 2
+    when 'viewer' then 1
+    else 0
+  end;
+  
+  return v_role_hierarchy >= v_required_hierarchy;
+end;
+$$;
+
 -- Lookup user id by email (for invitations)
 create or replace function get_user_id_by_email(lookup_email text)
 returns uuid

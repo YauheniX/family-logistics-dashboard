@@ -163,7 +163,7 @@ const avatar = authUser?.user_metadata?.avatar_url || profileAvatar;
 
 Comprehensive test suite in `src/utils/__tests__/profileResolver.test.ts`:
 
-- ✅ 30 test cases covering all scenarios
+- ✅ 31 test cases covering all scenarios
 - ✅ Tests for both user and member profile resolution
 - ✅ Tests for edge cases (null, empty, missing data)
 - ✅ Tests for helper functions (getInitials, isValidAvatarUrl)

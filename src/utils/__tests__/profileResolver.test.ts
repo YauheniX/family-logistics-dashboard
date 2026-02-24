@@ -103,10 +103,28 @@ describe('profileResolver', () => {
       expect(result.avatar).toBe('/uploads/avatar.jpg');
     });
 
-    it('falls back to Google avatar when local avatar is null', () => {
+    it('respects explicitly cleared avatar (null) without falling back', () => {
       const profile: UserProfileInput = {
         display_name: 'Test User',
         avatar_url: null,
+      };
+      const authUser: AuthUser = {
+        id: '1',
+        email: 'test@example.com',
+        user_metadata: {
+          avatar_url: 'https://google.com/avatar.jpg',
+        },
+      };
+
+      const result = resolveUserProfile(profile, authUser, 'test@example.com');
+
+      expect(result.avatar).toBeNull();
+    });
+
+    it('falls back to Google avatar when local avatar is undefined', () => {
+      const profile: UserProfileInput = {
+        display_name: 'Test User',
+        avatar_url: undefined,
       };
       const authUser: AuthUser = {
         id: '1',
