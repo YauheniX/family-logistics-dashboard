@@ -64,7 +64,8 @@ alter table shopping_lists
 
 -- ─── 5. Make household_id NOT NULL on shopping_lists ─────────
 
--- First ensure all rows have a household_id (should already be done)
+-- Delete orphaned shopping lists that have no household_id
+-- These are leftover from the old families system
 do $$
 declare
   v_orphaned_lists integer;
@@ -74,7 +75,15 @@ begin
   where household_id is null;
   
   if v_orphaned_lists > 0 then
-    raise exception 'Cannot proceed: % shopping lists have NULL household_id. Migrate them first.', v_orphaned_lists;
+    raise notice 'Deleting % orphaned shopping lists with NULL household_id', v_orphaned_lists;
+    
+    -- First delete the items in those lists
+    delete from shopping_items
+    where list_id in (select id from shopping_lists where household_id is null);
+    
+    -- Then delete the orphaned lists
+    delete from shopping_lists
+    where household_id is null;
   end if;
 end;
 $$;
