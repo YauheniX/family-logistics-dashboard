@@ -87,7 +87,9 @@
                 Reserved{{ item.reserved_by_name ? ` by ${item.reserved_by_name}` : '' }}
               </BaseBadge>
             </div>
-            <div class="flex gap-2 pt-2">
+          </div>
+          <template #footer>
+            <div class="flex gap-2">
               <BaseButton
                 v-if="item.is_reserved"
                 class="flex-1 text-sm"
@@ -107,7 +109,7 @@
                 Delete
               </BaseButton>
             </div>
-          </div>
+          </template>
         </BaseCard>
       </div>
       <p v-else class="text-sm text-neutral-600 dark:text-neutral-400">

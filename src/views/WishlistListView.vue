@@ -40,18 +40,6 @@
             $router.push({ name: 'wishlist-edit', params: { id: wishlist.id } })
           "
         >
-          <!-- Preview Image -->
-          <div
-            v-if="previewImages[wishlist.id]"
-            class="mb-3 -mt-4 -mx-4 h-32 overflow-hidden rounded-t-lg"
-          >
-            <img
-              :src="previewImages[wishlist.id]"
-              :alt="wishlist.title"
-              class="w-full h-full object-cover"
-            />
-          </div>
-
           <div class="flex items-center justify-between mb-2">
             <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
               {{ wishlist.title }}
