@@ -26,12 +26,12 @@ create policy "user_profiles_select"
 -- Users can insert their own profile
 create policy "user_profiles_insert"
   on user_profiles for insert
-  with check (id = auth.uid());
+  with check (id = (select auth.uid()));
 
 -- Users can update only their own profile
 create policy "user_profiles_update"
   on user_profiles for update
-  using (id = auth.uid());
+  using (id = (select auth.uid()));
 
 -- ═════════════════════════════════════════════════════════════
 -- HOUSEHOLDS
@@ -44,7 +44,7 @@ create policy "households_select"
     exists (
       select 1 from members
       where household_id = households.id
-        and user_id = auth.uid()
+        and user_id = (select auth.uid())
         and is_active = true
     )
   );
@@ -52,7 +52,7 @@ create policy "households_select"
 -- Any authenticated user can create a household
 create policy "households_insert"
   on households for insert
-  with check (auth.uid() is not null);
+  with check ((select auth.uid()) is not null);
 
 -- Only owner/admin can update household details
 create policy "households_update"
@@ -61,7 +61,7 @@ create policy "households_update"
     exists (
       select 1 from members
       where household_id = households.id
-        and user_id = auth.uid()
+        and user_id = (select auth.uid())
         and role in ('owner', 'admin')
         and is_active = true
     )
@@ -74,7 +74,7 @@ create policy "households_delete"
     exists (
       select 1 from members
       where household_id = households.id
-        and user_id = auth.uid()
+        and user_id = (select auth.uid())
         and role = 'owner'
         and is_active = true
     )
@@ -93,7 +93,7 @@ create policy "households_delete"
 create policy "members_select"
   on members for select
   using (
-    user_id = auth.uid()
+    user_id = (select auth.uid())
     or (
       public.is_active_member_of_household(household_id)
       and (
@@ -111,13 +111,13 @@ create policy "members_insert"
   with check (
     public.is_owner_or_admin_of_household(members.household_id)
     or (
-      user_id = auth.uid()
+      user_id = (select auth.uid())
       and role = 'owner'
       and exists (
         select 1
         from public.households h
         where h.id = members.household_id
-          and h.created_by = auth.uid()
+          and h.created_by = (select auth.uid())
       )
     )
   );
@@ -128,11 +128,11 @@ create policy "members_insert"
 create policy "members_update"
   on members for update
   using (
-    user_id = auth.uid()
+    user_id = (select auth.uid())
     or public.is_owner_or_admin_of_household(members.household_id)
   )
   with check (
-    user_id = auth.uid()
+    user_id = (select auth.uid())
     or public.is_owner_or_admin_of_household(members.household_id)
   );
 
@@ -156,7 +156,7 @@ create policy "invitations_select"
     or exists (
       select 1 from members
       where household_id = invitations.household_id
-        and user_id = auth.uid()
+        and user_id = (select auth.uid())
         and role in ('owner', 'admin')
         and is_active = true
     )
@@ -197,7 +197,7 @@ create policy "shopping_lists_select"
     exists (
       select 1 from members
       where household_id = shopping_lists.household_id
-        and user_id = auth.uid()
+        and user_id = (select auth.uid())
         and is_active = true
     )
   );
@@ -209,7 +209,7 @@ create policy "shopping_lists_insert"
     exists (
       select 1 from members
       where household_id = shopping_lists.household_id
-        and user_id = auth.uid()
+        and user_id = (select auth.uid())
         and is_active = true
     )
   );
@@ -221,7 +221,7 @@ create policy "shopping_lists_update"
     exists (
       select 1 from members
       where household_id = shopping_lists.household_id
-        and user_id = auth.uid()
+        and user_id = (select auth.uid())
         and is_active = true
     )
   );
@@ -230,11 +230,11 @@ create policy "shopping_lists_update"
 create policy "shopping_lists_delete"
   on shopping_lists for delete
   using (
-    created_by = auth.uid()
+    created_by = (select auth.uid())
     or exists (
       select 1 from members
       where household_id = shopping_lists.household_id
-        and user_id = auth.uid()
+        and user_id = (select auth.uid())
         and role in ('owner', 'admin')
         and is_active = true
     )
@@ -252,7 +252,7 @@ create policy "shopping_items_select"
       select 1 from shopping_lists sl
       join members m on m.household_id = sl.household_id
       where sl.id = shopping_items.list_id
-        and m.user_id = auth.uid()
+        and m.user_id = (select auth.uid())
         and m.is_active = true
     )
   );
@@ -265,7 +265,7 @@ create policy "shopping_items_insert"
       select 1 from shopping_lists sl
       join members m on m.household_id = sl.household_id
       where sl.id = shopping_items.list_id
-        and m.user_id = auth.uid()
+        and m.user_id = (select auth.uid())
         and m.is_active = true
     )
   );
@@ -278,7 +278,7 @@ create policy "shopping_items_update"
       select 1 from shopping_lists sl
       join members m on m.household_id = sl.household_id
       where sl.id = shopping_items.list_id
-        and m.user_id = auth.uid()
+        and m.user_id = (select auth.uid())
         and m.is_active = true
     )
   );
@@ -287,12 +287,12 @@ create policy "shopping_items_update"
 create policy "shopping_items_delete"
   on shopping_items for delete
   using (
-    added_by = auth.uid()
+    added_by = (select auth.uid())
     or exists (
       select 1 from shopping_lists sl
       join members m on m.household_id = sl.household_id
       where sl.id = shopping_items.list_id
-        and m.user_id = auth.uid()
+        and m.user_id = (select auth.uid())
         and m.role in ('owner', 'admin')
         and m.is_active = true
     )
@@ -309,13 +309,13 @@ create policy "shopping_items_delete"
 create policy "wishlists_select"
   on wishlists for select
   using (
-    user_id = auth.uid()
+    user_id = (select auth.uid())
     or (
       visibility in ('household', 'public')
       and exists (
         select 1 from members
         where household_id = wishlists.household_id
-          and user_id = auth.uid()
+          and user_id = (select auth.uid())
           and is_active = true
       )
     )
@@ -324,17 +324,17 @@ create policy "wishlists_select"
 -- Authenticated users can create their own wishlists
 create policy "wishlists_insert"
   on wishlists for insert
-  with check (user_id = auth.uid());
+  with check (user_id = (select auth.uid()));
 
 -- Only owner can update their wishlist
 create policy "wishlists_update"
   on wishlists for update
-  using (user_id = auth.uid());
+  using (user_id = (select auth.uid()));
 
 -- Only owner can delete their wishlist
 create policy "wishlists_delete"
   on wishlists for delete
-  using (user_id = auth.uid());
+  using (user_id = (select auth.uid()));
 
 -- ═════════════════════════════════════════════════════════════
 -- WISHLIST ITEMS
@@ -348,14 +348,14 @@ create policy "wishlist_items_select"
       select 1 from wishlists w
       where w.id = wishlist_id
         and (
-          w.user_id = auth.uid()
+          w.user_id = (select auth.uid())
           or w.visibility = 'public'
           or (
             w.visibility = 'household'
             and exists (
               select 1 from members
               where household_id = w.household_id
-                and user_id = auth.uid()
+                and user_id = (select auth.uid())
                 and is_active = true
             )
           )
@@ -370,7 +370,7 @@ create policy "wishlist_items_insert"
     exists (
       select 1 from wishlists w
       where w.id = wishlist_id
-        and w.user_id = auth.uid()
+        and w.user_id = (select auth.uid())
     )
   );
 
@@ -381,7 +381,7 @@ create policy "wishlist_items_update_owner"
     exists (
       select 1 from wishlists w
       where w.id = wishlist_id
-        and w.user_id = auth.uid()
+        and w.user_id = (select auth.uid())
     )
   );
 
@@ -395,7 +395,7 @@ create policy "wishlist_items_delete"
     exists (
       select 1 from wishlists w
       where w.id = wishlist_id
-        and w.user_id = auth.uid()
+        and w.user_id = (select auth.uid())
     )
   );
 
