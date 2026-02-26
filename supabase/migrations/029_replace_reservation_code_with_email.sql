@@ -42,7 +42,14 @@ begin
     raise exception 'Item not found or wishlist is not public';
   end if;
 
-  -- Validate email if provided (required for unreserving, optional for reserving)
+  -- For reserving: require email from non-owners
+  if p_reserved and not v_is_owner then
+    if p_email is null or trim(p_email) = '' then
+      raise exception 'Email is required to reserve items';
+    end if;
+  end if;
+
+  -- Validate email if provided
   if not v_is_owner and p_email is not null and trim(p_email) <> '' then
     -- Validate email format
     if not (p_email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$') then

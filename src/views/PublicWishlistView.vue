@@ -261,25 +261,23 @@ const handleReserve = async () => {
 
   // Use authenticated user's name or manual input
   const name = isAuthenticated.value ? displayName.value : reserveName.value.trim();
-  const email = isAuthenticated.value ? undefined : reserveEmail.value.trim();
+  const email = isAuthenticated.value ? authStore.user?.email : reserveEmail.value.trim();
 
   if (!name) {
     toastStore.error('Name is required to reserve an item');
     return;
   }
 
-  if (!isAuthenticated.value && !email) {
+  if (!email) {
     toastStore.error('Email is required to reserve an item');
     return;
   }
 
-  // Validate email format if provided
-  if (email) {
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailPattern.test(email)) {
-      toastStore.error('Please enter a valid email address');
-      return;
-    }
+  // Validate email format
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailPattern.test(email)) {
+    toastStore.error('Please enter a valid email address');
+    return;
   }
 
   const result = await wishlistStore.reserveItem(

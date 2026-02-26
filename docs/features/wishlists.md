@@ -137,8 +137,9 @@ returns jsonb
 
 1. **Owner Check**: Verify if caller is wishlist owner
 2. **Public Check**: Verify wishlist is public
-3. **Email Validation** (if not owner):
-   - Required for both reserve and unreserve
+3. **Email Requirement** (if not owner):
+   - **Required for reserving**: Non-owners must provide email
+   - **Required for unreserving**: Email must match `reserved_by_email`
    - Format validation: `^[^@\s]+@[^@\s]+\.[^@\s]+$`
    - Length check: max 255 characters
 4. **Reserving**:
@@ -146,6 +147,7 @@ returns jsonb
    - Set `is_reserved = true`, store email + name
 5. **Unreserving**:
    - Validate email matches `reserved_by_email`
+   - Atomic WHERE clause prevents race conditions
    - Clear reservation fields
 
 **Security**:
