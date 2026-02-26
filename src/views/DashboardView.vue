@@ -107,6 +107,7 @@ import { useShoppingStore } from '@/features/shopping/presentation/shopping.stor
 import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
 import { useUserProfile } from '@/composables/useUserProfile';
 import { resolveUserProfile } from '@/utils/profileResolver';
+import { getVisibilityVariant, getVisibilityLabel } from '@/composables/useVisibilityDisplay';
 
 const authStore = useAuthStore();
 const householdStore = useHouseholdStore();
@@ -132,34 +133,6 @@ const userName = computed(() => {
 });
 
 const allActiveLists = computed(() => shoppingStore.lists.filter((l) => l.status === 'active'));
-
-type WishlistVisibility = 'public' | 'household' | 'private';
-
-const VISIBILITY_CONFIG: Record<
-  WishlistVisibility,
-  { variant: 'success' | 'warning' | 'neutral'; label: string }
-> = {
-  public: { variant: 'success', label: 'Public' },
-  household: { variant: 'warning', label: 'Household' },
-  private: { variant: 'neutral', label: 'Private' },
-};
-
-const normalizeVisibility = (visibility: string | null | undefined): WishlistVisibility => {
-  if (visibility === 'public' || visibility === 'household') {
-    return visibility;
-  }
-  return 'private';
-};
-
-const getVisibilityVariant = (visibility: string | null | undefined) => {
-  const key = normalizeVisibility(visibility);
-  return VISIBILITY_CONFIG[key].variant;
-};
-
-const getVisibilityLabel = (visibility: string | null | undefined) => {
-  const key = normalizeVisibility(visibility);
-  return VISIBILITY_CONFIG[key].label;
-};
 
 async function loadDashboardData(userId: string) {
   await Promise.all([

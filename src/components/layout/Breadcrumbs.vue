@@ -84,7 +84,7 @@ const breadcrumbs = computed<Breadcrumb[]>(() => {
       crumbs.push({ label: 'Manage Wishlist', to: route.path });
       break;
     case 'wishlist-detail':
-      crumbs.push({ label: ' Wishlist Detail', to: route.path });
+      crumbs.push({ label: 'Wishlist Detail', to: route.path });
       break;
     case 'settings':
       crumbs.push({ label: 'Settings', to: '/settings' });

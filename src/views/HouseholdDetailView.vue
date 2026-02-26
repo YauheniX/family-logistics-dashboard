@@ -13,6 +13,7 @@
               type="button"
               class="p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
               title="Rename household"
+              aria-label="Rename household"
               @click="openRenameModal"
             >
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -200,9 +201,12 @@ const isOwner = computed(() => {
 const canRename = computed(() => {
   const userId = authStore.user?.id;
   if (!userId) return false;
-  // Owner and admin can rename
-  return householdEntityStore.members.some(
-    (member) => member.user_id === userId && (member.role === 'owner' || member.role === 'admin'),
+  // Owner/creator or admin can rename
+  return (
+    isOwner.value ||
+    householdEntityStore.members.some(
+      (member) => member.user_id === userId && member.role === 'admin',
+    )
   );
 });
 

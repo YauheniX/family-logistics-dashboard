@@ -131,6 +131,7 @@ import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.stor
 import { wishlistService } from '@/features/wishlist/domain/wishlist.service';
 import { isValidUrl } from '@/utils/validation';
 import { fetchLinkPreview } from '@/composables/useLinkPreview';
+import { getVisibilityVariant, getVisibilityLabel } from '@/composables/useVisibilityDisplay';
 
 const authStore = useAuthStore();
 const wishlistStore = useWishlistStore();
@@ -141,28 +142,6 @@ const newDescription = ref('');
 const newVisibility = ref<'private' | 'household' | 'public'>('private');
 const previewUrls = ref<Record<string, string>>({});
 const previewImages = ref<Record<string, string>>({});
-
-const getVisibilityVariant = (visibility: string | null | undefined) => {
-  switch (visibility) {
-    case 'public':
-      return 'success';
-    case 'household':
-      return 'warning';
-    default:
-      return 'neutral';
-  }
-};
-
-const getVisibilityLabel = (visibility: string | null | undefined) => {
-  switch (visibility) {
-    case 'public':
-      return 'Public';
-    case 'household':
-      return 'Household';
-    default:
-      return 'Private';
-  }
-};
 
 const handleCreate = async () => {
   if (!newTitle.value.trim()) return;

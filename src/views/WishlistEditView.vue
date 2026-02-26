@@ -359,10 +359,6 @@ const closeItemModal = () => {
   showItemModal.value = false;
 };
 
-const cancelEditItem = () => {
-  resetItemForm();
-};
-
 const handleOwnerUnreserve = async (itemId: string) => {
   // Owners can unreserve without a code
   const result = await wishlistStore.reserveItem(itemId, undefined, undefined);
@@ -384,9 +380,18 @@ const closeReserveModal = () => {
 };
 
 const handleReserve = async () => {
-  if (!reservingItem.value || !reserverName.value.trim()) return;
+  if (!reservingItem.value) return;
 
-  const result = await wishlistStore.reserveItem(reservingItem.value.id, reserverName.value.trim());
+  const name = reserverName.value.trim();
+  if (!name) return;
+
+  // Validate name length
+  if (name.length < 2) {
+    toastStore.error('Name must be at least 2 characters long');
+    return;
+  }
+
+  const result = await wishlistStore.reserveItem(reservingItem.value.id, name);
   if (result) {
     toastStore.success(`Item reserved! Save this code to unreserve later: ${result.code}`);
     closeReserveModal();

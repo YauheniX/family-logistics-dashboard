@@ -3,11 +3,13 @@
  * Updated for multi-tenant household architecture
  */
 
+import type { WishlistVisibility } from './validation.schemas';
+
 // ─── Enums ───────────────────────────────────────────────
+export type { WishlistVisibility };
 export type MemberRole = 'owner' | 'admin' | 'member' | 'child' | 'viewer';
 export type ShoppingListStatus = 'active' | 'archived';
 export type ItemPriority = 'low' | 'medium' | 'high';
-export type WishlistVisibility = 'private' | 'household' | 'public';
 export type InvitationStatus = 'pending' | 'accepted' | 'declined' | 'expired';
 
 // ─── User Profile ────────────────────────────────────────
