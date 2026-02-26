@@ -92,8 +92,8 @@ export abstract class BaseRepository<
    */
   async findById(id: string): Promise<ApiResponse<TEntity>> {
     return this.query(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return await this.supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(this.tableName as any)
         .select('*')
         .eq('id', id)
@@ -108,7 +108,9 @@ export abstract class BaseRepository<
     return this.query(async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return await this.supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(this.tableName as any)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .insert(dto as any)
         .select()
         .single();
@@ -122,7 +124,9 @@ export abstract class BaseRepository<
     return this.query(async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return await this.supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(this.tableName as any)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .insert(dtos as any)
         .select();
     });
@@ -133,9 +137,10 @@ export abstract class BaseRepository<
    */
   async update(id: string, dto: TUpdateDto): Promise<ApiResponse<TEntity>> {
     return this.query(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return await this.supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(this.tableName as any)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .update(dto as any)
         .eq('id', id)
         .select()
@@ -150,7 +155,9 @@ export abstract class BaseRepository<
     return this.query(async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return await this.supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(this.tableName as any)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .upsert(dto as any)
         .select()
         .single();
@@ -164,6 +171,7 @@ export abstract class BaseRepository<
     return this.query(async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await this.supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(this.tableName as any)
         .delete()
         .eq('id', id);

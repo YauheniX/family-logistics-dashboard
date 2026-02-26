@@ -32,6 +32,7 @@ describe('Legacy Auth Store', () => {
       error: null,
     });
     vi.mocked(authService.onAuthStateChange).mockImplementation(() => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       data: { subscription: { unsubscribe: () => {} } as any },
     }));
 
@@ -58,6 +59,7 @@ describe('Legacy Auth Store', () => {
       error: null,
     });
     vi.mocked(authService.onAuthStateChange).mockImplementation(() => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       data: { subscription: { unsubscribe: () => {} } as any },
     }));
 
@@ -76,6 +78,7 @@ describe('Legacy Auth Store', () => {
       error: { message: 'Not authenticated' },
     });
     vi.mocked(authService.onAuthStateChange).mockImplementation(() => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       data: { subscription: { unsubscribe: () => {} } as any },
     }));
 
@@ -94,6 +97,7 @@ describe('Legacy Auth Store', () => {
       error: null,
     });
     vi.mocked(authService.onAuthStateChange).mockImplementation(() => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       data: { subscription: { unsubscribe: () => {} } as any },
     }));
 

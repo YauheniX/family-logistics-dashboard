@@ -105,6 +105,7 @@ export const useHouseholdStore = defineStore('household', () => {
       }
 
       const mapped: Household[] = (data ?? [])
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((row: any) => {
           const household = row.households;
           if (!household?.id) return null;

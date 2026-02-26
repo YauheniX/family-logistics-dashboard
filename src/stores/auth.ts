@@ -11,6 +11,7 @@ import { useToastStore } from '@/stores/toast';
 
 interface LegacyAuthState {
   session: Session | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   user: (User & { user_metadata?: Record<string, any> }) | AuthUser | null;
   loading: boolean;
   initialized: boolean;

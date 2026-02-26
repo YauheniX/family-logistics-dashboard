@@ -61,7 +61,7 @@ interface Props {
   ariaLabel?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const _props = withDefaults(defineProps<Props>(), {
   type: 'text',
   disabled: false,
   required: false,
