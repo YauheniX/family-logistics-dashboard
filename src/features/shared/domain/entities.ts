@@ -175,14 +175,11 @@ export interface Wishlist {
 }
 
 export type CreateWishlistDto = Pick<Wishlist, 'title' | 'description'> & {
-  is_public?: boolean; // Legacy
-  visibility?: WishlistVisibility; // New
-  member_id?: string; // New
-  household_id?: string; // New
+  visibility?: WishlistVisibility;
+  member_id?: string;
+  household_id?: string;
 };
-export type UpdateWishlistDto = Partial<
-  Pick<Wishlist, 'title' | 'description' | 'is_public' | 'visibility'>
->;
+export type UpdateWishlistDto = Partial<Pick<Wishlist, 'title' | 'description' | 'visibility'>>;
 
 // ─── Wishlist Item ───────────────────────────────────────
 export interface WishlistItem {

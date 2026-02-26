@@ -16,34 +16,32 @@
         </div>
         <div class="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
           <BaseButton
-            v-if="wishlistStore.currentWishlist.is_public"
+            v-if="isOwner"
+            variant="primary"
+            class="w-full xs:w-auto"
+            @click="openEditWishlistModal"
+          >
+            Edit
+          </BaseButton>
+          <BaseButton
+            v-if="isOwner"
+            variant="secondary"
+            class="w-full xs:w-auto"
+            @click="openAddItemModal"
+          >
+            Add Item
+          </BaseButton>
+
+          <BaseButton
+            v-if="wishlistStore.currentWishlist.visibility === 'public'"
             variant="ghost"
             class="w-full xs:w-auto"
             @click="copyPublicLink"
           >
             📋 Copy Public Link
           </BaseButton>
-          <BaseButton variant="ghost" class="w-full xs:w-auto" @click="$router.push('/wishlists')"
-            >← Back</BaseButton
-          >
         </div>
       </div>
-    </BaseCard>
-
-    <!-- Edit Wishlist Details -->
-    <BaseCard>
-      <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50 mb-4">Details</h3>
-      <form class="space-y-3" @submit.prevent="handleUpdateWishlist">
-        <BaseInput v-model="editTitle" label="Title" required />
-        <BaseInput v-model="editDescription" label="Description" placeholder="Optional" />
-        <label class="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
-          <input v-model="editIsPublic" type="checkbox" class="checkbox" />
-          Public (shareable link)
-        </label>
-        <BaseButton variant="primary" type="submit" :disabled="wishlistStore.loading">
-          Save Changes
-        </BaseButton>
-      </form>
     </BaseCard>
 
     <!-- Items List -->
@@ -88,7 +86,7 @@
               </BaseBadge>
             </div>
           </div>
-          <template #footer>
+          <template v-if="isOwner" #footer>
             <div class="flex gap-2">
               <BaseButton
                 v-if="item.is_reserved"
@@ -110,77 +108,151 @@
               </BaseButton>
             </div>
           </template>
+          <template v-else #footer>
+            <div class="flex gap-2">
+              <BaseButton
+                v-if="!item.is_reserved"
+                class="flex-1 text-sm"
+                variant="primary"
+                @click="openReserveModal(item)"
+              >
+                Reserve
+              </BaseButton>
+              <span
+                v-else
+                class="flex-1 text-sm text-center py-2 text-success-600 dark:text-success-400 font-medium"
+              >
+                Reserved{{ item.reserved_by_name ? ` by ${item.reserved_by_name}` : '' }}
+              </span>
+            </div>
+          </template>
         </BaseCard>
       </div>
       <p v-else class="text-sm text-neutral-600 dark:text-neutral-400">
-        No items yet. Add one below.
+        No items yet. Click "Add Item" to get started.
       </p>
-    </BaseCard>
-
-    <!-- Add/Edit Item Form -->
-    <BaseCard>
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
-          {{ editingItemId ? 'Edit Item' : 'Add Item' }}
-        </h3>
-        <BaseButton v-if="editingItemId" variant="ghost" type="button" @click="cancelEditItem">
-          Cancel
-        </BaseButton>
-      </div>
-      <form class="space-y-4" @submit.prevent="handleSaveItem">
-        <div class="grid gap-4 md:grid-cols-2">
-          <BaseInput v-model="itemForm.title" label="Title" required placeholder="Item name" />
-          <div class="space-y-1">
-            <label class="label">Priority</label>
-            <select v-model="itemForm.priority" class="input w-full">
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
-          </div>
-        </div>
-        <BaseInput v-model="itemForm.description" label="Description" placeholder="Optional" />
-        <BaseInput v-model="itemForm.link" label="Link" type="url" placeholder="https://..." />
-        <div class="grid gap-4 md:grid-cols-2">
-          <BaseInput
-            label="Price"
-            type="number"
-            placeholder="0.00"
-            :model-value="itemForm.price ?? ''"
-            @update:model-value="itemForm.price = $event ? Number($event) : null"
-          />
-          <BaseInput v-model="itemForm.currency" label="Currency" placeholder="USD" />
-        </div>
-        <BaseButton variant="primary" type="submit">
-          {{ editingItemId ? 'Update Item' : 'Add Item' }}
-        </BaseButton>
-      </form>
     </BaseCard>
   </div>
   <LoadingState v-else message="Loading wishlist..." />
+
+  <!-- Edit Wishlist Modal -->
+  <ModalDialog :open="showEditWishlistModal" title="Edit Wishlist" @close="closeEditWishlistModal">
+    <form class="space-y-4" @submit.prevent="handleUpdateWishlist">
+      <BaseInput v-model="editTitle" label="Title" required />
+      <BaseInput v-model="editDescription" label="Description" placeholder="Optional" />
+      <div class="space-y-1">
+        <label class="label">Visibility</label>
+        <select v-model="editVisibility" class="input w-full">
+          <option value="private">Private (only you)</option>
+          <option value="household">Household (all members)</option>
+          <option value="public">Public (shareable link)</option>
+        </select>
+      </div>
+      <div class="flex gap-2 justify-end">
+        <BaseButton variant="ghost" type="button" @click="closeEditWishlistModal"
+          >Cancel</BaseButton
+        >
+        <BaseButton variant="primary" type="submit" :disabled="wishlistStore.loading">
+          Save Changes
+        </BaseButton>
+      </div>
+    </form>
+  </ModalDialog>
+
+  <!-- Add/Edit Item Modal -->
+  <ModalDialog
+    :open="showItemModal"
+    :title="editingItemId ? 'Edit Item' : 'Add Item'"
+    @close="closeItemModal"
+  >
+    <form class="space-y-4" @submit.prevent="handleSaveItem">
+      <div class="grid gap-4 md:grid-cols-2">
+        <BaseInput v-model="itemForm.title" label="Title" required placeholder="Item name" />
+        <div class="space-y-1">
+          <label class="label">Priority</label>
+          <select v-model="itemForm.priority" class="input w-full">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+      </div>
+      <BaseInput v-model="itemForm.description" label="Description" placeholder="Optional" />
+      <BaseInput v-model="itemForm.link" label="Link" type="url" placeholder="https://..." />
+      <div class="grid gap-4 md:grid-cols-2">
+        <BaseInput
+          label="Price"
+          type="number"
+          placeholder="0.00"
+          :model-value="itemForm.price ?? ''"
+          @update:model-value="itemForm.price = $event ? Number($event) : null"
+        />
+        <BaseInput v-model="itemForm.currency" label="Currency" placeholder="USD" />
+      </div>
+      <div class="flex gap-2 justify-end">
+        <BaseButton variant="ghost" type="button" @click="closeItemModal">Cancel</BaseButton>
+        <BaseButton variant="primary" type="submit">
+          {{ editingItemId ? 'Update Item' : 'Add Item' }}
+        </BaseButton>
+      </div>
+    </form>
+  </ModalDialog>
+
+  <!-- Reserve Item Modal -->
+  <ModalDialog :open="showReserveModal" title="Reserve Item" @close="closeReserveModal">
+    <form class="space-y-4" @submit.prevent="handleReserve">
+      <p class="text-sm text-neutral-600 dark:text-neutral-400">
+        Reserve "<strong>{{ reservingItem?.title }}</strong
+        >" so others know you're getting it.
+      </p>
+      <BaseInput v-model="reserverName" label="Your Name" placeholder="Enter your name" required />
+      <div class="flex gap-2 justify-end">
+        <BaseButton variant="ghost" type="button" @click="closeReserveModal">Cancel</BaseButton>
+        <BaseButton variant="primary" type="submit">Reserve</BaseButton>
+      </div>
+    </form>
+  </ModalDialog>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
 import BaseInput from '@/components/shared/BaseInput.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import LinkPreview from '@/components/shared/LinkPreview.vue';
+import ModalDialog from '@/components/shared/ModalDialog.vue';
 import { useToastStore } from '@/stores/toast';
+import { useAuthStore } from '@/stores/auth';
 import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
-import type { ItemPriority, WishlistItem } from '@/features/shared/domain/entities';
+import type {
+  ItemPriority,
+  WishlistItem,
+  WishlistVisibility,
+} from '@/features/shared/domain/entities';
 
 const props = defineProps<{ id: string }>();
 
 const wishlistStore = useWishlistStore();
 const toastStore = useToastStore();
+const authStore = useAuthStore();
+
+const isOwner = computed(() => {
+  const currentUserId = authStore.user?.id;
+  const wishlistOwnerId = wishlistStore.currentWishlist?.user_id;
+  return currentUserId && wishlistOwnerId && currentUserId === wishlistOwnerId;
+});
 
 const editTitle = ref('');
 const editDescription = ref('');
-const editIsPublic = ref(false);
+const editVisibility = ref<WishlistVisibility>('private');
 const editingItemId = ref<string | null>(null);
+const showItemModal = ref(false);
+const showEditWishlistModal = ref(false);
+const showReserveModal = ref(false);
+const reservingItem = ref<WishlistItem | null>(null);
+const reserverName = ref('');
 
 const itemForm = reactive({
   title: '',
@@ -221,7 +293,7 @@ watch(
     if (wl) {
       editTitle.value = wl.title;
       editDescription.value = wl.description ?? '';
-      editIsPublic.value = wl.is_public;
+      editVisibility.value = wl.visibility ?? 'private';
     }
   },
   { immediate: true },
@@ -231,12 +303,21 @@ onMounted(async () => {
   await wishlistStore.loadWishlist(props.id);
 });
 
+const openEditWishlistModal = () => {
+  showEditWishlistModal.value = true;
+};
+
+const closeEditWishlistModal = () => {
+  showEditWishlistModal.value = false;
+};
+
 const handleUpdateWishlist = async () => {
   await wishlistStore.updateWishlist(props.id, {
     title: editTitle.value,
     description: editDescription.value || null,
-    is_public: editIsPublic.value,
+    visibility: editVisibility.value,
   });
+  closeEditWishlistModal();
 };
 
 const copyPublicLink = () => {
@@ -265,6 +346,17 @@ const startEditItem = (item: WishlistItem) => {
   itemForm.price = item.price;
   itemForm.currency = item.currency;
   itemForm.priority = item.priority;
+  showItemModal.value = true;
+};
+
+const openAddItemModal = () => {
+  resetItemForm();
+  showItemModal.value = true;
+};
+
+const closeItemModal = () => {
+  resetItemForm();
+  showItemModal.value = false;
 };
 
 const cancelEditItem = () => {
@@ -276,6 +368,28 @@ const handleOwnerUnreserve = async (itemId: string) => {
   const result = await wishlistStore.reserveItem(itemId, undefined, undefined);
   if (result) {
     toastStore.success('Item unreserved successfully!');
+  }
+};
+
+const openReserveModal = (item: WishlistItem) => {
+  reservingItem.value = item;
+  reserverName.value = '';
+  showReserveModal.value = true;
+};
+
+const closeReserveModal = () => {
+  reservingItem.value = null;
+  reserverName.value = '';
+  showReserveModal.value = false;
+};
+
+const handleReserve = async () => {
+  if (!reservingItem.value || !reserverName.value.trim()) return;
+
+  const result = await wishlistStore.reserveItem(reservingItem.value.id, reserverName.value.trim());
+  if (result) {
+    toastStore.success(`Item reserved! Save this code to unreserve later: ${result.code}`);
+    closeReserveModal();
   }
 };
 
@@ -300,5 +414,6 @@ const handleSaveItem = async () => {
     });
   }
   resetItemForm();
+  showItemModal.value = false;
 };
 </script>

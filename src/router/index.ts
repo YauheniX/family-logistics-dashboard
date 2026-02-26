@@ -87,6 +87,13 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/wishlists/:id',
+      name: 'wishlist-detail',
+      component: WishlistEditView,
+      props: true,
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/wishlist/:shareSlug',
       name: 'public-wishlist',
       component: PublicWishlistView,

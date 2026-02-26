@@ -44,8 +44,8 @@
             <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
               {{ wishlist.title }}
             </h3>
-            <BaseBadge :variant="wishlist.is_public ? 'primary' : 'neutral'">
-              {{ wishlist.is_public ? 'Public' : 'Private' }}
+            <BaseBadge :variant="getVisibilityVariant(wishlist.visibility)">
+              {{ getVisibilityLabel(wishlist.visibility) }}
             </BaseBadge>
           </div>
           <p v-if="wishlist.description" class="text-sm text-neutral-600 dark:text-neutral-400">
@@ -94,10 +94,16 @@
           label="Description"
           placeholder="Optional description"
         />
-        <label class="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
-          <input v-model="newIsPublic" type="checkbox" class="checkbox" />
-          Make public (shareable link)
-        </label>
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+            >Visibility</label
+          >
+          <select v-model="newVisibility" class="input w-full">
+            <option value="private">Private (only you)</option>
+            <option value="household">Household (all members)</option>
+            <option value="public">Public (shareable link)</option>
+          </select>
+        </div>
         <div class="flex gap-3">
           <BaseButton variant="primary" type="submit" :disabled="wishlistStore.loading">
             Create
@@ -132,21 +138,43 @@ const wishlistStore = useWishlistStore();
 const showCreateModal = ref(false);
 const newTitle = ref('');
 const newDescription = ref('');
-const newIsPublic = ref(false);
+const newVisibility = ref<'private' | 'household' | 'public'>('private');
 const previewUrls = ref<Record<string, string>>({});
 const previewImages = ref<Record<string, string>>({});
+
+const getVisibilityVariant = (visibility: string | null | undefined) => {
+  switch (visibility) {
+    case 'public':
+      return 'success';
+    case 'household':
+      return 'warning';
+    default:
+      return 'neutral';
+  }
+};
+
+const getVisibilityLabel = (visibility: string | null | undefined) => {
+  switch (visibility) {
+    case 'public':
+      return 'Public';
+    case 'household':
+      return 'Household';
+    default:
+      return 'Private';
+  }
+};
 
 const handleCreate = async () => {
   if (!newTitle.value.trim()) return;
   const created = await wishlistStore.createWishlist({
     title: newTitle.value.trim(),
     description: newDescription.value.trim() || null,
-    is_public: newIsPublic.value,
+    visibility: newVisibility.value,
   });
   if (created) {
     newTitle.value = '';
     newDescription.value = '';
-    newIsPublic.value = false;
+    newVisibility.value = 'private';
     showCreateModal.value = false;
   }
 };

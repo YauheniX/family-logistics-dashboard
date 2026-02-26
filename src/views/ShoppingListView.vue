@@ -24,7 +24,7 @@
             <BaseButton variant="danger" class="w-full xs:w-auto" @click="showDeleteModal = true"
               >🗑️ Delete</BaseButton
             >
-            <BaseButton variant="primary" class="w-full xs:w-auto" @click="showAddItemForm = true">
+            <BaseButton variant="primary" class="w-full xs:w-auto" @click="openAddItemModal">
               + Add Item
             </BaseButton>
           </div>
@@ -107,41 +107,43 @@
       badge="Shopping"
     />
 
-    <!-- Add/Edit Item Form -->
-    <BaseCard v-if="showAddItemForm">
-      <template #header>
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
-            {{ editingItemId ? 'Edit Item' : 'Add Item' }}
-          </h3>
-          <button
-            type="button"
-            class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
-            @click="resetForm"
-          >
-            ✕
-          </button>
+    <!-- Add/Edit Item Modal -->
+    <ModalDialog
+      :open="showItemModal"
+      :title="editingItemId ? 'Edit Item' : 'Add Item'"
+      @close="resetForm"
+    >
+      <form class="space-y-4" @submit.prevent="handleSubmitItem">
+        <BaseInput v-model="newItemTitle" placeholder="Item name" required />
+        <div>
+          <label class="label">Quantity</label>
+          <div class="flex items-center gap-3">
+            <button
+              type="button"
+              class="flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-lg font-medium hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+              @click="newItemQuantity = Math.max(1, newItemQuantity - 1)"
+            >
+              −
+            </button>
+            <span class="w-12 text-center text-lg font-medium">{{ newItemQuantity }}</span>
+            <button
+              type="button"
+              class="flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-lg font-medium hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+              @click="newItemQuantity++"
+            >
+              +
+            </button>
+          </div>
         </div>
-      </template>
-      <form class="grid gap-4 md:grid-cols-3" @submit.prevent="handleSubmitItem">
-        <BaseInput v-model="newItemTitle" placeholder="Item name" class="md:col-span-2" required />
-        <BaseInput
-          v-model="newItemQuantity"
-          type="number"
-          placeholder="Qty"
-          :model-value="newItemQuantity.toString()"
-          @update:model-value="(v) => (newItemQuantity = Number(v) || 1)"
-        />
-        <BaseInput
-          v-model="newItemCategory"
-          placeholder="Category (e.g. Produce, Dairy)"
-          class="md:col-span-3"
-        />
-        <BaseButton type="submit" variant="primary" class="md:col-span-3" full-width>
-          {{ editingItemId ? 'Update Item' : 'Add item' }}
-        </BaseButton>
+        <BaseInput v-model="newItemCategory" placeholder="Category (e.g. Produce, Dairy)" />
+        <div class="flex gap-3">
+          <BaseButton type="submit" variant="primary">
+            {{ editingItemId ? 'Update Item' : 'Add Item' }}
+          </BaseButton>
+          <BaseButton variant="ghost" @click="resetForm">Cancel</BaseButton>
+        </div>
       </form>
-    </BaseCard>
+    </ModalDialog>
 
     <!-- Edit List Modal -->
     <ModalDialog
@@ -222,9 +224,9 @@ const householdStore = useHouseholdStore();
 
 const showPurchased = ref(true);
 const showOnlyMine = ref(false);
-const showAddItemForm = ref(false);
 const showEditListModal = ref(false);
 const showDeleteModal = ref(false);
+const showItemModal = ref(false);
 const editingItemId = ref<string | null>(null);
 const newItemTitle = ref('');
 const newItemQuantity = ref(1);
@@ -272,7 +274,15 @@ const handleEditItem = (item: ShoppingItem) => {
   newItemTitle.value = item.title;
   newItemQuantity.value = item.quantity || 1;
   newItemCategory.value = item.category || '';
-  showAddItemForm.value = true;
+  showItemModal.value = true;
+};
+
+const openAddItemModal = () => {
+  editingItemId.value = null;
+  newItemTitle.value = '';
+  newItemQuantity.value = 1;
+  newItemCategory.value = '';
+  showItemModal.value = true;
 };
 
 const resetForm = () => {
@@ -280,7 +290,7 @@ const resetForm = () => {
   newItemTitle.value = '';
   newItemQuantity.value = 1;
   newItemCategory.value = '';
-  showAddItemForm.value = false;
+  showItemModal.value = false;
 };
 
 const handleSubmitItem = async () => {

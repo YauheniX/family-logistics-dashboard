@@ -50,30 +50,29 @@
         </div>
       </BaseCard>
 
-      <!-- My Wishlists -->
-      <BaseCard :padding="false">
+      <!-- Household Wishlists -->
+      <BaseCard v-if="householdStore.currentHousehold" :padding="false">
         <div class="p-5">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-              My Wishlists
+              Household Wishlists
             </h3>
-            <RouterLink to="/wishlists" class="btn-ghost text-sm">View All</RouterLink>
           </div>
-          <div v-if="wishlistStore.wishlists.length" class="mt-3 space-y-2">
+          <div v-if="wishlistStore.householdWishlists.length" class="mt-3 space-y-2">
             <RouterLink
-              v-for="wishlist in wishlistStore.wishlists"
+              v-for="wishlist in wishlistStore.householdWishlists"
               :key="wishlist.id"
-              :to="{ name: 'wishlist-edit', params: { id: wishlist.id } }"
+              :to="{ name: 'wishlist-detail', params: { id: wishlist.id } }"
               class="flex items-center justify-between rounded-lg border border-neutral-200 dark:border-neutral-700 p-3 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
             >
               <p class="font-medium text-neutral-800 dark:text-neutral-200">{{ wishlist.title }}</p>
-              <BaseBadge :variant="wishlist.is_public ? 'primary' : 'neutral'">
-                {{ wishlist.is_public ? 'Public' : 'Private' }}
+              <BaseBadge :variant="getVisibilityVariant(wishlist.visibility)">
+                {{ getVisibilityLabel(wishlist.visibility) }}
               </BaseBadge>
             </RouterLink>
           </div>
           <p v-else class="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
-            No wishlists yet.
+            No shared wishlists from household members.
           </p>
         </div>
       </BaseCard>
@@ -134,6 +133,34 @@ const userName = computed(() => {
 
 const allActiveLists = computed(() => shoppingStore.lists.filter((l) => l.status === 'active'));
 
+type WishlistVisibility = 'public' | 'household' | 'private';
+
+const VISIBILITY_CONFIG: Record<
+  WishlistVisibility,
+  { variant: 'success' | 'warning' | 'neutral'; label: string }
+> = {
+  public: { variant: 'success', label: 'Public' },
+  household: { variant: 'warning', label: 'Household' },
+  private: { variant: 'neutral', label: 'Private' },
+};
+
+const normalizeVisibility = (visibility: string | null | undefined): WishlistVisibility => {
+  if (visibility === 'public' || visibility === 'household') {
+    return visibility;
+  }
+  return 'private';
+};
+
+const getVisibilityVariant = (visibility: string | null | undefined) => {
+  const key = normalizeVisibility(visibility);
+  return VISIBILITY_CONFIG[key].variant;
+};
+
+const getVisibilityLabel = (visibility: string | null | undefined) => {
+  const key = normalizeVisibility(visibility);
+  return VISIBILITY_CONFIG[key].label;
+};
+
 async function loadDashboardData(userId: string) {
   await Promise.all([
     householdEntityStore.loadHouseholds(userId),
@@ -158,6 +185,8 @@ async function loadDashboardData(userId: string) {
   // Only update tracking after successful load
   try {
     await shoppingStore.loadLists(currentHouseholdId);
+    // Load household wishlists
+    await wishlistStore.loadHouseholdWishlists(currentHouseholdId, userId);
     lastLoadedHouseholdId.value = currentHouseholdId;
   } catch (error) {
     console.error('Failed to load shopping lists:', error);
@@ -207,6 +236,10 @@ watch(
     // Only update tracking after successful load
     try {
       await shoppingStore.loadLists(currentHouseholdId);
+      // Load household wishlists if user is logged in
+      if (authStore.user?.id) {
+        await wishlistStore.loadHouseholdWishlists(currentHouseholdId, authStore.user.id);
+      }
       lastLoadedHouseholdId.value = currentHouseholdId;
     } catch (error) {
       console.error('Failed to load shopping lists:', error);

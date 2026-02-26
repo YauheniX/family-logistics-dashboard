@@ -24,6 +24,7 @@ const mockWishlist = {
   title: 'Birthday Wishes',
   description: null,
   is_public: true,
+  visibility: 'public' as const,
   share_slug: 'abc12345',
   created_at: '2024-01-01T00:00:00Z',
 };
@@ -295,7 +296,7 @@ describe('Wishlist Store', () => {
     const result = await store.createWishlist({
       title: 'Birthday Wishes',
       description: null,
-      is_public: true,
+      visibility: 'public',
     });
 
     expect(result).toEqual(mockWishlist);
@@ -314,7 +315,7 @@ describe('Wishlist Store', () => {
     const result = await store.createWishlist({
       title: 'Birthday Wishes',
       description: null,
-      is_public: true,
+      visibility: 'public',
     });
 
     expect(result).toBeNull();

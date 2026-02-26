@@ -61,10 +61,13 @@ export const ShoppingItemFormSchema = z.object({
 export type ShoppingItemFormData = z.infer<typeof ShoppingItemFormSchema>;
 
 // ─── Wishlist Schemas ────────────────────────────────────
+export const WishlistVisibilitySchema = z.enum(['private', 'household', 'public']);
+export type WishlistVisibility = z.infer<typeof WishlistVisibilitySchema>;
+
 export const WishlistFormSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title is too long'),
   description: z.string().max(500, 'Description is too long').nullable().optional(),
-  is_public: z.boolean().default(false),
+  visibility: WishlistVisibilitySchema.default('private'),
 });
 export type WishlistFormData = z.infer<typeof WishlistFormSchema>;
 

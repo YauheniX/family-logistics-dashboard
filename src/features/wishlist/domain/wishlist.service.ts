@@ -49,6 +49,17 @@ export class WishlistService {
   }
 
   /**
+   * Get wishlists shared by household members (visibility = 'household' or 'public').
+   * Excludes the current user's own wishlists.
+   */
+  async getHouseholdWishlists(
+    householdId: string,
+    excludeUserId: string,
+  ): Promise<ApiResponse<Wishlist[]>> {
+    return await wishlistRepository.findByHouseholdId(householdId, excludeUserId);
+  }
+
+  /**
    * Create a new wishlist with an auto-generated share slug
    */
   async createWishlist(data: CreateWishlistDto): Promise<ApiResponse<Wishlist>> {

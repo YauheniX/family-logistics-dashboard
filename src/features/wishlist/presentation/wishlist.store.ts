@@ -14,6 +14,7 @@ import type {
 export const useWishlistStore = defineStore('wishlist', () => {
   // ─── State ───────────────────────────────────────────────
   const wishlists = ref<Wishlist[]>([]);
+  const householdWishlists = ref<Wishlist[]>([]);
   const currentWishlist = ref<Wishlist | null>(null);
   const items = ref<WishlistItem[]>([]);
   const loading = ref(false);
@@ -70,6 +71,20 @@ export const useWishlistStore = defineStore('wishlist', () => {
       }
     } finally {
       loading.value = false;
+    }
+  }
+
+  async function loadHouseholdWishlists(householdId: string, excludeUserId: string) {
+    try {
+      const response = await wishlistService.getHouseholdWishlists(householdId, excludeUserId);
+      if (response.error) {
+        // Silently fail - household wishlists are optional
+        householdWishlists.value = [];
+      } else {
+        householdWishlists.value = response.data ?? [];
+      }
+    } catch {
+      householdWishlists.value = [];
     }
   }
 
@@ -221,6 +236,7 @@ export const useWishlistStore = defineStore('wishlist', () => {
   return {
     // State
     wishlists,
+    householdWishlists,
     currentWishlist,
     items,
     loading,
@@ -231,6 +247,7 @@ export const useWishlistStore = defineStore('wishlist', () => {
     itemsByPriority,
     // Wishlist Actions
     loadWishlists,
+    loadHouseholdWishlists,
     loadWishlist,
     loadWishlistBySlug,
     createWishlist,
