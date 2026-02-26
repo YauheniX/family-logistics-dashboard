@@ -42,7 +42,6 @@ const mockItem = {
   reserved_by_email: null,
   reserved_by_name: null,
   reserved_at: null,
-  reservation_code: null,
   created_at: '2024-01-01T00:00:00Z',
 };
 
@@ -411,8 +410,8 @@ describe('Wishlist Store', () => {
     const reservedItem = {
       ...mockItem,
       is_reserved: true,
+      reserved_by_email: 'gift@example.com',
       reserved_by_name: 'Gift Giver',
-      reservation_code: '1234',
     };
     vi.mocked(wishlistService.reserveItem).mockResolvedValue({
       data: reservedItem,
@@ -421,13 +420,14 @@ describe('Wishlist Store', () => {
 
     const store = useWishlistStore();
     store.items = [mockItem];
-    const result = await store.reserveItem('wi1', 'Gift Giver');
+    const result = await store.reserveItem('wi1', 'Gift Giver', 'gift@example.com');
 
-    expect(result?.item.is_reserved).toBe(true);
-    expect(result?.item.reserved_by_name).toBe('Gift Giver');
-    expect(result?.code).toBe('1234');
+    expect(result?.is_reserved).toBe(true);
+    expect(result?.reserved_by_name).toBe('Gift Giver');
+    expect(result?.reserved_by_email).toBe('gift@example.com');
     expect(store.items[0].is_reserved).toBe(true);
     expect(store.items[0].reserved_by_name).toBe('Gift Giver');
+    expect(store.items[0].reserved_by_email).toBe('gift@example.com');
   });
 
   it('handles reserveItem error', async () => {
@@ -439,7 +439,7 @@ describe('Wishlist Store', () => {
 
     const store = useWishlistStore();
     store.items = [mockItem];
-    const result = await store.reserveItem('wi1', 'Gift Giver');
+    const result = await store.reserveItem('wi1', 'Gift Giver', 'gift@example.com');
 
     expect(result).toBeNull();
     expect(store.items[0].is_reserved).toBe(false);

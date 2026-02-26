@@ -143,12 +143,9 @@ export class MockWishlistItemRepository extends MockRepository<
   }
 
   /**
-   * Reserve or unreserve an item (public access)
+   * Reserve or unreserve an item (public access, email-based verification)
    */
-  async reserveItem(
-    id: string,
-    dto: ReserveWishlistItemDto,
-  ): Promise<ApiResponse<WishlistItem & { reservation_code?: string }>> {
+  async reserveItem(id: string, dto: ReserveWishlistItemDto): Promise<ApiResponse<WishlistItem>> {
     try {
       const data = await this.loadAll();
       const index = data.findIndex((record) => record.id === id);
@@ -162,36 +159,29 @@ export class MockWishlistItemRepository extends MockRepository<
 
       const currentItem = data[index];
 
-      // Validate reservation code when unreserving
-      if (!dto.is_reserved && currentItem.reservation_code) {
-        if (!dto.reservation_code || dto.reservation_code !== currentItem.reservation_code) {
+      // Validate email when unreserving
+      if (!dto.is_reserved && currentItem.reserved_by_email) {
+        if (!dto.reserved_by_email || dto.reserved_by_email !== currentItem.reserved_by_email) {
           return {
             data: null,
-            error: { message: 'Invalid reservation code' },
+            error: { message: 'Email does not match the reservation' },
           };
         }
       }
 
-      // Generate code when reserving
-      const generatedCode: string | null = dto.is_reserved
-        ? String(Math.floor(Math.random() * 10000)).padStart(4, '0')
-        : null;
-
       const updated: WishlistItem = {
         ...data[index],
         ...dto,
-        reservation_code: generatedCode,
+        reserved_at: dto.is_reserved ? new Date().toISOString() : null,
+        reserved_by_email: dto.is_reserved ? dto.reserved_by_email : null,
+        reserved_by_name: dto.is_reserved ? dto.reserved_by_name : null,
       };
 
       data[index] = updated;
       await this.saveAll(data);
 
-      // Return with reservation_code available
       return {
-        data: {
-          ...updated,
-          reservation_code: generatedCode || updated.reservation_code,
-        } as WishlistItem & { reservation_code?: string },
+        data: updated,
         error: null,
       };
     } catch (error) {

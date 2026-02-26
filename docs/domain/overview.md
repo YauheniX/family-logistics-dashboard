@@ -370,7 +370,7 @@ export type UpdateWishlistDto = Partial<
 
 ## 7. WishlistItem
 
-Items in a wishlist with reservation support.
+Items in a wishlist with **email-based reservation** support (Migration 029).
 
 ```typescript
 export interface WishlistItem {
@@ -383,8 +383,8 @@ export interface WishlistItem {
   currency: string; // Currency code (ISO 4217)
   priority: ItemPriority; // low | medium | high
   is_reserved: boolean; // Reservation status
-  reserved_by_email: string | null; // Reserver email
-  reserved_by_name: string | null; // Reserver name
+  reserved_by_email: string | null; // Reserver email (required for unreserving)
+  reserved_by_name: string | null; // Reserver name (optional, for display)
   reserved_at: string | null; // ISO timestamp
   created_at: string; // ISO timestamp
 }
@@ -401,9 +401,19 @@ export type ItemPriority = 'low' | 'medium' | 'high';
 - Title required (1-200 chars)
 - Price is optional (for tracking)
 - Currency defaults to USD
-- Anonymous users can reserve items (email only)
+- **Email-based reservations**: Users provide email to reserve/unreserve
+- Anonymous users can reserve items (email + name required)
+- Email must match to unreserve (except owners)
+- Owners can unreserve any item without email
 - One email can reserve multiple items
-- Reservations can be cancelled
+
+**Reservation System** (Migration 029):
+
+- ✅ Email-based verification (replaced 4-digit codes)
+- ✅ Email stored in `reserved_by_email` for verification
+- ✅ Name displayed to owner as "Reserved by [name]"
+- ✅ Owners can unreserve without providing email
+- See [Wishlists Feature Documentation](../features/wishlists.md) for details
 
 **DTOs**:
 

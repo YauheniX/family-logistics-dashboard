@@ -116,24 +116,28 @@ export class WishlistService {
 
   /**
    * Toggle reservation on an item (public access, no auth required)
-   * Returns reservation_code when reserving
+   * Email required for reserving (to enable later unreservation), optional for unreserving if item has no email
    */
-  async reserveItem(
-    id: string,
-    name?: string,
-    code?: string,
-  ): Promise<ApiResponse<WishlistItem & { reservation_code?: string }>> {
+  async reserveItem(id: string, name?: string, email?: string): Promise<ApiResponse<WishlistItem>> {
     const itemResponse = await wishlistItemRepository.findById(id);
     if (itemResponse.error || !itemResponse.data) {
-      return itemResponse as ApiResponse<WishlistItem & { reservation_code?: string }>;
+      return itemResponse as ApiResponse<WishlistItem>;
     }
 
     const isReserved = !itemResponse.data.is_reserved;
+
+    // When reserving, require email for verification on unreserve
+    if (isReserved && (!email || email.trim() === '')) {
+      return {
+        data: null,
+        error: { message: 'Email is required to reserve an item' },
+      };
+    }
+
     return await wishlistItemRepository.reserveItem(id, {
       is_reserved: isReserved,
-      reserved_by_email: null,
+      reserved_by_email: isReserved ? (email ?? null) : (email ?? null),
       reserved_by_name: isReserved ? (name ?? null) : null,
-      reservation_code: code, // Pass code when unreserving
     });
   }
 }
