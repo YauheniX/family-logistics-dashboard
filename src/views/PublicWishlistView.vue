@@ -94,20 +94,33 @@
     <ModalDialog :open="showReserveModal" title="Reserve Item" @close="showReserveModal = false">
       <div class="space-y-4">
         <p class="text-sm text-neutral-600 dark:text-neutral-400">
-          Optionally enter your name so the wishlist owner knows who reserved this item.
+          <template v-if="isAuthenticated">
+            Reserve this item as <strong>{{ displayName }}</strong
+            >? Others will see your name.
+          </template>
+          <template v-else>
+            Enter your name to reserve this item. You'll need to provide an email if you want to
+            unreserve it later.
+          </template>
         </p>
-        <div>
-          <label class="label" for="reserve-name">Your Name (optional)</label>
+        <div v-if="!isAuthenticated">
+          <label class="label" for="reserve-name">Your Name</label>
           <input
             id="reserve-name"
             v-model="reserveName"
             type="text"
             class="input"
             placeholder="Your name"
+            required
           />
         </div>
         <div class="flex gap-3">
-          <BaseButton variant="primary" type="button" @click="handleReserve">
+          <BaseButton
+            variant="primary"
+            type="button"
+            :disabled="!isAuthenticated && !reserveName.trim()"
+            @click="handleReserve"
+          >
             Confirm Reservation
           </BaseButton>
           <BaseButton variant="ghost" type="button" @click="showReserveModal = false"
@@ -117,58 +130,28 @@
       </div>
     </ModalDialog>
 
-    <!-- Show Reservation Code Modal -->
-    <ModalDialog
-      :open="showCodeModal"
-      title="Reservation Confirmed!"
-      @close="showCodeModal = false"
-    >
-      <div class="space-y-4">
-        <p class="text-sm text-neutral-600 dark:text-neutral-400">
-          Save this 4-digit code. You'll need it to unreserve this item later.
-        </p>
-        <div
-          class="bg-primary-50 dark:bg-primary-900/20 border-2 border-primary-500 rounded-lg p-6 text-center"
-        >
-          <p class="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">Your Code</p>
-          <p class="text-4xl font-bold text-primary-600 dark:text-primary-400 tracking-widest">
-            {{ generatedCode }}
-          </p>
-        </div>
-        <div class="flex gap-3">
-          <BaseButton variant="primary" type="button" @click="copyCode"> 📋 Copy Code </BaseButton>
-          <BaseButton variant="ghost" type="button" @click="showCodeModal = false">
-            Done
-          </BaseButton>
-        </div>
-      </div>
-    </ModalDialog>
-
     <!-- Unreserve Modal -->
     <ModalDialog :open="showUnreserveModal" title="Unreserve Item" @close="cancelUnreserve">
       <div class="space-y-4">
         <p class="text-sm text-neutral-600 dark:text-neutral-400">
-          Enter the 4-digit code you received when reserving this item.
+          Enter the email address you used to reserve this item.
         </p>
         <div>
-          <label class="label" for="unreserve-code">Reservation Code</label>
+          <label class="label" for="unreserve-email">Your Email</label>
           <input
-            id="unreserve-code"
-            v-model="unreserveCode"
-            type="text"
-            inputmode="numeric"
-            class="input text-center text-2xl tracking-widest"
-            placeholder="0000"
-            maxlength="4"
-            pattern="[0-9]{4}"
-            @input="unreserveCode = unreserveCode.replace(/\D/g, '').slice(0, 4)"
+            id="unreserve-email"
+            v-model="unreserveEmail"
+            type="email"
+            class="input"
+            placeholder="your@email.com"
+            required
           />
         </div>
         <div class="flex gap-3">
           <BaseButton
             variant="primary"
             type="button"
-            :disabled="!/^\d{4}$/.test(unreserveCode)"
+            :disabled="!unreserveEmail.trim()"
             @click="handleUnreserve"
           >
             Confirm Unreserve
@@ -181,7 +164,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed, watch } from 'vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
@@ -190,6 +173,8 @@ import LoadingState from '@/components/shared/LoadingState.vue';
 import ModalDialog from '@/components/shared/ModalDialog.vue';
 import LinkPreview from '@/components/shared/LinkPreview.vue';
 import { useToastStore } from '@/stores/toast';
+import { useAuthStore } from '@/stores/auth';
+import { useUserProfile } from '@/composables/useUserProfile';
 import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
 import type { ItemPriority } from '@/features/shared/domain/entities';
 
@@ -197,15 +182,30 @@ const props = defineProps<{ shareSlug: string }>();
 
 const wishlistStore = useWishlistStore();
 const toastStore = useToastStore();
+const authStore = useAuthStore();
+const { userDisplayName, loadUserProfile } = useUserProfile();
 
 const showReserveModal = ref(false);
 const showUnreserveModal = ref(false);
-const showCodeModal = ref(false);
 const reserveName = ref('');
-const unreserveCode = ref('');
+const unreserveEmail = ref('');
 const reservingItemId = ref<string | null>(null);
 const unreservingItemId = ref<string | null>(null);
-const generatedCode = ref<string | null>(null);
+
+// Use authenticated user's name if available
+const isAuthenticated = computed(() => !!authStore.user);
+const displayName = computed(() => userDisplayName.value || '');
+
+// Load user profile when authenticated
+watch(
+  () => authStore.user,
+  (user) => {
+    if (user?.id) {
+      loadUserProfile(user.id);
+    }
+  },
+  { immediate: true },
+);
 
 const priorityVariant = (priority: ItemPriority): 'danger' | 'warning' | 'neutral' => {
   switch (priority) {
@@ -243,69 +243,55 @@ const startReserve = (itemId: string) => {
 
 const handleReserve = async () => {
   if (!reservingItemId.value) return;
+
+  // Use authenticated user's name or manual input
+  const name = isAuthenticated.value ? displayName.value : reserveName.value.trim();
+
+  if (!name) {
+    toastStore.error('Name is required to reserve an item');
+    return;
+  }
+
   const result = await wishlistStore.reserveItem(
     reservingItemId.value,
-    reserveName.value.trim() || undefined,
+    name,
+    undefined, // Email optional: if omitted, anyone can unreserve; if provided, only matching email can unreserve
   );
+
   if (result) {
     showReserveModal.value = false;
     reservingItemId.value = null;
     reserveName.value = '';
-
-    // Show the generated code
-    if (result.code) {
-      generatedCode.value = result.code;
-      showCodeModal.value = true;
-    } else {
-      toastStore.success('Item reserved successfully!');
-    }
-  }
-};
-
-const copyCode = async () => {
-  if (!generatedCode.value) return;
-
-  if (!navigator.clipboard || !navigator.clipboard.writeText) {
-    toastStore.error('Clipboard is not available in this browser. Please copy the code manually.');
-    return;
-  }
-
-  try {
-    await navigator.clipboard.writeText(generatedCode.value);
-    toastStore.success('Code copied to clipboard!');
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Failed to copy code to clipboard', error);
-    toastStore.error('Failed to copy code to clipboard. Please copy it manually.');
+    toastStore.success('Item reserved successfully! Provide your email to unreserve it later.');
   }
 };
 
 const startUnreserve = (itemId: string) => {
   unreservingItemId.value = itemId;
-  unreserveCode.value = '';
+  unreserveEmail.value = '';
   showUnreserveModal.value = true;
 };
 
 const handleUnreserve = async () => {
-  if (!unreservingItemId.value || unreserveCode.value.length !== 4) return;
+  if (!unreservingItemId.value || !unreserveEmail.value.trim()) return;
 
   const result = await wishlistStore.reserveItem(
     unreservingItemId.value,
     undefined,
-    unreserveCode.value,
+    unreserveEmail.value.trim(),
   );
 
   if (result) {
     toastStore.success('Item unreserved successfully!');
     showUnreserveModal.value = false;
     unreservingItemId.value = null;
-    unreserveCode.value = '';
+    unreserveEmail.value = '';
   }
 };
 
 const cancelUnreserve = () => {
   showUnreserveModal.value = false;
   unreservingItemId.value = null;
-  unreserveCode.value = '';
+  unreserveEmail.value = '';
 };
 </script>

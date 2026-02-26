@@ -208,15 +208,46 @@
   <ModalDialog :open="showReserveModal" title="Reserve Item" @close="closeReserveModal">
     <form class="space-y-4" @submit.prevent="handleReserve">
       <p class="text-sm text-neutral-600 dark:text-neutral-400">
-        Reserve "<strong>{{ reservingItem?.title }}</strong
-        >" so others know you're getting it.
+        <template v-if="isAuthenticated">
+          Reserve "<strong>{{ reservingItem?.title }}</strong
+          >" as <strong>{{ displayName }}</strong
+          >? Others will see your name.
+        </template>
+        <template v-else>
+          Reserve "<strong>{{ reservingItem?.title }}</strong
+          >" so others know you're getting it.
+        </template>
       </p>
-      <BaseInput v-model="reserverName" label="Your Name" placeholder="Enter your name" required />
+      <div v-if="!isAuthenticated">
+        <BaseInput
+          v-model="reserverName"
+          label="Your Name"
+          placeholder="Enter your name"
+          required
+        />
+      </div>
+      <BaseInput
+        v-model="reserverEmail"
+        label="Your Email"
+        type="email"
+        placeholder="your@email.com"
+        required
+      />
+      <p class="text-xs text-neutral-500 dark:text-neutral-400">
+        You'll need this email to unreserve the item later.
+      </p>
       <div class="flex gap-2 justify-end">
         <BaseButton variant="ghost" type="button" @click="closeReserveModal">Cancel</BaseButton>
-        <BaseButton variant="primary" type="submit" :disabled="isReserving" :loading="isReserving"
-          >Reserve</BaseButton
+        <BaseButton
+          variant="primary"
+          type="submit"
+          :disabled="
+            isReserving || (!isAuthenticated && !reserverName.trim()) || !reserverEmail.trim()
+          "
+          :loading="isReserving"
         >
+          Reserve
+        </BaseButton>
       </div>
     </form>
   </ModalDialog>
@@ -233,6 +264,7 @@ import LinkPreview from '@/components/shared/LinkPreview.vue';
 import ModalDialog from '@/components/shared/ModalDialog.vue';
 import { useToastStore } from '@/stores/toast';
 import { useAuthStore } from '@/stores/auth';
+import { useUserProfile } from '@/composables/useUserProfile';
 import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
 import type {
   ItemPriority,
@@ -245,12 +277,27 @@ const props = defineProps<{ id: string }>();
 const wishlistStore = useWishlistStore();
 const toastStore = useToastStore();
 const authStore = useAuthStore();
+const { userDisplayName, loadUserProfile } = useUserProfile();
 
 const isOwner = computed(() => {
   const currentUserId = authStore.user?.id;
   const wishlistOwnerId = wishlistStore.currentWishlist?.user_id;
   return currentUserId && wishlistOwnerId && currentUserId === wishlistOwnerId;
 });
+
+const isAuthenticated = computed(() => !!authStore.user);
+const displayName = computed(() => userDisplayName.value || '');
+
+// Load user profile when authenticated
+watch(
+  () => authStore.user,
+  (user) => {
+    if (user?.id) {
+      loadUserProfile(user.id);
+    }
+  },
+  { immediate: true },
+);
 
 const editTitle = ref('');
 const editDescription = ref('');
@@ -261,6 +308,7 @@ const showEditWishlistModal = ref(false);
 const showReserveModal = ref(false);
 const reservingItem = ref<WishlistItem | null>(null);
 const reserverName = ref('');
+const reserverEmail = ref('');
 const isReserving = ref(false);
 
 const itemForm = reactive({
@@ -393,20 +441,25 @@ const handleOwnerUnreserve = async (itemId: string) => {
 const openReserveModal = (item: WishlistItem) => {
   reservingItem.value = item;
   reserverName.value = '';
+  reserverEmail.value = '';
   showReserveModal.value = true;
 };
 
 const closeReserveModal = () => {
   reservingItem.value = null;
   reserverName.value = '';
+  reserverEmail.value = '';
   showReserveModal.value = false;
 };
 
 const handleReserve = async () => {
   if (!reservingItem.value) return;
 
-  const name = reserverName.value.trim();
-  if (!name) return;
+  // Use authenticated user's name or manual input
+  const name = isAuthenticated.value ? displayName.value : reserverName.value.trim();
+  const email = reserverEmail.value.trim();
+
+  if (!name || !email) return;
 
   // Validate name length
   if (name.length < 2) {
@@ -414,11 +467,18 @@ const handleReserve = async () => {
     return;
   }
 
+  // Email validation aligned with backend pattern: ^[^@\s]+@[^@\s]+\.[^@\s]+$
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailPattern.test(email)) {
+    toastStore.error('Please enter a valid email address');
+    return;
+  }
+
   isReserving.value = true;
   try {
-    const result = await wishlistStore.reserveItem(reservingItem.value.id, name);
+    const result = await wishlistStore.reserveItem(reservingItem.value.id, name, email);
     if (result) {
-      toastStore.success(`Item reserved! Save this code to unreserve later: ${result.code}`);
+      toastStore.success('Item reserved! Use your email to unreserve it later.');
       closeReserveModal();
     } else {
       toastStore.error('Unable to reserve item');

@@ -351,7 +351,7 @@ create table if not exists wishlists (
 
 ### 7. wishlist_items
 
-Items in a wishlist with reservation support.
+Items in a wishlist with **email-based reservation** support (Migration 029).
 
 ```sql
 create table if not exists wishlist_items (
@@ -365,6 +365,8 @@ create table if not exists wishlist_items (
   priority          text not null default 'medium' check (priority in ('low', 'medium', 'high')),
   is_reserved       boolean not null default false,
   reserved_by_email text,
+  reserved_by_name  text,
+  reserved_at       timestamptz,
   created_at        timestamptz not null default now()
 );
 ```
@@ -377,12 +379,21 @@ create table if not exists wishlist_items (
 - `medium` - Would like to have
 - `high` - Really want
 
+**Reservation System** (Migration 029):
+
+- ✅ **Email-based verification** (replaced 4-digit codes)
+- Anonymous users provide email + name to reserve
+- Email required to unreserve (unless wishlist owner)
+- Owner can see "Reserved by [name]" but email is private
+- Email validation and matching handled by `reserve_wishlist_item()` RPC
+
 **Key Points**:
 
 - Visitors can reserve items (without login)
-- Reservation tracked by email only
+- Reservation tracked by email for unreserving
 - Price and currency for gift planning
 - External link to product page
+- Owner can unreserve without email
 
 **Relationships**:
 

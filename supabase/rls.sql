@@ -405,10 +405,10 @@ create policy "wishlist_items_delete"
 -- ═════════════════════════════════════════════════════════════
 -- This function allows anonymous users to reserve items on
 -- public wishlists without needing to log in. It updates
--- is_reserved, reserved_by_name, reserved_at, and reservation_code
+-- is_reserved, reserved_by_email, reserved_by_name, and reserved_at
 -- fields.
 -- 
--- Returns a JSON object with the reservation_code when reserving.
+-- Returns a JSON object with success status.
 -- ═════════════════════════════════════════════════════════════
 
 create or replace function reserve_wishlist_item(
@@ -416,7 +416,7 @@ create or replace function reserve_wishlist_item(
   p_reserved boolean,
   p_email text default null,
   p_name text default null,
-  p_code text default null
+  p_code text default null  -- Keeping for backward compatibility during transition, will be ignored
 )
 returns jsonb
 language plpgsql
@@ -424,7 +424,6 @@ security definer
 set search_path = public
 as $$
 declare
-  v_code text;
   v_wishlist_user_id uuid;
   v_is_owner boolean := false;
   v_wishlist_is_public boolean := false;
@@ -445,34 +444,37 @@ begin
     raise exception 'Item not found or wishlist is not public';
   end if;
 
-  -- If unreserving, validate code (unless owner)
-  if not p_reserved and not v_is_owner then
-    if p_code is null then
-      raise exception 'Reservation code is required to unreserve';
+  -- Validate email if provided (required for unreserving, optional for reserving)
+  if not v_is_owner and p_email is not null and trim(p_email) <> '' then
+    -- Validate email format
+    if not (p_email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$') then
+      raise exception 'Invalid email format';
     end if;
     
-    if not exists (
-      select 1 from wishlist_items
-      where id = p_item_id 
-        and reservation_code = p_code
-        and is_reserved = true
-    ) then
-      raise exception 'Invalid reservation code';
+    if char_length(p_email) > 255 then
+      raise exception 'Email too long (max 255 characters)';
     end if;
   end if;
 
-  -- If reserving, generate a 4-digit code
-  if p_reserved then
-    -- Input validation
-    if p_email is not null then
-      if not (p_email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$') then
-        raise exception 'Invalid email format';
-      end if;
-      if char_length(p_email) > 255 then
-        raise exception 'Email too long (max 255 characters)';
+  -- For unreserving: require email match if item was reserved with email (unless owner)
+  if not p_reserved and not v_is_owner then
+    -- Check if item was reserved with an email
+    if exists (
+      select 1 from wishlist_items
+      where id = p_item_id
+        and is_reserved = true
+        and reserved_by_email is not null
+    ) then
+      -- Item has email - require matching email to unreserve
+      if p_email is null or trim(p_email) = '' then
+        raise exception 'Email is required to unreserve this item';
       end if;
     end if;
-    
+    -- If item was reserved without email (null), anyone can unreserve it
+  end if;
+
+  -- If reserving, validate inputs
+  if p_reserved then
     if p_name is not null then
       -- Note: SQL injection is already prevented by parameterization.
       -- XSS should be handled via proper output encoding, not by
@@ -492,19 +494,18 @@ begin
         'error', 'already_reserved'
       );
     end if;
+  end if;
 
-    -- Generate 4-digit code using cryptographically secure randomness
-    declare
-      v_random_bytes bytea := extensions.gen_random_bytes(2);
-    begin
-      v_code := lpad(
-        (
-          ((get_byte(v_random_bytes, 0) * 256 + get_byte(v_random_bytes, 1)) % 10000)
-        )::text,
-        4,
-        '0'
-      );
-    end;
+  -- If unreserving with email verification, check email matches (unless owner or item has no email)
+  if not p_reserved and not v_is_owner and p_email is not null and trim(p_email) <> '' then
+    if not exists (
+      select 1 from wishlist_items
+      where id = p_item_id 
+        and reserved_by_email = p_email
+        and is_reserved = true
+    ) then
+      raise exception 'Email does not match the reservation';
+    end if;
   end if;
 
   -- Update reservation fields (with atomic guard for reservations)
@@ -513,8 +514,7 @@ begin
     set is_reserved = true,
         reserved_by_email = p_email,
         reserved_by_name = p_name,
-        reserved_at = now(),
-        reservation_code = v_code
+        reserved_at = now()
     where id = p_item_id
       and is_reserved = false;  -- Atomic guard against race conditions
     
@@ -529,15 +529,13 @@ begin
     set is_reserved = false,
         reserved_by_email = null,
         reserved_by_name = null,
-        reserved_at = null,
-        reservation_code = null
+        reserved_at = null
     where id = p_item_id;
   end if;
 
-  -- Return the code when reserving
+  -- Return success (no code needed)
   return jsonb_build_object(
-    'success', true,
-    'reservation_code', v_code
+    'success', true
   );
 end;
 $$;

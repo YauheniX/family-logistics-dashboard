@@ -209,12 +209,9 @@ export class WishlistItemRepository extends BaseRepository<
 
   /**
    * Reserve or unreserve an item (public access, no auth required)
-   * Returns the item and reservation_code (when reserving)
+   * Requires email for both reserving and unreserving (owner can unreserve without email)
    */
-  async reserveItem(
-    id: string,
-    dto: ReserveWishlistItemDto,
-  ): Promise<ApiResponse<WishlistItem & { reservation_code?: string }>> {
+  async reserveItem(id: string, dto: ReserveWishlistItemDto): Promise<ApiResponse<WishlistItem>> {
     return this.query(async () => {
       // Call the RPC function to update reservation
       const { data: rpcData, error: rpcError } = await this.supabase.rpc('reserve_wishlist_item', {
@@ -222,10 +219,20 @@ export class WishlistItemRepository extends BaseRepository<
         p_reserved: dto.is_reserved,
         p_email: dto.reserved_by_email || null,
         p_name: dto.reserved_by_name || null,
-        p_code: dto.reservation_code || null,
+        p_code: null, // Backward compatibility parameter, ignored by function
       });
 
       if (rpcError) throw rpcError;
+
+      // Check if the operation failed (e.g., already reserved)
+      if (
+        rpcData &&
+        typeof rpcData === 'object' &&
+        'success' in rpcData &&
+        rpcData.success === false
+      ) {
+        throw new Error((rpcData as { error?: string }).error || 'Reservation failed');
+      }
 
       // Fetch and return the updated item
       const itemResponse = await this.supabase
@@ -238,25 +245,9 @@ export class WishlistItemRepository extends BaseRepository<
       if (itemResponse.error) throw itemResponse.error;
       if (!itemResponse.data) throw new Error('Item not found');
 
-      // Extract reservation code from RPC jsonb response (if present)
-      let codeFromRpc: string | undefined;
-      if (
-        rpcData !== null &&
-        rpcData !== undefined &&
-        typeof rpcData === 'object' &&
-        'reservation_code' in rpcData
-      ) {
-        const code = (rpcData as Record<string, unknown>).reservation_code;
-        codeFromRpc = code ? String(code) : undefined;
-      }
-
       const item = itemResponse.data as unknown as WishlistItem;
-      // Return the item with reservation_code property available
       return {
-        data: {
-          ...item,
-          reservation_code: codeFromRpc || item.reservation_code,
-        } as WishlistItem & { reservation_code?: string },
+        data: item,
         error: null,
       };
     });

@@ -154,14 +154,13 @@ create table if not exists wishlist_items (
   reserved_by_email text,
   reserved_by_name  text,
   reserved_at       timestamptz,
-  reservation_code  text check (reservation_code ~ '^\d{4}$' or reservation_code is null),
   created_at        timestamptz not null default now()
 );
 
-comment on table wishlist_items is 'Items in a wishlist with reservation support';
-comment on column wishlist_items.reserved_by_name is 'Name of person reserving (for public reservations)';
+comment on table wishlist_items is 'Items in a wishlist with email-based reservation support';
+comment on column wishlist_items.reserved_by_email is 'Email of person who reserved (required for unreserving)';
+comment on column wishlist_items.reserved_by_name is 'Name of person reserving (optional)';
 comment on column wishlist_items.reserved_at is 'Timestamp when item was reserved';
-comment on column wishlist_items.reservation_code is '4-digit code required to unreserve (owner can unreserve without code)';
 
 -- ─── Indexes ────────────────────────────────────────────────
 
