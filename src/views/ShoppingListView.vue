@@ -116,8 +116,8 @@
       <form class="space-y-4" @submit.prevent="handleSubmitItem">
         <BaseInput v-model="newItemTitle" placeholder="Item name" required />
         <div>
-          <label class="label">Quantity</label>
-          <div class="flex items-center gap-3">
+          <label id="quantity-label" class="label">Quantity</label>
+          <div role="group" aria-labelledby="quantity-label" class="flex items-center gap-3">
             <button
               type="button"
               :disabled="newItemQuantity <= 1"
@@ -133,7 +133,9 @@
             >
               −
             </button>
-            <span class="w-12 text-center text-lg font-medium">{{ newItemQuantity }}</span>
+            <span aria-live="polite" class="w-12 text-center text-lg font-medium">{{
+              newItemQuantity
+            }}</span>
             <button
               type="button"
               :disabled="newItemQuantity >= MAX_QUANTITY"
@@ -156,7 +158,7 @@
           <BaseButton type="submit" variant="primary">
             {{ editingItemId ? 'Update Item' : 'Add Item' }}
           </BaseButton>
-          <BaseButton variant="ghost" @click="resetForm">Cancel</BaseButton>
+          <BaseButton type="button" variant="ghost" @click="resetForm">Cancel</BaseButton>
         </div>
       </form>
     </ModalDialog>
@@ -228,6 +230,7 @@ import LoadingState from '@/components/shared/LoadingState.vue';
 import ModalDialog from '@/components/shared/ModalDialog.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
+import { useToastStore } from '@/stores/toast';
 import { useHouseholdStore } from '@/stores/household';
 import type { ShoppingItem } from '@/features/shared/domain/entities';
 
@@ -236,6 +239,7 @@ const props = defineProps<{ listId: string }>();
 const router = useRouter();
 const authStore = useAuthStore();
 const shoppingStore = useShoppingStore();
+const toastStore = useToastStore();
 const householdStore = useHouseholdStore();
 
 const MAX_QUANTITY = 999;
@@ -314,24 +318,28 @@ const resetForm = () => {
 const handleSubmitItem = async () => {
   if (!newItemTitle.value.trim()) return;
 
-  if (editingItemId.value) {
-    // Update existing item
-    await shoppingStore.updateItem(editingItemId.value, {
-      title: newItemTitle.value.trim(),
-      quantity: newItemQuantity.value || 1,
-      category: newItemCategory.value.trim() || 'Uncategorized',
-    });
-  } else {
-    // Add new item
-    await shoppingStore.addItem({
-      list_id: props.listId,
-      title: newItemTitle.value.trim(),
-      quantity: newItemQuantity.value || 1,
-      category: newItemCategory.value.trim() || 'Uncategorized',
-    });
+  try {
+    if (editingItemId.value) {
+      // Update existing item
+      await shoppingStore.updateItem(editingItemId.value, {
+        title: newItemTitle.value.trim(),
+        quantity: newItemQuantity.value || 1,
+        category: newItemCategory.value.trim() || 'Uncategorized',
+      });
+    } else {
+      // Add new item
+      await shoppingStore.addItem({
+        list_id: props.listId,
+        title: newItemTitle.value.trim(),
+        quantity: newItemQuantity.value || 1,
+        category: newItemCategory.value.trim() || 'Uncategorized',
+      });
+    }
+    resetForm();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to save item';
+    toastStore.error(message);
   }
-
-  resetForm();
 };
 
 const handleUpdateList = async () => {

@@ -21,7 +21,12 @@
         :aria-label="ariaLabel || label"
         :aria-invalid="!!error"
         :aria-describedby="error ? `${inputId}-error` : undefined"
-        :class="inputClasses"
+        :class="[
+          'input',
+          { 'pl-10': $slots.iconLeft },
+          { 'pr-10': $slots.iconRight },
+          { error: error },
+        ]"
         @input="handleInput"
         @blur="handleBlur"
       />
@@ -42,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, useSlots } from 'vue';
+import { computed } from 'vue';
 
 interface Props {
   modelValue: string | number;
@@ -76,17 +81,6 @@ const emit = defineEmits<{
 let inputCounter = 0;
 const inputId = computed(() => {
   return `input-${++inputCounter}`;
-});
-
-const slots = useSlots();
-
-const inputClasses = computed(() => {
-  const base = 'input';
-  const hasIconLeft = slots.iconLeft ? 'pl-10' : '';
-  const hasIconRight = slots.iconRight ? 'pr-10' : '';
-  const errorClass = props.error ? 'error' : '';
-
-  return [base, hasIconLeft, hasIconRight, errorClass].filter(Boolean).join(' ');
 });
 
 const handleInput = (event: Event) => {

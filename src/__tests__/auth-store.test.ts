@@ -41,7 +41,13 @@ describe('Auth Store', () => {
       error: null,
     });
     vi.mocked(authService.onAuthStateChange).mockImplementation(() => ({
-      data: { subscription: { unsubscribe: () => {} } as any },
+      data: {
+        subscription: {
+          id: 'mock-sub-1',
+          callback: vi.fn(),
+          unsubscribe: vi.fn(),
+        },
+      },
     }));
 
     const store = useAuthStore();
@@ -59,7 +65,13 @@ describe('Auth Store', () => {
       error: { message: 'Not authenticated' },
     });
     vi.mocked(authService.onAuthStateChange).mockImplementation(() => ({
-      data: { subscription: { unsubscribe: () => {} } as any },
+      data: {
+        subscription: {
+          id: 'mock-sub-2',
+          callback: vi.fn(),
+          unsubscribe: vi.fn(),
+        },
+      },
     }));
 
     const store = useAuthStore();
@@ -76,7 +88,13 @@ describe('Auth Store', () => {
       error: null,
     });
     vi.mocked(authService.onAuthStateChange).mockImplementation(() => ({
-      data: { subscription: { unsubscribe: () => {} } as any },
+      data: {
+        subscription: {
+          id: 'mock-sub-3',
+          callback: vi.fn(),
+          unsubscribe: vi.fn(),
+        },
+      },
     }));
 
     const store = useAuthStore();

@@ -171,7 +171,11 @@ const handleEmailLogin = async () => {
       toastStore.error(error.value);
     } else {
       toastStore.success('Successfully signed in!');
-      const redirect = (route.query.redirect as string) || '/';
+      const redirectParam =
+        route.query.redirect && typeof route.query.redirect === 'string'
+          ? route.query.redirect
+          : undefined;
+      const redirect = normalizeRedirectParam(redirectParam) || '/';
       router.push(redirect);
     }
   } catch (err: unknown) {

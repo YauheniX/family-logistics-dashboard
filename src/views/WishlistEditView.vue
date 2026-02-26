@@ -338,12 +338,17 @@ const handleUpdateWishlist = async () => {
   }
 };
 
-const copyPublicLink = () => {
+const copyPublicLink = async () => {
   const slug = wishlistStore.currentWishlist?.share_slug;
   if (!slug) return;
   const url = `${window.location.origin}/#/wishlist/${slug}`;
-  navigator.clipboard.writeText(url);
-  toastStore.success('Public link copied to clipboard!');
+  try {
+    await navigator.clipboard.writeText(url);
+    toastStore.success('Public link copied to clipboard!');
+  } catch (error) {
+    console.error('Failed to copy link:', error);
+    toastStore.error('Failed to copy public link');
+  }
 };
 
 const resetItemForm = () => {

@@ -164,6 +164,7 @@ import Avatar from '@/components/shared/Avatar.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useHouseholdEntityStore } from '@/features/household/presentation/household.store';
 import { useHouseholdStore } from '@/stores/household';
+import { useToastStore } from '@/stores/toast';
 import { resolveMemberProfile } from '@/utils/profileResolver';
 import type { Member } from '@/features/shared/domain/entities';
 
@@ -172,6 +173,7 @@ const props = defineProps<{ id: string }>();
 const authStore = useAuthStore();
 const householdEntityStore = useHouseholdEntityStore();
 const householdStore = useHouseholdStore();
+const toastStore = useToastStore();
 const router = useRouter();
 
 // Helper to resolve member display names
@@ -230,6 +232,8 @@ const handleRename = async () => {
     if (authStore.user?.id) {
       await householdStore.initializeForUser(authStore.user.id);
     }
+  } else {
+    toastStore.error('Failed to rename household');
   }
 };
 
