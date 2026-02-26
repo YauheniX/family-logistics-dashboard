@@ -136,7 +136,7 @@ export class WishlistService {
 
     return await wishlistItemRepository.reserveItem(id, {
       is_reserved: isReserved,
-      reserved_by_email: isReserved ? email : email || null,
+      reserved_by_email: isReserved ? (email ?? null) : (email ?? null),
       reserved_by_name: isReserved ? (name ?? null) : null,
     });
   }
