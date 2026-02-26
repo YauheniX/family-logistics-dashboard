@@ -94,6 +94,7 @@ interface NavItem {
 
 // Primary navigation items (always visible)
 const navItems = computed<NavItem[]>(() => [
+  { name: 'dashboard', label: 'Home', to: { name: 'dashboard' }, emoji: '🏠' },
   {
     name: 'household-list',
     label: 'Manage',
@@ -110,7 +111,20 @@ const moreItems: NavItem[] = [
 ];
 
 function isActive(routeName: string): boolean {
-  return route.name === routeName;
+  const currentRouteName = route.name as string;
+
+  // Match related routes for navigation items
+  if (routeName === 'household-list') {
+    return currentRouteName?.startsWith('household') || currentRouteName === 'member-management';
+  }
+  if (routeName === 'shopping') {
+    return currentRouteName?.startsWith('shopping');
+  }
+  if (routeName === 'wishlist-list') {
+    return currentRouteName?.startsWith('wishlist');
+  }
+
+  return currentRouteName === routeName;
 }
 
 function toggleMoreMenu() {

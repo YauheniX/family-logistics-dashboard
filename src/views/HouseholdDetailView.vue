@@ -2,15 +2,30 @@
   <div v-if="householdEntityStore.currentHousehold" class="space-y-6">
     <BaseCard>
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-        <div v-if="hasMultipleHouseholds" class="min-w-0">
-          <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Household</p>
-          <HouseholdSwitcher />
-        </div>
-        <div v-else class="min-w-0">
+        <div class="min-w-0">
           <p class="text-sm text-neutral-500 dark:text-neutral-400">Household</p>
-          <h2 class="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-            {{ householdEntityStore.currentHousehold.name }}
-          </h2>
+          <div class="flex items-center gap-2">
+            <h2 class="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+              {{ householdEntityStore.currentHousehold.name }}
+            </h2>
+            <button
+              v-if="canRename"
+              type="button"
+              class="p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+              title="Rename household"
+              aria-label="Rename household"
+              @click="openRenameModal"
+            >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
         <div class="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
           <BaseButton
@@ -71,35 +86,6 @@
           </p>
         </ul>
       </BaseCard>
-
-      <!-- Shopping Lists -->
-      <BaseCard>
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-            Shopping Lists
-          </h3>
-          <BaseButton variant="ghost" @click="showCreateListModal = true"> + New List </BaseButton>
-        </div>
-        <div v-if="shoppingStore.lists.length" class="space-y-2">
-          <RouterLink
-            v-for="list in shoppingStore.lists"
-            :key="list.id"
-            :to="{ name: 'shopping-list', params: { listId: list.id } }"
-            class="flex items-center justify-between rounded-lg border border-neutral-200 dark:border-neutral-700 p-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
-          >
-            <div>
-              <p class="font-medium text-neutral-800 dark:text-neutral-200">{{ list.title }}</p>
-              <p v-if="list.description" class="text-xs text-neutral-500 dark:text-neutral-400">
-                {{ list.description }}
-              </p>
-            </div>
-            <BaseBadge :variant="list.status === 'active' ? 'success' : 'neutral'">
-              {{ list.status }}
-            </BaseBadge>
-          </RouterLink>
-        </div>
-        <p v-else class="text-sm text-neutral-500 dark:text-neutral-400">No shopping lists yet.</p>
-      </BaseCard>
     </div>
 
     <!-- Invite Member Modal -->
@@ -123,35 +109,22 @@
       </form>
     </ModalDialog>
 
-    <!-- Create Shopping List Modal -->
-    <ModalDialog
-      :open="showCreateListModal"
-      title="New Shopping List"
-      @close="showCreateListModal = false"
-    >
-      <form class="space-y-4" @submit.prevent="handleCreateList">
+    <!-- Rename Household Modal -->
+    <ModalDialog :open="showRenameModal" title="Rename Household" @close="showRenameModal = false">
+      <form class="space-y-4" @submit.prevent="handleRename">
         <div>
-          <label class="label" for="list-title">Title</label>
+          <label class="label" for="household-name">New name</label>
           <input
-            id="list-title"
-            v-model="newListTitle"
+            id="household-name"
+            v-model="newHouseholdName"
             class="input"
             required
-            placeholder="Weekly groceries"
-          />
-        </div>
-        <div>
-          <label class="label" for="list-description">Description</label>
-          <input
-            id="list-description"
-            v-model="newListDescription"
-            class="input"
-            placeholder="Optional description"
+            placeholder="Enter household name"
           />
         </div>
         <div class="flex gap-3">
-          <BaseButton type="submit" :disabled="shoppingStore.loading"> Create </BaseButton>
-          <BaseButton variant="ghost" @click="showCreateListModal = false"> Cancel </BaseButton>
+          <BaseButton type="submit" :disabled="householdEntityStore.loading">Save</BaseButton>
+          <BaseButton variant="ghost" @click="showRenameModal = false">Cancel</BaseButton>
         </div>
       </form>
     </ModalDialog>
@@ -181,18 +154,17 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import { RouterLink, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import ModalDialog from '@/components/shared/ModalDialog.vue';
-import HouseholdSwitcher from '@/components/layout/HouseholdSwitcher.vue';
 import Avatar from '@/components/shared/Avatar.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useHouseholdEntityStore } from '@/features/household/presentation/household.store';
-import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
 import { useHouseholdStore } from '@/stores/household';
+import { useToastStore } from '@/stores/toast';
 import { resolveMemberProfile } from '@/utils/profileResolver';
 import type { Member } from '@/features/shared/domain/entities';
 
@@ -201,10 +173,8 @@ const props = defineProps<{ id: string }>();
 const authStore = useAuthStore();
 const householdEntityStore = useHouseholdEntityStore();
 const householdStore = useHouseholdStore();
-const shoppingStore = useShoppingStore();
+const toastStore = useToastStore();
 const router = useRouter();
-
-const hasMultipleHouseholds = computed(() => householdStore.households.length > 1);
 
 // Helper to resolve member display names
 const getMemberName = (member: Member) => {
@@ -213,11 +183,10 @@ const getMemberName = (member: Member) => {
 };
 
 const showInviteModal = ref(false);
-const showCreateListModal = ref(false);
 const showDeleteModal = ref(false);
+const showRenameModal = ref(false);
 const inviteEmail = ref('');
-const newListTitle = ref('');
-const newListDescription = ref('');
+const newHouseholdName = ref('');
 
 const isOwner = computed(() => {
   const userId = authStore.user?.id;
@@ -231,9 +200,45 @@ const isOwner = computed(() => {
   );
 });
 
+const canRename = computed(() => {
+  const userId = authStore.user?.id;
+  if (!userId) return false;
+  // Owner/creator or admin can rename
+  return (
+    isOwner.value ||
+    householdEntityStore.members.some(
+      (member) => member.user_id === userId && member.role === 'admin',
+    )
+  );
+});
+
+const openRenameModal = () => {
+  newHouseholdName.value = householdEntityStore.currentHousehold?.name || '';
+  showRenameModal.value = true;
+};
+
+const handleRename = async () => {
+  const trimmedName = newHouseholdName.value.trim();
+  if (!trimmedName || !householdEntityStore.currentHousehold) return;
+
+  const updated = await householdEntityStore.updateHousehold(
+    householdEntityStore.currentHousehold.id,
+    { name: trimmedName },
+  );
+
+  if (updated) {
+    showRenameModal.value = false;
+    // Also refresh the household list in the switcher
+    if (authStore.user?.id) {
+      await householdStore.initializeForUser(authStore.user.id);
+    }
+  } else {
+    toastStore.error('Failed to rename household');
+  }
+};
+
 const loadHouseholdData = async (householdId: string) => {
   await householdEntityStore.loadHousehold(householdId);
-  await shoppingStore.loadLists(householdId);
 };
 
 onMounted(async () => {
@@ -260,23 +265,6 @@ const handleInvite = async () => {
   if (result) {
     inviteEmail.value = '';
     showInviteModal.value = false;
-  }
-};
-
-const handleCreateList = async () => {
-  if (!newListTitle.value.trim()) return;
-  const result = await shoppingStore.createList({
-    household_id: props.id,
-    title: newListTitle.value.trim(),
-    description: newListDescription.value.trim() || null,
-  });
-  if (result) {
-    // Set the newly created list as the current shopping list and navigate to it
-    shoppingStore.currentList = result;
-    newListTitle.value = '';
-    newListDescription.value = '';
-    showCreateListModal.value = false;
-    router.push({ name: 'shopping-list', params: { listId: result.id } });
   }
 };
 

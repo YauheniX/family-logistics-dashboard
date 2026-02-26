@@ -80,8 +80,15 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: '/wishlists/:id',
+      path: '/wishlists/:id/edit',
       name: 'wishlist-edit',
+      component: WishlistEditView,
+      props: true,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/wishlists/:id',
+      name: 'wishlist-detail',
       component: WishlistEditView,
       props: true,
       meta: { requiresAuth: true },

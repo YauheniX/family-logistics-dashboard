@@ -106,16 +106,16 @@ describe('Validation Schemas', () => {
       const result = WishlistFormSchema.safeParse({
         title: 'Birthday Wishes',
         description: 'My birthday list',
-        is_public: true,
+        visibility: 'public',
       });
       expect(result.success).toBe(true);
     });
 
-    it('uses default for is_public', () => {
+    it('uses default for visibility', () => {
       const result = WishlistFormSchema.safeParse({ title: 'Wishes' });
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.is_public).toBe(false);
+        expect(result.data.visibility).toBe('private');
       }
     });
 
@@ -123,20 +123,20 @@ describe('Validation Schemas', () => {
       const result = WishlistFormSchema.safeParse({
         title: 'Wishes',
         description: null,
-        is_public: false,
+        visibility: 'private',
       });
       expect(result.success).toBe(true);
     });
 
     it('rejects empty title', () => {
-      const result = WishlistFormSchema.safeParse({ title: '', is_public: false });
+      const result = WishlistFormSchema.safeParse({ title: '', visibility: 'private' });
       expect(result.success).toBe(false);
     });
 
     it('rejects title exceeding max length', () => {
       const result = WishlistFormSchema.safeParse({
         title: 'a'.repeat(201),
-        is_public: false,
+        visibility: 'private',
       });
       expect(result.success).toBe(false);
     });
@@ -145,8 +145,21 @@ describe('Validation Schemas', () => {
       const result = WishlistFormSchema.safeParse({
         title: 'Wishes',
         description: 'a'.repeat(501),
-        is_public: false,
+        visibility: 'private',
       });
+      expect(result.success).toBe(false);
+    });
+
+    it('accepts all visibility values', () => {
+      const visibilities = ['private', 'household', 'public'] as const;
+      for (const visibility of visibilities) {
+        const result = WishlistFormSchema.safeParse({ title: 'Test', visibility });
+        expect(result.success).toBe(true);
+      }
+    });
+
+    it('rejects invalid visibility value', () => {
+      const result = WishlistFormSchema.safeParse({ title: 'Test', visibility: 'invalid' });
       expect(result.success).toBe(false);
     });
   });

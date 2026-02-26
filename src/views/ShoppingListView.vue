@@ -24,7 +24,7 @@
             <BaseButton variant="danger" class="w-full xs:w-auto" @click="showDeleteModal = true"
               >🗑️ Delete</BaseButton
             >
-            <BaseButton variant="primary" class="w-full xs:w-auto" @click="showAddItemForm = true">
+            <BaseButton variant="primary" class="w-full xs:w-auto" @click="openAddItemModal">
               + Add Item
             </BaseButton>
           </div>
@@ -107,41 +107,61 @@
       badge="Shopping"
     />
 
-    <!-- Add/Edit Item Form -->
-    <BaseCard v-if="showAddItemForm">
-      <template #header>
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
-            {{ editingItemId ? 'Edit Item' : 'Add Item' }}
-          </h3>
-          <button
-            type="button"
-            class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
-            @click="resetForm"
-          >
-            ✕
-          </button>
+    <!-- Add/Edit Item Modal -->
+    <ModalDialog
+      :open="showItemModal"
+      :title="editingItemId ? 'Edit Item' : 'Add Item'"
+      @close="resetForm"
+    >
+      <form class="space-y-4" @submit.prevent="handleSubmitItem">
+        <BaseInput v-model="newItemTitle" placeholder="Item name" required />
+        <div>
+          <label id="quantity-label" class="label">Quantity</label>
+          <div role="group" aria-labelledby="quantity-label" class="flex items-center gap-3">
+            <button
+              type="button"
+              :disabled="newItemQuantity <= 1"
+              :aria-disabled="newItemQuantity <= 1"
+              class="flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-lg font-medium transition-opacity dark:border-neutral-700 dark:bg-neutral-800"
+              :class="
+                newItemQuantity <= 1
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:bg-neutral-100 dark:hover:bg-neutral-700'
+              "
+              aria-label="Decrease quantity"
+              @click="newItemQuantity = Math.max(1, newItemQuantity - 1)"
+            >
+              −
+            </button>
+            <span aria-live="polite" class="w-12 text-center text-lg font-medium">{{
+              newItemQuantity
+            }}</span>
+            <button
+              type="button"
+              :disabled="newItemQuantity >= MAX_QUANTITY"
+              :aria-disabled="newItemQuantity >= MAX_QUANTITY"
+              class="flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-lg font-medium transition-opacity dark:border-neutral-700 dark:bg-neutral-800"
+              :class="
+                newItemQuantity >= MAX_QUANTITY
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:bg-neutral-100 dark:hover:bg-neutral-700'
+              "
+              aria-label="Increase quantity"
+              @click="newItemQuantity = Math.min(newItemQuantity + 1, MAX_QUANTITY)"
+            >
+              +
+            </button>
+          </div>
         </div>
-      </template>
-      <form class="grid gap-4 md:grid-cols-3" @submit.prevent="handleSubmitItem">
-        <BaseInput v-model="newItemTitle" placeholder="Item name" class="md:col-span-2" required />
-        <BaseInput
-          v-model="newItemQuantity"
-          type="number"
-          placeholder="Qty"
-          :model-value="newItemQuantity.toString()"
-          @update:model-value="(v) => (newItemQuantity = Number(v) || 1)"
-        />
-        <BaseInput
-          v-model="newItemCategory"
-          placeholder="Category (e.g. Produce, Dairy)"
-          class="md:col-span-3"
-        />
-        <BaseButton type="submit" variant="primary" class="md:col-span-3" full-width>
-          {{ editingItemId ? 'Update Item' : 'Add item' }}
-        </BaseButton>
+        <BaseInput v-model="newItemCategory" placeholder="Category (e.g. Produce, Dairy)" />
+        <div class="flex gap-3">
+          <BaseButton type="submit" variant="primary">
+            {{ editingItemId ? 'Update Item' : 'Add Item' }}
+          </BaseButton>
+          <BaseButton type="button" variant="ghost" @click="resetForm">Cancel</BaseButton>
+        </div>
       </form>
-    </BaseCard>
+    </ModalDialog>
 
     <!-- Edit List Modal -->
     <ModalDialog
@@ -210,6 +230,7 @@ import LoadingState from '@/components/shared/LoadingState.vue';
 import ModalDialog from '@/components/shared/ModalDialog.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
+import { useToastStore } from '@/stores/toast';
 import { useHouseholdStore } from '@/stores/household';
 import type { ShoppingItem } from '@/features/shared/domain/entities';
 
@@ -218,13 +239,16 @@ const props = defineProps<{ listId: string }>();
 const router = useRouter();
 const authStore = useAuthStore();
 const shoppingStore = useShoppingStore();
+const toastStore = useToastStore();
 const householdStore = useHouseholdStore();
+
+const MAX_QUANTITY = 999;
 
 const showPurchased = ref(true);
 const showOnlyMine = ref(false);
-const showAddItemForm = ref(false);
 const showEditListModal = ref(false);
 const showDeleteModal = ref(false);
+const showItemModal = ref(false);
 const editingItemId = ref<string | null>(null);
 const newItemTitle = ref('');
 const newItemQuantity = ref(1);
@@ -272,7 +296,15 @@ const handleEditItem = (item: ShoppingItem) => {
   newItemTitle.value = item.title;
   newItemQuantity.value = item.quantity || 1;
   newItemCategory.value = item.category || '';
-  showAddItemForm.value = true;
+  showItemModal.value = true;
+};
+
+const openAddItemModal = () => {
+  editingItemId.value = null;
+  newItemTitle.value = '';
+  newItemQuantity.value = 1;
+  newItemCategory.value = '';
+  showItemModal.value = true;
 };
 
 const resetForm = () => {
@@ -280,30 +312,34 @@ const resetForm = () => {
   newItemTitle.value = '';
   newItemQuantity.value = 1;
   newItemCategory.value = '';
-  showAddItemForm.value = false;
+  showItemModal.value = false;
 };
 
 const handleSubmitItem = async () => {
   if (!newItemTitle.value.trim()) return;
 
-  if (editingItemId.value) {
-    // Update existing item
-    await shoppingStore.updateItem(editingItemId.value, {
-      title: newItemTitle.value.trim(),
-      quantity: newItemQuantity.value || 1,
-      category: newItemCategory.value.trim() || 'Uncategorized',
-    });
-  } else {
-    // Add new item
-    await shoppingStore.addItem({
-      list_id: props.listId,
-      title: newItemTitle.value.trim(),
-      quantity: newItemQuantity.value || 1,
-      category: newItemCategory.value.trim() || 'Uncategorized',
-    });
+  try {
+    if (editingItemId.value) {
+      // Update existing item
+      await shoppingStore.updateItem(editingItemId.value, {
+        title: newItemTitle.value.trim(),
+        quantity: newItemQuantity.value || 1,
+        category: newItemCategory.value.trim() || 'Uncategorized',
+      });
+    } else {
+      // Add new item
+      await shoppingStore.addItem({
+        list_id: props.listId,
+        title: newItemTitle.value.trim(),
+        quantity: newItemQuantity.value || 1,
+        category: newItemCategory.value.trim() || 'Uncategorized',
+      });
+    }
+    resetForm();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to save item';
+    toastStore.error(message);
   }
-
-  resetForm();
 };
 
 const handleUpdateList = async () => {

@@ -3,11 +3,13 @@
  * Updated for multi-tenant household architecture
  */
 
+import type { WishlistVisibility } from './validation.schemas';
+
 // ─── Enums ───────────────────────────────────────────────
+export type { WishlistVisibility };
 export type MemberRole = 'owner' | 'admin' | 'member' | 'child' | 'viewer';
 export type ShoppingListStatus = 'active' | 'archived';
 export type ItemPriority = 'low' | 'medium' | 'high';
-export type WishlistVisibility = 'private' | 'household' | 'public';
 export type InvitationStatus = 'pending' | 'accepted' | 'declined' | 'expired';
 
 // ─── User Profile ────────────────────────────────────────
@@ -175,14 +177,11 @@ export interface Wishlist {
 }
 
 export type CreateWishlistDto = Pick<Wishlist, 'title' | 'description'> & {
-  is_public?: boolean; // Legacy
-  visibility?: WishlistVisibility; // New
-  member_id?: string; // New
-  household_id?: string; // New
+  visibility?: WishlistVisibility;
+  member_id?: string;
+  household_id?: string;
 };
-export type UpdateWishlistDto = Partial<
-  Pick<Wishlist, 'title' | 'description' | 'is_public' | 'visibility'>
->;
+export type UpdateWishlistDto = Partial<Pick<Wishlist, 'title' | 'description' | 'visibility'>>;
 
 // ─── Wishlist Item ───────────────────────────────────────
 export interface WishlistItem {

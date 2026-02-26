@@ -21,7 +21,12 @@
         :aria-label="ariaLabel || label"
         :aria-invalid="!!error"
         :aria-describedby="error ? `${inputId}-error` : undefined"
-        :class="inputClasses"
+        :class="[
+          'input',
+          { 'pl-10': $slots.iconLeft },
+          { 'pr-10': $slots.iconRight },
+          { error: error },
+        ]"
         @input="handleInput"
         @blur="handleBlur"
       />
@@ -56,7 +61,7 @@ interface Props {
   ariaLabel?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const _props = withDefaults(defineProps<Props>(), {
   type: 'text',
   disabled: false,
   required: false,
@@ -76,15 +81,6 @@ const emit = defineEmits<{
 let inputCounter = 0;
 const inputId = computed(() => {
   return `input-${++inputCounter}`;
-});
-
-const inputClasses = computed(() => {
-  const base = 'input';
-  const hasIconLeft = props.$slots?.iconLeft ? 'pl-10' : '';
-  const hasIconRight = props.$slots?.iconRight ? 'pr-10' : '';
-  const errorClass = props.error ? 'error' : '';
-
-  return [base, hasIconLeft, hasIconRight, errorClass].filter(Boolean).join(' ');
 });
 
 const handleInput = (event: Event) => {

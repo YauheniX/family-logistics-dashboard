@@ -209,11 +209,8 @@ const handleRegister = async () => {
         'Account created successfully! Please check your email to confirm your account.';
       toastStore.success(success.value);
 
-      if (response.data?.user?.id) {
-        await householdStore.ensureDefaultHouseholdForUser(
-          response.data.user.id,
-          response.data.user.email,
-        );
+      if (response.data?.id) {
+        await householdStore.ensureDefaultHouseholdForUser(response.data.id, response.data.email);
       }
 
       // Clear form
@@ -239,7 +236,11 @@ const handleGoogleRegister = async () => {
   error.value = '';
 
   try {
-    const redirect = normalizeRedirectParam(route.query.redirect);
+    const redirect = normalizeRedirectParam(
+      route.query.redirect && typeof route.query.redirect === 'string'
+        ? route.query.redirect
+        : undefined,
+    );
     const response = await authService.signInWithOAuth('google', redirect);
 
     if (response.error) {

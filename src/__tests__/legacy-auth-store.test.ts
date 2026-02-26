@@ -31,7 +31,10 @@ describe('Legacy Auth Store', () => {
       data: { id: 'u1', email: 'a@b.com' },
       error: null,
     });
-    vi.mocked(authService.onAuthStateChange).mockImplementation(() => {});
+    vi.mocked(authService.onAuthStateChange).mockImplementation(() => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: { subscription: { unsubscribe: () => {} } as any },
+    }));
 
     const store = useAuthStore();
     await store.initialize();
@@ -55,7 +58,10 @@ describe('Legacy Auth Store', () => {
       data: { id: 'u1', email: 'a@b.com' },
       error: null,
     });
-    vi.mocked(authService.onAuthStateChange).mockImplementation(() => {});
+    vi.mocked(authService.onAuthStateChange).mockImplementation(() => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: { subscription: { unsubscribe: () => {} } as any },
+    }));
 
     const store = useAuthStore();
     await store.initialize();
@@ -71,7 +77,10 @@ describe('Legacy Auth Store', () => {
       data: null,
       error: { message: 'Not authenticated' },
     });
-    vi.mocked(authService.onAuthStateChange).mockImplementation(() => {});
+    vi.mocked(authService.onAuthStateChange).mockImplementation(() => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: { subscription: { unsubscribe: () => {} } as any },
+    }));
 
     const store = useAuthStore();
     await store.initialize();
@@ -87,7 +96,10 @@ describe('Legacy Auth Store', () => {
       data: null,
       error: null,
     });
-    vi.mocked(authService.onAuthStateChange).mockImplementation(() => {});
+    vi.mocked(authService.onAuthStateChange).mockImplementation(() => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: { subscription: { unsubscribe: () => {} } as any },
+    }));
 
     const store = useAuthStore();
     await store.initialize();

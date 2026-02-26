@@ -127,7 +127,7 @@ export abstract class MockRepository<
         id: generateId(),
         created_at: now,
         updated_at: now,
-      } as TEntity;
+      } as unknown as TEntity;
 
       data.push(newRecord);
       await this.saveAll(data);
@@ -158,7 +158,7 @@ export abstract class MockRepository<
             id: generateId(),
             created_at: now,
             updated_at: now,
-          }) as TEntity,
+          }) as unknown as TEntity,
       );
 
       data.push(...newRecords);

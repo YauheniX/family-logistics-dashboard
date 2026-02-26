@@ -12,9 +12,11 @@ import type {
 import type { ApiResponse } from '../../shared/domain/repository.interface';
 
 /**
- * Add computed is_public property based on visibility for frontend compatibility
+ * Add computed is_public property based on visibility for frontend display compatibility.
  */
-function addIsPublic<T extends { visibility?: string }>(wishlist: T): T & { is_public: boolean } {
+function addIsPublic<T extends { visibility?: string | null }>(
+  wishlist: T,
+): T & { is_public: boolean } {
   return {
     ...wishlist,
     is_public: wishlist.visibility === 'public',
@@ -86,10 +88,10 @@ export class WishlistRepository extends BaseRepository<
       householdId = memberData.household_id;
     }
 
-    // Map visibility from legacy is_public to new visibility enum
-    const visibility = dto.visibility || (dto.is_public ? 'public' : 'private');
+    // Use visibility, default to 'private' if not provided
+    const visibility = dto.visibility ?? 'private';
 
-    return await this.execute(async () => {
+    const result = await this.execute(async () => {
       return await supabase
         .from('wishlists')
         .insert({
@@ -102,6 +104,12 @@ export class WishlistRepository extends BaseRepository<
         .select()
         .single();
     });
+
+    // Add is_public computed property for frontend compatibility
+    if (result.data) {
+      return { data: addIsPublic(result.data), error: null };
+    }
+    return { data: null, error: result.error };
   }
 
   /**
@@ -123,6 +131,58 @@ export class WishlistRepository extends BaseRepository<
       return { data: addIsPublic(result.data), error: null };
     }
     return { data: null, error: result.error };
+  }
+
+  /**
+   * Find a wishlist by ID (overrides base to add is_public)
+   */
+  async findById(id: string): Promise<ApiResponse<Wishlist>> {
+    const result = await super.findById(id);
+    // Add is_public computed property for frontend compatibility
+    if (result.data) {
+      return { data: addIsPublic(result.data), error: null };
+    }
+    return result;
+  }
+
+  /**
+   * Update a wishlist (overrides base to add is_public)
+   */
+  async update(id: string, dto: UpdateWishlistDto): Promise<ApiResponse<Wishlist>> {
+    const result = await super.update(id, dto);
+    // Add is_public computed property for frontend compatibility
+    if (result.data) {
+      return { data: addIsPublic(result.data), error: null };
+    }
+    return result;
+  }
+
+  /**
+   * Find wishlists shared by household members.
+   *
+   * Retrieves wishlists that belong to the specified household and are visible
+   * to other household members (visibility = 'household' or 'public').
+   * The current user's own wishlists are excluded from the results.
+   *
+   * @param householdId - The UUID of the household to search within
+   * @param excludeUserId - The UUID of the current user (their wishlists will be excluded)
+   * @returns Promise containing an array of visible wishlists ordered by creation date (newest first)
+   */
+  async findByHouseholdId(
+    householdId: string,
+    excludeUserId: string,
+  ): Promise<ApiResponse<Wishlist[]>> {
+    const result = await this.findAll((builder) =>
+      builder
+        .eq('household_id', householdId)
+        .neq('user_id', excludeUserId)
+        .in('visibility', ['household', 'public'])
+        .order('created_at', { ascending: false }),
+    );
+    if (result.data) {
+      return { ...result, data: result.data.map(addIsPublic) };
+    }
+    return result;
   }
 }
 

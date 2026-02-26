@@ -171,7 +171,11 @@ const handleEmailLogin = async () => {
       toastStore.error(error.value);
     } else {
       toastStore.success('Successfully signed in!');
-      const redirect = (route.query.redirect as string) || '/';
+      const redirectParam =
+        route.query.redirect && typeof route.query.redirect === 'string'
+          ? route.query.redirect
+          : undefined;
+      const redirect = normalizeRedirectParam(redirectParam) || '/';
       router.push(redirect);
     }
   } catch (err: unknown) {
@@ -187,7 +191,11 @@ const handleGoogleLogin = async () => {
   error.value = '';
 
   try {
-    const redirect = normalizeRedirectParam(route.query.redirect);
+    const redirect = normalizeRedirectParam(
+      route.query.redirect && typeof route.query.redirect === 'string'
+        ? route.query.redirect
+        : undefined,
+    );
     const response = await authService.signInWithOAuth('google', redirect);
 
     if (response.error) {

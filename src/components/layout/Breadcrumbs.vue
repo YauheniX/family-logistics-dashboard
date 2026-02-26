@@ -54,12 +54,12 @@ const breadcrumbs = computed<Breadcrumb[]>(() => {
   const routeName = route.name as string;
 
   // Always start with Home
-  if (routeName !== 'dashboard') {
-    crumbs.push({ label: 'Home', to: '/' });
-  }
+  crumbs.push({ label: 'Home', to: '/' });
 
   // Build breadcrumbs based on current route
   switch (routeName) {
+    case 'dashboard':
+      break;
     case 'household-detail':
       crumbs.push({ label: 'Manage', to: '/households' });
       break;
@@ -81,7 +81,10 @@ const breadcrumbs = computed<Breadcrumb[]>(() => {
       break;
     case 'wishlist-edit':
       crumbs.push({ label: 'Wishlists', to: '/wishlists' });
-      crumbs.push({ label: 'Edit Wishlist', to: route.path });
+      crumbs.push({ label: 'Manage Wishlist', to: route.path });
+      break;
+    case 'wishlist-detail':
+      crumbs.push({ label: 'Wishlist Detail', to: route.path });
       break;
     case 'settings':
       crumbs.push({ label: 'Settings', to: '/settings' });

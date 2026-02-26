@@ -9,6 +9,7 @@ export interface AuthUser {
   user_metadata?: {
     avatar_url?: string;
     full_name?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
   };
 }

@@ -18,8 +18,12 @@ vi.mock('@/features/household/domain/household.service', () => ({
 const mockHousehold = {
   id: 'f1',
   name: 'Test Family',
+  slug: 'test-family',
   created_by: 'u1',
   created_at: '2024-01-01T00:00:00Z',
+  updated_at: '2024-01-01T00:00:00Z',
+  is_active: true,
+  settings: {},
 };
 
 const mockMember = {
@@ -27,7 +31,13 @@ const mockMember = {
   household_id: 'f1',
   user_id: 'u2',
   role: 'member' as const,
+  display_name: 'Test Member',
+  date_of_birth: null,
+  avatar_url: null,
+  is_active: true,
   joined_at: '2024-01-01T00:00:00Z',
+  invited_by: null,
+  metadata: {},
   email: 'member@test.com',
 };
 
