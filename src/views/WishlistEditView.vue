@@ -81,7 +81,7 @@
               >
                 {{ item.price }} {{ item.currency }}
               </p>
-              <BaseBadge v-if="item.is_reserved" variant="success">
+              <BaseBadge v-if="item.is_reserved && isOwner" variant="success">
                 Reserved{{ item.reserved_by_name ? ` by ${item.reserved_by_name}` : '' }}
               </BaseBadge>
             </div>
@@ -192,7 +192,12 @@
       </div>
       <div class="flex gap-2 justify-end">
         <BaseButton variant="ghost" type="button" @click="closeItemModal">Cancel</BaseButton>
-        <BaseButton variant="primary" type="submit">
+        <BaseButton
+          variant="primary"
+          type="submit"
+          :disabled="wishlistStore.loading"
+          :loading="wishlistStore.loading"
+        >
           {{ editingItemId ? 'Update Item' : 'Add Item' }}
         </BaseButton>
       </div>
@@ -209,7 +214,9 @@
       <BaseInput v-model="reserverName" label="Your Name" placeholder="Enter your name" required />
       <div class="flex gap-2 justify-end">
         <BaseButton variant="ghost" type="button" @click="closeReserveModal">Cancel</BaseButton>
-        <BaseButton variant="primary" type="submit">Reserve</BaseButton>
+        <BaseButton variant="primary" type="submit" :disabled="isReserving" :loading="isReserving"
+          >Reserve</BaseButton
+        >
       </div>
     </form>
   </ModalDialog>
@@ -254,6 +261,7 @@ const showEditWishlistModal = ref(false);
 const showReserveModal = ref(false);
 const reservingItem = ref<WishlistItem | null>(null);
 const reserverName = ref('');
+const isReserving = ref(false);
 
 const itemForm = reactive({
   title: '',
@@ -313,12 +321,21 @@ const closeEditWishlistModal = () => {
 };
 
 const handleUpdateWishlist = async () => {
-  await wishlistStore.updateWishlist(props.id, {
-    title: editTitle.value,
-    description: editDescription.value || null,
-    visibility: editVisibility.value,
-  });
-  closeEditWishlistModal();
+  try {
+    const success = await wishlistStore.updateWishlist(props.id, {
+      title: editTitle.value,
+      description: editDescription.value || null,
+      visibility: editVisibility.value,
+    });
+    if (success) {
+      closeEditWishlistModal();
+    } else {
+      toastStore.error('Failed to update wishlist');
+    }
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to update wishlist';
+    toastStore.error(message);
+  }
 };
 
 const copyPublicLink = () => {
@@ -392,6 +409,7 @@ const handleReserve = async () => {
     return;
   }
 
+  isReserving.value = true;
   try {
     const result = await wishlistStore.reserveItem(reservingItem.value.id, name);
     if (result) {
@@ -403,11 +421,13 @@ const handleReserve = async () => {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to reserve item';
     toastStore.error(message);
+  } finally {
+    isReserving.value = false;
   }
 };
 
 const handleSaveItem = async () => {
-  if (!itemForm.title.trim()) return;
+  if (!itemForm.title.trim() || wishlistStore.loading) return;
 
   const data = {
     title: itemForm.title.trim(),
@@ -418,15 +438,26 @@ const handleSaveItem = async () => {
     priority: itemForm.priority,
   };
 
-  if (editingItemId.value) {
-    await wishlistStore.updateItem(editingItemId.value, data);
-  } else {
-    await wishlistStore.addItem({
-      wishlist_id: props.id,
-      ...data,
-    });
+  try {
+    let result = null;
+    if (editingItemId.value) {
+      result = await wishlistStore.updateItem(editingItemId.value, data);
+    } else {
+      result = await wishlistStore.addItem({
+        wishlist_id: props.id,
+        ...data,
+      });
+    }
+
+    if (result) {
+      resetItemForm();
+      showItemModal.value = false;
+    } else {
+      toastStore.error('Failed to save item');
+    }
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to save item';
+    toastStore.error(message);
   }
-  resetItemForm();
-  showItemModal.value = false;
 };
 </script>

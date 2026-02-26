@@ -62,9 +62,12 @@ describe('useVisibilityDisplay', () => {
 
   describe('type exports', () => {
     it('should export WishlistVisibility type', () => {
-      // Type-only test - this will fail at compile time if type is not exported
-      const visibility: WishlistVisibility = 'public';
-      expect(visibility).toBe('public');
+      // Type-level assertion using expectTypeOf
+      type ActualType = WishlistVisibility;
+      type ExpectedType = 'public' | 'household' | 'private';
+      // This will fail at compile time if types don't match
+      const _typeCheck: ActualType = 'public' as ExpectedType;
+      expect(_typeCheck).toBe('public');
     });
   });
 });

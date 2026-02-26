@@ -120,7 +120,14 @@
           <div class="flex items-center gap-3">
             <button
               type="button"
-              class="flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-lg font-medium hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+              :disabled="newItemQuantity <= 1"
+              :aria-disabled="newItemQuantity <= 1"
+              class="flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-lg font-medium transition-opacity dark:border-neutral-700 dark:bg-neutral-800"
+              :class="
+                newItemQuantity <= 1
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:bg-neutral-100 dark:hover:bg-neutral-700'
+              "
               aria-label="Decrease quantity"
               @click="newItemQuantity = Math.max(1, newItemQuantity - 1)"
             >
@@ -129,7 +136,14 @@
             <span class="w-12 text-center text-lg font-medium">{{ newItemQuantity }}</span>
             <button
               type="button"
-              class="flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-lg font-medium hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+              :disabled="newItemQuantity >= MAX_QUANTITY"
+              :aria-disabled="newItemQuantity >= MAX_QUANTITY"
+              class="flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-lg font-medium transition-opacity dark:border-neutral-700 dark:bg-neutral-800"
+              :class="
+                newItemQuantity >= MAX_QUANTITY
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:bg-neutral-100 dark:hover:bg-neutral-700'
+              "
               aria-label="Increase quantity"
               @click="newItemQuantity = Math.min(newItemQuantity + 1, MAX_QUANTITY)"
             >
