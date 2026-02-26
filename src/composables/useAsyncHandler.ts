@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref, readonly, type Ref } from 'vue';
 import { useToastStore } from '@/stores/toast';
 import type { ApiResponse, ApiError } from '@/types/api';
 
@@ -18,8 +18,8 @@ export interface UseAsyncHandlerOptions {
 }
 
 export interface UseAsyncHandlerReturn<T> {
-  loading: Readonly<typeof loading>;
-  error: Readonly<typeof error>;
+  loading: Readonly<Ref<boolean>>;
+  error: Readonly<Ref<ApiError | null>>;
   execute: (fn: () => Promise<ApiResponse<T>>) => Promise<T | null>;
   executeRaw: (fn: () => Promise<T>) => Promise<T | null>;
 }
@@ -121,11 +121,4 @@ export function useAsyncHandler<T = unknown>(
     execute,
     executeRaw,
   };
-}
-
-/**
- * Helper to make a value readonly
- */
-function readonly<T>(value: { value: T }): { readonly value: T } {
-  return value as { readonly value: T };
 }

@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue';
+import { ref, computed, type ComputedRef } from 'vue';
 import { memberRepository } from '@/features/household/infrastructure/household.factory';
 import { useHouseholdStore } from '@/stores/household';
 import { useToastStore } from '@/stores/toast';
@@ -9,7 +9,7 @@ export interface UseMembersReturn {
   members: ReturnType<typeof ref<Member[]>>;
   loading: ReturnType<typeof ref<boolean>>;
   error: ReturnType<typeof ref<ApiError | null>>;
-  isOwnerOrAdmin: ReturnType<typeof computed<boolean>>;
+  isOwnerOrAdmin: ComputedRef<boolean>;
   fetchMembers: () => Promise<void>;
   createChild: (data: { name: string; birthday: string; avatar: string }) => Promise<Member | null>;
   inviteMember: (email: string, role?: string) => Promise<Invitation | null>;

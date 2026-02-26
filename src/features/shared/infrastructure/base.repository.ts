@@ -75,14 +75,16 @@ export abstract class BaseRepository<
    * Find all records
    */
   async findAll(query?: QueryBuilder): Promise<ApiResponse<TEntity[]>> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return this.query(async () => {
-      let builder = this.supabase.from(this.tableName).select('*');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let builder = this.supabase.from(this.tableName as any).select('*');
       if (query) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         builder = query(builder as any) as any;
       }
       return await builder;
-    });
+    }) as Promise<ApiResponse<TEntity[]>>;
   }
 
   /**
@@ -90,7 +92,12 @@ export abstract class BaseRepository<
    */
   async findById(id: string): Promise<ApiResponse<TEntity>> {
     return this.query(async () => {
-      return await this.supabase.from(this.tableName).select('*').eq('id', id).single();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return await this.supabase
+        .from(this.tableName as any)
+        .select('*')
+        .eq('id', id)
+        .single();
     });
   }
 
@@ -99,9 +106,9 @@ export abstract class BaseRepository<
    */
   async create(dto: TCreateDto): Promise<ApiResponse<TEntity>> {
     return this.query(async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return await this.supabase
-        .from(this.tableName)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(this.tableName as any)
         .insert(dto as any)
         .select()
         .single();
@@ -113,9 +120,9 @@ export abstract class BaseRepository<
    */
   async createMany(dtos: TCreateDto[]): Promise<ApiResponse<TEntity[]>> {
     return this.query(async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return await this.supabase
-        .from(this.tableName)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(this.tableName as any)
         .insert(dtos as any)
         .select();
     });
@@ -126,9 +133,9 @@ export abstract class BaseRepository<
    */
   async update(id: string, dto: TUpdateDto): Promise<ApiResponse<TEntity>> {
     return this.query(async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return await this.supabase
-        .from(this.tableName)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(this.tableName as any)
         .update(dto as any)
         .eq('id', id)
         .select()
@@ -141,9 +148,9 @@ export abstract class BaseRepository<
    */
   async upsert(dto: Partial<TEntity>): Promise<ApiResponse<TEntity>> {
     return this.query(async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return await this.supabase
-        .from(this.tableName)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(this.tableName as any)
         .upsert(dto as any)
         .select()
         .single();
@@ -155,7 +162,11 @@ export abstract class BaseRepository<
    */
   async delete(id: string): Promise<ApiResponse<void>> {
     return this.query(async () => {
-      const { error } = await this.supabase.from(this.tableName).delete().eq('id', id);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await this.supabase
+        .from(this.tableName as any)
+        .delete()
+        .eq('id', id);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return { data: null as any, error };
     });

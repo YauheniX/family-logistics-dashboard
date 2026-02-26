@@ -73,9 +73,7 @@ vi.mock('@/features/shared/infrastructure/supabase.client', () => {
 // Helper to get mocked supabase
 async function getMockedSupabase() {
   const mod = await import('@/features/shared/infrastructure/supabase.client');
-  return mod.supabase as ReturnType<
-    typeof import('@/features/shared/infrastructure/supabase.client')
-  >['supabase'] & {
+  return mod.supabase as typeof mod.supabase & {
     __fromBuilder: Record<string, ReturnType<typeof vi.fn>>;
     __mockRpc: ReturnType<typeof vi.fn>;
   };

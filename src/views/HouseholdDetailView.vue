@@ -227,7 +227,9 @@ const handleRename = async () => {
   if (updated) {
     showRenameModal.value = false;
     // Also refresh the household list in the switcher
-    await householdStore.fetchHouseholds();
+    if (authStore.user?.id) {
+      await householdStore.initializeForUser(authStore.user.id);
+    }
   }
 };
 

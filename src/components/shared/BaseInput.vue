@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, useSlots } from 'vue';
 
 interface Props {
   modelValue: string | number;
@@ -78,10 +78,12 @@ const inputId = computed(() => {
   return `input-${++inputCounter}`;
 });
 
+const slots = useSlots();
+
 const inputClasses = computed(() => {
   const base = 'input';
-  const hasIconLeft = props.$slots?.iconLeft ? 'pl-10' : '';
-  const hasIconRight = props.$slots?.iconRight ? 'pr-10' : '';
+  const hasIconLeft = slots.iconLeft ? 'pl-10' : '';
+  const hasIconRight = slots.iconRight ? 'pr-10' : '';
   const errorClass = props.error ? 'error' : '';
 
   return [base, hasIconLeft, hasIconRight, errorClass].filter(Boolean).join(' ');

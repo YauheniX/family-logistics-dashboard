@@ -125,7 +125,7 @@ export class WishlistService {
   ): Promise<ApiResponse<WishlistItem & { reservation_code?: string }>> {
     const itemResponse = await wishlistItemRepository.findById(id);
     if (itemResponse.error || !itemResponse.data) {
-      return itemResponse;
+      return itemResponse as ApiResponse<WishlistItem & { reservation_code?: string }>;
     }
 
     const isReserved = !itemResponse.data.is_reserved;

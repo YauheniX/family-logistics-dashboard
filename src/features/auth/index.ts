@@ -3,7 +3,8 @@
  */
 
 // Domain
-export * from './domain/auth.service';
+export { authService as authServiceReal } from './domain/auth.service';
+export type { AuthService, AuthUser } from './domain/auth.service';
 export * from './domain/auth.service.mock';
 
 // Factory (default export)

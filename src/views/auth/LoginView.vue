@@ -187,7 +187,11 @@ const handleGoogleLogin = async () => {
   error.value = '';
 
   try {
-    const redirect = normalizeRedirectParam(route.query.redirect);
+    const redirect = normalizeRedirectParam(
+      route.query.redirect && typeof route.query.redirect === 'string'
+        ? route.query.redirect
+        : undefined,
+    );
     const response = await authService.signInWithOAuth('google', redirect);
 
     if (response.error) {

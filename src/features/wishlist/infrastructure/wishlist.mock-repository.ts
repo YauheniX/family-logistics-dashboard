@@ -74,6 +74,39 @@ export class MockWishlistRepository extends MockRepository<
       };
     }
   }
+
+  /**
+   * Find wishlists shared by household members (visibility = 'household' or 'public')
+   * Excludes the current user's own wishlists
+   */
+  async findByHouseholdId(
+    householdId: string,
+    excludeUserId: string,
+  ): Promise<ApiResponse<Wishlist[]>> {
+    try {
+      const wishlists = await this.loadAll();
+      const filtered = wishlists
+        .filter(
+          (w) =>
+            w.household_id === householdId &&
+            w.user_id !== excludeUserId &&
+            (w.visibility === 'household' || w.visibility === 'public'),
+        )
+        .sort((a, b) => {
+          const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+          return dateB - dateA;
+        });
+      return { data: filtered, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: {
+          message: error instanceof Error ? error.message : 'Failed to fetch household wishlists',
+        },
+      };
+    }
+  }
 }
 
 export class MockWishlistItemRepository extends MockRepository<
