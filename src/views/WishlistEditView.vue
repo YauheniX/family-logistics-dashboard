@@ -118,12 +118,20 @@
               >
                 Reserve
               </BaseButton>
-              <span
-                v-else
-                class="flex-1 text-sm text-center py-2 text-success-600 dark:text-success-400 font-medium"
-              >
-                Reserved{{ item.reserved_by_name ? ` by ${item.reserved_by_name}` : '' }}
-              </span>
+              <template v-else>
+                <span
+                  class="flex-1 text-sm text-center py-2 text-success-600 dark:text-success-400 font-medium"
+                >
+                  Reserved{{ item.reserved_by_name ? ` by ${item.reserved_by_name}` : '' }}
+                </span>
+                <BaseButton
+                  class="flex-1 text-sm"
+                  variant="tertiary"
+                  @click="openUnreserveModal(item)"
+                >
+                  Unreserve
+                </BaseButton>
+              </template>
             </div>
           </template>
         </BaseCard>
@@ -205,27 +213,42 @@
   </ModalDialog>
 
   <!-- Reserve Item Modal -->
+  <!-- Unreserve Modal (for non-owners) -->
+  <ModalDialog :open="showUnreserveModal" title="Unreserve Item" @close="closeUnreserveModal">
+    <form class="space-y-4" @submit.prevent="handleNonOwnerUnreserve">
+      <p class="text-sm text-neutral-600 dark:text-neutral-400">
+        Enter the email address you used to reserve "<strong>{{ unreservingItem?.title }}</strong
+        >" to unreserve it.
+      </p>
+      <BaseInput
+        v-model="unreserverEmail"
+        label="Your Email"
+        type="email"
+        placeholder="your@email.com"
+        required
+      />
+      <div class="flex gap-2 justify-end">
+        <BaseButton variant="ghost" type="button" @click="closeUnreserveModal"> Cancel </BaseButton>
+        <BaseButton
+          variant="primary"
+          type="submit"
+          :disabled="isUnreserving || !unreserverEmail.trim()"
+          :loading="isUnreserving"
+        >
+          Unreserve
+        </BaseButton>
+      </div>
+    </form>
+  </ModalDialog>
+
+  <!-- Reserve Modal (for anonymous users only) -->
   <ModalDialog :open="showReserveModal" title="Reserve Item" @close="closeReserveModal">
     <form class="space-y-4" @submit.prevent="handleReserve">
       <p class="text-sm text-neutral-600 dark:text-neutral-400">
-        <template v-if="isAuthenticated">
-          Reserve "<strong>{{ reservingItem?.title }}</strong
-          >" as <strong>{{ displayName }}</strong
-          >? Others will see your name.
-        </template>
-        <template v-else>
-          Reserve "<strong>{{ reservingItem?.title }}</strong
-          >" so others know you're getting it.
-        </template>
+        Reserve "<strong>{{ reservingItem?.title }}</strong
+        >" so others know you're getting it.
       </p>
-      <div v-if="!isAuthenticated">
-        <BaseInput
-          v-model="reserverName"
-          label="Your Name"
-          placeholder="Enter your name"
-          required
-        />
-      </div>
+      <BaseInput v-model="reserverName" label="Your Name" placeholder="Enter your name" required />
       <BaseInput
         v-model="reserverEmail"
         label="Your Email"
@@ -241,12 +264,7 @@
         <BaseButton
           variant="primary"
           type="submit"
-          :disabled="
-            isReserving ||
-            (!isAuthenticated && !reserverName.trim()) ||
-            (isAuthenticated && !displayName.trim()) ||
-            !reserverEmail.trim()
-          "
+          :disabled="isReserving || !reserverName.trim() || !reserverEmail.trim()"
           :loading="isReserving"
         >
           Reserve
@@ -313,6 +331,10 @@ const reservingItem = ref<WishlistItem | null>(null);
 const reserverName = ref('');
 const reserverEmail = ref('');
 const isReserving = ref(false);
+const showUnreserveModal = ref(false);
+const unreservingItem = ref<WishlistItem | null>(null);
+const unreserverEmail = ref('');
+const isUnreserving = ref(false);
 
 const itemForm = reactive({
   title: '',
@@ -441,8 +463,62 @@ const handleOwnerUnreserve = async (itemId: string) => {
   }
 };
 
+const openUnreserveModal = (item: WishlistItem) => {
+  unreservingItem.value = item;
+  unreserverEmail.value = '';
+  showUnreserveModal.value = true;
+};
+
+const closeUnreserveModal = () => {
+  unreservingItem.value = null;
+  unreserverEmail.value = '';
+  showUnreserveModal.value = false;
+};
+
+const handleNonOwnerUnreserve = async () => {
+  if (!unreservingItem.value) return;
+
+  const email = unreserverEmail.value.trim();
+
+  if (!email) {
+    toastStore.error('Email is required to unreserve an item');
+    return;
+  }
+
+  // Email validation
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailPattern.test(email)) {
+    toastStore.error('Please enter a valid email address');
+    return;
+  }
+
+  isUnreserving.value = true;
+  try {
+    const result = await wishlistStore.reserveItem(unreservingItem.value.id, undefined, email);
+    if (result) {
+      toastStore.success('Item unreserved successfully!');
+      closeUnreserveModal();
+    } else {
+      toastStore.error('Unable to unreserve item. Please check your email.');
+    }
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to unreserve item';
+    toastStore.error(message);
+  } finally {
+    isUnreserving.value = false;
+  }
+};
+
 const openReserveModal = (item: WishlistItem) => {
   reservingItem.value = item;
+
+  // Auto-reserve for authenticated users (we know their email)
+  if (isAuthenticated.value && authStore.user?.email) {
+    handleAutoReserve();
+    return;
+  }
+
+  // Show modal for anonymous users
   reserverName.value = '';
   reserverEmail.value = '';
   showReserveModal.value = true;
@@ -455,11 +531,34 @@ const closeReserveModal = () => {
   showReserveModal.value = false;
 };
 
+const handleAutoReserve = async () => {
+  if (!reservingItem.value || !authStore.user?.email) return;
+
+  const name = displayName.value || 'Anonymous';
+  const email = authStore.user.email;
+
+  isReserving.value = true;
+  try {
+    const result = await wishlistStore.reserveItem(reservingItem.value.id, name, email);
+    if (result) {
+      toastStore.success('Item reserved!');
+      reservingItem.value = null;
+    } else {
+      toastStore.error('Unable to reserve item');
+    }
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to reserve item';
+    toastStore.error(message);
+  } finally {
+    isReserving.value = false;
+  }
+};
+
 const handleReserve = async () => {
   if (!reservingItem.value) return;
 
-  // Use authenticated user's name or manual input
-  const name = isAuthenticated.value ? displayName.value : reserverName.value.trim();
+  // This modal is only shown to anonymous users
+  const name = reserverName.value.trim();
   const email = reserverEmail.value.trim();
 
   if (!name) {

@@ -15,6 +15,7 @@ Personal wishlists allow users to create and share gift wishlists with anyone vi
 - ✅ **Multiple Visibility Levels** - Private, Household, or Public
 - ✅ **Public Sharing** - Share via unique slug URL (no login required)
 - ✅ **Email-Based Reservations** - Reserve items with name and email
+- ✅ **Auto-Reservation for Authenticated Users** - Instant reservation without modal (Feb 2026)
 - ✅ **Owner Privileges** - See who reserved items, unreserve without email
 - ✅ **Link Previews** - Auto-fetch previews from URLs
 - ✅ **Price Tracking** - Track item prices with currency support
@@ -37,6 +38,8 @@ Personal wishlists allow users to create and share gift wishlists with anyone vi
 
 #### Reserving an Item
 
+##### Public/Anonymous User
+
 ```text
 Public User
   → Opens public wishlist link
@@ -49,6 +52,21 @@ Public User
 ```
 
 **Backend**: Calls `reserve_wishlist_item(item_id, reserved: true, email, name)`
+
+##### Authenticated User (Non-Owner)
+
+```text
+Authenticated User
+  → Opens any public wishlist
+  → Sees unreserved item
+  → Clicks "Reserve"
+  ✅ Item instantly reserved (no modal)
+  ✅ Uses email from auth session automatically
+  ✅ Uses displayName or full_name from profile
+  ✅ Success: "Item reserved successfully"
+```
+
+**Implementation**: Automatic email/name detection from authentication session
 
 #### Unreserving an Item
 
@@ -120,7 +138,7 @@ create table wishlist_items (
 
 ### Reservation Function (Migration 029)
 
-**reserve_wishlist_item()**
+Function: `reserve_wishlist_item()`
 
 ```sql
 create or replace function reserve_wishlist_item(
@@ -245,7 +263,7 @@ class WishlistService {
 
 ### PublicWishlistView.vue
 
-**Reserve Modal**:
+**Reserve Modal** (Anonymous users only):
 
 ```vue
 <ModalDialog title="Reserve Item">
@@ -255,6 +273,8 @@ class WishlistService {
   <BaseButton @click="handleReserve">Confirm Reservation</BaseButton>
 </ModalDialog>
 ```
+
+**Note**: Authenticated users bypass the modal - email auto-detected from auth session.
 
 **Unreserve Modal**:
 
@@ -274,6 +294,34 @@ class WishlistService {
 - See who reserved items (name only, email hidden)
 - Unreserve as owner (no email needed)
 - Standard CRUD for items
+- **Auto-reservation for authenticated users** (February 2026):
+  - When authenticated users click "Reserve" on an item
+  - Email automatically detected from auth session
+  - Name automatically detected from user profile (displayName or full_name)
+  - No modal required - instant reservation
+  - Improves UX by eliminating redundant email entry
+
+**Auto-Reservation Implementation**:
+
+```typescript
+// handleAutoReserve() in WishlistEditView.vue
+const email = authStore.user?.email;
+const name = profile.value?.display_name ?? profile.value?.full_name ?? '';
+
+if (!email || !name) {
+  toastStore.error('Email/Name required');
+  return;
+}
+
+await wishlistStore.reserveItem(item.id, name, email);
+toastStore.success('Item reserved successfully');
+```
+
+**Testing**:
+
+- Feature manually tested with authenticated and anonymous users
+- Store-level reservation logic covered by existing `wishlist-store.test.ts` (25 tests)
+- UI integration tests added to verify: authenticated users trigger `reserveItem` directly, anonymous users see modal
 
 ---
 
@@ -351,7 +399,7 @@ const wishlist = await wishlistService.createWishlist({
 const publicUrl = `${window.location.origin}/#/wishlist/${wishlist.share_slug}`;
 ```
 
-### Reserving an Item
+### Reserving an Item (Code Example)
 
 ```typescript
 // Public user reserves item
