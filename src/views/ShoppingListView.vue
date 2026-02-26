@@ -131,7 +131,7 @@
               type="button"
               class="flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-lg font-medium hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700"
               aria-label="Increase quantity"
-              @click="newItemQuantity++"
+              @click="newItemQuantity = Math.min(newItemQuantity + 1, MAX_QUANTITY)"
             >
               +
             </button>
@@ -223,6 +223,8 @@ const router = useRouter();
 const authStore = useAuthStore();
 const shoppingStore = useShoppingStore();
 const householdStore = useHouseholdStore();
+
+const MAX_QUANTITY = 999;
 
 const showPurchased = ref(true);
 const showOnlyMine = ref(false);

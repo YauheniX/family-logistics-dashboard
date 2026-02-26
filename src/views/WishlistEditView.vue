@@ -129,7 +129,8 @@
         </BaseCard>
       </div>
       <p v-else class="text-sm text-neutral-600 dark:text-neutral-400">
-        No items yet. Click "Add Item" to get started.
+        <template v-if="isOwner">No items yet. Click "Add Item" to get started.</template>
+        <template v-else>This wishlist has no items yet.</template>
       </p>
     </BaseCard>
   </div>
@@ -391,10 +392,17 @@ const handleReserve = async () => {
     return;
   }
 
-  const result = await wishlistStore.reserveItem(reservingItem.value.id, name);
-  if (result) {
-    toastStore.success(`Item reserved! Save this code to unreserve later: ${result.code}`);
-    closeReserveModal();
+  try {
+    const result = await wishlistStore.reserveItem(reservingItem.value.id, name);
+    if (result) {
+      toastStore.success(`Item reserved! Save this code to unreserve later: ${result.code}`);
+      closeReserveModal();
+    } else {
+      toastStore.error('Unable to reserve item');
+    }
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to reserve item';
+    toastStore.error(message);
   }
 };
 
