@@ -151,7 +151,7 @@ create table if not exists wishlist_items (
   currency          text not null default 'USD',
   priority          text not null default 'medium' check (priority in ('low', 'medium', 'high')),
   is_reserved       boolean not null default false,
-  reserved_by_email text,
+  reserved_by_email extensions.citext,
   reserved_by_name  text,
   reserved_at       timestamptz,
   created_at        timestamptz not null default now()

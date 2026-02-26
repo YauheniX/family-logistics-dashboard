@@ -242,7 +242,10 @@
           variant="primary"
           type="submit"
           :disabled="
-            isReserving || (!isAuthenticated && !reserverName.trim()) || !reserverEmail.trim()
+            isReserving ||
+            (!isAuthenticated && !reserverName.trim()) ||
+            (isAuthenticated && !displayName.trim()) ||
+            !reserverEmail.trim()
           "
           :loading="isReserving"
         >
@@ -459,7 +462,15 @@ const handleReserve = async () => {
   const name = isAuthenticated.value ? displayName.value : reserverName.value.trim();
   const email = reserverEmail.value.trim();
 
-  if (!name || !email) return;
+  if (!name) {
+    toastStore.error('Name is required to reserve an item');
+    return;
+  }
+
+  if (!email) {
+    toastStore.error('Email is required to reserve an item');
+    return;
+  }
 
   // Validate name length
   if (name.length < 2) {

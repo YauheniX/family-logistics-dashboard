@@ -120,12 +120,35 @@ begin
       );
     end if;
   else
+    -- Atomic unreserve: enforce email match or NULL in WHERE clause
     update wishlist_items
     set is_reserved = false,
         reserved_by_email = null,
         reserved_by_name = null,
         reserved_at = null
-    where id = p_item_id;
+    where id = p_item_id
+      and is_reserved = true
+      and (
+        v_is_owner  -- Owner can always unreserve
+        or reserved_by_email is null  -- Item has no email protection, anyone can unreserve
+        or (p_email is not null and trim(p_email) <> '' and reserved_by_email = p_email)  -- Email matches
+      );
+    
+    if not found then
+      -- Check why update failed
+      if not exists (select 1 from wishlist_items where id = p_item_id and is_reserved = true) then
+        raise exception 'Item is not reserved';
+      elsif not v_is_owner and exists (
+        select 1 from wishlist_items 
+        where id = p_item_id and reserved_by_email is not null
+      ) then
+        if p_email is null or trim(p_email) = '' then
+          raise exception 'Email is required to unreserve this item';
+        else
+          raise exception 'Email does not match the reservation';
+        end if;
+      end if;
+    end if;
   end if;
 
   -- Return success (no code needed)

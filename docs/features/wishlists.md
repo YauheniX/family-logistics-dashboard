@@ -37,7 +37,7 @@ Personal wishlists allow users to create and share gift wishlists with anyone vi
 
 #### Reserving an Item
 
-```
+```text
 Public User
   → Opens public wishlist link
   → Sees unreserved item
@@ -52,7 +52,7 @@ Public User
 
 #### Unreserving an Item
 
-```
+```text
 Public User
   → Opens public wishlist link
   → Sees "Reserved" badge on item
@@ -66,7 +66,7 @@ Public User
 
 #### Owner View
 
-```
+```text
 Wishlist Owner
   → Opens their wishlist
   → Sees "Reserved by [Name]" badge
@@ -341,7 +341,6 @@ const wishlist = await wishlistService.createWishlist({
   title: 'Birthday 2026',
   description: 'Things I want for my birthday',
   visibility: 'public',
-  user_id: userId,
   member_id: memberId,
   household_id: householdId,
 });

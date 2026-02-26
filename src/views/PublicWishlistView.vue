@@ -99,26 +99,39 @@
             >? Others will see your name.
           </template>
           <template v-else>
-            Enter your name to reserve this item. You'll need to provide an email if you want to
-            unreserve it later.
+            Enter your name and email to reserve this item. You'll need the email to unreserve it
+            later.
           </template>
         </p>
-        <div v-if="!isAuthenticated">
-          <label class="label" for="reserve-name">Your Name</label>
-          <input
-            id="reserve-name"
-            v-model="reserveName"
-            type="text"
-            class="input"
-            placeholder="Your name"
-            required
-          />
+        <div v-if="!isAuthenticated" class="space-y-3">
+          <div>
+            <label class="label" for="reserve-name">Your Name</label>
+            <input
+              id="reserve-name"
+              v-model="reserveName"
+              type="text"
+              class="input"
+              placeholder="Your name"
+              required
+            />
+          </div>
+          <div>
+            <label class="label" for="reserve-email">Your Email</label>
+            <input
+              id="reserve-email"
+              v-model="reserveEmail"
+              type="email"
+              class="input"
+              placeholder="your@email.com"
+              required
+            />
+          </div>
         </div>
         <div class="flex gap-3">
           <BaseButton
             variant="primary"
             type="button"
-            :disabled="!isAuthenticated && !reserveName.trim()"
+            :disabled="!isAuthenticated && (!reserveName.trim() || !reserveEmail.trim())"
             @click="handleReserve"
           >
             Confirm Reservation
@@ -188,6 +201,7 @@ const { userDisplayName, loadUserProfile } = useUserProfile();
 const showReserveModal = ref(false);
 const showUnreserveModal = ref(false);
 const reserveName = ref('');
+const reserveEmail = ref('');
 const unreserveEmail = ref('');
 const reservingItemId = ref<string | null>(null);
 const unreservingItemId = ref<string | null>(null);
@@ -238,6 +252,7 @@ onMounted(async () => {
 const startReserve = (itemId: string) => {
   reservingItemId.value = itemId;
   reserveName.value = '';
+  reserveEmail.value = '';
   showReserveModal.value = true;
 };
 
@@ -246,23 +261,39 @@ const handleReserve = async () => {
 
   // Use authenticated user's name or manual input
   const name = isAuthenticated.value ? displayName.value : reserveName.value.trim();
+  const email = isAuthenticated.value ? undefined : reserveEmail.value.trim();
 
   if (!name) {
     toastStore.error('Name is required to reserve an item');
     return;
   }
 
+  if (!isAuthenticated.value && !email) {
+    toastStore.error('Email is required to reserve an item');
+    return;
+  }
+
+  // Validate email format if provided
+  if (email) {
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+      toastStore.error('Please enter a valid email address');
+      return;
+    }
+  }
+
   const result = await wishlistStore.reserveItem(
     reservingItemId.value,
     name,
-    undefined, // Email optional: if omitted, anyone can unreserve; if provided, only matching email can unreserve
+    email, // Email required for anonymous, optional for authenticated
   );
 
   if (result) {
     showReserveModal.value = false;
     reservingItemId.value = null;
     reserveName.value = '';
-    toastStore.success('Item reserved successfully! Provide your email to unreserve it later.');
+    reserveEmail.value = '';
+    toastStore.success('Item reserved successfully! Use your email to unreserve it later.');
   }
 };
 
