@@ -67,6 +67,26 @@ export const useWishlistStore = defineStore('wishlist', () => {
     }
   }
 
+  /**
+   * Load wishlists for a user filtered by household.
+   * Use this when you want to show only wishlists for the currently selected household.
+   */
+  async function loadWishlistsByHousehold(userId: string, householdId: string) {
+    loading.value = true;
+    error.value = null;
+    try {
+      const response = await wishlistService.getUserWishlistsByHousehold(userId, householdId);
+      if (response.error) {
+        error.value = response.error.message;
+        useToastStore().error(`Failed to load wishlists: ${response.error.message}`);
+      } else {
+        wishlists.value = response.data ?? [];
+      }
+    } finally {
+      loading.value = false;
+    }
+  }
+
   async function loadWishlist(id: string) {
     loading.value = true;
     error.value = null;
@@ -258,6 +278,7 @@ export const useWishlistStore = defineStore('wishlist', () => {
     $reset,
     // Wishlist Actions
     loadWishlists,
+    loadWishlistsByHousehold,
     loadHouseholdWishlists,
     loadWishlist,
     loadWishlistBySlug,

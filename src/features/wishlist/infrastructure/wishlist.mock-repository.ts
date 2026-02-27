@@ -48,6 +48,33 @@ export class MockWishlistRepository extends MockRepository<
   }
 
   /**
+   * Find wishlists by user ID and household ID
+   */
+  async findByUserIdAndHouseholdId(
+    userId: string,
+    householdId: string,
+  ): Promise<ApiResponse<Wishlist[]>> {
+    try {
+      const wishlists = await this.loadAll();
+      const filtered = wishlists
+        .filter((w) => w.user_id === userId && w.household_id === householdId)
+        .sort((a, b) => {
+          const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+          return dateB - dateA;
+        });
+      return { data: filtered, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: {
+          message: error instanceof Error ? error.message : 'Failed to fetch wishlists',
+        },
+      };
+    }
+  }
+
+  /**
    * Find a wishlist by its share slug (public access)
    */
   async findBySlug(slug: string): Promise<ApiResponse<Wishlist>> {

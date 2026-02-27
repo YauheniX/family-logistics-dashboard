@@ -35,6 +35,16 @@ export class WishlistService {
   }
 
   /**
+   * Get wishlists for the current user filtered by household
+   */
+  async getUserWishlistsByHousehold(
+    userId: string,
+    householdId: string,
+  ): Promise<ApiResponse<Wishlist[]>> {
+    return await wishlistRepository.findByUserIdAndHouseholdId(userId, householdId);
+  }
+
+  /**
    * Get a single wishlist by ID
    */
   async getWishlist(id: string): Promise<ApiResponse<Wishlist>> {
