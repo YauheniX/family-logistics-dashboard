@@ -46,7 +46,7 @@
         :to="item.to"
         class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
         :class="
-          route.name === item.name
+          isActive(item.name)
             ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-400 border border-primary-200 dark:border-primary-800'
             : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
         "
@@ -96,7 +96,7 @@
         :to="item.to"
         class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
         :class="
-          route.name === item.name
+          isActive(item.name)
             ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-400 border border-primary-200 dark:border-primary-800'
             : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
         "
@@ -133,15 +133,38 @@ const householdStore = useHouseholdStore();
 
 const currentHousehold = computed(() => householdStore.currentHousehold);
 
+function isActive(itemName: string): boolean {
+  const currentRouteName = route.name as string;
+
+  // Exact match
+  if (currentRouteName === itemName) {
+    return true;
+  }
+
+  // Match household-detail and member-management for "Manage Household"
+  if (itemName === 'household-detail') {
+    return currentRouteName === 'household-detail' || currentRouteName === 'member-management';
+  }
+
+  return false;
+}
+
 const items = computed(() => [
   {
     name: 'household-list',
+    label: 'Households',
+    to: '/households',
+    emoji: '🏘️',
+  },
+  {
+    name: 'household-detail',
     label: 'Manage Household',
     to: currentHousehold.value ? `/households/${currentHousehold.value.id}` : '/households',
     emoji: '👨‍👩‍👧‍👦',
   },
   { name: 'shopping', label: 'Shopping', to: { name: 'shopping' }, emoji: '🛒' },
   { name: 'wishlist-list', label: 'Wishlists', to: '/wishlists', emoji: '🎁' },
+  { name: 'apps', label: 'Apps', to: '/apps', emoji: '🎮' },
   { name: 'settings', label: 'Settings', to: '/settings', emoji: '⚙️' },
 ]);
 </script>

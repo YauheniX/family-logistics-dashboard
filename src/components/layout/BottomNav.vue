@@ -107,6 +107,8 @@ const navItems = computed<NavItem[]>(() => [
 
 // Additional items in "More" menu
 const moreItems: NavItem[] = [
+  { name: 'household-list', label: 'Households', to: '/households', emoji: '🏠' },
+  { name: 'apps', label: 'Apps', to: '/apps', emoji: '📱' },
   { name: 'settings', label: 'Settings', to: '/settings', emoji: '⚙️' },
 ];
 

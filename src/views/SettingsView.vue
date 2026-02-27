@@ -61,6 +61,7 @@
           placeholder="Your full name"
           :error="errors.name"
           :disabled="loading"
+          @blur="handleSaveProfile"
         />
 
         <!-- Email Input (Read-only) -->
@@ -71,17 +72,6 @@
           :disabled="true"
           hint="Email cannot be changed"
         />
-
-        <div class="flex justify-end pt-2">
-          <BaseButton
-            variant="primary"
-            :loading="saving"
-            :disabled="loading"
-            @click="handleSaveProfile"
-          >
-            Save Changes
-          </BaseButton>
-        </div>
       </div>
     </BaseCard>
 

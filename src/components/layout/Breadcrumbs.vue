@@ -60,11 +60,16 @@ const breadcrumbs = computed<Breadcrumb[]>(() => {
   switch (routeName) {
     case 'dashboard':
       break;
+    case 'household-list':
+      crumbs.push({ label: 'Households', to: '/households' });
+      break;
     case 'household-detail':
-      crumbs.push({ label: 'Manage', to: '/households' });
+      crumbs.push({ label: 'Households', to: '/households' });
+      crumbs.push({ label: 'Details', to: route.path });
       break;
     case 'member-management':
-      crumbs.push({ label: 'Manage', to: `/households/${route.params.id}` });
+      crumbs.push({ label: 'Households', to: '/households' });
+      crumbs.push({ label: 'Details', to: `/households/${route.params.id}` });
       crumbs.push({ label: 'Members', to: route.path });
       break;
     case 'shopping':
@@ -81,13 +86,25 @@ const breadcrumbs = computed<Breadcrumb[]>(() => {
       break;
     case 'wishlist-edit':
       crumbs.push({ label: 'Wishlists', to: '/wishlists' });
-      crumbs.push({ label: 'Manage Wishlist', to: route.path });
+      crumbs.push({ label: 'Edit Wishlist', to: route.path });
       break;
     case 'wishlist-detail':
-      crumbs.push({ label: 'Wishlist Detail', to: route.path });
+      crumbs.push({ label: 'Wishlists', to: '/wishlists' });
+      crumbs.push({ label: 'Wishlist', to: route.path });
       break;
     case 'settings':
       crumbs.push({ label: 'Settings', to: '/settings' });
+      break;
+    case 'apps':
+      crumbs.push({ label: 'Apps', to: '/apps' });
+      break;
+    case 'rock-paper-scissors':
+      crumbs.push({ label: 'Apps', to: '/apps' });
+      crumbs.push({ label: 'Rock-Paper-Scissors', to: route.path });
+      break;
+    case 'cityscape':
+      crumbs.push({ label: 'Apps', to: '/apps' });
+      crumbs.push({ label: 'Cityscape', to: route.path });
       break;
   }
 

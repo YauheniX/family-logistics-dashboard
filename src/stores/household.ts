@@ -322,6 +322,74 @@ export const useHouseholdStore = defineStore('household', () => {
     }
   }
 
+  async function deleteHousehold(householdId: string) {
+    const toast = useToastStore();
+
+    if (!householdId) {
+      toast.error('Household ID is required');
+      return false;
+    }
+
+    if (isMockMode()) {
+      households.value = households.value.filter((h) => h.id !== householdId);
+
+      // If deleted household was current, select first available
+      if (currentHousehold.value?.id === householdId) {
+        if (households.value.length > 0) {
+          setCurrentHousehold(households.value[0]);
+        } else {
+          setCurrentHousehold(null);
+        }
+      }
+
+      toast.success('Household deleted (mock)');
+      return true;
+    }
+
+    loading.value = true;
+    try {
+      const { error: deleteError } = await supabase
+        .from('households')
+        .delete()
+        .eq('id', householdId);
+
+      if (deleteError) {
+        toast.error(`Failed to delete household: ${deleteError.message}`);
+        return false;
+      }
+
+      // Guard: abort if user changed during async operation
+      if (_activeUserId.value === null) {
+        console.log('[household] deleteHousehold aborted: user logged out');
+        return false;
+      }
+
+      // Remove from local state
+      households.value = households.value.filter((h) => h.id !== householdId);
+
+      // If deleted household was current, select first available
+      if (currentHousehold.value?.id === householdId) {
+        if (households.value.length > 0) {
+          setCurrentHousehold(households.value[0]);
+          toast.success(`Household deleted. Switched to ${households.value[0].name}`);
+        } else {
+          setCurrentHousehold(null);
+          toast.success('Household deleted');
+        }
+      } else {
+        toast.success('Household deleted');
+      }
+
+      return true;
+    } catch (error) {
+      console.error('[household] Unexpected error while deleting household:', error);
+      toast.error('Unexpected error while deleting household');
+      return false;
+    } finally {
+      loading.value = false;
+    }
+  }
+
   return {
     // State
     currentHousehold,
@@ -342,6 +410,7 @@ export const useHouseholdStore = defineStore('household', () => {
     initializeForUser,
     initializeMockHouseholds,
     createHousehold,
+    deleteHousehold,
     ensureDefaultHouseholdForUser,
   };
 });

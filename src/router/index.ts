@@ -11,6 +11,9 @@ import PublicWishlistView from '@/views/PublicWishlistView.vue';
 import LoginView from '@/views/auth/LoginView.vue';
 import RegisterView from '@/views/auth/RegisterView.vue';
 import SettingsView from '@/views/SettingsView.vue';
+import AppsView from '@/views/AppsView.vue';
+import RockPaperScissorsView from '@/views/RockPaperScissorsView.vue';
+import CityscapeView from '@/views/CityscapeView.vue';
 import NavigationDemoView from '@/views/NavigationDemoView.vue';
 import { useAuthStore } from '@/stores/auth';
 
@@ -103,6 +106,24 @@ const router = createRouter({
       path: '/settings',
       name: 'settings',
       component: SettingsView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/apps',
+      name: 'apps',
+      component: AppsView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/apps/rock-paper-scissors',
+      name: 'rock-paper-scissors',
+      component: RockPaperScissorsView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/apps/cityscape',
+      name: 'cityscape',
+      component: CityscapeView,
       meta: { requiresAuth: true },
     },
     {
