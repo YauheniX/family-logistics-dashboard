@@ -1,7 +1,7 @@
 # 🎁 Wishlists & Reservations
 
-**Feature Status**: ✅ Implemented (Migration 029 - Email-Based Reservations)  
-**Last Updated**: February 26, 2026
+**Feature Status**: ✅ Implemented (Migration 030 - Household Reservations)  
+**Last Updated**: February 27, 2026
 
 ---
 
@@ -24,11 +24,11 @@ Personal wishlists allow users to create and share gift wishlists with anyone vi
 
 ## Visibility Levels
 
-| Level         | Who Can View          | Use Case                            |
-| ------------- | --------------------- | ----------------------------------- |
-| **Private**   | Owner only            | Personal shopping ideas             |
-| **Household** | All household members | Share with family privately         |
-| **Public**    | Anyone with link      | Share with friends, extended family |
+| Level         | Who Can View          | Who Can Reserve             | Use Case                             |
+| ------------- | --------------------- | --------------------------- | ------------------------------------ |
+| **Private**   | Owner only            | ❌ No one                   | Personal shopping ideas              |
+| **Household** | All household members | ✅ Household members only   | Share with family, gift coordination |
+| **Public**    | Anyone with link      | ✅ Anyone (incl. anonymous) | Share with friends, extended family  |
 
 ---
 
@@ -67,6 +67,21 @@ Authenticated User
 ```
 
 **Implementation**: Automatic email/name detection from authentication session
+
+##### Authenticated Household Member (Household Wishlist)
+
+```text
+Household Member
+  → Views household member's wishlist (visibility = 'household')
+  → Sees unreserved item
+  → Clicks "Reserve"
+  ✅ Item instantly reserved (no modal)
+  ✅ Uses email from auth session automatically
+  ✅ Uses displayName or full_name from profile
+  ✅ Success: "Item reserved successfully"
+```
+
+**Backend**: Requires authentication + membership verification in same household
 
 #### Unreserving an Item
 
@@ -178,6 +193,22 @@ returns jsonb
 ---
 
 ## Migration History
+
+### Migration 030: Household Wishlist Reservations (Feb 2026)
+
+**Changes**:
+
+- ✅ Added: Support for reserving items from household-visibility wishlists
+- ✅ Updated: `reserve_wishlist_item()` to check household membership
+- ✅ Authenticated household members can now reserve from each other's wishlists
+
+**Access Control by Visibility**:
+
+| Visibility | Public Users | Authenticated (non-member) | Household Member |
+| ---------- | ------------ | -------------------------- | ---------------- |
+| private    | ❌ No        | ❌ No                      | ❌ No            |
+| household  | ❌ No        | ❌ No                      | ✅ Yes           |
+| public     | ✅ Yes       | ✅ Yes                     | ✅ Yes           |
 
 ### Migration 029: Email-Based Reservations (Feb 2026)
 
@@ -463,8 +494,18 @@ WHERE wi.wishlist_id = 'wishlist-id'
 
 ### "Item not found or wishlist is not public"
 
-**Cause**: Wishlist visibility changed to private/household  
-**Solution**: Owner must set visibility back to public
+**Cause**: Wishlist visibility is private, OR you're trying to reserve a household wishlist without being a household member  
+**Solution**: For household wishlists, log in as a household member. For private wishlists, only the owner can view.
+
+### "You must be a member of this household to reserve items"
+
+**Cause**: Trying to reserve from a household-visibility wishlist without being in the same household  
+**Solution**: You must be an active member of the same household to reserve from household wishlists
+
+### "Authentication required to reserve from household wishlists"
+
+**Cause**: Trying to reserve a household item as anonymous user  
+**Solution**: Log in with an account that is a member of the wishlist owner's household
 
 ### "Email is required to reserve or unreserve items"
 
@@ -473,6 +514,6 @@ WHERE wi.wishlist_id = 'wishlist-id'
 
 ---
 
-**Version**: 1.0  
-**Migration**: 029  
-**Last Updated**: February 26, 2026
+**Version**: 1.1  
+**Migration**: 030  
+**Last Updated**: February 27, 2026
