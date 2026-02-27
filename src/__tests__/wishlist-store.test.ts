@@ -7,6 +7,7 @@ vi.mock('@/features/wishlist/domain/wishlist.service', () => ({
     getUserWishlists: vi.fn(),
     getWishlist: vi.fn(),
     getWishlistBySlug: vi.fn(),
+    getHouseholdWishlists: vi.fn(),
     createWishlist: vi.fn(),
     updateWishlist: vi.fn(),
     deleteWishlist: vi.fn(),
@@ -138,7 +139,7 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.wishlists = [mockWishlist];
+    store.$patch({ wishlists: [mockWishlist] });
     const result = await store.updateWishlist('w1', { title: 'Updated Wishes' });
 
     expect(result).toEqual(updated);
@@ -154,7 +155,7 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.wishlists = [mockWishlist];
+    store.$patch({ wishlists: [mockWishlist] });
     const result = await store.updateWishlist('w1', { title: 'Updated Wishes' });
 
     expect(result).toBeNull();
@@ -171,7 +172,7 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.wishlists = [mockWishlist];
+    store.$patch({ wishlists: [mockWishlist] });
     await store.removeWishlist('w1');
 
     expect(store.wishlists).toEqual([]);
@@ -185,7 +186,7 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.wishlists = [mockWishlist];
+    store.$patch({ wishlists: [mockWishlist] });
     await store.removeWishlist('w1');
 
     expect(store.wishlists).toContainEqual(mockWishlist);
@@ -230,7 +231,7 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.items = [mockItem];
+    store.$patch({ items: [mockItem] });
     const result = await store.updateItem('wi1', { title: 'Updated Headphones' });
 
     expect(result).toEqual(updated);
@@ -245,7 +246,7 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.items = [mockItem];
+    store.$patch({ items: [mockItem] });
     const result = await store.updateItem('wi1', { title: 'Updated Headphones' });
 
     expect(result).toBeNull();
@@ -262,7 +263,7 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.items = [mockItem];
+    store.$patch({ items: [mockItem] });
     await store.removeItem('wi1');
 
     expect(store.items).toEqual([]);
@@ -276,7 +277,7 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.items = [mockItem];
+    store.$patch({ items: [mockItem] });
     await store.removeItem('wi1');
 
     expect(store.items).toContainEqual(mockItem);
@@ -419,7 +420,7 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.items = [mockItem];
+    store.$patch({ items: [mockItem] });
     const result = await store.reserveItem('wi1', 'Gift Giver', 'gift@example.com');
 
     expect(result?.is_reserved).toBe(true);
@@ -438,8 +439,97 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.items = [mockItem];
+    store.$patch({ items: [mockItem] });
     const result = await store.reserveItem('wi1', 'Gift Giver', 'gift@example.com');
+
+    expect(result).toBeNull();
+    expect(store.items[0].is_reserved).toBe(false);
+  });
+
+  // ─── loadHouseholdWishlists ───────────────────────────────
+
+  it('loads household wishlists successfully', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    const householdWishlist = {
+      ...mockWishlist,
+      id: 'w2',
+      user_id: 'u2',
+      visibility: 'household' as const,
+      title: 'Family Member Wishlist',
+    };
+    vi.mocked(wishlistService.getHouseholdWishlists).mockResolvedValue({
+      data: [householdWishlist],
+      error: null,
+    });
+
+    const store = useWishlistStore();
+    await store.loadHouseholdWishlists('household-1', 'u1');
+
+    expect(store.householdWishlists).toEqual([householdWishlist]);
+  });
+
+  it('handles loadHouseholdWishlists error gracefully', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.getHouseholdWishlists).mockResolvedValue({
+      data: null,
+      error: { message: 'Failed to load' },
+    });
+
+    const store = useWishlistStore();
+    // Seed non-empty initial state to ensure the error handler actually clears it
+    store.$patch({
+      householdWishlists: [{ ...mockWishlist, id: 'stale-wishlist', title: 'Stale Data' }],
+    });
+
+    await store.loadHouseholdWishlists('household-1', 'u1');
+
+    // Verify service was called with correct args
+    expect(wishlistService.getHouseholdWishlists).toHaveBeenCalledWith('household-1', 'u1');
+    // Should fail silently and set empty array (clearing previous state)
+    expect(store.householdWishlists).toEqual([]);
+  });
+
+  it('reserves item from household wishlist with authenticated user', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    const householdItem = {
+      ...mockItem,
+      id: 'wi-household',
+      wishlist_id: 'w-household',
+    };
+    const reservedHouseholdItem = {
+      ...householdItem,
+      is_reserved: true,
+      reserved_by_email: 'member@household.com',
+      reserved_by_name: 'Household Member',
+    };
+    vi.mocked(wishlistService.reserveItem).mockResolvedValue({
+      data: reservedHouseholdItem,
+      error: null,
+    });
+
+    const store = useWishlistStore();
+    store.$patch({ items: [householdItem] });
+    const result = await store.reserveItem(
+      'wi-household',
+      'Household Member',
+      'member@household.com',
+    );
+
+    expect(result?.is_reserved).toBe(true);
+    expect(result?.reserved_by_email).toBe('member@household.com');
+    expect(store.items[0].is_reserved).toBe(true);
+  });
+
+  it('handles reservation error for non-household members', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.reserveItem).mockResolvedValue({
+      data: null,
+      error: { message: 'You must be a member of this household to reserve items' },
+    });
+
+    const store = useWishlistStore();
+    store.$patch({ items: [mockItem] });
+    const result = await store.reserveItem('wi1', 'Outsider', 'outsider@example.com');
 
     expect(result).toBeNull();
     expect(store.items[0].is_reserved).toBe(false);
@@ -450,7 +540,7 @@ describe('Wishlist Store', () => {
   it('computes reservedItems and unreservedItems', () => {
     const store = useWishlistStore();
     const reserved = { ...mockItem, id: 'wi2', is_reserved: true, reserved_by_email: 'a@b.com' };
-    store.items = [mockItem, reserved];
+    store.$patch({ items: [mockItem, reserved] });
 
     expect(store.reservedItems).toEqual([reserved]);
     expect(store.unreservedItems).toEqual([mockItem]);
@@ -459,7 +549,7 @@ describe('Wishlist Store', () => {
   it('computes itemsByPriority', () => {
     const store = useWishlistStore();
     const lowItem = { ...mockItem, id: 'wi2', priority: 'low' as const };
-    store.items = [mockItem, lowItem];
+    store.$patch({ items: [mockItem, lowItem] });
 
     expect(store.itemsByPriority['high']).toEqual([mockItem]);
     expect(store.itemsByPriority['low']).toEqual([lowItem]);
