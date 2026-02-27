@@ -8,7 +8,12 @@ interface AuthState {
   initialized: boolean;
 }
 
-export const useAuthStore = defineStore('auth', {
+/**
+ * Feature-based auth store for isolated testing.
+ * NOTE: For application code, use @/stores/auth instead.
+ * This store has a different ID ('auth-feature') to avoid Pinia ID collision.
+ */
+export const useAuthStore = defineStore('auth-feature', {
   state: (): AuthState => ({
     user: null,
     loading: false,

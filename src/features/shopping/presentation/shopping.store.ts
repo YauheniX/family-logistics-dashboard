@@ -36,6 +36,22 @@ export const useShoppingStore = defineStore('shopping', () => {
 
   const unpurchasedItems = computed(() => items.value.filter((i) => !i.is_purchased));
 
+  // ─── Reset ──────────────────────────────────────────────
+
+  /** Reset store to initial state (call on logout) */
+  function $reset() {
+    lists.value = [];
+    currentList.value = null;
+    items.value = [];
+    loading.value = false;
+    error.value = null;
+  }
+
+  /** Set current list (use instead of direct mutation) */
+  function setCurrentList(list: ShoppingList | null) {
+    currentList.value = list;
+  }
+
   // ─── List Actions ───────────────────────────────────────
 
   function clearLists() {
@@ -217,6 +233,9 @@ export const useShoppingStore = defineStore('shopping', () => {
     itemsByCategory,
     purchasedItems,
     unpurchasedItems,
+    // Reset & Setters
+    $reset,
+    setCurrentList,
     // List Actions
     clearLists,
     loadLists,

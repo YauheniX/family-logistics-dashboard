@@ -113,12 +113,16 @@ import ReportProblemModal from '@/components/shared/ReportProblemModal.vue';
 import Avatar from '@/components/shared/Avatar.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useHouseholdStore } from '@/stores/household';
+import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
+import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
 import { useTheme } from '@/composables/useTheme';
 import { useUserProfile } from '@/composables/useUserProfile';
 import { resolveUserProfile } from '@/utils/profileResolver';
 
 const authStore = useAuthStore();
 const householdStore = useHouseholdStore();
+const shoppingStore = useShoppingStore();
+const wishlistStore = useWishlistStore();
 const route = useRoute();
 const router = useRouter();
 const { initTheme } = useTheme();
@@ -161,11 +165,12 @@ watch(
         householdStore.initializeForUser(userId);
       });
     } else if (!userId && prevUserId) {
-      // User just logged out - clear household context
-      console.log('[App.vue] watch - User logged out, clearing profile');
+      // User just logged out - clear ALL store state to prevent data leakage
+      console.log('[App.vue] watch - User logged out, clearing all stores');
       clearUserProfile();
-      householdStore.setCurrentHousehold(null);
-      householdStore.loadHouseholds([]);
+      householdStore.$reset();
+      shoppingStore.$reset();
+      wishlistStore.$reset();
     }
   },
 );

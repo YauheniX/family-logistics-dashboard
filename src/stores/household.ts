@@ -38,6 +38,16 @@ export const useHouseholdStore = defineStore('household', () => {
       currentRole.value === 'member',
   );
 
+  // ─── Reset ──────────────────────────────────────────────
+
+  /** Reset store to initial state (call on logout) */
+  function $reset() {
+    currentHousehold.value = null;
+    households.value = [];
+    loading.value = false;
+    localStorage.removeItem('current_household_id');
+  }
+
   // ─── Actions ─────────────────────────────────────────────
   function setCurrentHousehold(household: Household | null) {
     currentHousehold.value = household;
@@ -289,6 +299,8 @@ export const useHouseholdStore = defineStore('household', () => {
     isOwnerOrAdmin,
     canManageMembers,
     canEditContent,
+    // Reset
+    $reset,
     // Actions
     setCurrentHousehold,
     loadHouseholds,

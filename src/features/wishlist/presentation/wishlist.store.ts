@@ -37,6 +37,18 @@ export const useWishlistStore = defineStore('wishlist', () => {
     return grouped;
   });
 
+  // ─── Reset ──────────────────────────────────────────────
+
+  /** Reset store to initial state (call on logout) */
+  function $reset() {
+    wishlists.value = [];
+    householdWishlists.value = [];
+    currentWishlist.value = null;
+    items.value = [];
+    loading.value = false;
+    error.value = null;
+  }
+
   // ─── Wishlist Actions ──────────────────────────────────────
 
   async function loadWishlists(userId: string) {
@@ -242,6 +254,8 @@ export const useWishlistStore = defineStore('wishlist', () => {
     reservedItems,
     unreservedItems,
     itemsByPriority,
+    // Reset
+    $reset,
     // Wishlist Actions
     loadWishlists,
     loadHouseholdWishlists,
