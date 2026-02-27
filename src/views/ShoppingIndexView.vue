@@ -92,7 +92,7 @@ const handleCreateList = async () => {
     description: newListDescription.value.trim() || null,
   });
   if (result) {
-    shoppingStore.currentList = result;
+    shoppingStore.setCurrentList(result);
     newListTitle.value = '';
     newListDescription.value = '';
     showCreateListModal.value = false;

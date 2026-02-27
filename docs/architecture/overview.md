@@ -587,58 +587,125 @@ See [RLS Policies](../backend/rls-policies.md) for complete policy documentation
 
 **Library**: Pinia (Vue 3 official state management)
 
+### Store Registry
+
+| Store ID           | Location                                               | Purpose                       |
+| ------------------ | ------------------------------------------------------ | ----------------------------- |
+| `auth`             | `@/stores/auth.ts`                                     | User authentication (primary) |
+| `auth-feature`     | `@/features/auth/presentation/auth.store.ts`           | Feature testing only          |
+| `household`        | `@/stores/household.ts`                                | Current household context     |
+| `household-entity` | `@/features/household/presentation/household.store.ts` | CRUD operations               |
+| `shopping`         | `@/features/shopping/presentation/shopping.store.ts`   | Shopping lists & items        |
+| `wishlist`         | `@/features/wishlist/presentation/wishlist.store.ts`   | Wishlists & items             |
+| `toast`            | `@/stores/toast.ts`                                    | Toast notifications           |
+
+**⚠️ CRITICAL**: Store IDs must be unique across the entire application. Duplicate IDs cause silent state-sharing bugs.
+
 ### Store Organization
 
-```
+```plaintext
 stores/
-├── auth.ts                  # User authentication
-├── household.ts             # Current household context
-└── toast.ts                 # Toast notifications
+├── auth.ts                  # User authentication (ID: 'auth')
+├── household.ts             # Current household context (ID: 'household')
+└── toast.ts                 # Toast notifications (ID: 'toast')
+
+features/
+├── shopping/presentation/
+│   └── shopping.store.ts    # Shopping lists (ID: 'shopping')
+├── wishlist/presentation/
+│   └── wishlist.store.ts    # Wishlists (ID: 'wishlist')
+└── household/presentation/
+    └── household.store.ts   # Household CRUD (ID: 'household-entity')
 ```
 
-**Pattern**:
+### Store Pattern (Setup Syntax)
 
 ```typescript
 export const useShoppingStore = defineStore('shopping', () => {
-  // State
+  // ─── State ────────────────────────────────────────────
   const lists = ref<ShoppingList[]>([]);
+  const currentList = ref<ShoppingList | null>(null);
   const loading = ref(false);
+  const error = ref<string | null>(null);
 
-  // Getters (computed)
+  // ─── Getters (computed) ───────────────────────────────
   const activeLists = computed(() => lists.value.filter((l) => l.status === 'active'));
 
-  // Actions (methods)
-  async function loadLists() {
+  // ─── Reset (for logout) ───────────────────────────────
+  function $reset() {
+    lists.value = [];
+    currentList.value = null;
+    loading.value = false;
+    error.value = null;
+  }
+
+  // ─── Setters (actions) ────────────────────────────────
+  function setCurrentList(list: ShoppingList | null) {
+    currentList.value = list;
+  }
+
+  // ─── Async Actions ────────────────────────────────────
+  async function loadLists(householdId: string) {
     loading.value = true;
-    const result = await shoppingService.getListsForHousehold(householdId);
+    const result = await shoppingService.getHouseholdLists(householdId);
     if (result.success) {
       lists.value = result.data;
     }
     loading.value = false;
   }
 
-  return { lists, loading, activeLists, loadLists };
+  return {
+    // State
+    lists,
+    currentList,
+    loading,
+    error,
+    // Getters
+    activeLists,
+    // Reset & Setters
+    $reset,
+    setCurrentList,
+    // Actions
+    loadLists,
+  };
 });
 ```
 
-**Usage in Components**:
+### Logout Cleanup Pattern
+
+All stores must be reset on logout to prevent data leakage between sessions:
 
 ```typescript
-const shoppingStore = useShoppingStore();
-
-// Access state
-console.log(shoppingStore.lists);
-
-// Call actions
-shoppingStore.loadLists();
-
-// Watch computed
+// In App.vue watch for auth state
 watch(
-  () => shoppingStore.activeLists,
-  (newLists) => {
-    console.log('Active lists changed:', newLists);
+  () => authStore.user?.id,
+  (userId, prevUserId) => {
+    if (!userId && prevUserId) {
+      // User logged out - reset ALL stores
+      householdStore.$reset();
+      shoppingStore.$reset();
+      wishlistStore.$reset();
+    }
   },
 );
+```
+
+### Usage in Components
+
+```typescript
+// ✅ Correct - use store instance
+const shoppingStore = useShoppingStore();
+shoppingStore.loadLists(householdId);
+shoppingStore.setCurrentList(list);
+
+// ❌ Wrong - direct mutation
+shoppingStore.currentList = list;
+
+// ✅ Correct - destructure with storeToRefs for reactivity
+const { lists, loading } = storeToRefs(shoppingStore);
+
+// ❌ Wrong - loses reactivity
+const { lists } = shoppingStore;
 ```
 
 See [State Management](../frontend/state-management.md) for details.
@@ -744,7 +811,7 @@ vi.mock('@/features/shopping/infrastructure/shopping.repository', () => ({
 ```typescript
 vi.mock('@/features/shopping', () => ({
   shoppingService: {
-    getListsForHousehold: vi.fn().mockResolvedValue({ success: true, data: [...] }),
+    getHouseholdLists: vi.fn().mockResolvedValue({ success: true, data: [...] }),
   },
 }));
 ```

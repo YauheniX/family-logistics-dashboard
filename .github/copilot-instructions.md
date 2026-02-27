@@ -81,6 +81,55 @@ if (user.role === 'admin') {
 }
 ```
 
+### 5. Pinia State Management
+
+**Store IDs must be unique** across all stores. Check existing stores before creating new ones.
+
+```typescript
+// ✅ Good - unique store ID
+export const useShoppingStore = defineStore('shopping', () => { ... });
+
+// ❌ Bad - duplicate store ID (causes silent state sharing bugs)
+export const useAuthStore = defineStore('auth', { ... });  // In stores/auth.ts
+export const useAuthStore = defineStore('auth', { ... });  // In features/auth/ - COLLISION!
+```
+
+**Use setter actions instead of direct mutation:**
+
+```typescript
+// ✅ Good - use action
+shoppingStore.setCurrentList(list);
+
+// ❌ Bad - direct mutation breaks strict patterns
+shoppingStore.currentList = list;
+```
+
+**Reset stores on logout** to prevent data leakage between sessions:
+
+```typescript
+// ✅ Good - clear all stores on logout (in App.vue)
+householdStore.$reset();
+shoppingStore.$reset();
+wishlistStore.$reset();
+
+// ❌ Bad - only clearing some stores
+householdStore.setCurrentHousehold(null);
+// Shopping/wishlist data from previous user still present!
+```
+
+**Import from correct location:**
+
+```typescript
+// ✅ Good - use primary stores
+import { useAuthStore } from '@/stores/auth';
+import { useHouseholdStore } from '@/stores/household';
+import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
+import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
+
+// ❌ Bad - feature-internal auth store (ID: 'auth-feature', not for app use)
+import { useAuthStore } from '@/features/auth/presentation/auth.store';
+```
+
 ---
 
 ## Database Security Rules
@@ -303,6 +352,14 @@ Public  → Anonymous (public wishlists only)
 5. ❌ Inventing features not in domain
 6. ❌ Skipping tests
 
+### Pinia State Management
+
+7. ❌ Duplicate store IDs (e.g., two stores with `defineStore('auth', ...)`)
+8. ❌ Direct state mutation outside actions (`store.property = value`)
+9. ❌ Not resetting stores on logout (data leakage between sessions)
+10. ❌ Destructuring store properties without `storeToRefs()` (breaks reactivity)
+11. ❌ Importing from feature-internal stores instead of primary store paths
+
 ### Database Layer (SQL/Migrations)
 
 7. ❌ SECURITY DEFINER without `SET search_path = public`
@@ -325,6 +382,8 @@ Public  → Anonymous (public wishlists only)
 - [ ] Documentation updated
 - [ ] No legacy `families` references
 - [ ] All data scoped to household
+- [ ] Store IDs are unique (no duplicates)
+- [ ] Stores reset on logout via `$reset()`
 
 ### Database Code (if SQL changes)
 

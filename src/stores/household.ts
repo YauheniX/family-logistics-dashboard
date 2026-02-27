@@ -24,6 +24,9 @@ export const useHouseholdStore = defineStore('household', () => {
   const households = ref<Household[]>([]);
   const loading = ref(false);
 
+  // Track the user we're currently initializing for (prevents race conditions on logout)
+  const _activeUserId = ref<string | null>(null);
+
   // ─── Getters ─────────────────────────────────────────────
   const hasMultipleHouseholds = computed(() => households.value.length > 1);
   const currentRole = computed(() => currentHousehold.value?.role ?? null);
@@ -37,6 +40,17 @@ export const useHouseholdStore = defineStore('household', () => {
       currentRole.value === 'admin' ||
       currentRole.value === 'member',
   );
+
+  // ─── Reset ──────────────────────────────────────────────
+
+  /** Reset store to initial state (call on logout) */
+  function $reset() {
+    _activeUserId.value = null; // Cancel any in-flight operations
+    currentHousehold.value = null;
+    households.value = [];
+    loading.value = false;
+    localStorage.removeItem('current_household_id');
+  }
 
   // ─── Actions ─────────────────────────────────────────────
   function setCurrentHousehold(household: Household | null) {
@@ -83,6 +97,9 @@ export const useHouseholdStore = defineStore('household', () => {
       return;
     }
 
+    // Track active user to prevent race conditions on logout
+    _activeUserId.value = userId;
+
     if (isMockMode()) {
       initializeMockHouseholds();
       return;
@@ -96,6 +113,12 @@ export const useHouseholdStore = defineStore('household', () => {
         .select('role, households:household_id(id, name, slug)')
         .eq('user_id', userId)
         .eq('is_active', true);
+
+      // Guard: abort if user changed during async operation (e.g., logged out)
+      if (_activeUserId.value !== userId) {
+        console.log('[household] initializeForUser aborted: user changed during fetch');
+        return;
+      }
 
       if (error) {
         console.error('Failed to load households:', error);
@@ -164,6 +187,8 @@ export const useHouseholdStore = defineStore('household', () => {
     }
 
     ensuringForUserIds.add(userId);
+    // Track active user to prevent race conditions on logout
+    _activeUserId.value = userId;
     loading.value = true;
 
     try {
@@ -174,6 +199,12 @@ export const useHouseholdStore = defineStore('household', () => {
         .eq('user_id', userId)
         .eq('is_active', true)
         .limit(1);
+
+      // Guard: abort if user changed during async operation (e.g., logged out)
+      if (_activeUserId.value !== userId) {
+        console.log('[household] ensureDefaultHouseholdForUser aborted: user changed');
+        return null;
+      }
 
       if (membershipError) {
         console.error('[household] Failed to check existing memberships', membershipError);
@@ -191,6 +222,13 @@ export const useHouseholdStore = defineStore('household', () => {
 
       const defaultName = userEmail ? `${userEmail.split('@')[0]}'s household` : 'My Household';
       const created = await createHousehold(defaultName);
+
+      // Guard: abort if user changed during household creation
+      if (_activeUserId.value !== userId) {
+        console.log('[household] ensureDefaultHouseholdForUser aborted after create: user changed');
+        return null;
+      }
+
       if (!created) {
         console.error('[household] Default household creation failed for user', userId);
         toast.error('Could not create your default household');
@@ -269,6 +307,12 @@ export const useHouseholdStore = defineStore('household', () => {
         role: 'owner',
       };
 
+      // Guard: don't set state if user logged out during async operation
+      if (_activeUserId.value === null) {
+        console.log('[household] createHousehold aborted: user logged out');
+        return null;
+      }
+
       households.value.unshift(newHousehold);
       setCurrentHousehold(newHousehold);
       toast.success('Household created successfully');
@@ -289,6 +333,8 @@ export const useHouseholdStore = defineStore('household', () => {
     isOwnerOrAdmin,
     canManageMembers,
     canEditContent,
+    // Reset
+    $reset,
     // Actions
     setCurrentHousehold,
     loadHouseholds,
