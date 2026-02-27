@@ -419,4 +419,135 @@ describe('CityscapeView', () => {
       expect(wrapper.find('.container').classes()).toContain('grayscale');
     });
   });
+
+  describe('Keyboard Accessibility', () => {
+    it('triggers mail truck animation on Enter key', async () => {
+      const house1 = wrapper.find('.house-1');
+
+      await house1.trigger('keydown', { key: 'Enter' });
+      await nextTick();
+
+      expect(wrapper.find('.mailtruck').classes()).toContain('mailtruck-animation');
+    });
+
+    it('triggers bike animation on Space key', async () => {
+      const house2 = wrapper.find('.house-2');
+
+      await house2.trigger('keydown', { key: ' ' });
+      await nextTick();
+
+      expect(wrapper.find('.bike-container').classes()).toContain('bike-animation');
+    });
+
+    it('triggers rain on Enter key', async () => {
+      const house4 = wrapper.find('.house-4');
+
+      await house4.trigger('keydown', { key: 'Enter' });
+      await nextTick();
+
+      expect(wrapper.find('.rain').attributes('style')).toContain('display: block');
+    });
+
+    it('toggles night mode on Enter key', async () => {
+      const house5 = wrapper.find('.house-5');
+
+      await house5.trigger('keydown', { key: 'Enter' });
+      await nextTick();
+
+      expect(wrapper.find('.scene').classes()).toContain('night');
+    });
+
+    it('toggles smoke and shades on Space key', async () => {
+      const house3 = wrapper.find('.house-3-container');
+
+      await house3.trigger('keydown', { key: ' ' });
+      await nextTick();
+
+      expect(wrapper.find('.smoke').attributes('style')).toContain('display: block');
+    });
+
+    it('toggles grayscale on Enter key', async () => {
+      const lamp = wrapper.find('#streetlamp-1');
+
+      await lamp.trigger('keydown', { key: 'Enter' });
+      await nextTick();
+
+      expect(wrapper.find('.container').classes()).toContain('grayscale');
+    });
+
+    it('does not trigger on other keys', async () => {
+      const house1 = wrapper.find('.house-1');
+
+      await house1.trigger('keydown', { key: 'a' });
+      await nextTick();
+
+      expect(wrapper.find('.mailtruck').classes()).not.toContain('mailtruck-animation');
+    });
+
+    it('has proper ARIA attributes', () => {
+      expect(wrapper.find('.house-1').attributes('role')).toBe('button');
+      expect(wrapper.find('.house-1').attributes('tabindex')).toBe('0');
+      expect(wrapper.find('.house-1').attributes('aria-label')).toBeTruthy();
+    });
+  });
+
+  describe('Timer Cleanup', () => {
+    it('cleans up rain timer on unmount', async () => {
+      const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
+
+      // Trigger rain to start timer
+      await wrapper.find('.house-4').trigger('click');
+      await nextTick();
+
+      // Unmount component
+      wrapper.unmount();
+
+      // Timer should be cleared
+      expect(clearTimeoutSpy).toHaveBeenCalled();
+    });
+
+    it('cleans up bike timer on unmount', async () => {
+      const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
+
+      // Trigger bike to start timer
+      await wrapper.find('.house-2').trigger('click');
+      await nextTick();
+
+      // Unmount component
+      wrapper.unmount();
+
+      // Timer should be cleared
+      expect(clearTimeoutSpy).toHaveBeenCalled();
+    });
+
+    it('cleans up mail truck timer on unmount', async () => {
+      const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
+
+      // Trigger mail truck to start timer
+      await wrapper.find('.house-1').trigger('click');
+      await nextTick();
+
+      // Unmount component
+      wrapper.unmount();
+
+      // Timer should be cleared
+      expect(clearTimeoutSpy).toHaveBeenCalled();
+    });
+
+    it('handles unmount with multiple active timers', async () => {
+      const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
+
+      // Start multiple animations
+      await wrapper.find('.house-1').trigger('click');
+      await wrapper.find('.house-2').trigger('click');
+      await wrapper.find('.house-4').trigger('click');
+      await nextTick();
+
+      // Unmount component
+      wrapper.unmount();
+
+      // All timers should  be cleared (called at least 3 times)
+      expect(clearTimeoutSpy.mock.calls.length).toBeGreaterThanOrEqual(3);
+    });
+  });
 });
