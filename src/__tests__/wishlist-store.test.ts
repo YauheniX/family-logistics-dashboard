@@ -476,9 +476,14 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
+    // Seed non-empty initial state to ensure the error handler actually clears it
+    store.householdWishlists = [{ ...mockWishlist, id: 'stale-wishlist', title: 'Stale Data' }];
+
     await store.loadHouseholdWishlists('household-1', 'u1');
 
-    // Should fail silently and set empty array
+    // Verify service was called with correct args
+    expect(wishlistService.getHouseholdWishlists).toHaveBeenCalledWith('household-1', 'u1');
+    // Should fail silently and set empty array (clearing previous state)
     expect(store.householdWishlists).toEqual([]);
   });
 

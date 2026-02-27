@@ -79,13 +79,19 @@ begin
     raise exception 'Item not found';
   end if;
 
+  -- FIRST: Check visibility - private wishlists cannot have reservations at all
+  -- This check happens BEFORE owner check to ensure consistent behavior
+  if v_wishlist_visibility = 'private' then
+    raise exception 'Cannot reserve items from private wishlists';
+  end if;
+
   -- Check if caller is the wishlist owner
   if v_caller_uid is not null and v_caller_uid = v_wishlist_user_id then
     v_is_owner := true;
     v_can_access := true;
   end if;
 
-  -- Determine access based on visibility
+  -- Determine access based on visibility (private already handled above)
   if not v_can_access then
     case v_wishlist_visibility
       when 'public' then
@@ -110,9 +116,7 @@ begin
           raise exception 'You must be a member of this household to reserve items';
         end if;
       
-      when 'private' then
-        -- Private wishlists: only owner can access (already checked above)
-        raise exception 'Cannot reserve items from private wishlists';
+      -- Note: 'private' case already handled above before owner check
       
       else
         raise exception 'Unknown wishlist visibility';
@@ -171,12 +175,15 @@ begin
   end if;
 
   -- If unreserving with email verification, check email matches (unless owner or item has no email)
+  -- Only enforce email match if the reservation actually has an email stored
   if not p_reserved and not v_is_owner and p_email is not null and trim(p_email) <> '' then
-    if not exists (
+    -- Check if reservation has an email that doesn't match the provided one
+    if exists (
       select 1 from wishlist_items
       where id = p_item_id 
-        and reserved_by_email = p_email
         and is_reserved = true
+        and reserved_by_email is not null  -- Only check match if reservation HAS email
+        and reserved_by_email <> p_email   -- And it doesn't match
     ) then
       raise exception 'Email does not match the reservation';
     end if;
