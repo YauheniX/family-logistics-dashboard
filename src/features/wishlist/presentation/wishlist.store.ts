@@ -20,6 +20,9 @@ export const useWishlistStore = defineStore('wishlist', () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
+  // Request tracking to prevent stale data
+  let currentHouseholdRequestId = 0;
+
   // ─── Getters ─────────────────────────────────────────────
   const reservedItems = computed(() => items.value.filter((i) => i.is_reserved));
 
@@ -64,6 +67,49 @@ export const useWishlistStore = defineStore('wishlist', () => {
       }
     } finally {
       loading.value = false;
+    }
+  }
+
+  /**
+   * Load wishlists for a user filtered by household.
+   * Use this when you want to show only wishlists for the currently selected household.
+   * Uses request token pattern to prevent stale data from out-of-order responses.
+   */
+  async function loadWishlistsByHousehold(userId: string, householdId: string) {
+    // Increment request ID to track this request
+    const requestId = ++currentHouseholdRequestId;
+
+    // Clear existing data immediately to prevent showing stale data
+    wishlists.value = [];
+    loading.value = true;
+    error.value = null;
+
+    try {
+      const response = await wishlistService.getUserWishlistsByHousehold(userId, householdId);
+
+      // Only update state if this is still the latest request
+      if (requestId !== currentHouseholdRequestId) {
+        return; // Stale response, ignore
+      }
+
+      if (response.error) {
+        error.value = response.error.message;
+        wishlists.value = []; // Clear on error
+        useToastStore().error(`Failed to load wishlists: ${response.error.message}`);
+      } else {
+        wishlists.value = response.data ?? [];
+      }
+    } catch (err) {
+      // Only update state if this is still the latest request
+      if (requestId === currentHouseholdRequestId) {
+        error.value = err instanceof Error ? err.message : 'Failed to load wishlists';
+        wishlists.value = []; // Clear on error
+      }
+    } finally {
+      // Only reset loading if this is still the latest request
+      if (requestId === currentHouseholdRequestId) {
+        loading.value = false;
+      }
     }
   }
 
@@ -258,6 +304,7 @@ export const useWishlistStore = defineStore('wishlist', () => {
     $reset,
     // Wishlist Actions
     loadWishlists,
+    loadWishlistsByHousehold,
     loadHouseholdWishlists,
     loadWishlist,
     loadWishlistBySlug,

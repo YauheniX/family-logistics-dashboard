@@ -32,6 +32,50 @@ Personal wishlists allow users to create and share gift wishlists with anyone vi
 
 ---
 
+## Household Scoping
+
+Wishlists are scoped to the **currently selected household** in the UI:
+
+### Creating Wishlists
+
+When a user creates a wishlist, it is automatically associated with their **currently selected household**:
+
+```typescript
+// In WishlistListView.vue
+const handleCreate = async (dto: CreateWishlistDto) => {
+  await wishlistStore.createWishlist({
+    ...dto,
+    household_id: currentHouseholdId.value, // Uses selected household
+    member_id: currentMember.id,
+  });
+};
+```
+
+### Viewing Wishlists
+
+The wishlist list displays only wishlists belonging to the **current household**:
+
+```typescript
+// When household changes, reload wishlists
+watch(currentHouseholdId, (newHouseholdId) => {
+  if (userId && newHouseholdId) {
+    wishlistStore.loadWishlistsByHousehold(userId, newHouseholdId);
+  }
+});
+```
+
+### Switching Households
+
+When users switch households:
+
+1. **Dashboard** automatically reloads wishlists for the new household
+2. **Wishlist List** automatically filters to show only that household's wishlists
+3. **Creating** a new wishlist assigns it to the newly selected household
+
+This ensures proper **multi-tenant isolation** - users only see and create wishlists within their current household context.
+
+---
+
 ## Reservation System (Email-Based)
 
 ### User Flow
@@ -249,8 +293,14 @@ returns jsonb
 
 ```typescript
 class WishlistService {
-  // Get user's wishlists
+  // Get user's wishlists (all households)
   async getUserWishlists(userId: string): Promise<ApiResponse<Wishlist[]>>;
+
+  // Get user's wishlists filtered by household (recommended)
+  async getUserWishlistsByHousehold(
+    userId: string,
+    householdId: string,
+  ): Promise<ApiResponse<Wishlist[]>>;
 
   // Get single wishlist (authenticated)
   async getWishlist(id: string): Promise<ApiResponse<Wishlist>>;

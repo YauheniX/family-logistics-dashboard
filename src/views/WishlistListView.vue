@@ -11,7 +11,13 @@
             Create and manage your personal wishlists.
           </p>
         </div>
-        <BaseButton variant="primary" class="w-full sm:w-auto" @click="showCreateModal = true">
+        <BaseButton
+          variant="primary"
+          class="w-full sm:w-auto"
+          :disabled="!currentHouseholdId"
+          :title="!currentHouseholdId ? 'Select a household first' : undefined"
+          @click="showCreateModal = true"
+        >
           ➕ Create Wishlist
         </BaseButton>
       </div>
@@ -82,8 +88,6 @@
       v-else
       title="No wishlists yet"
       description="Create your first wishlist to start tracking gift ideas."
-      cta="Create a Wishlist"
-      @action="showCreateModal = true"
     />
 
     <ModalDialog :open="showCreateModal" title="Create Wishlist" @close="showCreateModal = false">
@@ -118,7 +122,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
+import { storeToRefs } from 'pinia';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
@@ -127,6 +132,8 @@ import EmptyState from '@/components/shared/EmptyState.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import ModalDialog from '@/components/shared/ModalDialog.vue';
 import { useAuthStore } from '@/stores/auth';
+import { useHouseholdStore } from '@/stores/household';
+import { useToastStore } from '@/stores/toast';
 import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
 import { wishlistService } from '@/features/wishlist/domain/wishlist.service';
 import { isValidUrl } from '@/utils/validation';
@@ -134,7 +141,12 @@ import { fetchLinkPreview } from '@/composables/useLinkPreview';
 import { getVisibilityVariant, getVisibilityLabel } from '@/composables/useVisibilityDisplay';
 
 const authStore = useAuthStore();
+const householdStore = useHouseholdStore();
 const wishlistStore = useWishlistStore();
+
+// Use storeToRefs for proper reactivity with Pinia
+const { currentHousehold } = storeToRefs(householdStore);
+const currentHouseholdId = computed(() => currentHousehold.value?.id);
 
 const showCreateModal = ref(false);
 const newTitle = ref('');
@@ -145,10 +157,15 @@ const previewImages = ref<Record<string, string>>({});
 
 const handleCreate = async () => {
   if (!newTitle.value.trim()) return;
+  if (!currentHouseholdId.value) {
+    useToastStore().warning('Please select a household first');
+    return;
+  }
   const created = await wishlistStore.createWishlist({
     title: newTitle.value.trim(),
     description: newDescription.value.trim() || null,
     visibility: newVisibility.value,
+    household_id: currentHouseholdId.value,
   });
   if (created) {
     newTitle.value = '';
@@ -230,25 +247,16 @@ const loadWishlistPreviews = async () => {
   previewImages.value = images;
 };
 
+// Load wishlists when user or household changes
 watch(
-  () => authStore.user?.id,
-  async (userId) => {
-    if (userId) {
-      await wishlistStore.loadWishlists(userId);
+  [() => authStore.user?.id, currentHouseholdId],
+  async ([userId, householdId]) => {
+    if (userId && householdId) {
+      await wishlistStore.loadWishlistsByHousehold(userId, householdId);
       // Load previews after wishlists are loaded
       await loadWishlistPreviews();
     }
   },
   { immediate: true },
-);
-
-// Also reload previews when wishlists change
-watch(
-  () => wishlistStore.wishlists.length,
-  () => {
-    if (wishlistStore.wishlists.length > 0) {
-      loadWishlistPreviews();
-    }
-  },
 );
 </script>

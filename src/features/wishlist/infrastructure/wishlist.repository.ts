@@ -49,6 +49,27 @@ export class WishlistRepository extends BaseRepository<
     return result;
   }
 
+  /**
+   * Find wishlists by user ID and household ID
+   * Returns only wishlists for the specified household
+   */
+  async findByUserIdAndHouseholdId(
+    userId: string,
+    householdId: string,
+  ): Promise<ApiResponse<Wishlist[]>> {
+    const result = await this.findAll((builder) =>
+      builder
+        .eq('user_id', userId)
+        .eq('household_id', householdId)
+        .order('created_at', { ascending: false }),
+    );
+    // Add is_public computed property for frontend compatibility
+    if (result.data) {
+      return { ...result, data: result.data.map(addIsPublic) };
+    }
+    return result;
+  }
+
   async create(dto: CreateWishlistDto & { share_slug: string }): Promise<ApiResponse<Wishlist>> {
     const userIdResponse = await this.getAuthenticatedUserId();
     if (userIdResponse.error || !userIdResponse.data) {

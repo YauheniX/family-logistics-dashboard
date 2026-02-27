@@ -94,6 +94,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { storeToRefs } from 'pinia';
 import { RouterLink, useRouter } from 'vue-router';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
@@ -117,6 +118,10 @@ const wishlistStore = useWishlistStore();
 const router = useRouter();
 const { userDisplayName, userAvatarUrl: profileAvatarUrl } = useUserProfile();
 
+// Use storeToRefs for proper reactivity with Pinia
+const { currentHousehold } = storeToRefs(householdStore);
+const currentHouseholdId = computed(() => currentHousehold.value?.id);
+
 // Track last loaded household to prevent duplicate loads
 const lastLoadedHouseholdId = ref<string | null>(null);
 
@@ -135,35 +140,9 @@ const userName = computed(() => {
 const allActiveLists = computed(() => shoppingStore.lists.filter((l) => l.status === 'active'));
 
 async function loadDashboardData(userId: string) {
-  await Promise.all([
-    householdEntityStore.loadHouseholds(userId),
-    wishlistStore.loadWishlists(userId),
-  ]);
-
-  // Load shopping lists for current household if one is selected
-  // The watcher handles subsequent household switches
-  const currentHouseholdId = householdStore.currentHousehold?.id;
-
-  // Clear tracking if household is deselected
-  if (!currentHouseholdId) {
-    lastLoadedHouseholdId.value = null;
-    return;
-  }
-
-  // Skip if already loaded
-  if (currentHouseholdId === lastLoadedHouseholdId.value) {
-    return;
-  }
-
-  // Only update tracking after successful load
-  try {
-    await shoppingStore.loadLists(currentHouseholdId);
-    // Load household wishlists
-    await wishlistStore.loadHouseholdWishlists(currentHouseholdId, userId);
-    lastLoadedHouseholdId.value = currentHouseholdId;
-  } catch (error) {
-    console.error('Failed to load shopping lists:', error);
-  }
+  // Load households only - the watcher on currentHouseholdId handles
+  // loading wishlists and shopping lists for the current household
+  await householdEntityStore.loadHouseholds(userId);
 }
 
 async function handleInvitationAccepted() {
@@ -192,31 +171,31 @@ watch(
 );
 
 // Watch for household switches
-watch(
-  () => householdStore.currentHousehold?.id,
-  async (currentHouseholdId) => {
-    // Clear tracking if household is deselected
-    if (!currentHouseholdId) {
-      lastLoadedHouseholdId.value = null;
-      return;
-    }
+watch(currentHouseholdId, async (householdId) => {
+  // Clear tracking if household is deselected
+  if (!householdId) {
+    lastLoadedHouseholdId.value = null;
+    return;
+  }
 
-    // Skip if already loaded
-    if (currentHouseholdId === lastLoadedHouseholdId.value) {
-      return;
-    }
+  // Skip if already loaded
+  if (householdId === lastLoadedHouseholdId.value) {
+    return;
+  }
 
-    // Only update tracking after successful load
-    try {
-      await shoppingStore.loadLists(currentHouseholdId);
-      // Load household wishlists if user is logged in
-      if (authStore.user?.id) {
-        await wishlistStore.loadHouseholdWishlists(currentHouseholdId, authStore.user.id);
-      }
-      lastLoadedHouseholdId.value = currentHouseholdId;
-    } catch (error) {
-      console.error('Failed to load shopping lists:', error);
-    }
-  },
-);
+  // Only update tracking after successful load
+  try {
+    const userId = authStore.user?.id;
+    if (!userId) return;
+
+    await Promise.all([
+      shoppingStore.loadLists(householdId),
+      wishlistStore.loadWishlistsByHousehold(userId, householdId),
+      wishlistStore.loadHouseholdWishlists(householdId, userId),
+    ]);
+    lastLoadedHouseholdId.value = householdId;
+  } catch (error) {
+    console.error('Failed to load data for household:', error);
+  }
+});
 </script>
