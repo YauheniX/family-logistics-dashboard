@@ -140,34 +140,9 @@ const userName = computed(() => {
 const allActiveLists = computed(() => shoppingStore.lists.filter((l) => l.status === 'active'));
 
 async function loadDashboardData(userId: string) {
-  // Load households first (this will set currentHousehold)
+  // Load households only - the watcher on currentHouseholdId handles
+  // loading wishlists and shopping lists for the current household
   await householdEntityStore.loadHouseholds(userId);
-
-  // The watcher handles loading wishlists and shopping lists for current household
-  const householdId = currentHouseholdId.value;
-
-  // Clear tracking if household is deselected
-  if (!householdId) {
-    lastLoadedHouseholdId.value = null;
-    return;
-  }
-
-  // Skip if already loaded
-  if (householdId === lastLoadedHouseholdId.value) {
-    return;
-  }
-
-  // Only update tracking after successful load
-  try {
-    await Promise.all([
-      shoppingStore.loadLists(householdId),
-      wishlistStore.loadWishlistsByHousehold(userId, householdId),
-      wishlistStore.loadHouseholdWishlists(householdId, userId),
-    ]);
-    lastLoadedHouseholdId.value = householdId;
-  } catch (error) {
-    console.error('Failed to load dashboard data:', error);
-  }
 }
 
 async function handleInvitationAccepted() {

@@ -11,7 +11,13 @@
             Create and manage your personal wishlists.
           </p>
         </div>
-        <BaseButton variant="primary" class="w-full sm:w-auto" @click="showCreateModal = true">
+        <BaseButton
+          variant="primary"
+          class="w-full sm:w-auto"
+          :disabled="!currentHouseholdId"
+          :title="!currentHouseholdId ? 'Select a household first' : undefined"
+          @click="showCreateModal = true"
+        >
           ➕ Create Wishlist
         </BaseButton>
       </div>
@@ -127,6 +133,7 @@ import LoadingState from '@/components/shared/LoadingState.vue';
 import ModalDialog from '@/components/shared/ModalDialog.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useHouseholdStore } from '@/stores/household';
+import { useToastStore } from '@/stores/toast';
 import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
 import { wishlistService } from '@/features/wishlist/domain/wishlist.service';
 import { isValidUrl } from '@/utils/validation';
@@ -151,7 +158,8 @@ const previewImages = ref<Record<string, string>>({});
 const handleCreate = async () => {
   if (!newTitle.value.trim()) return;
   if (!currentHouseholdId.value) {
-    return; // Cannot create without a household
+    useToastStore().warning('Please select a household first');
+    return;
   }
   const created = await wishlistStore.createWishlist({
     title: newTitle.value.trim(),
