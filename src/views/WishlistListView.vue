@@ -259,14 +259,4 @@ watch(
   },
   { immediate: true },
 );
-
-// Also reload previews when wishlists change
-watch(
-  () => wishlistStore.wishlists.length,
-  () => {
-    if (wishlistStore.wishlists.length > 0) {
-      loadWishlistPreviews();
-    }
-  },
-);
 </script>
