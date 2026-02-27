@@ -139,7 +139,7 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.wishlists = [mockWishlist];
+    store.$patch({ wishlists: [mockWishlist] });
     const result = await store.updateWishlist('w1', { title: 'Updated Wishes' });
 
     expect(result).toEqual(updated);
@@ -155,7 +155,7 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.wishlists = [mockWishlist];
+    store.$patch({ wishlists: [mockWishlist] });
     const result = await store.updateWishlist('w1', { title: 'Updated Wishes' });
 
     expect(result).toBeNull();
@@ -172,7 +172,7 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.wishlists = [mockWishlist];
+    store.$patch({ wishlists: [mockWishlist] });
     await store.removeWishlist('w1');
 
     expect(store.wishlists).toEqual([]);
@@ -186,7 +186,7 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.wishlists = [mockWishlist];
+    store.$patch({ wishlists: [mockWishlist] });
     await store.removeWishlist('w1');
 
     expect(store.wishlists).toContainEqual(mockWishlist);
@@ -231,7 +231,7 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.items = [mockItem];
+    store.$patch({ items: [mockItem] });
     const result = await store.updateItem('wi1', { title: 'Updated Headphones' });
 
     expect(result).toEqual(updated);
@@ -246,7 +246,7 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.items = [mockItem];
+    store.$patch({ items: [mockItem] });
     const result = await store.updateItem('wi1', { title: 'Updated Headphones' });
 
     expect(result).toBeNull();
@@ -263,7 +263,7 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.items = [mockItem];
+    store.$patch({ items: [mockItem] });
     await store.removeItem('wi1');
 
     expect(store.items).toEqual([]);
@@ -277,7 +277,7 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.items = [mockItem];
+    store.$patch({ items: [mockItem] });
     await store.removeItem('wi1');
 
     expect(store.items).toContainEqual(mockItem);
@@ -420,7 +420,7 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.items = [mockItem];
+    store.$patch({ items: [mockItem] });
     const result = await store.reserveItem('wi1', 'Gift Giver', 'gift@example.com');
 
     expect(result?.is_reserved).toBe(true);
@@ -439,7 +439,7 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.items = [mockItem];
+    store.$patch({ items: [mockItem] });
     const result = await store.reserveItem('wi1', 'Gift Giver', 'gift@example.com');
 
     expect(result).toBeNull();
@@ -477,7 +477,9 @@ describe('Wishlist Store', () => {
 
     const store = useWishlistStore();
     // Seed non-empty initial state to ensure the error handler actually clears it
-    store.householdWishlists = [{ ...mockWishlist, id: 'stale-wishlist', title: 'Stale Data' }];
+    store.$patch({
+      householdWishlists: [{ ...mockWishlist, id: 'stale-wishlist', title: 'Stale Data' }],
+    });
 
     await store.loadHouseholdWishlists('household-1', 'u1');
 
@@ -506,7 +508,7 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.items = [householdItem];
+    store.$patch({ items: [householdItem] });
     const result = await store.reserveItem(
       'wi-household',
       'Household Member',
@@ -526,7 +528,7 @@ describe('Wishlist Store', () => {
     });
 
     const store = useWishlistStore();
-    store.items = [mockItem];
+    store.$patch({ items: [mockItem] });
     const result = await store.reserveItem('wi1', 'Outsider', 'outsider@example.com');
 
     expect(result).toBeNull();
@@ -538,7 +540,7 @@ describe('Wishlist Store', () => {
   it('computes reservedItems and unreservedItems', () => {
     const store = useWishlistStore();
     const reserved = { ...mockItem, id: 'wi2', is_reserved: true, reserved_by_email: 'a@b.com' };
-    store.items = [mockItem, reserved];
+    store.$patch({ items: [mockItem, reserved] });
 
     expect(store.reservedItems).toEqual([reserved]);
     expect(store.unreservedItems).toEqual([mockItem]);
@@ -547,7 +549,7 @@ describe('Wishlist Store', () => {
   it('computes itemsByPriority', () => {
     const store = useWishlistStore();
     const lowItem = { ...mockItem, id: 'wi2', priority: 'low' as const };
-    store.items = [mockItem, lowItem];
+    store.$patch({ items: [mockItem, lowItem] });
 
     expect(store.itemsByPriority['high']).toEqual([mockItem]);
     expect(store.itemsByPriority['low']).toEqual([lowItem]);
