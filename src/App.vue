@@ -147,7 +147,10 @@ onMounted(() => {
     console.log('[App.vue] onMounted - Loading user profile for:', userId);
     loadUserProfile(userId);
     householdStore.ensureDefaultHouseholdForUser(userId, email).finally(() => {
-      householdStore.initializeForUser(userId);
+      // Guard: only proceed if same user is still logged in
+      if (authStore.user?.id === userId) {
+        householdStore.initializeForUser(userId);
+      }
     });
   }
 });
@@ -162,7 +165,10 @@ watch(
       console.log('[App.vue] watch - Loading user profile for:', userId);
       loadUserProfile(userId);
       householdStore.ensureDefaultHouseholdForUser(userId, email).finally(() => {
-        householdStore.initializeForUser(userId);
+        // Guard: only proceed if same user is still logged in
+        if (authStore.user?.id === userId) {
+          householdStore.initializeForUser(userId);
+        }
       });
     } else if (!userId && prevUserId) {
       // User just logged out - clear ALL store state to prevent data leakage

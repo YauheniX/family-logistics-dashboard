@@ -599,7 +599,7 @@ See [RLS Policies](../backend/rls-policies.md) for complete policy documentation
 | `wishlist`         | `@/features/wishlist/presentation/wishlist.store.ts`   | Wishlists & items             |
 | `toast`            | `@/stores/toast.ts`                                    | Toast notifications           |
 
-**⚠️ CRITICAL**: Store IDs must be unique across the entire application. Duplicate IDs cause silent state sharing bugs.
+**⚠️ CRITICAL**: Store IDs must be unique across the entire application. Duplicate IDs cause silent state-sharing bugs.
 
 ### Store Organization
 
@@ -647,7 +647,7 @@ export const useShoppingStore = defineStore('shopping', () => {
   // ─── Async Actions ────────────────────────────────────
   async function loadLists(householdId: string) {
     loading.value = true;
-    const result = await shoppingService.getListsForHousehold(householdId);
+    const result = await shoppingService.getHouseholdLists(householdId);
     if (result.success) {
       lists.value = result.data;
     }
@@ -811,7 +811,7 @@ vi.mock('@/features/shopping/infrastructure/shopping.repository', () => ({
 ```typescript
 vi.mock('@/features/shopping', () => ({
   shoppingService: {
-    getListsForHousehold: vi.fn().mockResolvedValue({ success: true, data: [...] }),
+    getHouseholdLists: vi.fn().mockResolvedValue({ success: true, data: [...] }),
   },
 }));
 ```
