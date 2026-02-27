@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { isMockMode } from '@/config/backend.config';
 import { supabase } from '@/features/shared/infrastructure/supabase.client';
 import { useToastStore } from '@/stores/toast';
+import { householdService } from '@/features/household/domain/household.service';
 
 export interface Household {
   id: string;
@@ -348,19 +349,19 @@ export const useHouseholdStore = defineStore('household', () => {
 
     loading.value = true;
     try {
-      const { error: deleteError } = await supabase
-        .from('households')
-        .delete()
-        .eq('id', householdId);
+      // Capture the initiating user ID before async operation
+      const initiatingUserId = _activeUserId.value;
 
-      if (deleteError) {
-        toast.error(`Failed to delete household: ${deleteError.message}`);
+      const response = await householdService.deleteHousehold(householdId);
+
+      if (response.error) {
+        toast.error(`Failed to delete household: ${response.error.message}`);
         return false;
       }
 
       // Guard: abort if user changed during async operation
-      if (_activeUserId.value === null) {
-        console.log('[household] deleteHousehold aborted: user logged out');
+      if (_activeUserId.value !== initiatingUserId) {
+        console.log('[household] deleteHousehold aborted: user changed during operation');
         return false;
       }
 

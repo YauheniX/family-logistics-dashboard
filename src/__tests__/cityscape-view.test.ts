@@ -214,6 +214,8 @@ describe('CityscapeView', () => {
     });
 
     afterEach(() => {
+      vi.clearAllTimers();
+      vi.useRealTimers();
       vi.restoreAllMocks();
     });
 
@@ -264,12 +266,19 @@ describe('CityscapeView', () => {
     it('has touch-friendly classes', () => {
       const viewport = wrapper.find('.cityscape-viewport');
       expect(viewport.exists()).toBe(true);
+      // In jsdom, scoped CSS isn't applied, so we verify structure exists
+      // The actual CSS defines overflow-x: auto and max-width for scrollability
+      expect(viewport.element.tagName).toBe('DIV');
+      expect(viewport.classes()).toContain('cityscape-viewport');
     });
 
     it('prevents text selection on wrapper', () => {
       const wrapperDiv = wrapper.find('.wrapper');
       expect(wrapperDiv.exists()).toBe(true);
-      // Check that user-select: none is applied via CSS
+      // In jsdom, scoped CSS isn't applied, so we verify structure exists
+      // The actual CSS defines user-select: none for better mobile UX
+      expect(wrapperDiv.element.tagName).toBe('DIV');
+      expect(wrapperDiv.classes()).toContain('wrapper');
     });
   });
 

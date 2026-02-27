@@ -214,6 +214,7 @@ const profileForm = ref({
 const errors = ref<{ name?: string }>({});
 const saving = ref(false);
 const loading = ref(true);
+const originalName = ref('');
 
 const preferences = ref({
   emailNotifications: true,
@@ -265,6 +266,11 @@ const handleSaveProfile = async () => {
     return;
   }
 
+  // Dirty check: skip save if name unchanged
+  if (profileForm.value.name.trim() === originalName.value) {
+    return;
+  }
+
   if (!authStore.user?.id) {
     toastStore.error('User not authenticated');
     return;
@@ -286,6 +292,7 @@ const handleSaveProfile = async () => {
     if (result.data) {
       profileForm.value.name = result.data.display_name || '';
       profileForm.value.avatarUrl = result.data.avatar_url;
+      originalName.value = result.data.display_name || '';
 
       // Refresh global user profile to update header
       await loadUserProfile(authStore.user.id);
@@ -320,9 +327,11 @@ onMounted(async () => {
       if (!result.error && result.data) {
         profileForm.value.name = result.data.display_name;
         profileForm.value.avatarUrl = result.data.avatar_url;
+        originalName.value = result.data.display_name || '';
       } else if (!result.data) {
         // Profile doesn't exist yet, use email as default
         profileForm.value.name = authStore.user.email?.split('@')[0] || '';
+        originalName.value = profileForm.value.name;
       }
     } catch {
       // Handle exceptions from repository

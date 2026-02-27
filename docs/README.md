@@ -28,11 +28,13 @@ Welcome to the documentation for the Family Shopping & Wishlist Planner.
 - [Household Management](features/household-management.md) - Creating and managing households
 - [Shopping Lists](features/shopping-lists.md) - Shared shopping lists
 - [Wishlists](features/wishlists.md) - Personal wishlists with public sharing
+- [Cityscape App](features/cityscape.md) - Interactive animated city scene ✅
 - [Mock Mode](features/mock-mode.md) - Frontend-only mode without backend ✅
 
 ### Development
 
 - [Project Structure](frontend/project-structure.md) - Folder organization
+- [Navigation Structure](frontend/navigation.md) - Sidebar menu and routing ✅
 - [Adding Features](development/adding-features.md) - Feature development guide
 - [Repository Pattern](development/repository-pattern.md) - Data access pattern
 - [Testing Guide](testing/overview.md) - Testing strategy
@@ -55,7 +57,7 @@ Welcome to the documentation for the Family Shopping & Wishlist Planner.
 
 ## 📖 Documentation Structure
 
-```
+```plaintext
 docs/
 ├── getting-started/     # Setup and installation
 ├── architecture/        # System architecture
@@ -140,7 +142,7 @@ A **production-grade Family Planning System** with:
 
 This documentation is **actively maintained** and reflects the **current state** of the codebase.
 
-**Last Updated**: February 21, 2026
+**Last Updated**: January 2025
 
 ### Old Documentation
 

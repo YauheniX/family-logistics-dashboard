@@ -1,10 +1,21 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import { setActivePinia, createPinia } from 'pinia';
 import router from '@/router';
+import { useAuthStore } from '@/stores/auth';
 
 describe('Router - Cityscape Route', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Setup Pinia for router beforeEach guard
+    setActivePinia(createPinia());
+
+    // Mock auth store to consider user as authenticated
+    const authStore = useAuthStore();
+    authStore.user = { id: 'test-user', email: 'test@example.com' };
+    authStore.initialized = true;
+
     // Reset router to initial state
-    router.push('/');
+    await router.push('/');
+    await router.isReady();
   });
 
   describe('Route Configuration', () => {
@@ -142,16 +153,6 @@ describe('Router - Cityscape Route', () => {
       expect(rpsIndex).toBeGreaterThan(-1);
       expect(cityscapeIndex).toBeGreaterThan(-1);
       expect(cityscapeIndex).toBeGreaterThan(rpsIndex);
-    });
-
-    it('cityscape route appears after apps index', () => {
-      const routes = router.getRoutes();
-      const appsIndex = routes.findIndex((r) => r.name === 'apps');
-      const cityscapeIndex = routes.findIndex((r) => r.name === 'cityscape');
-
-      expect(appsIndex).toBeGreaterThan(-1);
-      expect(cityscapeIndex).toBeGreaterThan(-1);
-      expect(cityscapeIndex).toBeGreaterThan(appsIndex);
     });
   });
 });

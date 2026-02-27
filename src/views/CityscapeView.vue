@@ -31,7 +31,14 @@
             </div>
 
             <div class="houses">
-              <div class="house-1" @click="triggerMailTruck">
+              <div
+                class="house-1"
+                tabindex="0"
+                role="button"
+                aria-label="Trigger mail truck animation"
+                @click="triggerMailTruck"
+                @keydown="(e) => handleKeyDown(e, triggerMailTruck)"
+              >
                 <div class="house-1-windows">
                   <div class="house-windows-row">
                     <div class="window house-1-window"></div>
@@ -48,7 +55,14 @@
                 </div>
               </div>
 
-              <div class="house-2" @click="triggerBike">
+              <div
+                class="house-2"
+                tabindex="0"
+                role="button"
+                aria-label="Trigger bike animation"
+                @click="triggerBike"
+                @keydown="(e) => handleKeyDown(e, triggerBike)"
+              >
                 <div class="tank">
                   <div class="tank-details"></div>
                 </div>
@@ -73,7 +87,14 @@
                 <div class="house-2-rack"></div>
               </div>
 
-              <div class="house-3-container" @click="toggleHouse3">
+              <div
+                class="house-3-container"
+                tabindex="0"
+                role="button"
+                aria-label="Toggle chimney smoke and window shades"
+                @click="toggleHouse3"
+                @keydown="(e) => handleKeyDown(e, toggleHouse3)"
+              >
                 <div class="house-3">
                   <div class="house-3-chimney">
                     <div class="smoke" :style="{ display: showSmoke ? 'block' : 'none' }">
@@ -125,7 +146,14 @@
                 </div>
               </div>
 
-              <div class="house-4" @click="triggerRain">
+              <div
+                class="house-4"
+                tabindex="0"
+                role="button"
+                aria-label="Trigger rain animation"
+                @click="triggerRain"
+                @keydown="(e) => handleKeyDown(e, triggerRain)"
+              >
                 <div class="house-4-window-circle"></div>
                 <div class="house-4-windows">
                   <div class="house-windows-row">
@@ -141,7 +169,14 @@
                 </div>
               </div>
 
-              <div class="house-5" @click="toggleNight">
+              <div
+                class="house-5"
+                tabindex="0"
+                role="button"
+                aria-label="Toggle night mode"
+                @click="toggleNight"
+                @keydown="(e) => handleKeyDown(e, toggleNight)"
+              >
                 <div class="house-5-roof">
                   <div class="tank">
                     <div class="tank-details"></div>
@@ -180,9 +215,13 @@
             <div
               id="streetlamp-1"
               class="streetlamp"
+              tabindex="0"
+              role="button"
+              aria-label="Toggle grayscale filter"
               @mouseenter="isGrayscale = true"
               @mouseleave="isGrayscale = false"
               @click="toggleGrayscale"
+              @keydown="(e) => handleKeyDown(e, toggleGrayscale)"
             >
               <div class="streetlamp-glow"></div>
             </div>
@@ -190,9 +229,13 @@
             <div
               id="streetlamp-2"
               class="streetlamp"
+              tabindex="0"
+              role="button"
+              aria-label="Toggle grayscale filter"
               @mouseenter="isGrayscale = true"
               @mouseleave="isGrayscale = false"
               @click="toggleGrayscale"
+              @keydown="(e) => handleKeyDown(e, toggleGrayscale)"
             >
               <div class="streetlamp-glow"></div>
             </div>
@@ -236,7 +279,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onBeforeUnmount } from 'vue';
 
 const isGrayscale = ref(false);
 const isNight = ref(false);
@@ -246,10 +289,21 @@ const showShades = ref(true);
 const bikeAnimating = ref(false);
 const truckAnimating = ref(false);
 
+// Timer IDs for cleanup
+const rainTimer = ref<number | null>(null);
+const bikeTimer = ref<number | null>(null);
+const truckTimer = ref<number | null>(null);
+
 const triggerRain = () => {
+  // Clear any existing timer
+  if (rainTimer.value !== null) {
+    clearTimeout(rainTimer.value);
+  }
+
   showRain.value = true;
-  setTimeout(() => {
+  rainTimer.value = window.setTimeout(() => {
     showRain.value = false;
+    rainTimer.value = null;
   }, 2500);
 };
 
@@ -259,16 +313,28 @@ const toggleHouse3 = () => {
 };
 
 const triggerBike = () => {
+  // Clear any existing timer
+  if (bikeTimer.value !== null) {
+    clearTimeout(bikeTimer.value);
+  }
+
   bikeAnimating.value = true;
-  setTimeout(() => {
+  bikeTimer.value = window.setTimeout(() => {
     bikeAnimating.value = false;
+    bikeTimer.value = null;
   }, 6000);
 };
 
 const triggerMailTruck = () => {
+  // Clear any existing timer
+  if (truckTimer.value !== null) {
+    clearTimeout(truckTimer.value);
+  }
+
   truckAnimating.value = true;
-  setTimeout(() => {
+  truckTimer.value = window.setTimeout(() => {
     truckAnimating.value = false;
+    truckTimer.value = null;
   }, 5000);
 };
 
@@ -279,6 +345,27 @@ const toggleNight = () => {
 const toggleGrayscale = () => {
   isGrayscale.value = !isGrayscale.value;
 };
+
+// Keyboard accessibility helper
+const handleKeyDown = (event: KeyboardEvent, callback: () => void) => {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault(); // Prevent page scroll on Space
+    callback();
+  }
+};
+
+// Cleanup timers on component unmount
+onBeforeUnmount(() => {
+  if (rainTimer.value !== null) {
+    clearTimeout(rainTimer.value);
+  }
+  if (bikeTimer.value !== null) {
+    clearTimeout(bikeTimer.value);
+  }
+  if (truckTimer.value !== null) {
+    clearTimeout(truckTimer.value);
+  }
+});
 </script>
 
 <style scoped>

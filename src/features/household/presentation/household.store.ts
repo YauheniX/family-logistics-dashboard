@@ -106,12 +106,14 @@ export const useHouseholdEntityStore = defineStore('household-entity', () => {
         if (currentHousehold.value?.id === id) {
           if (households.value.length > 0) {
             currentHousehold.value = households.value[0];
+            // Repopulate members for the newly selected household
+            await loadMembers(households.value[0].id);
             useToastStore().success(`Household deleted. Switched to ${households.value[0].name}`);
           } else {
             currentHousehold.value = null;
             useToastStore().success('Household deleted successfully!');
+            members.value = [];
           }
-          members.value = [];
         } else {
           useToastStore().success('Household deleted successfully!');
         }

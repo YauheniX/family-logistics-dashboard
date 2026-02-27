@@ -53,13 +53,34 @@
           <!-- Choice Icons -->
           <div id="icons">
             <div>
-              <button :disabled="isPlaying" class="choice-btn" @click="play('Rock')">✊</button>
+              <button
+                :disabled="isPlaying"
+                class="choice-btn"
+                aria-label="Play Rock"
+                @click="play('Rock')"
+              >
+                ✊
+              </button>
             </div>
             <div>
-              <button :disabled="isPlaying" class="choice-btn" @click="play('Paper')">🖐️</button>
+              <button
+                :disabled="isPlaying"
+                class="choice-btn"
+                aria-label="Play Paper"
+                @click="play('Paper')"
+              >
+                🖐️
+              </button>
             </div>
             <div>
-              <button :disabled="isPlaying" class="choice-btn" @click="play('Scissors')">✌️</button>
+              <button
+                :disabled="isPlaying"
+                class="choice-btn"
+                aria-label="Play Scissors"
+                @click="play('Scissors')"
+              >
+                ✌️
+              </button>
             </div>
           </div>
         </div>

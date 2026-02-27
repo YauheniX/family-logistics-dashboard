@@ -51,13 +51,13 @@ describe('Breadcrumbs - Cityscape Route', () => {
       expect(links.length).toBe(3);
 
       expect(links[0].text()).toBe('Home');
-      expect(links[0].attributes('to')).toBe('/');
+      expect(links[0].props('to')).toBe('/');
 
       expect(links[1].text()).toBe('Apps');
-      expect(links[1].attributes('to')).toBe('/apps');
+      expect(links[1].props('to')).toBe('/apps');
 
       expect(links[2].text()).toBe('Cityscape');
-      expect(links[2].attributes('to')).toBe('/apps/cityscape');
+      expect(links[2].props('to')).toBe('/apps/cityscape');
     });
 
     it('renders breadcrumb navigation on cityscape route', async () => {
@@ -140,7 +140,7 @@ describe('Breadcrumbs - Cityscape Route', () => {
       const wrapper = await mountBreadcrumbs();
 
       const links = wrapper.findAllComponents({ name: 'RouterLink' });
-      expect(links[0].attributes('to')).toBe('/');
+      expect(links[0].props('to')).toBe('/');
     });
 
     it('Apps link navigates to /apps', async () => {
@@ -148,7 +148,7 @@ describe('Breadcrumbs - Cityscape Route', () => {
       const wrapper = await mountBreadcrumbs();
 
       const links = wrapper.findAllComponents({ name: 'RouterLink' });
-      expect(links[1].attributes('to')).toBe('/apps');
+      expect(links[1].props('to')).toBe('/apps');
     });
 
     it('Cityscape link navigates to current route path', async () => {
@@ -156,7 +156,7 @@ describe('Breadcrumbs - Cityscape Route', () => {
       const wrapper = await mountBreadcrumbs();
 
       const links = wrapper.findAllComponents({ name: 'RouterLink' });
-      expect(links[2].attributes('to')).toBe('/apps/cityscape');
+      expect(links[2].props('to')).toBe('/apps/cityscape');
     });
   });
 
