@@ -292,6 +292,12 @@ const confirmDelete = async () => {
 
   if (deleted) {
     showDeleteModal.value = false;
+
+    // Refresh the main household store to update the switcher
+    if (authStore.user?.id) {
+      await householdStore.initializeForUser(authStore.user.id);
+    }
+
     router.push('/households');
   } else if (import.meta.env.DEV) {
     console.error('Failed to delete household');

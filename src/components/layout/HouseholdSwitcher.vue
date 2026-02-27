@@ -4,15 +4,14 @@
     <button
       :aria-expanded="isOpen"
       aria-haspopup="true"
-      class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
+      class="flex items-center gap-2 rounded-lg px-3 py-2 text-base font-medium transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
       @click="toggleDropdown"
     >
-      <span class="text-lg" aria-hidden="true">{{ currentHousehold?.emoji || '🏠' }}</span>
-      <span class="hidden md:inline max-w-[150px] truncate">
+      <span class="md:inline max-w-[100px] truncate">
         {{ currentHousehold?.name || 'Select Household' }}
       </span>
       <svg
-        class="h-4 w-4 transition-transform"
+        class="h-6 w-6 transition-transform"
         :class="{ 'rotate-180': isOpen }"
         fill="none"
         stroke="currentColor"
@@ -42,7 +41,6 @@
           role="menuitem"
           @click="selectHousehold(household.id)"
         >
-          <span class="text-lg" aria-hidden="true">{{ household.emoji || '🏠' }}</span>
           <div class="flex-1 min-w-0">
             <p class="font-medium text-sm text-neutral-900 dark:text-neutral-50 truncate">
               {{ household.name }}
@@ -69,8 +67,8 @@
       <!-- Divider -->
       <div class="border-t border-neutral-200 dark:border-neutral-700"></div>
 
-      <!-- Create New Household (only if user is not owner in any household) -->
-      <div v-if="!isOwnerInAnyHousehold" class="py-2">
+      <!-- Create New Household -->
+      <div class="py-2">
         <button
           class="flex items-center gap-3 px-4 py-2 w-full text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700"
           role="menuitem"
@@ -84,7 +82,7 @@
       </div>
 
       <!-- No Household Selected Message -->
-      <div v-if="!currentHousehold && isOwnerInAnyHousehold" class="py-2 px-4">
+      <div v-if="!currentHousehold" class="py-2 px-4">
         <p class="text-xs text-neutral-500 dark:text-neutral-400 text-center">
           Select a household above
         </p>
@@ -126,11 +124,6 @@ const dropdownRef = ref<HTMLElement | null>(null);
 
 const currentHousehold = computed(() => householdStore.currentHousehold);
 const households = computed(() => householdStore.households);
-
-// Check if user is owner in any household
-const isOwnerInAnyHousehold = computed(() => {
-  return households.value.some((h) => h.role === 'owner');
-});
 
 function toggleDropdown() {
   isOpen.value = !isOpen.value;

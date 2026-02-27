@@ -5,10 +5,10 @@
         <div class="min-w-0">
           <p class="text-sm text-neutral-500 dark:text-neutral-400">Households</p>
           <h2 class="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-            My Households
+            Households
           </h2>
           <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
-            Manage your household groups and their shopping lists.
+            Manage your household groups.
           </p>
         </div>
         <BaseButton class="w-full sm:w-auto" @click="showCreateModal = true">

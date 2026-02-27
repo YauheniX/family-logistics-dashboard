@@ -16,14 +16,9 @@
           <div class="flex min-w-0 items-center gap-2 md:gap-3 flex-1">
             <!-- Logo -->
             <RouterLink to="/" class="flex-shrink-0" aria-label="Go to home">
-              <img src="/icon.svg" alt="Logo" class="h-8 w-8" />
+              <img src="/icon.svg" alt="Logo" class="h-16 w-16" />
             </RouterLink>
 
-            <h1
-              class="hidden md:block truncate font-semibold text-neutral-900 dark:text-neutral-50 md:text-xl"
-            >
-              {{ pageTitle }}
-            </h1>
             <HouseholdSwitcher />
           </div>
 
@@ -204,21 +199,6 @@ watch(
     mobileNavOpen.value = false;
   },
 );
-
-const pageTitle = computed(() => {
-  const routeName = route.name as string;
-  const titles: Record<string, string> = {
-    dashboard: 'Home',
-    'household-list': 'Members',
-    'household-detail': 'Household Details',
-    'shopping-list': 'Shopping List',
-    'wishlist-list': 'Wishlists',
-    'wishlist-edit': 'My Wishlist',
-    'public-wishlist': 'Public Wishlist',
-    settings: 'Settings',
-  };
-  return titles[routeName] || 'HouseholdBoard';
-});
 
 const logout = async () => {
   await authStore.logout();

@@ -99,12 +99,25 @@ export const useHouseholdEntityStore = defineStore('household-entity', () => {
         useToastStore().error(`Failed to delete household: ${response.error.message}`);
         return false;
       } else {
+        // Remove from local state
         households.value = households.value.filter((household) => household.id !== id);
+
+        // If deleted household was current, select first available
         if (currentHousehold.value?.id === id) {
-          currentHousehold.value = null;
-          members.value = [];
+          if (households.value.length > 0) {
+            currentHousehold.value = households.value[0];
+            // Repopulate members for the newly selected household
+            await loadMembers(households.value[0].id);
+            useToastStore().success(`Household deleted. Switched to ${households.value[0].name}`);
+          } else {
+            currentHousehold.value = null;
+            useToastStore().success('Household deleted successfully!');
+            members.value = [];
+          }
+        } else {
+          useToastStore().success('Household deleted successfully!');
         }
-        useToastStore().success('Household deleted successfully!');
+
         return true;
       }
     } finally {
