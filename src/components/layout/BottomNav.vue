@@ -78,11 +78,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
-import { useHouseholdStore } from '@/stores/household';
 
 const route = useRoute();
-const householdStore = useHouseholdStore();
-const currentHousehold = computed(() => householdStore.currentHousehold);
 const showMoreMenu = ref(false);
 
 interface NavItem {
@@ -95,12 +92,6 @@ interface NavItem {
 // Primary navigation items (always visible)
 const navItems = computed<NavItem[]>(() => [
   { name: 'dashboard', label: 'Home', to: { name: 'dashboard' }, emoji: '🏠' },
-  {
-    name: 'household-list',
-    label: 'Manage',
-    to: currentHousehold.value ? `/households/${currentHousehold.value.id}` : '/households',
-    emoji: '👥',
-  },
   { name: 'shopping', label: 'Shopping', to: { name: 'shopping' }, emoji: '🛒' },
   { name: 'wishlist-list', label: 'Wishlists', to: '/wishlists', emoji: '🎁' },
 ]);

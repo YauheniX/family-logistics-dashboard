@@ -11,6 +11,39 @@ import type {
 } from '../../shared/domain/entities';
 import type { ApiResponse } from '../../shared/domain/repository.interface';
 
+// Type for Supabase query result with nested member data (matches database nullability before transformation)
+type WishlistWithMember = {
+  id: string;
+  user_id: string;
+  member_id: string | null;
+  household_id: string | null;
+  title: string;
+  description: string | null;
+  visibility: 'public' | 'private' | 'household';
+  share_slug: string;
+  created_at: string;
+  updated_at: string | null;
+  member?: {
+    display_name: string | null;
+    role: string;
+  } | null;
+};
+
+/**
+ * Transform Supabase query result with nested member to normalized wishlist format.
+ * Converts nullable fields to undefined and extracts member_name from nested member.
+ */
+function transformWishlistWithMember(w: WishlistWithMember) {
+  return {
+    ...w,
+    member_id: w.member_id ?? undefined,
+    household_id: w.household_id ?? undefined,
+    updated_at: w.updated_at ?? undefined,
+    member_name: w.member?.display_name ?? undefined,
+    member: undefined, // Remove nested object
+  };
+}
+
 /**
  * Add computed is_public property based on visibility for frontend display compatibility.
  */
@@ -73,16 +106,9 @@ export class WishlistRepository extends BaseRepository<
 
     // Filter OUT children's wishlists (they're shown in separate section)
     if (result.data) {
-      const personalWishlists = result.data
-        .filter((w: any) => w.member?.role !== 'child')
-        .map((w: any) =>
-          addIsPublic({
-            ...w,
-            member_id: w.member_id ?? undefined, // Convert null to undefined
-            member_name: w.member?.display_name || null,
-            member: undefined, // Remove nested object
-          }),
-        );
+      const personalWishlists = (result.data as unknown as WishlistWithMember[])
+        .filter((w) => w.member?.role !== 'child')
+        .map((w) => addIsPublic(transformWishlistWithMember(w)));
       return { ...result, data: personalWishlists };
     }
     return { data: null, error: result.error };
@@ -277,26 +303,14 @@ export class WishlistRepository extends BaseRepository<
     // Filter: exclude current user's PERSONAL wishlists (where member_id = current user's member)
     // but INCLUDE children's wishlists (even if user_id = current user)
     if (result.data && currentUserMemberId) {
-      const filteredWishlists = result.data
-        .filter((w: any) => w.member_id !== currentUserMemberId) // Exclude user's own wishlists
-        .map((w: any) =>
-          addIsPublic({
-            ...w,
-            member_id: w.member_id ?? undefined, // Convert null to undefined
-            member_name: w.member?.display_name || null,
-            member: undefined, // Remove nested object
-          }),
-        );
+      const filteredWishlists = (result.data as unknown as WishlistWithMember[])
+        .filter((w) => w.member_id !== currentUserMemberId) // Exclude user's own wishlists
+        .map((w) => addIsPublic(transformWishlistWithMember(w)));
       return { ...result, data: filteredWishlists };
     } else if (result.data && !currentUserMemberId) {
       // User not in household, return all shared wishlists
-      const allWishlists = result.data.map((w: any) =>
-        addIsPublic({
-          ...w,
-          member_id: w.member_id ?? undefined, // Convert null to undefined
-          member_name: w.member?.display_name || null,
-          member: undefined,
-        }),
+      const allWishlists = (result.data as unknown as WishlistWithMember[]).map((w) =>
+        addIsPublic(transformWishlistWithMember(w)),
       );
       return { ...result, data: allWishlists };
     }
@@ -333,16 +347,9 @@ export class WishlistRepository extends BaseRepository<
 
     // Filter for wishlists where member is a child and transform data
     if (result.data) {
-      const childWishlists = result.data
-        .filter((w: any) => w.member?.role === 'child')
-        .map((w: any) =>
-          addIsPublic({
-            ...w,
-            member_id: w.member_id ?? undefined, // Convert null to undefined
-            member_name: w.member?.display_name || null,
-            member: undefined, // Remove nested object
-          }),
-        );
+      const childWishlists = (result.data as unknown as WishlistWithMember[])
+        .filter((w) => w.member?.role === 'child')
+        .map((w) => addIsPublic(transformWishlistWithMember(w)));
       return { ...result, data: childWishlists };
     }
     return { data: null, error: result.error };

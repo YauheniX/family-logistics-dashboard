@@ -53,16 +53,35 @@
           </div>
         </div>
 
-        <!-- Name Input -->
-        <BaseInput
-          v-model="profileForm.name"
-          type="text"
-          label="Full Name"
-          placeholder="Your full name"
-          :error="errors.name"
-          :disabled="loading"
-          @blur="handleSaveProfile"
-        />
+        <!-- Name Display with Edit Button -->
+        <div>
+          <label class="label">Full Name</label>
+          <div class="flex items-center gap-3">
+            <BaseInput
+              :model-value="profileForm.name"
+              type="text"
+              placeholder="Your full name"
+              :disabled="true"
+              class="flex-1"
+            />
+            <BaseButton variant="secondary" aria-label="Edit name" @click="openEditNameModal">
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                />
+              </svg>
+            </BaseButton>
+          </div>
+        </div>
 
         <!-- Email Input (Read-only) -->
         <BaseInput
@@ -131,59 +150,30 @@
             </label>
           </div>
         </div>
-
-        <!-- Email Notifications Toggle -->
-        <div
-          class="flex items-center justify-between p-3 rounded-lg border border-neutral-200 dark:border-neutral-700"
-        >
-          <div>
-            <p class="text-body-semibold text-neutral-900 dark:text-neutral-50">
-              Email Notifications
-            </p>
-            <p class="text-small text-neutral-600 dark:text-neutral-400">
-              Receive updates via email
-            </p>
-          </div>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input
-              v-model="preferences.emailNotifications"
-              type="checkbox"
-              class="sr-only peer"
-              @change="handleSavePreferences"
-            />
-            <div
-              class="w-11 h-6 bg-neutral-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-500 dark:peer-focus:ring-primary-400 rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-neutral-600 peer-checked:bg-primary-500 dark:peer-checked:bg-primary-400"
-            ></div>
-          </label>
-        </div>
-
-        <!-- Push Notifications Toggle -->
-        <div
-          class="flex items-center justify-between p-3 rounded-lg border border-neutral-200 dark:border-neutral-700"
-        >
-          <div>
-            <p class="text-body-semibold text-neutral-900 dark:text-neutral-50">
-              Push Notifications
-            </p>
-            <p class="text-small text-neutral-600 dark:text-neutral-400">
-              Receive push notifications on your device
-            </p>
-          </div>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input
-              v-model="preferences.pushNotifications"
-              type="checkbox"
-              class="sr-only peer"
-              @change="handleSavePreferences"
-            />
-            <div
-              class="w-11 h-6 bg-neutral-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-500 dark:peer-focus:ring-primary-400 rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-neutral-600 peer-checked:bg-primary-500 dark:peer-checked:bg-primary-400"
-            ></div>
-          </label>
-        </div>
       </div>
     </BaseCard>
   </div>
+
+  <!-- Edit Name Modal -->
+  <ModalDialog :open="showEditNameModal" title="Edit Full Name" @close="showEditNameModal = false">
+    <form class="space-y-4" @submit.prevent="confirmEditName">
+      <BaseInput
+        v-model="editNameForm"
+        type="text"
+        label="Full Name"
+        placeholder="Enter your full name"
+        :error="errors.name"
+        :disabled="saving"
+        required
+      />
+      <div class="flex gap-3">
+        <BaseButton type="submit" :loading="saving">Save Changes</BaseButton>
+        <BaseButton variant="ghost" type="button" @click="showEditNameModal = false">
+          Cancel
+        </BaseButton>
+      </div>
+    </form>
+  </ModalDialog>
 </template>
 
 <script setup lang="ts">
@@ -192,6 +182,7 @@ import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseInput from '@/components/shared/BaseInput.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import Avatar from '@/components/shared/Avatar.vue';
+import ModalDialog from '@/components/shared/ModalDialog.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useToastStore } from '@/stores/toast';
 import { useTheme } from '@/composables/useTheme';
@@ -215,11 +206,8 @@ const errors = ref<{ name?: string }>({});
 const saving = ref(false);
 const loading = ref(true);
 const originalName = ref('');
-
-const preferences = ref({
-  emailNotifications: true,
-  pushNotifications: false,
-});
+const showEditNameModal = ref(false);
+const editNameForm = ref('');
 
 const selectedTheme = ref(currentTheme.value);
 
@@ -258,16 +246,23 @@ const handleAvatarUpload = () => {
   toastStore.info('Avatar upload feature coming soon!');
 };
 
-const handleSaveProfile = async () => {
+const openEditNameModal = () => {
+  editNameForm.value = profileForm.value.name;
+  errors.value = {};
+  showEditNameModal.value = true;
+};
+
+const confirmEditName = async () => {
   errors.value = {};
 
-  if (!profileForm.value.name || profileForm.value.name.trim().length < 2) {
-    errors.value.name = 'Name must be at least 2 characters';
+  // Skip save if name unchanged
+  if (editNameForm.value.trim() === originalName.value) {
+    showEditNameModal.value = false;
     return;
   }
 
-  // Dirty check: skip save if name unchanged
-  if (profileForm.value.name.trim() === originalName.value) {
+  if (!editNameForm.value || editNameForm.value.trim().length < 2) {
+    errors.value.name = 'Name must be at least 2 characters';
     return;
   }
 
@@ -280,7 +275,7 @@ const handleSaveProfile = async () => {
 
   try {
     const result = await profileRepository.saveProfile(authStore.user.id, {
-      display_name: profileForm.value.name.trim(),
+      display_name: editNameForm.value.trim(),
       avatar_url: profileForm.value.avatarUrl,
     });
 
@@ -293,10 +288,15 @@ const handleSaveProfile = async () => {
       profileForm.value.name = result.data.display_name || '';
       profileForm.value.avatarUrl = result.data.avatar_url;
       originalName.value = result.data.display_name || '';
-
-      // Refresh global user profile to update header
-      await loadUserProfile(authStore.user.id);
       toastStore.success('Profile updated successfully!');
+      showEditNameModal.value = false;
+
+      // Refresh global user profile to update header (non-blocking)
+      try {
+        await loadUserProfile(authStore.user.id);
+      } catch {
+        toastStore.error('Profile refresh failed, but changes were saved');
+      }
     }
   } catch {
     toastStore.error('An unexpected error occurred');
@@ -312,10 +312,6 @@ const handleChangePassword = () => {
 const handleThemeChange = () => {
   setTheme(selectedTheme.value);
   toastStore.success(`Theme changed to ${selectedTheme.value}`);
-};
-
-const handleSavePreferences = () => {
-  toastStore.success('Preferences saved');
 };
 
 onMounted(async () => {
@@ -341,16 +337,6 @@ onMounted(async () => {
     }
   } else {
     loading.value = false;
-  }
-
-  // Load saved preferences from localStorage if available
-  const savedPrefs = localStorage.getItem('user-preferences');
-  if (savedPrefs) {
-    try {
-      preferences.value = JSON.parse(savedPrefs);
-    } catch {
-      // Ignore parsing errors
-    }
   }
 });
 </script>

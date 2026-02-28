@@ -1,7 +1,7 @@
 # Navigation Structure
 
-**Last Updated**: January 2025  
-**Component**: `SidebarNav.vue`
+**Last Updated**: February 2026  
+**Components**: `SidebarNav.vue`, `BottomNav.vue`
 
 ---
 
@@ -18,15 +18,24 @@ The application uses a responsive sidebar navigation that appears:
 
 ### Primary Navigation
 
-| Icon | Label            | Route               | Description                                   |
-| ---- | ---------------- | ------------------- | --------------------------------------------- |
-| 🏠   | Dashboard        | `/`                 | Main dashboard view                           |
-| 🏘️   | Households       | `/households`       | List and switch between households            |
-| 👨‍👩‍👧‍👦   | Manage Household | `/household-detail` | Manage current household members and settings |
-| 🛒   | Shopping Lists   | `/shopping`         | Shared shopping lists for current household   |
-| 🎁   | Wishlists        | `/wishlists`        | Personal wishlists (public sharing)           |
-| 🎮   | Apps             | `/apps`             | Mini-apps launcher hub                        |
-| ⚙️   | Settings         | `/settings`         | User and app settings                         |
+#### Desktop Sidebar (SidebarNav.vue)
+
+| Icon | Label      | Route         | Description                                 |
+| ---- | ---------- | ------------- | ------------------------------------------- |
+| 🏘️   | Households | `/households` | List and switch between households          |
+| 🛒   | Shopping   | `/shopping`   | Shared shopping lists for current household |
+| 🎁   | Wishlists  | `/wishlists`  | Personal wishlists (public sharing)         |
+| 🎮   | Apps       | `/apps`       | Mini-apps launcher hub                      |
+| ⚙️   | Settings   | `/settings`   | User and app settings                       |
+
+#### Mobile Bottom Navigation (BottomNav.vue)
+
+| Icon | Label     | Route        | Description                                     |
+| ---- | --------- | ------------ | ----------------------------------------------- |
+| 🏠   | Home      | `/`          | Main dashboard view                             |
+| 🛒   | Shopping  | `/shopping`  | Shared shopping lists                           |
+| 🎁   | Wishlists | `/wishlists` | Personal wishlists                              |
+| ⋯    | More      | (dropdown)   | Additional options (Households, Apps, Settings) |
 
 ---
 
@@ -35,71 +44,99 @@ The application uses a responsive sidebar navigation that appears:
 The sidebar uses intelligent active state highlighting:
 
 ```typescript
-const isActive = (routeName: string): boolean => {
-  if (route.name === routeName) return true;
+// SidebarNav.vue
+function isActive(itemName: string): boolean {
+  const currentRouteName = route.name as string;
+  // Match exact route.name or any matched route record name (for nested routes)
+  return currentRouteName === itemName || route.matched.some((record) => record.name === itemName);
+}
 
-  // Special cases for nested routes
-  if (routeName === 'household-detail') {
-    return route.name === 'member-management';
+// BottomNav.vue
+function isActive(routeName: string): boolean {
+  const currentRouteName = route.name as string;
+
+  // Match related routes for navigation items
+  if (routeName === 'household-list') {
+    return currentRouteName?.startsWith('household') || currentRouteName === 'member-management';
+  }
+  if (routeName === 'shopping') {
+    return currentRouteName?.startsWith('shopping');
+  }
+  if (routeName === 'wishlist-list') {
+    return currentRouteName?.startsWith('wishlist');
   }
 
-  return false;
-};
+  return currentRouteName === routeName;
+}
 ```
 
 ### Special Cases
 
-- **Manage Household** - Also active when viewing member management
-- **Apps** - Remains active when using sub-apps like Rock-Paper-Scissors
+- **Households** - Active when viewing household list or detail pages
+- **Shopping** - Active for all shopping-related routes
+- **Wishlists** - Active for all wishlist-related routes
 
 ---
 
 ## Responsive Design
 
-### Desktop (≥768px)
+### Desktop (≥1024px)
 
-- Fixed sidebar on left side
+- Fixed sidebar on left side (`SidebarNav.vue`)
 - Full labels visible
 - Icons + text navigation
+- All primary menu items visible
 
-### Mobile (<768px)
+### Mobile (<1024px)
 
-- Bottom navigation bar
-- Icons only (no labels)
+- Bottom navigation bar (`BottomNav.vue`)
 - Fixed to bottom of viewport
+- Primary actions: Home, Shopping, Wishlists
+- "More" menu (⋯) for additional options:
+  - Households
+  - Apps
+  - Settings
 - Swipe-friendly layout
+- Safe area insets for notched devices
 
 ---
 
-## Recent Changes (January 2025)
+## Recent Changes
 
-### New Menu Items Added
+### February 2026: Navigation Simplification
+
+**Removed Items**:
+
+- ❌ **Manage Household** menu item removed from both sidebar and bottom navigation
+  - Reason: Direct access via household cards in `/households` view
+  - Household management now accessible by clicking on household card
+
+**New Behavior**:
+
+- ✅ **Auto-switching**: Clicking a household card now automatically switches the current household
+- ✅ **Simplified navigation**: Reduced navigation clutter on mobile
+- ✅ **More menu**: Additional items moved to "More" dropdown on mobile
+
+### January 2025: Initial Menu Expansion
 
 1. **Households** 🏘️
-   - Previously: Users could only view/manage the _current_ household
-   - Now: Dedicated view to list all households and switch between them
+   - Dedicated view to list all households and switch between them
    - Route: `/households`
 
 2. **Apps** 🎮
    - New mini-apps hub
    - Apps: Rock-Paper-Scissors game
    - Route: `/apps`
-   - Sub-routes: `/apps/rock-paper-scissors`
-
-### Menu Item Separation
-
-- **Households** (🏘️) - View and switch between all households
-- **Manage Household** (👨‍👩‍👧‍👦) - Manage _current_ household only
-
-This separation clarifies the distinction between switching households vs. managing the active one.
 
 ---
 
 ## Implementation Details
 
-### Component Location
+### Component Locations
 
-`src/components/layout/SidebarNav.vue`
+- Desktop: `src/components/layout/SidebarNav.vue`
+- Mobile: `src/components/layout/BottomNav.vue`
+- Household Switcher: `src/components/layout/HouseholdSwitcher.vue`
 
 ### Key Features
 
@@ -151,12 +188,48 @@ Unauthenticated users are redirected to the login page.
 
 ---
 
+## Household Switching
+
+### Auto-Switch on Navigation
+
+When a user clicks on a household card in `/households`, the app automatically:
+
+1. Switches the current household (`householdStore.switchHousehold(id)`)
+2. Updates the household switcher in the app header
+3. Navigates to the household detail page
+
+**Implementation** (`HouseholdListView.vue`):
+
+```vue
+<RouterLink
+  :to="{ name: 'household-detail', params: { id: household.id } }"
+  @click="handleHouseholdClick(household.id)"
+>
+```
+
+```typescript
+const handleHouseholdClick = (householdId: string) => {
+  householdStore.switchHousehold(householdId);
+};
+```
+
+---
+
 ## Related Files
 
-- Component: `src/components/layout/SidebarNav.vue`
+- Components:
+  - `src/components/layout/SidebarNav.vue`
+  - `src/components/layout/BottomNav.vue`
+  - `src/components/layout/HouseholdSwitcher.vue`
+  - `src/components/shared/ToastContainer.vue`
 - Router: `src/router/index.ts`
-- Apps Hub: `src/views/AppsView.vue`
-- Households View: `src/views/HouseholdsView.vue` (if exists)
+- Views:
+  - `src/views/AppsView.vue`
+  - `src/views/HouseholdListView.vue`
+  - `src/views/MemberManagementView.vue`
+- Stores:
+  - `src/stores/household.ts`
+  - `src/stores/toast.ts`
 
 ---
 

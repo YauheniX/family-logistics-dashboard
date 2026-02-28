@@ -14,6 +14,7 @@ export interface UseMembersReturn {
   createChild: (data: { name: string; birthday: string; avatar: string }) => Promise<Member | null>;
   inviteMember: (email: string, role?: string) => Promise<Invitation | null>;
   removeMember: (memberId: string) => Promise<boolean>;
+  updateMember: (memberId: string, updates: Partial<Member>) => Promise<boolean>;
 }
 
 /**
@@ -227,6 +228,46 @@ export function useMembers(): UseMembersReturn {
     }
   }
 
+  /**
+   * Update a member's data (avatar/birthday for children, role for adults)
+   */
+  async function updateMember(memberId: string, updates: Partial<Member>): Promise<boolean> {
+    if (!isOwnerOrAdmin.value) {
+      toastStore.error('Only owners and admins can update members');
+      return false;
+    }
+
+    loading.value = true;
+    error.value = null;
+
+    try {
+      const response = await memberRepository.update(memberId, updates);
+
+      if (response.error) {
+        error.value = {
+          message: response.error.message,
+          code: response.error.code,
+          details: response.error.details,
+        };
+        toastStore.error('Failed to update member');
+        return false;
+      }
+
+      // Refresh list after update
+      await fetchMembers();
+      toastStore.success('Member updated successfully');
+      return true;
+    } catch (err) {
+      error.value = {
+        message: err instanceof Error ? err.message : 'Failed to update member',
+      };
+      toastStore.error('Failed to update member');
+      return false;
+    } finally {
+      loading.value = false;
+    }
+  }
+
   return {
     members,
     loading,
@@ -236,5 +277,6 @@ export function useMembers(): UseMembersReturn {
     createChild,
     inviteMember,
     removeMember,
+    updateMember,
   };
 }

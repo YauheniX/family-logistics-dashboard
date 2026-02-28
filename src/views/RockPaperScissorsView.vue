@@ -41,6 +41,42 @@
             <div class="arm"></div>
           </div>
 
+          <!-- Choice Icons / Next Round Button -->
+          <div class="flex justify-center items-center gap-4 min-h-[60px]">
+            <!-- Choice Icons -->
+            <template v-if="!result">
+              <button
+                :disabled="isPlaying"
+                class="choice-btn"
+                aria-label="Play Rock"
+                @click="play('Rock')"
+              >
+                ✊
+              </button>
+              <button
+                :disabled="isPlaying"
+                class="choice-btn"
+                aria-label="Play Paper"
+                @click="play('Paper')"
+              >
+                🖐️
+              </button>
+              <button
+                :disabled="isPlaying"
+                class="choice-btn"
+                aria-label="Play Scissors"
+                @click="play('Scissors')"
+              >
+                ✌️
+              </button>
+            </template>
+
+            <!-- Next Round Button -->
+            <button v-else class="choice-btn" aria-label="Next Round" @click="resetRound">
+              ▶️
+            </button>
+          </div>
+
           <!-- User Hand -->
           <div id="user-hand" class="hand" :class="getHandClass('user')">
             <div class="fist"></div>
@@ -51,67 +87,28 @@
             <div class="thumb"></div>
             <div class="arm"></div>
           </div>
-
-          <!-- Choice Icons -->
-          <div id="icons">
-            <div>
-              <button
-                :disabled="isPlaying"
-                class="choice-btn"
-                aria-label="Play Rock"
-                @click="play('Rock')"
-              >
-                ✊
-              </button>
-            </div>
-            <div>
-              <button
-                :disabled="isPlaying"
-                class="choice-btn"
-                aria-label="Play Paper"
-                @click="play('Paper')"
-              >
-                🖐️
-              </button>
-            </div>
-            <div>
-              <button
-                :disabled="isPlaying"
-                class="choice-btn"
-                aria-label="Play Scissors"
-                @click="play('Scissors')"
-              >
-                ✌️
-              </button>
-            </div>
-          </div>
         </div>
 
         <!-- Result Display -->
-        <div v-if="result" id="message" class="mt-4 sm:mt-8 text-center">
-          <h2
-            class="text-xl sm:text-2xl font-bold mb-3 sm:mb-4"
-            :class="{
-              'text-success-600 dark:text-success-400': result === 'You Win!',
-              'text-danger-600 dark:text-danger-400': result === 'You Lose!',
-              'text-neutral-700 dark:text-neutral-300': result === 'Tie',
-            }"
-          >
-            {{ result }}
-          </h2>
+        <div class="mt-4 sm:mt-8 text-center min-h-[80px] flex items-center justify-center">
+          <div v-if="result" id="message">
+            <h2
+              class="text-xl sm:text-2xl font-bold"
+              :class="{
+                'text-success-600 dark:text-success-400': result === 'You Win!',
+                'text-danger-600 dark:text-danger-400': result === 'You Lose!',
+                'text-neutral-700 dark:text-neutral-300': result === 'Tie',
+              }"
+            >
+              {{ result }}
+            </h2>
+          </div>
         </div>
 
         <!-- Game Controls -->
         <div class="flex gap-2 sm:gap-3 justify-center mt-4 sm:mt-8 px-2">
           <button
-            v-if="result"
-            class="flex-1 sm:flex-none px-4 sm:px-6 py-2.5 sm:py-2 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white rounded-lg transition-colors font-medium text-sm sm:text-base touch-manipulation"
-            @click="resetRound"
-          >
-            Next Round
-          </button>
-          <button
-            class="flex-1 sm:flex-none px-3 sm:px-4 py-2.5 sm:py-2 text-sm bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-300 dark:hover:bg-neutral-600 active:bg-neutral-400 dark:active:bg-neutral-500 transition-colors touch-manipulation"
+            class="px-4 sm:px-6 py-2.5 sm:py-2 text-sm bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-300 dark:hover:bg-neutral-600 active:bg-neutral-400 dark:active:bg-neutral-500 transition-colors touch-manipulation"
             @click="resetGame"
           >
             Reset Game
@@ -131,6 +128,7 @@ const playerScore = ref(0);
 const computerScore = ref(0);
 const playerChoice = ref<Choice | null>(null);
 const computerChoice = ref<Choice | null>(null);
+let winnerTimeoutId: ReturnType<typeof setTimeout> | null = null;
 const result = ref<string | null>(null);
 const isPlaying = ref(false);
 
@@ -164,23 +162,30 @@ function getHandClass(hand: 'user' | 'computer'): string {
   return `show-${choice.toLowerCase()}`;
 }
 
+// Animation delay after choices are shown before revealing winner
+const ROUND_RESULT_DELAY_MS = 500;
+
 function play(choice: Choice) {
   if (isPlaying.value || result.value) return;
 
   isPlaying.value = true;
   playerChoice.value = choice;
-  computerChoice.value = getComputerChoice();
+  const computer = getComputerChoice();
+  computerChoice.value = computer;
 
   // Small delay to show the animation
-  setTimeout(() => {
-    if (computerChoice.value) {
-      result.value = determineWinner(choice, computerChoice.value);
-    }
+  winnerTimeoutId = setTimeout(() => {
+    result.value = determineWinner(choice, computer);
     isPlaying.value = false;
-  }, 500);
+    winnerTimeoutId = null;
+  }, ROUND_RESULT_DELAY_MS);
 }
 
 function resetRound() {
+  if (winnerTimeoutId !== null) {
+    clearTimeout(winnerTimeoutId);
+    winnerTimeoutId = null;
+  }
   playerChoice.value = null;
   computerChoice.value = null;
   result.value = null;
@@ -227,6 +232,7 @@ function resetGame() {
 
 #hands {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 200px;
@@ -359,21 +365,6 @@ div.arm {
 
 /* Rock keeps default fist position */
 
-#icons {
-  width: 55px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-#icons > div {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 55px;
-  height: 55px;
-}
-
 .choice-btn {
   background: #f5f5f5;
   border: 2px solid #ccc;
@@ -392,16 +383,6 @@ div.arm {
 }
 
 @media (min-width: 640px) {
-  #icons {
-    width: 60px;
-    gap: 10px;
-  }
-
-  #icons > div {
-    width: 60px;
-    height: 60px;
-  }
-
   .choice-btn {
     height: 60px;
     width: 60px;

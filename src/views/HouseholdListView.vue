@@ -24,6 +24,7 @@
         v-for="household in householdEntityStore.households"
         :key="household.id"
         :to="{ name: 'household-detail', params: { id: household.id } }"
+        @click="handleHouseholdClick(household.id)"
       >
         <BaseCard hover>
           <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
@@ -74,9 +75,11 @@ import EmptyState from '@/components/shared/EmptyState.vue';
 import LoadingState from '@/components/shared/LoadingState.vue';
 import ModalDialog from '@/components/shared/ModalDialog.vue';
 import { useAuthStore } from '@/stores/auth';
+import { useHouseholdStore } from '@/stores/household';
 import { useHouseholdEntityStore } from '@/features/household/presentation/household.store';
 
 const authStore = useAuthStore();
+const householdStore = useHouseholdStore();
 const householdEntityStore = useHouseholdEntityStore();
 
 const showCreateModal = ref(false);
@@ -92,6 +95,10 @@ const handleCreate = async () => {
     newHouseholdName.value = '';
     showCreateModal.value = false;
   }
+};
+
+const handleHouseholdClick = (householdId: string) => {
+  householdStore.switchHousehold(householdId);
 };
 
 watch(
