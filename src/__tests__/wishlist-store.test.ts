@@ -5,6 +5,7 @@ import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.stor
 vi.mock('@/features/wishlist/domain/wishlist.service', () => ({
   wishlistService: {
     getUserWishlists: vi.fn(),
+    getUserWishlistsByHousehold: vi.fn(),
     getWishlist: vi.fn(),
     getWishlistBySlug: vi.fn(),
     getHouseholdWishlists: vi.fn(),
@@ -556,5 +557,166 @@ describe('Wishlist Store', () => {
 
     expect(store.itemsByPriority['high']).toEqual([mockItem]);
     expect(store.itemsByPriority['low']).toEqual([lowItem]);
+  });
+
+  // ─── loadWishlistsByHousehold ─────────────────────────────
+
+  it('loads wishlists by household successfully', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.getUserWishlistsByHousehold).mockResolvedValue({
+      data: [mockWishlist],
+      error: null,
+    });
+
+    const store = useWishlistStore();
+    await store.loadWishlistsByHousehold('u1', 'h1');
+
+    expect(store.wishlists).toEqual([mockWishlist]);
+    expect(store.loading).toBe(false);
+    expect(store.error).toBeNull();
+  });
+
+  it('handles loadWishlistsByHousehold error', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.getUserWishlistsByHousehold).mockResolvedValue({
+      data: null,
+      error: { message: 'Network error' },
+    });
+
+    const store = useWishlistStore();
+    await store.loadWishlistsByHousehold('u1', 'h1');
+
+    expect(store.wishlists).toEqual([]);
+    expect(store.error).toBe('Network error');
+  });
+
+  it('prevents stale responses in loadWishlistsByHousehold', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    const wishlist1 = { ...mockWishlist, id: 'w1', title: 'Household 1' };
+    const wishlist2 = { ...mockWishlist, id: 'w2', title: 'Household 2' };
+
+    // Set up two requests with different delays
+    let resolve1: ((value: any) => void) | undefined;
+    let resolve2: ((value: any) => void) | undefined;
+    const promise1 = new Promise((resolve) => {
+      resolve1 = resolve;
+    });
+    const promise2 = new Promise((resolve) => {
+      resolve2 = resolve;
+    });
+
+    vi.mocked(wishlistService.getUserWishlistsByHousehold)
+      .mockReturnValueOnce(promise1 as any)
+      .mockReturnValueOnce(promise2 as any);
+
+    const store = useWishlistStore();
+
+    // Start first request
+    const call1 = store.loadWishlistsByHousehold('u1', 'h1');
+
+    // Start second request (supersedes first)
+    const call2 = store.loadWishlistsByHousehold('u1', 'h2');
+
+    // Resolve second request first (latest)
+    resolve2!({ data: [wishlist2], error: null });
+    await call2;
+
+    // Then resolve first request (stale)
+    resolve1!({ data: [wishlist1], error: null });
+    await call1;
+
+    // Should only have data from second request (h2), ignoring stale h1 response
+    expect(store.wishlists).toEqual([wishlist2]);
+  });
+
+  it('handles exception in loadWishlistsByHousehold', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.getUserWishlistsByHousehold).mockRejectedValue(
+      new Error('Network failure'),
+    );
+
+    const store = useWishlistStore();
+    await store.loadWishlistsByHousehold('u1', 'h1');
+
+    expect(store.wishlists).toEqual([]);
+    expect(store.error).toBe('Network failure');
+    expect(store.loading).toBe(false);
+  });
+
+  // ─── loadChildrenWishlists ────────────────────────────────
+
+  it('loads children wishlists successfully', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    const childWishlist = {
+      ...mockWishlist,
+      id: 'w3',
+      user_id: 'child-1',
+      title: "Child's Wishlist",
+    };
+    vi.mocked(wishlistService.getChildrenWishlists).mockResolvedValue({
+      data: [childWishlist],
+      error: null,
+    });
+
+    const store = useWishlistStore();
+    await store.loadChildrenWishlists('u1', 'h1');
+
+    expect(store.childrenWishlists).toEqual([childWishlist]);
+  });
+
+  it('handles loadChildrenWishlists error gracefully', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.getChildrenWishlists).mockResolvedValue({
+      data: null,
+      error: { message: 'Failed to load' },
+    });
+
+    const store = useWishlistStore();
+    // Seed non-empty initial state
+    store.$patch({
+      childrenWishlists: [{ ...mockWishlist, id: 'stale', title: 'Stale' }],
+    });
+
+    await store.loadChildrenWishlists('u1', 'h1');
+
+    // Should fail silently and clear state
+    expect(store.childrenWishlists).toEqual([]);
+  });
+
+  it('handles loadChildrenWishlists exception gracefully', async () => {
+    const { wishlistService } = await import('@/features/wishlist/domain/wishlist.service');
+    vi.mocked(wishlistService.getChildrenWishlists).mockRejectedValue(new Error('Network failure'));
+
+    const store = useWishlistStore();
+    // Seed non-empty initial state
+    store.$patch({
+      childrenWishlists: [{ ...mockWishlist, id: 'stale', title: 'Stale' }],
+    });
+
+    await store.loadChildrenWishlists('u1', 'h1');
+
+    // Should fail silently and clear state
+    expect(store.childrenWishlists).toEqual([]);
+  });
+
+  // ─── $reset ───────────────────────────────────────────────
+
+  it('resets store state', () => {
+    const store = useWishlistStore();
+    store.$patch({
+      wishlists: [mockWishlist],
+      currentWishlist: mockWishlist,
+      items: [mockItem],
+      loading: true,
+      error: 'Some error',
+    });
+
+    store.$reset();
+
+    expect(store.wishlists).toEqual([]);
+    expect(store.currentWishlist).toBeNull();
+    expect(store.items).toEqual([]);
+    expect(store.loading).toBe(false);
+    expect(store.error).toBeNull();
   });
 });

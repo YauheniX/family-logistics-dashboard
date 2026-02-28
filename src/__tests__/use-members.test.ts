@@ -542,4 +542,105 @@ describe('useMembers', () => {
       expect(isOwnerOrAdmin.value).toBe(false);
     });
   });
+
+  describe('updateMember', () => {
+    it('should fail when user is not owner or admin', async () => {
+      const householdStore = useHouseholdStore();
+      householdStore.setCurrentHousehold({
+        id: 'hh-1',
+        name: 'Test',
+        slug: 'test',
+        role: 'member',
+      });
+
+      const { updateMember } = useMembers();
+      const toastStore = useToastStore();
+
+      const result = await updateMember('m-1', { display_name: 'Updated' });
+
+      expect(result).toBe(false);
+      expect(toastStore.toasts.some((t) => t.message.includes('Only owners and admins'))).toBe(
+        true,
+      );
+    });
+
+    it('should update member successfully', async () => {
+      const householdStore = useHouseholdStore();
+      householdStore.setCurrentHousehold({
+        id: 'hh-1',
+        name: 'Test',
+        slug: 'test',
+        role: 'owner',
+      });
+
+      const supabase = await getMockedSupabase();
+      const updatedMember = {
+        id: 'm-1',
+        household_id: 'hh-1',
+        display_name: 'Updated Name',
+        role: 'member',
+      };
+
+      supabase.from = vi.fn().mockImplementation(() => ({
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        update: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: updatedMember, error: null }),
+        order: vi.fn().mockResolvedValue({ data: [updatedMember], error: null }),
+      }));
+
+      const { updateMember } = useMembers();
+      const result = await updateMember('m-1', { display_name: 'Updated Name' });
+
+      expect(result).toBe(true);
+    });
+
+    it('should handle update errors', async () => {
+      const householdStore = useHouseholdStore();
+      householdStore.setCurrentHousehold({
+        id: 'hh-1',
+        name: 'Test',
+        slug: 'test',
+        role: 'owner',
+      });
+
+      const supabase = await getMockedSupabase();
+      supabase.from = vi.fn().mockImplementation(() => ({
+        update: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: null,
+          error: { message: 'Update failed', code: '500', details: null },
+        }),
+      }));
+
+      const { updateMember, error } = useMembers();
+      const result = await updateMember('m-1', { display_name: 'Updated' });
+
+      expect(result).toBe(false);
+      expect(error.value).not.toBeNull();
+    });
+
+    it('should handle unexpected errors during update', async () => {
+      const householdStore = useHouseholdStore();
+      householdStore.setCurrentHousehold({
+        id: 'hh-1',
+        name: 'Test',
+        slug: 'test',
+        role: 'owner',
+      });
+
+      const supabase = await getMockedSupabase();
+      supabase.from = vi.fn().mockImplementation(() => {
+        throw new Error('Network error');
+      });
+
+      const { updateMember, error } = useMembers();
+      const result = await updateMember('m-1', { display_name: 'Updated' });
+
+      expect(result).toBe(false);
+      expect(error.value?.message).toBe('Network error');
+    });
+  });
 });

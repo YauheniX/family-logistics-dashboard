@@ -107,4 +107,79 @@ describe('Legacy Auth Store', () => {
 
     expect(authService.getCurrentUser).toHaveBeenCalledTimes(1);
   });
+
+  describe('loginWithGoogle', () => {
+    it('should call signInWith OAuth and handle success', async () => {
+      const { authService } = await import('@/features/auth');
+      vi.mocked(authService.signInWithOAuth).mockResolvedValue({
+        data: null, // OAuth redirects, no user data returned immediately
+        error: null,
+      });
+
+      const store = useAuthStore();
+      await store.loginWithGoogle();
+
+      expect(authService.signInWithOAuth).toHaveBeenCalledWith('google');
+      expect(store.error).toBeNull();
+      expect(store.loading).toBe(false);
+    });
+
+    it('should handle OAuth error', async () => {
+      const { authService } = await import('@/features/auth');
+      const mockError = { message: 'OAuth failed' };
+      vi.mocked(authService.signInWithOAuth).mockResolvedValue({
+        data: null,
+        error: mockError,
+      });
+
+      const store = useAuthStore();
+
+      await expect(store.loginWithGoogle()).rejects.toThrow('OAuth failed');
+      expect(store.error).toBe('OAuth failed');
+      expect(store.loading).toBe(false);
+    });
+
+    it('should handle unexpected errors', async () => {
+      const { authService } = await import('@/features/auth');
+      vi.mocked(authService.signInWithOAuth).mockRejectedValue(new Error('Network error'));
+
+      const store = useAuthStore();
+
+      await expect(store.loginWithGoogle()).rejects.toThrow('Network error');
+      expect(store.error).toBe('Network error');
+    });
+  });
+
+  describe('logout', () => {
+    it('should clear user and session on logout', async () => {
+      const { authService } = await import('@/features/auth');
+      vi.mocked(authService.signOut).mockResolvedValue({
+        data: null,
+        error: null,
+      });
+
+      const store = useAuthStore();
+      store.user = { id: 'u1', email: 'a@b.com' };
+      store.session = { access_token: 'token' } as never;
+
+      await store.logout();
+
+      expect(store.user).toBeNull();
+      expect(store.session).toBeNull();
+      expect(authService.signOut).toHaveBeenCalled();
+    });
+
+    it('should handle logout errors', async () => {
+      const { authService } = await import('@/features/auth');
+      const mockError = { message: 'Logout failed' };
+      vi.mocked(authService.signOut).mockResolvedValue({
+        data: null,
+        error: mockError,
+      });
+
+      const store = useAuthStore();
+
+      await expect(store.logout()).rejects.toThrow('Logout failed');
+    });
+  });
 });
