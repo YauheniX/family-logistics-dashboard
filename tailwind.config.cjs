@@ -125,9 +125,27 @@ module.exports = {
         'fade-out': 'fadeOut 200ms ease-out',
         'slide-up': 'slideUp 300ms ease-out',
         'slide-down': 'slideDown 300ms ease-out',
+        'slide-in-left': 'slideInLeft 250ms ease-out',
+        'slide-in-right': 'slideInRight 250ms ease-out',
         'scale-in': 'scaleIn 200ms ease-out',
         'bounce-subtle': 'bounceSubtle 500ms ease-in-out',
         shimmer: 'shimmer 2s linear infinite',
+        pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        wiggle: 'wiggle 0.5s ease-in-out',
+        'spin-slow': 'spin 3s linear infinite',
+        bounce: 'bounce 1s infinite',
+        'strike-through': 'strikeThrough 0.3s ease-out forwards',
+        'check-in': 'checkIn 0.3s ease-out forwards',
+        'number-roll': 'numberRoll 0.3s ease-out',
+        float: 'float 3s ease-in-out infinite',
+        breathing: 'breathing 4s ease-in-out infinite',
+        ripple: 'ripple 0.6s ease-out',
+        confetti: 'confetti 1s ease-out',
+        'heart-burst': 'heartBurst 0.6s ease-out',
+        'progress-bar': 'progressBar 1s ease-out forwards',
+        'skeleton-wave': 'skeletonWave 1.5s linear infinite',
+        'stagger-fade-in': 'fadeIn 300ms ease-out',
       },
       keyframes: {
         fadeIn: {
@@ -146,6 +164,14 @@ module.exports = {
           '0%': { transform: 'translateY(-10px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
+        slideInLeft: {
+          '0%': { transform: 'translateX(-100%)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+        slideInRight: {
+          '0%': { transform: 'translateX(100%)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
         scaleIn: {
           '0%': { transform: 'scale(0.95)', opacity: '0' },
           '100%': { transform: 'scale(1)', opacity: '1' },
@@ -157,6 +183,55 @@ module.exports = {
         shimmer: {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
+        },
+        wiggle: {
+          '0%, 100%': { transform: 'rotate(0deg)' },
+          '25%': { transform: 'rotate(-3deg)' },
+          '75%': { transform: 'rotate(3deg)' },
+        },
+        strikeThrough: {
+          '0%': { width: '0%' },
+          '100%': { width: '100%' },
+        },
+        checkIn: {
+          '0%': { transform: 'scale(0) rotate(0deg)', opacity: '0' },
+          '50%': { transform: 'scale(1.2) rotate(180deg)' },
+          '100%': { transform: 'scale(1) rotate(360deg)', opacity: '1' },
+        },
+        numberRoll: {
+          '0%': { transform: 'translateY(-20px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        breathing: {
+          '0%, 100%': { transform: 'scale(1)', opacity: '0.7' },
+          '50%': { transform: 'scale(1.05)', opacity: '1' },
+        },
+        ripple: {
+          '0%': { transform: 'scale(0)', opacity: '1' },
+          '100%': { transform: 'scale(4)', opacity: '0' },
+        },
+        confetti: {
+          '0%': { transform: 'translateY(0) rotate(0deg)', opacity: '1' },
+          '100%': { transform: 'translateY(-200px) rotate(720deg)', opacity: '0' },
+        },
+        heartBurst: {
+          '0%': { transform: 'scale(1)' },
+          '25%': { transform: 'scale(1.3)' },
+          '50%': { transform: 'scale(0.9)' },
+          '75%': { transform: 'scale(1.1)' },
+          '100%': { transform: 'scale(1)' },
+        },
+        progressBar: {
+          '0%': { transform: 'scaleX(0)', transformOrigin: 'left' },
+          '100%': { transform: 'scaleX(1)', transformOrigin: 'left' },
+        },
+        skeletonWave: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
         },
       },
     },
