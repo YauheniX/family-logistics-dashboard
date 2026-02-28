@@ -135,7 +135,7 @@ const currentHousehold = computed(() => householdStore.currentHousehold);
 
 function isActive(itemName: string): boolean {
   const currentRouteName = route.name as string;
-  return currentRouteName === itemName;
+  return currentRouteName === itemName || route.matched.some((record) => record.name === itemName);
 }
 
 const items = computed(() => [

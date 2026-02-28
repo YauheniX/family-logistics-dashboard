@@ -128,6 +128,7 @@ const playerScore = ref(0);
 const computerScore = ref(0);
 const playerChoice = ref<Choice | null>(null);
 const computerChoice = ref<Choice | null>(null);
+let winnerTimeoutId: ReturnType<typeof setTimeout> | null = null;
 const result = ref<string | null>(null);
 const isPlaying = ref(false);
 
@@ -170,13 +171,18 @@ function play(choice: Choice) {
   computerChoice.value = computer;
 
   // Small delay to show the animation
-  setTimeout(() => {
+  winnerTimeoutId = setTimeout(() => {
     result.value = determineWinner(choice, computer);
     isPlaying.value = false;
+    winnerTimeoutId = null;
   }, 500);
 }
 
 function resetRound() {
+  if (winnerTimeoutId !== null) {
+    clearTimeout(winnerTimeoutId);
+    winnerTimeoutId = null;
+  }
   playerChoice.value = null;
   computerChoice.value = null;
   result.value = null;

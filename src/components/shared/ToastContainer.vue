@@ -1,7 +1,7 @@
 <template>
   <div
     class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-full max-w-md px-4"
-    role="alert"
+    role="status"
     aria-live="polite"
   >
     <transition-group name="toast">
@@ -58,7 +58,9 @@ const toastIcon = (type: ToastType) => {
 <style scoped>
 .toast-enter-active,
 .toast-leave-active {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .toast-enter-from {

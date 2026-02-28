@@ -20,14 +20,13 @@ The application uses a responsive sidebar navigation that appears:
 
 #### Desktop Sidebar (SidebarNav.vue)
 
-| Icon | Label          | Route         | Description                                 |
-| ---- | -------------- | ------------- | ------------------------------------------- |
-| 🏠   | Dashboard      | `/`           | Main dashboard view                         |
-| 🏘️   | Households     | `/households` | List and switch between households          |
-| 🛒   | Shopping Lists | `/shopping`   | Shared shopping lists for current household |
-| 🎁   | Wishlists      | `/wishlists`  | Personal wishlists (public sharing)         |
-| 🎮   | Apps           | `/apps`       | Mini-apps launcher hub                      |
-| ⚙️   | Settings       | `/settings`   | User and app settings                       |
+| Icon | Label      | Route         | Description                                 |
+| ---- | ---------- | ------------- | ------------------------------------------- |
+| 🏘️   | Households | `/households` | List and switch between households          |
+| 🛒   | Shopping   | `/shopping`   | Shared shopping lists for current household |
+| 🎁   | Wishlists  | `/wishlists`  | Personal wishlists (public sharing)         |
+| 🎮   | Apps       | `/apps`       | Mini-apps launcher hub                      |
+| ⚙️   | Settings   | `/settings`   | User and app settings                       |
 
 #### Mobile Bottom Navigation (BottomNav.vue)
 

@@ -68,14 +68,20 @@ const breadcrumbs = computed<Breadcrumb[]>(() => {
     case 'household-detail':
       crumbs.push({ label: 'Households', to: '/households' });
       crumbs.push({
-        label: householdStore.currentHousehold?.name ?? 'Details',
+        label:
+          householdStore.currentHousehold?.id === route.params.id
+            ? householdStore.currentHousehold.name
+            : 'Details',
         to: route.path,
       });
       break;
     case 'member-management':
       crumbs.push({ label: 'Households', to: '/households' });
       crumbs.push({
-        label: householdStore.currentHousehold?.name ?? 'Details',
+        label:
+          householdStore.currentHousehold?.id === route.params.id
+            ? householdStore.currentHousehold.name
+            : 'Details',
         to: `/households/${route.params.id}`,
       });
       crumbs.push({ label: 'Members', to: route.path });

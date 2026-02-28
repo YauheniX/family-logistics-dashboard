@@ -81,8 +81,6 @@ import { RouterLink, useRoute } from 'vue-router';
 import { useHouseholdStore } from '@/stores/household';
 
 const route = useRoute();
-const householdStore = useHouseholdStore();
-const currentHousehold = computed(() => householdStore.currentHousehold);
 const showMoreMenu = ref(false);
 
 interface NavItem {

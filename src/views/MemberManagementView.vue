@@ -248,6 +248,7 @@ import MemberCard from '@/components/members/MemberCard.vue';
 import AddChildModal from '@/components/members/AddChildModal.vue';
 import { useHouseholdEntityStore } from '@/features/household/presentation/household.store';
 import { useHouseholdStore } from '@/stores/household';
+import { useToastStore } from '@/stores/toast';
 import { useMembers } from '@/composables/useMembers';
 import { resolveMemberProfile } from '@/utils/profileResolver';
 import type { Member } from '@/features/shared/domain/entities';
@@ -256,6 +257,7 @@ const route = useRoute();
 const router = useRouter();
 const householdEntityStore = useHouseholdEntityStore();
 const householdStore = useHouseholdStore();
+const toastStore = useToastStore();
 const {
   loading: membersLoading,
   isOwnerOrAdmin,
@@ -449,9 +451,16 @@ const confirmEdit = async () => {
   let success = false;
 
   if (memberToEdit.value.role === 'child') {
+    // Validate that the trimmed name is not empty
+    const trimmedName = editMemberNameInput.value.trim();
+    if (!trimmedName) {
+      toastStore.error('Name cannot be empty');
+      return;
+    }
+
     // Update child data (name, avatar, and birthday)
     success = await updateMember(memberToEdit.value.id, {
-      display_name: editMemberNameInput.value.trim(),
+      display_name: trimmedName,
       avatar_url: editMemberAvatar.value,
       date_of_birth: editMemberBirthday.value,
     });

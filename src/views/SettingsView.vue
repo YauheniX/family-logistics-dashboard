@@ -64,14 +64,7 @@
               :disabled="true"
               class="flex-1"
             />
-            <BaseButton
-              variant="secondary"
-              @click="
-                editNameForm = profileForm.name;
-                errors = {};
-                showEditNameModal = true;
-              "
-            >
+            <BaseButton variant="secondary" aria-label="Edit name" @click="openEditNameModal">
               <svg
                 class="h-4 w-4"
                 fill="none"
@@ -253,17 +246,23 @@ const handleAvatarUpload = () => {
   toastStore.info('Avatar upload feature coming soon!');
 };
 
+const openEditNameModal = () => {
+  editNameForm.value = profileForm.value.name;
+  errors.value = {};
+  showEditNameModal.value = true;
+};
+
 const confirmEditName = async () => {
   errors.value = {};
-
-  if (!editNameForm.value || editNameForm.value.trim().length < 2) {
-    errors.value.name = 'Name must be at least 2 characters';
-    return;
-  }
 
   // Skip save if name unchanged
   if (editNameForm.value.trim() === originalName.value) {
     showEditNameModal.value = false;
+    return;
+  }
+
+  if (!editNameForm.value || editNameForm.value.trim().length < 2) {
+    errors.value.name = 'Name must be at least 2 characters';
     return;
   }
 

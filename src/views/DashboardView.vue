@@ -162,6 +162,8 @@ async function handleInvitationAccepted() {
 }
 
 // Helper function to load data for current household
+const loadRequestToken = ref(0);
+
 async function loadCurrentHouseholdData() {
   const userId = authStore.user?.id;
   const householdId = currentHouseholdId.value;
@@ -176,15 +178,28 @@ async function loadCurrentHouseholdData() {
     return;
   }
 
-  console.log('[Dashboard] Loading data for household:', householdId);
+  const currentToken = ++loadRequestToken.value;
+  console.log('[Dashboard] Loading data for household:', householdId, 'token:', currentToken);
   try {
     await Promise.all([
       shoppingStore.loadLists(householdId),
       wishlistStore.loadWishlistsByHousehold(userId, householdId),
       wishlistStore.loadHouseholdWishlists(householdId, userId),
     ]);
-    lastLoadedHouseholdId.value = householdId;
-    console.log('[Dashboard] Data loaded successfully');
+
+    // Only apply results if this is still the latest request
+    if (currentToken === loadRequestToken.value) {
+      lastLoadedHouseholdId.value = householdId;
+      console.log('[Dashboard] Data loaded successfully');
+    } else {
+      console.log(
+        '[Dashboard] Discarding stale data (token:',
+        currentToken,
+        'current:',
+        loadRequestToken.value,
+        ')',
+      );
+    }
   } catch (error) {
     console.error('[Dashboard] Failed to load data:', error);
   }
