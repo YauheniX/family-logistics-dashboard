@@ -39,6 +39,7 @@
 import { computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
+import { useHouseholdStore } from '@/stores/household';
 
 interface Breadcrumb {
   label: string;
@@ -48,6 +49,7 @@ interface Breadcrumb {
 const route = useRoute();
 
 const shoppingStore = useShoppingStore();
+const householdStore = useHouseholdStore();
 
 const breadcrumbs = computed<Breadcrumb[]>(() => {
   const crumbs: Breadcrumb[] = [];
@@ -65,11 +67,17 @@ const breadcrumbs = computed<Breadcrumb[]>(() => {
       break;
     case 'household-detail':
       crumbs.push({ label: 'Households', to: '/households' });
-      crumbs.push({ label: 'Details', to: route.path });
+      crumbs.push({
+        label: householdStore.currentHousehold?.name ?? 'Details',
+        to: route.path,
+      });
       break;
     case 'member-management':
       crumbs.push({ label: 'Households', to: '/households' });
-      crumbs.push({ label: 'Details', to: `/households/${route.params.id}` });
+      crumbs.push({
+        label: householdStore.currentHousehold?.name ?? 'Details',
+        to: `/households/${route.params.id}`,
+      });
       crumbs.push({ label: 'Members', to: route.path });
       break;
     case 'shopping':
@@ -89,7 +97,6 @@ const breadcrumbs = computed<Breadcrumb[]>(() => {
       crumbs.push({ label: 'Edit Wishlist', to: route.path });
       break;
     case 'wishlist-detail':
-      crumbs.push({ label: 'Wishlists', to: '/wishlists' });
       crumbs.push({ label: 'Wishlist', to: route.path });
       break;
     case 'settings':

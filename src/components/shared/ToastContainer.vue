@@ -1,11 +1,15 @@
 <template>
-  <div class="fixed bottom-4 right-4 z-50 flex flex-col gap-2" role="alert" aria-live="polite">
+  <div
+    class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-full max-w-md px-4"
+    role="alert"
+    aria-live="polite"
+  >
     <transition-group name="toast">
       <div
         v-for="toast in toastStore.toasts"
         :key="toast.id"
         :class="toastClasses(toast.type)"
-        class="flex min-w-[300px] max-w-md items-center gap-3 rounded-lg px-4 py-3 shadow-lg"
+        class="flex items-center gap-3 rounded-lg px-4 py-3 shadow-lg w-full"
       >
         <span class="text-lg">{{ toastIcon(toast.type) }}</span>
         <p class="flex-1 text-sm font-medium">{{ toast.message }}</p>
@@ -54,16 +58,20 @@ const toastIcon = (type: ToastType) => {
 <style scoped>
 .toast-enter-active,
 .toast-leave-active {
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .toast-enter-from {
   opacity: 0;
-  transform: translateX(100%);
+  transform: translateY(20px);
 }
 
 .toast-leave-to {
   opacity: 0;
-  transform: translateX(100%);
+  transform: translateY(-10px);
+}
+
+.toast-move {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 </style>

@@ -97,9 +97,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted, onActivated } from 'vue';
 import { storeToRefs } from 'pinia';
-import { RouterLink, useRouter } from 'vue-router';
+import { RouterLink, useRouter, useRoute } from 'vue-router';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';
@@ -120,6 +120,7 @@ const householdEntityStore = useHouseholdEntityStore();
 const shoppingStore = useShoppingStore();
 const wishlistStore = useWishlistStore();
 const router = useRouter();
+const route = useRoute();
 const { userDisplayName, userAvatarUrl: profileAvatarUrl } = useUserProfile();
 
 // Use storeToRefs for proper reactivity with Pinia
@@ -160,6 +161,63 @@ async function handleInvitationAccepted() {
   }
 }
 
+// Helper function to load data for current household
+async function loadCurrentHouseholdData() {
+  const userId = authStore.user?.id;
+  const householdId = currentHouseholdId.value;
+
+  if (!userId || !householdId) {
+    console.log('[Dashboard] Cannot load data: missing userId or householdId');
+    return;
+  }
+
+  if (!householdStore.initialized) {
+    console.log('[Dashboard] Cannot load data: household store not initialized');
+    return;
+  }
+
+  console.log('[Dashboard] Loading data for household:', householdId);
+  try {
+    await Promise.all([
+      shoppingStore.loadLists(householdId),
+      wishlistStore.loadWishlistsByHousehold(userId, householdId),
+      wishlistStore.loadHouseholdWishlists(householdId, userId),
+    ]);
+    lastLoadedHouseholdId.value = householdId;
+    console.log('[Dashboard] Data loaded successfully');
+  } catch (error) {
+    console.error('[Dashboard] Failed to load data:', error);
+  }
+}
+
+// Load data on component mount
+onMounted(async () => {
+  console.log('[Dashboard] Component mounted, loading data...');
+  await loadCurrentHouseholdData();
+});
+
+// Reload data when navigating back to dashboard (important for router reuse)
+onActivated(async () => {
+  console.log('[Dashboard] Component activated, reloading data...');
+  // Force reload by clearing the tracking
+  lastLoadedHouseholdId.value = null;
+  await loadCurrentHouseholdData();
+});
+
+// Watch for route changes to reload data when navigating back to dashboard
+// This handles cases where component is reused by Vue Router
+watch(
+  () => route.name,
+  async (routeName) => {
+    if (routeName === 'dashboard') {
+      console.log('[Dashboard] Navigated to dashboard route, reloading data...');
+      // Force reload by clearing the tracking
+      lastLoadedHouseholdId.value = null;
+      await loadCurrentHouseholdData();
+    }
+  },
+);
+
 watch(
   () => authStore.user?.id,
   async (userId) => {
@@ -175,7 +233,7 @@ watch(
 );
 
 // Watch for household switches
-watch(currentHouseholdId, async (householdId) => {
+watch(currentHouseholdId, async (householdId, oldHouseholdId) => {
   // CRITICAL: Wait for household store initialization before loading data
   // This prevents loading data for stale household ID from localStorage
   if (!householdStore.initialized) {
@@ -189,26 +247,13 @@ watch(currentHouseholdId, async (householdId) => {
     return;
   }
 
-  // Skip if already loaded
-  if (householdId === lastLoadedHouseholdId.value) {
+  // Skip if already loaded (unless household actually changed)
+  if (householdId === lastLoadedHouseholdId.value && householdId === oldHouseholdId) {
+    console.log('[Dashboard] Data already loaded for household:', householdId);
     return;
   }
 
-  // Only update tracking after successful load
-  try {
-    const userId = authStore.user?.id;
-    if (!userId) return;
-
-    console.log('[Dashboard] Loading data for household:', householdId);
-    await Promise.all([
-      shoppingStore.loadLists(householdId),
-      wishlistStore.loadWishlistsByHousehold(userId, householdId),
-      wishlistStore.loadHouseholdWishlists(householdId, userId),
-    ]);
-    lastLoadedHouseholdId.value = householdId;
-  } catch (error) {
-    console.error('Failed to load data for household:', error);
-  }
+  await loadCurrentHouseholdData();
 });
 
 // When household store is initialized, trigger data load for current household
@@ -216,23 +261,11 @@ watch(
   () => householdStore.initialized,
   async (isInitialized) => {
     if (isInitialized && currentHouseholdId.value) {
-      const userId = authStore.user?.id;
-      if (!userId) return;
-
       console.log(
         '[Dashboard] Household store initialized, loading data for:',
         currentHouseholdId.value,
       );
-      try {
-        await Promise.all([
-          shoppingStore.loadLists(currentHouseholdId.value),
-          wishlistStore.loadWishlistsByHousehold(userId, currentHouseholdId.value),
-          wishlistStore.loadHouseholdWishlists(currentHouseholdId.value, userId),
-        ]);
-        lastLoadedHouseholdId.value = currentHouseholdId.value;
-      } catch (error) {
-        console.error('Failed to load data after initialization:', error);
-      }
+      await loadCurrentHouseholdData();
     }
   },
 );

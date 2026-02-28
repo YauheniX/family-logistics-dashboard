@@ -167,13 +167,13 @@ const cardBorderClass = computed(() => {
 
 const canEdit = computed(() => {
   // Only show edit button if user has management permissions
-  // and the member is not the owner (owner can't be edited in this view)
+  // Owner cannot be edited, but children and other members can be
   return props.canManage === true && props.member.role !== 'owner';
 });
 
 const canRemove = computed(() => {
   // Only show remove button if user has management permissions
-  // and the member is not the owner (owner can't be removed)
+  // Owner cannot be removed
   return props.canManage === true && props.member.role !== 'owner';
 });
 </script>

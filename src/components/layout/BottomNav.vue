@@ -95,12 +95,6 @@ interface NavItem {
 // Primary navigation items (always visible)
 const navItems = computed<NavItem[]>(() => [
   { name: 'dashboard', label: 'Home', to: { name: 'dashboard' }, emoji: '🏠' },
-  {
-    name: 'household-list',
-    label: 'Manage',
-    to: currentHousehold.value ? `/households/${currentHousehold.value.id}` : '/households',
-    emoji: '👥',
-  },
   { name: 'shopping', label: 'Shopping', to: { name: 'shopping' }, emoji: '🛒' },
   { name: 'wishlist-list', label: 'Wishlists', to: '/wishlists', emoji: '🎁' },
 ]);

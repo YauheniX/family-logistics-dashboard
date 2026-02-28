@@ -135,18 +135,7 @@ const currentHousehold = computed(() => householdStore.currentHousehold);
 
 function isActive(itemName: string): boolean {
   const currentRouteName = route.name as string;
-
-  // Exact match
-  if (currentRouteName === itemName) {
-    return true;
-  }
-
-  // Match household-detail and member-management for "Manage Household"
-  if (itemName === 'household-detail') {
-    return currentRouteName === 'household-detail' || currentRouteName === 'member-management';
-  }
-
-  return false;
+  return currentRouteName === itemName;
 }
 
 const items = computed(() => [
@@ -155,12 +144,6 @@ const items = computed(() => [
     label: 'Households',
     to: '/households',
     emoji: '🏘️',
-  },
-  {
-    name: 'household-detail',
-    label: 'Manage Household',
-    to: currentHousehold.value ? `/households/${currentHousehold.value.id}` : '/households',
-    emoji: '👨‍👩‍👧‍👦',
   },
   { name: 'shopping', label: 'Shopping', to: { name: 'shopping' }, emoji: '🛒' },
   { name: 'wishlist-list', label: 'Wishlists', to: '/wishlists', emoji: '🎁' },
