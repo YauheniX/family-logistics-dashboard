@@ -1,16 +1,21 @@
 <template>
-  <div class="glass-card flex flex-col items-start gap-3 p-6 text-left">
+  <div class="glass-card flex flex-col items-start gap-3 p-6 text-left animate-fade-in">
     <div
       v-if="badge"
-      class="rounded-full bg-slate-100 dark:bg-slate-700 px-3 py-1 text-xs font-semibold text-slate-600 dark:text-slate-300"
+      class="rounded-full bg-neutral-100 dark:bg-neutral-700 px-3 py-1 text-xs font-semibold text-neutral-600 dark:text-neutral-300 shadow-soft"
     >
       {{ badge }}
     </div>
     <div>
-      <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ title }}</h3>
-      <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">{{ description }}</p>
+      <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{{ title }}</h3>
+      <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-400">{{ description }}</p>
     </div>
-    <button v-if="cta" class="btn-primary" type="button" @click="$emit('action')">
+    <button
+      v-if="cta"
+      class="btn-primary hover:shadow-medium"
+      type="button"
+      @click="$emit('action')"
+    >
       {{ cta }}
     </button>
   </div>

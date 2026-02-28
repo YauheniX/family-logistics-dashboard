@@ -2,10 +2,10 @@
   <div class="space-y-6">
     <BaseCard>
       <div class="p-6">
-        <h2 class="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+        <h2 class="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
           Good morning, {{ userName }}!
         </h2>
-        <p class="mt-2 text-neutral-600 dark:text-neutral-400">
+        <p class="text-neutral-600 dark:text-neutral-400">
           Manage your household, shopping lists, and wishlists in one place.
         </p>
       </div>
@@ -35,15 +35,23 @@
               v-for="list in allActiveLists"
               :key="list.id"
               :to="{ name: 'shopping-list', params: { listId: list.id } }"
-              class="flex items-center justify-between rounded-lg border border-neutral-200 dark:border-neutral-700 p-3 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+              class="interactive-card flex items-center justify-between"
             >
-              <div>
-                <p class="font-medium text-neutral-800 dark:text-neutral-200">{{ list.title }}</p>
-                <p v-if="list.description" class="text-xs text-neutral-500 dark:text-neutral-400">
+              <div class="min-w-0">
+                <p class="font-medium text-neutral-800 dark:text-neutral-200 truncate">
+                  {{ list.title }}
+                </p>
+                <p
+                  v-if="list.description"
+                  class="text-xs text-neutral-500 dark:text-neutral-400 truncate"
+                >
                   {{ list.description }}
                 </p>
               </div>
-              <BaseBadge :variant="list.status === 'active' ? 'success' : 'neutral'">
+              <BaseBadge
+                :variant="list.status === 'active' ? 'success' : 'neutral'"
+                class="flex-shrink-0 ml-2"
+              >
                 {{ list.status }}
               </BaseBadge>
             </RouterLink>
@@ -67,10 +75,15 @@
               v-for="wishlist in wishlistStore.householdWishlists"
               :key="wishlist.id"
               :to="{ name: 'wishlist-detail', params: { id: wishlist.id } }"
-              class="flex items-center justify-between rounded-lg border border-neutral-200 dark:border-neutral-700 p-3 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+              class="interactive-card flex items-center justify-between"
             >
-              <p class="font-medium text-neutral-800 dark:text-neutral-200">{{ wishlist.title }}</p>
-              <BaseBadge :variant="getVisibilityVariant(wishlist.visibility)">
+              <p class="font-medium text-neutral-800 dark:text-neutral-200 truncate flex-1 min-w-0">
+                {{ wishlist.title }}
+              </p>
+              <BaseBadge
+                :variant="getVisibilityVariant(wishlist.visibility)"
+                class="flex-shrink-0 ml-2"
+              >
                 {{ getVisibilityLabel(wishlist.visibility) }}
               </BaseBadge>
             </RouterLink>
