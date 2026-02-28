@@ -8,6 +8,7 @@ vi.mock('@/features/wishlist/domain/wishlist.service', () => ({
     getWishlist: vi.fn(),
     getWishlistBySlug: vi.fn(),
     getHouseholdWishlists: vi.fn(),
+    getChildrenWishlists: vi.fn(),
     createWishlist: vi.fn(),
     updateWishlist: vi.fn(),
     deleteWishlist: vi.fn(),
@@ -465,6 +466,8 @@ describe('Wishlist Store', () => {
     const store = useWishlistStore();
     await store.loadHouseholdWishlists('household-1', 'u1');
 
+    // Note: This now includes children's wishlists with household/public visibility
+    // even if created by current user (filtered by member_id, not user_id)
     expect(store.householdWishlists).toEqual([householdWishlist]);
   });
 

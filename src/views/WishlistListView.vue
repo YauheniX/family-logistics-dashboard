@@ -16,7 +16,7 @@
           class="w-full sm:w-auto"
           :disabled="!currentHouseholdId"
           :title="!currentHouseholdId ? 'Select a household first' : undefined"
-          @click="showCreateModal = true"
+          @click="showCreatePersonalModal = true"
         >
           ➕ Create Wishlist
         </BaseButton>
@@ -90,8 +90,115 @@
       description="Create your first wishlist to start tracking gift ideas."
     />
 
-    <ModalDialog :open="showCreateModal" title="Create Wishlist" @close="showCreateModal = false">
-      <form class="space-y-4" @submit.prevent="handleCreate">
+    <!-- Children's Wishlists Section -->
+    <template v-if="canCreateForChildren">
+      <BaseCard>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div class="min-w-0">
+            <p class="text-sm text-neutral-500 dark:text-neutral-400">Children</p>
+            <h2 class="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
+              Children's Wishlists
+            </h2>
+            <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+              Wishlists you manage for your children.
+            </p>
+          </div>
+          <BaseButton
+            variant="primary"
+            class="w-full sm:w-auto"
+            :disabled="!currentHouseholdId || childMembers.length === 0"
+            :title="
+              !currentHouseholdId
+                ? 'Select a household first'
+                : childMembers.length === 0
+                  ? 'No children in household'
+                  : undefined
+            "
+            @click="showCreateChildModal = true"
+          >
+            👶 Create for Child
+          </BaseButton>
+        </div>
+      </BaseCard>
+
+      <div
+        v-if="wishlistStore.childrenWishlists.length"
+        class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      >
+        <BaseCard
+          v-for="wishlist in wishlistStore.childrenWishlists"
+          :key="wishlist.id"
+          :hover="true"
+          :padding="false"
+          class="flex flex-col"
+        >
+          <div
+            class="flex-1 p-4 cursor-pointer"
+            tabindex="0"
+            role="button"
+            @click="$router.push({ name: 'wishlist-edit', params: { id: wishlist.id } })"
+            @keydown.enter="$router.push({ name: 'wishlist-edit', params: { id: wishlist.id } })"
+            @keydown.space.prevent="
+              $router.push({ name: 'wishlist-edit', params: { id: wishlist.id } })
+            "
+          >
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
+                {{ wishlist.title }}
+              </h3>
+              <div class="flex gap-2">
+                <BaseBadge v-if="wishlist.member_name" variant="neutral">
+                  {{ wishlist.member_name }}
+                </BaseBadge>
+                <BaseBadge :variant="getVisibilityVariant(wishlist.visibility)">
+                  {{ getVisibilityLabel(wishlist.visibility) }}
+                </BaseBadge>
+              </div>
+            </div>
+            <p v-if="wishlist.description" class="text-sm text-neutral-600 dark:text-neutral-400">
+              {{ wishlist.description }}
+            </p>
+            <p class="mt-3 text-xs text-neutral-500 dark:text-neutral-500">
+              Created {{ new Date(wishlist.created_at).toLocaleDateString() }}
+            </p>
+          </div>
+
+          <!-- Action Buttons - Always at bottom -->
+          <template #footer>
+            <div class="flex gap-2">
+              <BaseButton
+                variant="ghost"
+                class="flex-1 text-sm"
+                @click.stop="$router.push({ name: 'wishlist-edit', params: { id: wishlist.id } })"
+              >
+                Edit
+              </BaseButton>
+              <BaseButton
+                variant="danger"
+                class="flex-1 text-sm"
+                @click.stop="handleDelete(wishlist.id)"
+              >
+                Delete
+              </BaseButton>
+            </div>
+          </template>
+        </BaseCard>
+      </div>
+
+      <EmptyState
+        v-else
+        title="No children's wishlists yet"
+        description="Click 'Create for Child' to create a wishlist for one of your children."
+      />
+    </template>
+
+    <!-- Personal Wishlist Modal -->
+    <ModalDialog
+      :open="showCreatePersonalModal"
+      title="Create Wishlist"
+      @close="showCreatePersonalModal = false"
+    >
+      <form class="space-y-4" @submit.prevent="handleCreatePersonal">
         <BaseInput v-model="newTitle" label="Title" placeholder="Birthday wishlist" required />
         <BaseInput
           v-model="newDescription"
@@ -112,7 +219,54 @@
           <BaseButton variant="primary" type="submit" :disabled="wishlistStore.loading">
             Create
           </BaseButton>
-          <BaseButton variant="ghost" type="button" @click="showCreateModal = false"
+          <BaseButton variant="ghost" type="button" @click="showCreatePersonalModal = false"
+            >Cancel</BaseButton
+          >
+        </div>
+      </form>
+    </ModalDialog>
+
+    <!-- Child Wishlist Modal -->
+    <ModalDialog
+      :open="showCreateChildModal"
+      title="Create Wishlist for Child"
+      @close="showCreateChildModal = false"
+    >
+      <form class="space-y-4" @submit.prevent="handleCreateChild">
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Child</label>
+          <select v-model="selectedMemberId" class="input w-full" required>
+            <option :value="null" disabled selected>Choose which child...</option>
+            <option v-for="child in childMembers" :key="child.id" :value="child.id">
+              {{ child.display_name }}
+            </option>
+          </select>
+        </div>
+        <BaseInput v-model="newTitle" label="Title" placeholder="Birthday wishlist" required />
+        <BaseInput
+          v-model="newDescription"
+          label="Description"
+          placeholder="Optional description"
+        />
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+            >Visibility</label
+          >
+          <select v-model="newVisibility" class="input w-full">
+            <option value="private">Private (only you)</option>
+            <option value="household">Household (all members)</option>
+            <option value="public">Public (shareable link)</option>
+          </select>
+        </div>
+        <div class="flex gap-3">
+          <BaseButton
+            variant="primary"
+            type="submit"
+            :disabled="wishlistStore.loading || !selectedMemberId"
+          >
+            Create
+          </BaseButton>
+          <BaseButton variant="ghost" type="button" @click="showCreateChildModal = false"
             >Cancel</BaseButton
           >
         </div>
@@ -135,6 +289,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useHouseholdStore } from '@/stores/household';
 import { useToastStore } from '@/stores/toast';
 import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
+import { useMembers } from '@/composables/useMembers';
 import { wishlistService } from '@/features/wishlist/domain/wishlist.service';
 import { isValidUrl } from '@/utils/validation';
 import { fetchLinkPreview } from '@/composables/useLinkPreview';
@@ -143,19 +298,32 @@ import { getVisibilityVariant, getVisibilityLabel } from '@/composables/useVisib
 const authStore = useAuthStore();
 const householdStore = useHouseholdStore();
 const wishlistStore = useWishlistStore();
+const { members, fetchMembers } = useMembers();
 
 // Use storeToRefs for proper reactivity with Pinia
 const { currentHousehold } = storeToRefs(householdStore);
 const currentHouseholdId = computed(() => currentHousehold.value?.id);
 
-const showCreateModal = ref(false);
+// Filter for child members only
+const childMembers = computed(() =>
+  (members.value || []).filter((m) => m.role === 'child' && m.is_active),
+);
+
+// Check if user can create wishlists for children (owner or admin)
+const canCreateForChildren = computed(
+  () => householdStore.isOwnerOrAdmin && childMembers.value.length > 0,
+);
+
+const showCreatePersonalModal = ref(false);
+const showCreateChildModal = ref(false);
 const newTitle = ref('');
 const newDescription = ref('');
 const newVisibility = ref<'private' | 'household' | 'public'>('private');
+const selectedMemberId = ref<string | null>(null);
 const previewUrls = ref<Record<string, string>>({});
 const previewImages = ref<Record<string, string>>({});
 
-const handleCreate = async () => {
+const handleCreatePersonal = async () => {
   if (!newTitle.value.trim()) return;
   if (!currentHouseholdId.value) {
     useToastStore().warning('Please select a household first');
@@ -166,12 +334,39 @@ const handleCreate = async () => {
     description: newDescription.value.trim() || null,
     visibility: newVisibility.value,
     household_id: currentHouseholdId.value,
+    // No member_id - will use current user's member_id
   });
   if (created) {
     newTitle.value = '';
     newDescription.value = '';
     newVisibility.value = 'private';
-    showCreateModal.value = false;
+    showCreatePersonalModal.value = false;
+  }
+};
+
+const handleCreateChild = async () => {
+  if (!newTitle.value.trim()) return;
+  if (!selectedMemberId.value) {
+    useToastStore().warning('Please select a child');
+    return;
+  }
+  if (!currentHouseholdId.value) {
+    useToastStore().warning('Please select a household first');
+    return;
+  }
+  const created = await wishlistStore.createWishlist({
+    title: newTitle.value.trim(),
+    description: newDescription.value.trim() || null,
+    visibility: newVisibility.value,
+    household_id: currentHouseholdId.value,
+    member_id: selectedMemberId.value,
+  });
+  if (created) {
+    newTitle.value = '';
+    newDescription.value = '';
+    newVisibility.value = 'private';
+    selectedMemberId.value = null;
+    showCreateChildModal.value = false;
   }
 };
 
@@ -247,12 +442,16 @@ const loadWishlistPreviews = async () => {
   previewImages.value = images;
 };
 
-// Load wishlists when user or household changes
+// Load wishlists and members when user or household changes
 watch(
   [() => authStore.user?.id, currentHouseholdId],
   async ([userId, householdId]) => {
     if (userId && householdId) {
-      await wishlistStore.loadWishlistsByHousehold(userId, householdId);
+      await Promise.all([
+        wishlistStore.loadWishlistsByHousehold(userId, householdId),
+        wishlistStore.loadChildrenWishlists(userId, householdId),
+        fetchMembers(),
+      ]);
       // Load previews after wishlists are loaded
       await loadWishlistPreviews();
     }

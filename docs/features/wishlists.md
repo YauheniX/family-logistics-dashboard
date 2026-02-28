@@ -38,7 +38,16 @@ Wishlists are scoped to the **currently selected household** in the UI:
 
 ### Creating Wishlists
 
-When a user creates a wishlist, it is automatically associated with their **currently selected household**:
+When a user creates a wishlist, it is automatically associated with their **currently selected household**.
+
+**Children's Wishlists**: Parents can create wishlists for their children members. These wishlists:
+
+- Have `user_id` = parent (creator)
+- Have `member_id` = child member
+- Appear in parent's "Children's Wishlists" section (private view)
+- Appear in "Household Wishlists" section for ALL members (if visibility = household/public)
+
+This allows families to coordinate gift-giving for children.
 
 ```typescript
 // In WishlistListView.vue
@@ -63,6 +72,17 @@ watch(currentHouseholdId, (newHouseholdId) => {
   }
 });
 ```
+
+**Household Wishlists Filter Logic**:
+
+The "Household Wishlists" section shows wishlists from other household members based on `member_id` filtering:
+
+- ✅ Includes: Wishlists where `member_id` ≠ current user's member (with household/public visibility)
+- ✅ Includes: Children's wishlists created by current user BUT assigned to child members (if visibility = household/public)
+- ❌ Excludes: Current user's personal wishlists (where `member_id` = current user's member)
+- ❌ Excludes: Private wishlists from any member
+
+This ensures children's wishlists are visible to the whole family for gift coordination.
 
 ### Switching Households
 
@@ -309,6 +329,8 @@ class WishlistService {
   async getWishlistBySlug(slug: string): Promise<ApiResponse<Wishlist>>;
 
   // Get household wishlists (filtered by visibility)
+  // Includes other members' wishlists AND children's wishlists
+  // with household/public visibility (even if created by current user)
   async getHouseholdWishlists(
     householdId: string,
     excludeUserId: string,

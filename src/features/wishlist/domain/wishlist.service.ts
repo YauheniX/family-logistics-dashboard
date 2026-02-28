@@ -70,6 +70,17 @@ export class WishlistService {
   }
 
   /**
+   * Get wishlists created by parent for their children.
+   * Returns wishlists where user_id = parent but member_id points to a child.
+   */
+  async getChildrenWishlists(
+    userId: string,
+    householdId: string,
+  ): Promise<ApiResponse<Wishlist[]>> {
+    return await wishlistRepository.findChildrenWishlists(userId, householdId);
+  }
+
+  /**
    * Create a new wishlist with an auto-generated share slug
    */
   async createWishlist(data: CreateWishlistDto): Promise<ApiResponse<Wishlist>> {
