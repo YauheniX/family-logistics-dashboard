@@ -1,13 +1,13 @@
 <template>
   <div
     v-if="mobileOpen"
-    class="fixed inset-0 z-40 bg-black/40 lg:hidden"
+    class="fixed inset-0 z-40 bg-black/40 lg:hidden transition-opacity duration-normal backdrop-blur-sm"
     aria-hidden="true"
     @click="emit('close')"
   ></div>
 
   <aside
-    class="fixed inset-y-0 left-0 z-50 w-64 shrink-0 border-r border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 px-5 py-6 transform transition-transform duration-200 lg:hidden"
+    class="fixed inset-y-0 left-0 z-50 w-64 shrink-0 border-r border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 px-5 py-6 transform transition-transform duration-slow lg:hidden shadow-2xl"
     :class="mobileOpen ? 'translate-x-0' : '-translate-x-full'"
     :aria-hidden="mobileOpen ? 'false' : 'true'"
   >
@@ -25,10 +25,12 @@
     <!-- Current Household Display -->
     <div
       v-if="currentHousehold"
-      class="mb-6 rounded-xl bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/40 dark:to-primary-800/40 p-4 border border-primary-200 dark:border-primary-700"
+      class="mb-6 rounded-xl bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/40 dark:to-primary-800/40 p-4 border border-primary-200 dark:border-primary-700 shadow-soft hover:shadow-medium transition-shadow duration-normal"
     >
       <div class="flex items-center gap-2 mb-1">
-        <span class="text-xl" aria-hidden="true">{{ currentHousehold.emoji || '🏠' }}</span>
+        <span class="text-xl animate-bounce-subtle" aria-hidden="true">{{
+          currentHousehold.emoji || '🏠'
+        }}</span>
         <p class="font-semibold text-neutral-900 dark:text-neutral-50 truncate">
           {{ currentHousehold.name }}
         </p>
@@ -44,15 +46,17 @@
         v-for="item in items"
         :key="item.name"
         :to="item.to"
-        class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
+        class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-normal focus-ring group"
         :class="
           isActive(item.name)
-            ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-400 border border-primary-200 dark:border-primary-800'
-            : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+            ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-400 border border-primary-200 dark:border-primary-800 shadow-soft'
+            : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 hover:shadow-soft hover:translate-x-1'
         "
         @click="emit('close')"
       >
-        <span class="text-lg" aria-hidden="true">{{ item.emoji }}</span>
+        <span class="text-lg transition-transform group-hover:scale-110" aria-hidden="true">{{
+          item.emoji
+        }}</span>
         <span>{{ item.label }}</span>
       </RouterLink>
     </nav>
@@ -75,10 +79,12 @@
     <!-- Current Household Display -->
     <div
       v-if="currentHousehold"
-      class="mb-6 rounded-xl bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/40 dark:to-primary-800/40 p-4 border border-primary-200 dark:border-primary-700"
+      class="mb-6 rounded-xl bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/40 dark:to-primary-800/40 p-4 border border-primary-200 dark:border-primary-700 shadow-soft hover:shadow-medium transition-shadow duration-normal"
     >
       <div class="flex items-center gap-2 mb-1">
-        <span class="text-xl" aria-hidden="true">{{ currentHousehold.emoji || '🏠' }}</span>
+        <span class="text-xl animate-bounce-subtle" aria-hidden="true">{{
+          currentHousehold.emoji || '🏠'
+        }}</span>
         <p class="font-semibold text-neutral-900 dark:text-neutral-50 truncate">
           {{ currentHousehold.name }}
         </p>
@@ -94,14 +100,16 @@
         v-for="item in items"
         :key="item.name"
         :to="item.to"
-        class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
+        class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-normal focus-ring group"
         :class="
           isActive(item.name)
-            ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-400 border border-primary-200 dark:border-primary-800'
-            : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+            ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-400 border border-primary-200 dark:border-primary-800 shadow-soft'
+            : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 hover:shadow-soft hover:translate-x-1'
         "
       >
-        <span class="text-lg" aria-hidden="true">{{ item.emoji }}</span>
+        <span class="text-lg transition-transform group-hover:scale-110" aria-hidden="true">{{
+          item.emoji
+        }}</span>
         <span>{{ item.label }}</span>
       </RouterLink>
     </nav>

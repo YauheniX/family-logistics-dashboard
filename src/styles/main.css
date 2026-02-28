@@ -45,11 +45,15 @@ a {
 
 /* Card Components */
 .glass-card {
-  @apply bg-white rounded-card shadow-card-light border border-neutral-200;
+  @apply bg-white rounded-card shadow-card-light border border-neutral-200 transition-shadow duration-normal;
 }
 
 .dark .glass-card {
   @apply bg-neutral-800 border-neutral-700 shadow-none;
+}
+
+.glass-card:hover {
+  @apply shadow-card-hover;
 }
 
 .page-grid {
@@ -58,11 +62,11 @@ a {
 
 /* Button Components */
 .btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-semibold transition-all h-10 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-semibold transition-all duration-normal h-10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95;
 }
 
 .btn-primary {
-  @apply btn bg-primary-500 text-white hover:bg-primary-600 focus:ring-primary-500;
+  @apply btn bg-primary-500 text-white hover:bg-primary-600 hover:shadow-medium focus:ring-primary-500 active:bg-primary-700;
 }
 
 .dark .btn-primary {
@@ -70,7 +74,7 @@ a {
 }
 
 .btn-secondary {
-  @apply btn bg-transparent text-primary-500 border border-primary-500 hover:bg-primary-50;
+  @apply btn bg-transparent text-primary-500 border border-primary-500 hover:bg-primary-50 hover:border-primary-600;
 }
 
 .dark .btn-secondary {
@@ -78,7 +82,7 @@ a {
 }
 
 .btn-tertiary {
-  @apply btn bg-transparent text-neutral-700 hover:bg-neutral-100;
+  @apply btn bg-transparent text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900;
 }
 
 .dark .btn-tertiary {
@@ -86,32 +90,32 @@ a {
 }
 
 .btn-ghost {
-  @apply btn bg-transparent text-neutral-700 hover:bg-neutral-100;
+  @apply btn bg-transparent text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900;
 }
 
 .dark .btn-ghost {
-  @apply text-neutral-300 hover:bg-neutral-700;
+  @apply text-neutral-300 hover:bg-neutral-700 hover:text-neutral-100;
 }
 
 .btn:disabled {
-  @apply opacity-50 cursor-not-allowed;
+  @apply opacity-50 cursor-not-allowed pointer-events-none;
 }
 
 /* Input Components */
 .input {
-  @apply w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20;
+  @apply w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm shadow-sm transition-all duration-normal focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:shadow-medium hover:border-neutral-300;
 }
 
 .dark .input {
-  @apply border-neutral-700 bg-neutral-800 text-neutral-50 focus:border-primary-400 focus:ring-primary-400/20;
+  @apply border-neutral-700 bg-neutral-800 text-neutral-50 focus:border-primary-400 focus:ring-primary-400/20 hover:border-neutral-600;
 }
 
 .input:disabled {
-  @apply bg-neutral-100 text-neutral-500 cursor-not-allowed;
+  @apply bg-neutral-100 text-neutral-500 cursor-not-allowed hover:border-neutral-200;
 }
 
 .dark .input:disabled {
-  @apply bg-neutral-900 text-neutral-500;
+  @apply bg-neutral-900 text-neutral-500 hover:border-neutral-700;
 }
 
 .input.error {
@@ -132,7 +136,7 @@ a {
 
 /* Badge Components */
 .badge {
-  @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium;
+  @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition-all duration-normal;
 }
 
 .badge-success {
@@ -169,9 +173,35 @@ a {
 
 /* Checkbox */
 .checkbox {
-  @apply h-4 w-4 rounded border-neutral-300 text-success-500 focus:ring-2 focus:ring-success-500/20;
+  @apply h-4 w-4 rounded border-neutral-300 text-success-500 focus:ring-2 focus:ring-success-500/20 transition-all duration-normal cursor-pointer;
 }
 
 .dark .checkbox {
   @apply border-neutral-600 bg-neutral-800 text-success-400 focus:ring-success-400/20;
+}
+
+/* Link styles */
+.link {
+  @apply text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 underline-offset-2 hover:underline transition-colors duration-normal;
+}
+
+/* Interactive card/list item */
+.interactive-card {
+  @apply rounded-lg border border-neutral-200 dark:border-neutral-700 p-3 transition-all duration-normal hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:shadow-soft hover:border-neutral-300 dark:hover:border-neutral-600 cursor-pointer;
+}
+
+/* Focus visible for accessibility */
+.focus-ring {
+  @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:focus-visible:ring-primary-400 dark:focus-visible:ring-offset-neutral-900 rounded-lg;
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

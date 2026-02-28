@@ -30,7 +30,9 @@ const props = withDefaults(defineProps<Props>(), {
 
 const cardClasses = computed(() => {
   const base = 'glass-card flex flex-col h-full';
-  const hoverEffect = props.hover ? 'transition-shadow hover:shadow-lg cursor-pointer' : '';
+  const hoverEffect = props.hover
+    ? 'transition-all duration-normal hover:shadow-card-hover cursor-pointer hover:scale-[1.02] active:scale-[0.98]'
+    : '';
   return [base, hoverEffect].filter(Boolean).join(' ');
 });
 

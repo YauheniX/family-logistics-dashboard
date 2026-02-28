@@ -11,11 +11,15 @@
       <main class="flex-1 pb-16 lg:pb-0">
         <header
           v-if="showShell"
-          class="flex items-center justify-between gap-2 sm:gap-3 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 sm:px-4 py-2.5 sm:py-3 md:px-6 md:py-4"
+          class="flex items-center justify-between gap-2 sm:gap-3 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 sm:px-4 py-2.5 sm:py-3 md:px-6 md:py-4 backdrop-blur-sm bg-opacity-95 dark:bg-opacity-95 sticky top-0 z-40 shadow-soft"
         >
           <div class="flex min-w-0 items-center gap-2 md:gap-3 flex-1">
             <!-- Logo -->
-            <RouterLink to="/" class="flex-shrink-0" aria-label="Go to home">
+            <RouterLink
+              to="/"
+              class="flex-shrink-0 focus-ring transition-transform hover:scale-105 active:scale-95"
+              aria-label="Go to home"
+            >
               <img src="/icon.svg" alt="Logo" class="h-16 w-16" />
             </RouterLink>
 
@@ -26,7 +30,7 @@
             <BaseButton
               variant="ghost"
               aria-label="Report a problem"
-              class="hidden sm:inline-flex"
+              class="hidden sm:inline-flex hover:shadow-soft"
               @click="reportModalOpen = true"
             >
               <svg
@@ -61,6 +65,7 @@
                 :name="displayNameOrEmail"
                 :size="32"
                 :show-role-badge="false"
+                class="ring-2 ring-transparent hover:ring-primary-500/20 transition-all duration-normal"
               />
 
               <BaseButton variant="ghost" class="text-sm px-2 sm:px-3" @click="logout"
@@ -73,12 +78,12 @@
         <!-- Breadcrumbs -->
         <div
           v-if="showShell"
-          class="px-4 py-2 md:px-6 border-b border-neutral-100 dark:border-neutral-700/50"
+          class="px-4 py-2 md:px-6 border-b border-neutral-100 dark:border-neutral-700/50 bg-neutral-50/50 dark:bg-neutral-900/50"
         >
           <Breadcrumbs />
         </div>
 
-        <section class="p-3 sm:p-4 md:p-6">
+        <section class="p-3 sm:p-4 md:p-6 animate-fade-in">
           <RouterView />
         </section>
       </main>
