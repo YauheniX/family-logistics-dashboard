@@ -102,10 +102,6 @@ const breadcrumbs = computed<Breadcrumb[]>(() => {
       crumbs.push({ label: 'Apps', to: '/apps' });
       crumbs.push({ label: 'Rock-Paper-Scissors', to: route.path });
       break;
-    case 'cityscape':
-      crumbs.push({ label: 'Apps', to: '/apps' });
-      crumbs.push({ label: 'Cityscape', to: route.path });
-      break;
   }
 
   return crumbs;

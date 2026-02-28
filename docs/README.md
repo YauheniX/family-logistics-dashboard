@@ -28,7 +28,6 @@ Welcome to the documentation for the Family Shopping & Wishlist Planner.
 - [Household Management](features/household-management.md) - Creating and managing households
 - [Shopping Lists](features/shopping-lists.md) - Shared shopping lists
 - [Wishlists](features/wishlists.md) - Personal wishlists with public sharing
-- [Cityscape App](features/cityscape.md) - Interactive animated city scene ✅
 - [Mock Mode](features/mock-mode.md) - Frontend-only mode without backend ✅
 
 ### Development
