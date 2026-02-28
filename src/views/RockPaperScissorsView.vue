@@ -2,25 +2,27 @@
   <div class="min-h-screen bg-neutral-50 dark:bg-dark-bg pb-20 lg:pb-0">
     <div class="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
       <!-- Game Container -->
-      <div class="game-container bg-white dark:bg-neutral-800 rounded-lg shadow-sm p-6 sm:p-8">
+      <div
+        class="game-container bg-white dark:bg-neutral-800 rounded-lg shadow-sm p-3 sm:p-6 lg:p-8"
+      >
         <!-- Header with Title and Scores -->
-        <div class="mb-6">
+        <div class="mb-4 sm:mb-6">
           <h1
-            class="game-title text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-neutral-50 text-center mb-4"
+            class="game-title text-xl sm:text-2xl lg:text-3xl font-bold text-neutral-900 dark:text-neutral-50 text-center mb-3 sm:mb-4"
           >
             Rock-Paper-Scissors
           </h1>
           <!-- Score Display -->
-          <div class="flex justify-around text-center">
+          <div class="flex justify-around text-center max-w-xs mx-auto">
             <div>
-              <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-1">You</p>
-              <p class="text-3xl font-bold text-primary-600 dark:text-primary-400">
+              <p class="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 mb-1">You</p>
+              <p class="text-2xl sm:text-3xl font-bold text-primary-600 dark:text-primary-400">
                 {{ playerScore }}
               </p>
             </div>
             <div>
-              <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Computer</p>
-              <p class="text-3xl font-bold text-danger-600 dark:text-danger-400">
+              <p class="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 mb-1">Computer</p>
+              <p class="text-2xl sm:text-3xl font-bold text-danger-600 dark:text-danger-400">
                 {{ computerScore }}
               </p>
             </div>
@@ -86,9 +88,9 @@
         </div>
 
         <!-- Result Display -->
-        <div v-if="result" id="message" class="mt-8 text-center">
+        <div v-if="result" id="message" class="mt-4 sm:mt-8 text-center">
           <h2
-            class="text-2xl font-bold mb-4"
+            class="text-xl sm:text-2xl font-bold mb-3 sm:mb-4"
             :class="{
               'text-success-600 dark:text-success-400': result === 'You Win!',
               'text-danger-600 dark:text-danger-400': result === 'You Lose!',
@@ -100,16 +102,16 @@
         </div>
 
         <!-- Game Controls -->
-        <div class="flex gap-3 justify-center mt-8">
+        <div class="flex gap-2 sm:gap-3 justify-center mt-4 sm:mt-8 px-2">
           <button
             v-if="result"
-            class="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors font-medium"
+            class="flex-1 sm:flex-none px-4 sm:px-6 py-2.5 sm:py-2 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white rounded-lg transition-colors font-medium text-sm sm:text-base touch-manipulation"
             @click="resetRound"
           >
             Next Round
           </button>
           <button
-            class="px-4 py-2 text-sm bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-300 dark:hover:bg-neutral-600 transition-colors"
+            class="flex-1 sm:flex-none px-3 sm:px-4 py-2.5 sm:py-2 text-sm bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-300 dark:hover:bg-neutral-600 active:bg-neutral-400 dark:active:bg-neutral-500 transition-colors touch-manipulation"
             @click="resetGame"
           >
             Reset Game
@@ -227,8 +229,15 @@ function resetGame() {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 250px;
-  gap: 20px;
+  min-height: 200px;
+  gap: 15px;
+}
+
+@media (min-width: 640px) {
+  #hands {
+    min-height: 250px;
+    gap: 20px;
+  }
 }
 
 #hands.hands-paused .hand {
@@ -351,32 +360,53 @@ div.arm {
 /* Rock keeps default fist position */
 
 #icons {
-  width: 60px;
+  width: 55px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 #icons > div {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 60px;
-  height: 60px;
+  width: 55px;
+  height: 55px;
 }
 
 .choice-btn {
   background: #f5f5f5;
   border: 2px solid #ccc;
   cursor: pointer;
-  display: block;
-  height: 60px;
-  width: 60px;
-  line-height: 60px;
-  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 55px;
+  width: 55px;
+  font-size: 1.75rem;
   user-select: none;
   transition: all 0.2s;
   border-radius: 8px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (min-width: 640px) {
+  #icons {
+    width: 60px;
+    gap: 10px;
+  }
+
+  #icons > div {
+    width: 60px;
+    height: 60px;
+  }
+
+  .choice-btn {
+    height: 60px;
+    width: 60px;
+    font-size: 2rem;
+  }
 }
 
 .choice-btn:hover:not(:disabled) {
@@ -420,81 +450,146 @@ div.arm {
   }
 }
 
+/* Mobile optimization for small screens */
 @media (max-width: 640px) {
   .hand {
-    width: 150px;
-    height: 150px;
+    width: 120px;
+    height: 120px;
   }
 
   .fist {
-    height: 82px;
-    left: 30px;
-    top: 37px;
-    width: 67px;
+    height: 66px;
+    left: 24px;
+    top: 30px;
+    width: 54px;
   }
 
   .finger {
-    width: 52px;
-    height: 22px;
-    left: 60px;
+    width: 42px;
+    height: 18px;
+    left: 48px;
   }
 
   .finger-1 {
-    top: 37px;
+    top: 30px;
   }
   .finger-2 {
-    top: 58px;
-    left: 63px;
+    top: 46px;
+    left: 50px;
   }
   .finger-3 {
-    top: 79px;
+    top: 63px;
   }
   .finger-4 {
-    top: 100px;
-    height: 19px;
-    left: 57px;
+    top: 80px;
+    height: 15px;
+    left: 46px;
   }
 
   div.thumb {
-    width: 26px;
-    height: 52px;
-    top: 37px;
-    left: 60px;
+    width: 21px;
+    height: 42px;
+    top: 30px;
+    left: 48px;
+    box-shadow: -14px 5px 0 -12px black;
+  }
+
+  .dark div.thumb {
+    box-shadow: -14px 5px 0 -12px #ffd700;
   }
 
   div.arm {
-    width: 16px;
-    height: 52px;
-    left: 15px;
-    top: 52px;
+    width: 13px;
+    height: 42px;
+    left: 12px;
+    top: 42px;
   }
 
   .show-scissors .finger-1,
   .show-scissors .finger-2 {
-    width: 97px;
+    width: 78px;
   }
 
   .show-paper .finger-1,
   .show-paper .finger-2,
   .show-paper .finger-3,
   .show-paper .finger-4 {
-    left: calc(93px + var(--dif));
-    width: 60px;
+    left: calc(74px + var(--dif));
+    width: 48px;
+  }
+}
+
+/* Extra small screens - further optimization */
+@media (max-width: 380px) {
+  .hand {
+    width: 100px;
+    height: 100px;
   }
 
-  #icons {
-    width: 50px;
+  .fist {
+    height: 55px;
+    left: 20px;
+    top: 25px;
+    width: 45px;
   }
 
-  #icons > div {
-    width: 50px;
-    height: 50px;
+  .finger {
+    width: 35px;
+    height: 15px;
+    left: 40px;
   }
 
-  .choice-btn {
-    width: 50px;
-    height: 50px;
-    font-size: 1.5rem;
+  .finger-1 {
+    top: 25px;
+  }
+  .finger-2 {
+    top: 38px;
+    left: 42px;
+  }
+  .finger-3 {
+    top: 52px;
+  }
+  .finger-4 {
+    top: 67px;
+    height: 13px;
+    left: 38px;
+  }
+
+  div.thumb {
+    width: 18px;
+    height: 35px;
+    top: 25px;
+    left: 40px;
+    box-shadow: -12px 4px 0 -10px black;
+  }
+
+  .dark div.thumb {
+    box-shadow: -12px 4px 0 -10px #ffd700;
+  }
+
+  div.arm {
+    width: 11px;
+    height: 35px;
+    left: 10px;
+    top: 35px;
+  }
+
+  .show-scissors .finger-1,
+  .show-scissors .finger-2 {
+    width: 65px;
+  }
+
+  .show-paper .finger-1,
+  .show-paper .finger-2,
+  .show-paper .finger-3,
+  .show-paper .finger-4 {
+    left: calc(62px + var(--dif));
+    width: 40px;
+  }
+
+  #hands {
+    min-height: 160px;
+    gap: 10px;
   }
 }
 </style>
