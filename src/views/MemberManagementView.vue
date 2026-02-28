@@ -433,7 +433,7 @@ const handleEditMember = (member: Member) => {
   }
 
   // Initialize avatar for children
-  editMemberAvatar.value = member.avatar || '';
+  editMemberAvatar.value = member.avatar_url || '';
 
   // Initialize birthday for children
   editMemberBirthday.value = member.date_of_birth || '';
@@ -452,7 +452,7 @@ const confirmEdit = async () => {
     // Update child data (name, avatar, and birthday)
     success = await updateMember(memberToEdit.value.id, {
       display_name: editMemberNameInput.value.trim(),
-      avatar: editMemberAvatar.value,
+      avatar_url: editMemberAvatar.value,
       date_of_birth: editMemberBirthday.value,
     });
   } else {
