@@ -134,6 +134,36 @@ export class MockWishlistRepository extends MockRepository<
       };
     }
   }
+
+  /**
+   * Find wishlists created by parent for their children.
+   * In mock mode, simulates filtering for child member wishlists.
+   */
+  async findChildrenWishlists(
+    userId: string,
+    householdId: string,
+  ): Promise<ApiResponse<Wishlist[]>> {
+    try {
+      const wishlists = await this.loadAll();
+      // In mock mode, filter by user_id and household_id
+      // Real implementation would check member_id -> role === 'child'
+      const filtered = wishlists
+        .filter((w) => w.user_id === userId && w.household_id === householdId)
+        .sort((a, b) => {
+          const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+          return dateB - dateA;
+        });
+      return { data: filtered, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: {
+          message: error instanceof Error ? error.message : 'Failed to fetch children wishlists',
+        },
+      };
+    }
+  }
 }
 
 export class MockWishlistItemRepository extends MockRepository<

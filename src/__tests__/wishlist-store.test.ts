@@ -465,6 +465,8 @@ describe('Wishlist Store', () => {
     const store = useWishlistStore();
     await store.loadHouseholdWishlists('household-1', 'u1');
 
+    // Note: This now includes children's wishlists with household/public visibility
+    // even if created by current user (filtered by member_id, not user_id)
     expect(store.householdWishlists).toEqual([householdWishlist]);
   });
 

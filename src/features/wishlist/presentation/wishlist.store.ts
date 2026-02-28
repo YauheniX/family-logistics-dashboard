@@ -15,6 +15,7 @@ export const useWishlistStore = defineStore('wishlist', () => {
   // ─── State ───────────────────────────────────────────────
   const wishlists = ref<Wishlist[]>([]);
   const householdWishlists = ref<Wishlist[]>([]);
+  const childrenWishlists = ref<Wishlist[]>([]);
   const currentWishlist = ref<Wishlist | null>(null);
   const items = ref<WishlistItem[]>([]);
   const loading = ref(false);
@@ -46,6 +47,7 @@ export const useWishlistStore = defineStore('wishlist', () => {
   function $reset() {
     wishlists.value = [];
     householdWishlists.value = [];
+    childrenWishlists.value = [];
     currentWishlist.value = null;
     items.value = [];
     loading.value = false;
@@ -143,6 +145,20 @@ export const useWishlistStore = defineStore('wishlist', () => {
       }
     } catch {
       householdWishlists.value = [];
+    }
+  }
+
+  async function loadChildrenWishlists(userId: string, householdId: string) {
+    try {
+      const response = await wishlistService.getChildrenWishlists(userId, householdId);
+      if (response.error) {
+        // Silently fail - children wishlists are optional
+        childrenWishlists.value = [];
+      } else {
+        childrenWishlists.value = response.data ?? [];
+      }
+    } catch {
+      childrenWishlists.value = [];
     }
   }
 
@@ -292,6 +308,7 @@ export const useWishlistStore = defineStore('wishlist', () => {
     // State
     wishlists,
     householdWishlists,
+    childrenWishlists,
     currentWishlist,
     items,
     loading,
@@ -306,6 +323,7 @@ export const useWishlistStore = defineStore('wishlist', () => {
     loadWishlists,
     loadWishlistsByHousehold,
     loadHouseholdWishlists,
+    loadChildrenWishlists,
     loadWishlist,
     loadWishlistBySlug,
     createWishlist,

@@ -51,23 +51,43 @@ export class WishlistRepository extends BaseRepository<
 
   /**
    * Find wishlists by user ID and household ID
-   * Returns only wishlists for the specified household
+   * Returns only personal wishlists (excludes children's wishlists)
    */
   async findByUserIdAndHouseholdId(
     userId: string,
     householdId: string,
   ): Promise<ApiResponse<Wishlist[]>> {
-    const result = await this.findAll((builder) =>
-      builder
+    const result = await this.query(async () => {
+      return await supabase
+        .from('wishlists')
+        .select(
+          `
+          *,
+          member:members!wishlists_member_id_fkey (
+            display_name,
+            role
+          )
+        `,
+        )
         .eq('user_id', userId)
         .eq('household_id', householdId)
-        .order('created_at', { ascending: false }),
-    );
-    // Add is_public computed property for frontend compatibility
+        .order('created_at', { ascending: false });
+    });
+
+    // Filter OUT children's wishlists (they're shown in separate section)
     if (result.data) {
-      return { ...result, data: result.data.map(addIsPublic) };
+      const personalWishlists = result.data
+        .filter((w: any) => w.member?.role !== 'child')
+        .map((w: any) =>
+          addIsPublic({
+            ...w,
+            member_name: w.member?.display_name || null,
+            member: undefined, // Remove nested object
+          }),
+        );
+      return { ...result, data: personalWishlists };
     }
-    return result;
+    return { data: null, error: result.error };
   }
 
   async create(dto: CreateWishlistDto & { share_slug: string }): Promise<ApiResponse<Wishlist>> {
@@ -82,8 +102,32 @@ export class WishlistRepository extends BaseRepository<
     let memberId = dto.member_id;
     let householdId = dto.household_id;
 
-    if (!memberId || !householdId) {
+    // If household_id provided but no member_id, find current user's member in that household
+    if (householdId && !memberId) {
       // Query members table directly (not through this.execute since it's not in the typed schema)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: memberData, error: memberError } = await (supabase as any)
+        .from('members')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('household_id', householdId)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (memberError || !memberData) {
+        return {
+          data: null,
+          error: {
+            message: 'User must belong to this household to create wishlists',
+            code: memberError?.code,
+            details: memberError?.details,
+          },
+        };
+      }
+
+      memberId = memberData.id;
+    } else if (!memberId || !householdId) {
+      // No household_id provided, get first active membership
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: memberData, error: memberError } = await (supabase as any)
         .from('members')
@@ -183,27 +227,132 @@ export class WishlistRepository extends BaseRepository<
    *
    * Retrieves wishlists that belong to the specified household and are visible
    * to other household members (visibility = 'household' or 'public').
-   * The current user's own wishlists are excluded from the results.
+   * The current user's own PERSONAL wishlists are excluded, but children's wishlists
+   * with household/public visibility ARE included (even if created by current user).
    *
    * @param householdId - The UUID of the household to search within
-   * @param excludeUserId - The UUID of the current user (their wishlists will be excluded)
+   * @param excludeUserId - The UUID of the current user
    * @returns Promise containing an array of visible wishlists ordered by creation date (newest first)
    */
   async findByHouseholdId(
     householdId: string,
     excludeUserId: string,
   ): Promise<ApiResponse<Wishlist[]>> {
-    const result = await this.findAll((builder) =>
-      builder
-        .eq('household_id', householdId)
-        .neq('user_id', excludeUserId)
-        .in('visibility', ['household', 'public'])
-        .order('created_at', { ascending: false }),
-    );
-    if (result.data) {
-      return { ...result, data: result.data.map(addIsPublic) };
+    // First, get the current user's member_id in this household
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: memberData, error: memberError } = await (supabase as any)
+      .from('members')
+      .select('id')
+      .eq('user_id', excludeUserId)
+      .eq('household_id', householdId)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (memberError) {
+      return {
+        data: null,
+        error: {
+          message: 'Failed to get user member',
+          code: memberError.code,
+          details: memberError.details,
+        },
+      };
     }
-    return result;
+
+    const currentUserMemberId = memberData?.id;
+
+    // Get wishlists with member info to properly filter
+    const result = await this.query(async () => {
+      return await supabase
+        .from('wishlists')
+        .select(
+          `
+          *,
+          member:members!wishlists_member_id_fkey (
+            id,
+            display_name,
+            role
+          )
+        `,
+        )
+        .eq('household_id', householdId)
+        .in('visibility', ['household', 'public'])
+        .order('created_at', { ascending: false });
+    });
+
+    // Filter: exclude current user's PERSONAL wishlists (where member_id = current user's member)
+    // but INCLUDE children's wishlists (even if user_id = current user)
+    if (result.data && currentUserMemberId) {
+      const filteredWishlists = result.data
+        .filter((w: any) => w.member_id !== currentUserMemberId) // Exclude user's own wishlists
+        .map((w: any) =>
+          addIsPublic({
+            ...w,
+            member_name: w.member?.display_name || null,
+            member: undefined, // Remove nested object
+          }),
+        );
+      return { ...result, data: filteredWishlists };
+    } else if (result.data && !currentUserMemberId) {
+      // User not in household, return all shared wishlists
+      const allWishlists = result.data.map((w: any) =>
+        addIsPublic({
+          ...w,
+          member_name: w.member?.display_name || null,
+          member: undefined,
+        }),
+      );
+      return { ...result, data: allWishlists };
+    }
+    return { data: null, error: result.error };
+  }
+
+  /**
+   * Find wishlists created by parent for their children.
+   *
+   * Retrieves wishlists where the current user is the creator (user_id)
+   * but the member_id points to a child member in the household.
+   *
+   * @param userId - The UUID of the parent user
+   * @param householdId - The UUID of the household
+   * @returns Promise containing an array of children's wishlists ordered by creation date (newest first)
+   */
+  async findChildrenWishlists(
+    userId: string,
+    householdId: string,
+  ): Promise<ApiResponse<Wishlist[]>> {
+    const result = await this.query(async () => {
+      return await supabase
+        .from('wishlists')
+        .select(
+          `
+          *,
+          member:members!wishlists_member_id_fkey (
+            id,
+            display_name,
+            role
+          )
+        `,
+        )
+        .eq('user_id', userId)
+        .eq('household_id', householdId)
+        .order('created_at', { ascending: false });
+    });
+
+    // Filter for wishlists where member is a child and transform data
+    if (result.data) {
+      const childWishlists = result.data
+        .filter((w: any) => w.member?.role === 'child')
+        .map((w: any) =>
+          addIsPublic({
+            ...w,
+            member_name: w.member?.display_name || null,
+            member: undefined, // Remove nested object
+          }),
+        );
+      return { ...result, data: childWishlists };
+    }
+    return { data: null, error: result.error };
   }
 }
 
