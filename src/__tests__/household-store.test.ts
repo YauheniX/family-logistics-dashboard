@@ -659,7 +659,7 @@ describe('Household Store', () => {
 
       // We can't easily test the full flow without mocking createHousehold,
       // but we can at least test that it doesn't crash
-      const result = await store.ensureDefaultHouseholdForUser('user1', 'john@example.com');
+      const _result = await store.ensureDefaultHouseholdForUser('user1', 'john@example.com');
 
       // Will be null because createHousehold isn't fully mocked, but that's OK
       expect(store.loading).toBe(false);

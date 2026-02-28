@@ -596,18 +596,18 @@ describe('Wishlist Store', () => {
     const wishlist2 = { ...mockWishlist, id: 'w2', title: 'Household 2' };
 
     // Set up two requests with different delays
-    let resolve1: ((value: any) => void) | undefined;
-    let resolve2: ((value: any) => void) | undefined;
-    const promise1 = new Promise((resolve) => {
+    let resolve1: ((value: { data: (typeof wishlist1)[]; error: null }) => void) | undefined;
+    let resolve2: ((value: { data: (typeof wishlist2)[]; error: null }) => void) | undefined;
+    const promise1 = new Promise<{ data: (typeof wishlist1)[]; error: null }>((resolve) => {
       resolve1 = resolve;
     });
-    const promise2 = new Promise((resolve) => {
+    const promise2 = new Promise<{ data: (typeof wishlist2)[]; error: null }>((resolve) => {
       resolve2 = resolve;
     });
 
     vi.mocked(wishlistService.getUserWishlistsByHousehold)
-      .mockReturnValueOnce(promise1 as any)
-      .mockReturnValueOnce(promise2 as any);
+      .mockReturnValueOnce(promise1)
+      .mockReturnValueOnce(promise2);
 
     const store = useWishlistStore();
 
