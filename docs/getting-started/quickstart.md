@@ -6,7 +6,7 @@ Get the Family Logistics Dashboard running in 5 minutes.
 
 ---
 
-## TL;DR
+## Start
 
 ```bash
 # Clone
