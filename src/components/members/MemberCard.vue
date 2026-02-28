@@ -1,21 +1,40 @@
 <template>
   <div
-    class="glass-card p-3 sm:p-4 rounded-2xl transition-all hover:shadow-lg border-2"
+    class="glass-card p-3 sm:p-4 rounded-2xl transition-all duration-300 hover:shadow-lg border-2 group relative overflow-hidden"
     :class="cardBorderClass"
   >
-    <div class="flex items-start gap-3 sm:gap-4">
-      <!-- Avatar -->
-      <Avatar
-        :avatar-url="resolvedProfile.avatar"
-        :name="memberName"
-        :role="member.role"
-        :size="56"
-        :show-role-badge="false"
-      />
+    <!-- Hover Glow Effect -->
+    <div
+      class="absolute inset-0 bg-gradient-to-r from-primary-500/0 via-primary-500/5 to-primary-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+    />
+
+    <div class="flex items-start gap-3 sm:gap-4 relative z-10">
+      <!-- Avatar with Hover Zoom -->
+      <div class="relative">
+        <div
+          class="transform transition-transform duration-300 ease-out group-hover:scale-110 origin-center"
+        >
+          <Avatar
+            :avatar-url="resolvedProfile.avatar"
+            :name="memberName"
+            :role="member.role"
+            :size="56"
+            :show-role-badge="false"
+          />
+        </div>
+        <!-- Online Status Badge (Future) -->
+        <div
+          v-if="member.role !== 'child' && isOnline"
+          class="absolute bottom-0 right-0 w-4 h-4 bg-success-500 border-2 border-white dark:border-neutral-800 rounded-full animate-pulse-slow"
+          title="Online"
+        />
+      </div>
 
       <!-- Info -->
       <div class="flex-1 min-w-0">
-        <h3 class="font-semibold text-neutral-900 dark:text-neutral-100 truncate">
+        <h3
+          class="font-semibold text-neutral-900 dark:text-neutral-100 truncate transition-colors duration-200 group-hover:text-primary-600 dark:group-hover:text-primary-400"
+        >
           {{ memberName }}
         </h3>
 
@@ -29,39 +48,74 @@
           {{ member.email }}
         </p>
 
-        <!-- Role Badge -->
-        <div class="mt-2">
+        <!-- Role Badge with Animation -->
+        <div class="mt-2 animate-fade-in">
           <BaseBadge :variant="badgeVariant" :class="badgeClass">
             {{ roleLabel }}
           </BaseBadge>
         </div>
 
-        <!-- Future: Wishlist/Achievements Preview -->
-        <div v-if="isChild" class="mt-3 flex gap-2">
-          <span class="text-xs text-neutral-500 dark:text-neutral-400"> 🎁 Wishlist </span>
-          <span class="text-xs text-neutral-500 dark:text-neutral-400"> 🏆 Achievements </span>
+        <!-- Wishlist/Achievements Preview for Children -->
+        <div v-if="isChild" class="mt-3 flex gap-3 animate-fade-in" style="animation-delay: 100ms">
+          <button
+            class="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200 group/btn"
+            type="button"
+            @click="$emit('view-wishlist', member)"
+          >
+            <span class="group-hover/btn:animate-bounce-subtle">🎁</span>
+            <span>Wishlist</span>
+          </button>
+          <button
+            class="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400 hover:text-warning-600 dark:hover:text-warning-400 transition-colors duration-200 group/btn"
+            type="button"
+            @click="$emit('view-achievements', member)"
+          >
+            <span class="group-hover/btn:animate-bounce-subtle">🏆</span>
+            <span>Achievements</span>
+          </button>
         </div>
       </div>
 
-      <!-- Actions -->
-      <div class="flex flex-col gap-2">
+      <!-- Action Buttons - Slide In on Hover -->
+      <div
+        class="flex flex-col gap-2 transition-all duration-300 ease-out"
+        :class="
+          canEdit || canRemove
+            ? 'opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0'
+            : 'opacity-0'
+        "
+      >
         <button
           v-if="canEdit"
           type="button"
           title="Edit member"
-          class="text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 transition-colors"
+          class="p-2 text-neutral-500 hover:text-primary-600 dark:text-neutral-400 dark:hover:text-primary-400 transition-all duration-200 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg hover:scale-110 focus-ring"
           @click="$emit('edit', member)"
         >
-          ✏️
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+            />
+          </svg>
         </button>
         <button
           v-if="canRemove"
           type="button"
           title="Remove member"
-          class="text-neutral-500 hover:text-red-600 dark:text-neutral-400 dark:hover:text-red-400 transition-colors"
+          class="p-2 text-neutral-500 hover:text-danger-600 dark:text-neutral-400 dark:hover:text-danger-400 transition-all duration-200 hover:bg-danger-50 dark:hover:bg-danger-900/20 rounded-lg hover:scale-110 focus-ring"
           @click="$emit('remove', member.id)"
         >
-          🗑️
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+            />
+          </svg>
         </button>
       </div>
     </div>
@@ -86,10 +140,15 @@ const props = defineProps<Props>();
 defineEmits<{
   (e: 'remove', id: string): void;
   (e: 'edit', member: Member): void;
+  (e: 'view-wishlist', member: Member): void;
+  (e: 'view-achievements', member: Member): void;
 }>();
 
 const resolvedProfile = computed(() => resolveMemberProfile(props.member));
 const memberName = computed(() => resolvedProfile.value.name);
+
+// Future: Online status indicator
+const isOnline = computed(() => false); // TODO: Implement real-time presence
 
 // Determine role type
 const isChild = computed(() => props.member.role === 'child');

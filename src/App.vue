@@ -74,6 +74,8 @@
             </div>
           </div>
         </header>
+        <!-- Route Progress Bar -->
+        <ProgressBar />
 
         <!-- Breadcrumbs -->
         <div
@@ -111,6 +113,7 @@ import ThemeToggle from '@/components/shared/ThemeToggle.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import ReportProblemModal from '@/components/shared/ReportProblemModal.vue';
 import Avatar from '@/components/shared/Avatar.vue';
+import ProgressBar from '@/components/shared/ProgressBar.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useHouseholdStore } from '@/stores/household';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';

@@ -4,20 +4,41 @@
     :disabled="disabled || loading"
     :class="buttonClasses"
     :aria-label="ariaLabel"
-    @click="$emit('click', $event)"
+    class="group relative overflow-hidden"
+    @click="handleClick"
   >
+    <!-- Ripple Effect -->
+    <span
+      v-if="showRipple"
+      class="absolute inset-0 bg-white/20 dark:bg-black/20 rounded-lg scale-0 group-active:scale-100 transition-transform duration-300 pointer-events-none"
+    />
+
+    <!-- Content Wrapper -->
+    <span
+      class="relative z-10 flex items-center justify-center gap-2"
+      :class="{ 'opacity-0': loading }"
+    >
+      <slot v-if="$slots.icon" name="icon" />
+      <slot />
+    </span>
+
+    <!-- Loading Spinner (Centered Overlay) -->
     <span
       v-if="loading"
-      class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
-      aria-hidden="true"
-    ></span>
-    <slot v-else-if="$slots.icon" name="icon" />
-    <slot />
+      class="absolute inset-0 flex items-center justify-center"
+      role="status"
+      aria-label="Loading"
+    >
+      <span
+        class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+        aria-hidden="true"
+      />
+    </span>
   </button>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 interface Props {
   variant?: 'primary' | 'secondary' | 'tertiary' | 'ghost' | 'danger';
@@ -26,6 +47,7 @@ interface Props {
   loading?: boolean;
   fullWidth?: boolean;
   ariaLabel?: string;
+  ripple?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -34,12 +56,15 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   loading: false,
   fullWidth: false,
+  ripple: true,
   ariaLabel: undefined,
 });
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'click', event: MouseEvent): void;
 }>();
+
+const showRipple = ref(false);
 
 const buttonClasses = computed(() => {
   const base = 'btn';
@@ -56,4 +81,16 @@ const buttonClasses = computed(() => {
 
   return [base, variant, width].filter(Boolean).join(' ');
 });
+
+const handleClick = (event: MouseEvent) => {
+  if (!props.disabled && !props.loading) {
+    if (props.ripple) {
+      showRipple.value = true;
+      setTimeout(() => {
+        showRipple.value = false;
+      }, 300);
+    }
+    emit('click', event);
+  }
+};
 </script>
