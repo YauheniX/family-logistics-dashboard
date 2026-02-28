@@ -50,7 +50,7 @@ const isActive = (routeName: string): boolean => {
 ### Special Cases
 
 - **Manage Household** - Also active when viewing member management
-- **Apps** - Remains active when using sub-apps like Cityscape or Rock-Paper-Scissors
+- **Apps** - Remains active when using sub-apps like Rock-Paper-Scissors
 
 ---
 
@@ -81,10 +81,10 @@ const isActive = (routeName: string): boolean => {
    - Route: `/households`
 
 2. **Apps** 🎮
-   - New mini-apps hub launching with Cityscape app
-   - Additional apps: Rock-Paper-Scissors game
+   - New mini-apps hub
+   - Apps: Rock-Paper-Scissors game
    - Route: `/apps`
-   - Sub-routes: `/apps/rock-paper-scissors`, `/apps/cityscape`
+   - Sub-routes: `/apps/rock-paper-scissors`
 
 ### Menu Item Separation
 
@@ -176,4 +176,3 @@ Potential improvements:
 
 - [Architecture Overview](../architecture/overview.md)
 - [RBAC Permissions](../architecture/rbac-permissions.md)
-- [Cityscape App](../features/cityscape.md)

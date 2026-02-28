@@ -10,7 +10,6 @@ describe('AppsView', () => {
       routes: [
         { path: '/apps', component: { template: '<div />' } },
         { path: '/apps/rock-paper-scissors', component: { template: '<div />' } },
-        { path: '/apps/cityscape', component: { template: '<div />' } },
       ],
     });
   };
@@ -63,22 +62,6 @@ describe('AppsView', () => {
       expect(rpsLink?.html()).toContain('✊✋✌️');
     });
 
-    it('renders Cityscape tile', () => {
-      const wrapper = mountAppsView();
-      const links = wrapper.findAllComponents({ name: 'RouterLink' });
-      const cityscapeLink = links.find((link) => link.props('to') === '/apps/cityscape');
-      expect(cityscapeLink).toBeDefined();
-      expect(cityscapeLink?.text()).toContain('Cityscape');
-      expect(cityscapeLink?.text()).toContain('Interactive animated city scene');
-    });
-
-    it('Cityscape tile has correct emoji', () => {
-      const wrapper = mountAppsView();
-      const links = wrapper.findAllComponents({ name: 'RouterLink' });
-      const cityscapeLink = links.find((link) => link.props('to') === '/apps/cityscape');
-      expect(cityscapeLink?.html()).toContain('🏙️');
-    });
-
     it('renders Coming Soon placeholder', () => {
       const wrapper = mountAppsView();
       const comingSoon = wrapper.find('.border-dashed');
@@ -104,26 +87,15 @@ describe('AppsView', () => {
       expect(rpsLink?.classes()).toContain('cursor-pointer');
     });
 
-    it('Cityscape tile has hover classes', () => {
-      const wrapper = mountAppsView();
-      const links = wrapper.findAllComponents({ name: 'RouterLink' });
-      const cityscapeLink = links.find((link) => link.props('to') === '/apps/cityscape');
-      expect(cityscapeLink?.classes()).toContain('hover:shadow-lg');
-      expect(cityscapeLink?.classes()).toContain('hover:border-primary-500');
-      expect(cityscapeLink?.classes()).toContain('cursor-pointer');
-    });
-
     it('app tiles have consistent styling', () => {
       const wrapper = mountAppsView();
       const links = wrapper.findAllComponents({ name: 'RouterLink' });
       const rpsLink = links.find((link) => link.props('to') === '/apps/rock-paper-scissors');
-      const cityscapeLink = links.find((link) => link.props('to') === '/apps/cityscape');
 
-      // Both should have the same base classes
+      // Should have the base classes
       const sharedClasses = ['rounded-lg', 'p-8', 'text-center', 'transition-all'];
       sharedClasses.forEach((className) => {
         expect(rpsLink?.classes()).toContain(className);
-        expect(cityscapeLink?.classes()).toContain(className);
       });
     });
 
@@ -143,17 +115,10 @@ describe('AppsView', () => {
       expect(rpsLink?.props('to')).toBe('/apps/rock-paper-scissors');
     });
 
-    it('Cityscape tile links to correct route', () => {
-      const wrapper = mountAppsView();
-      const links = wrapper.findAllComponents({ name: 'RouterLink' });
-      const cityscapeLink = links.find((link) => link.props('to') === '/apps/cityscape');
-      expect(cityscapeLink?.props('to')).toBe('/apps/cityscape');
-    });
-
     it('renders correct number of RouterLinks', () => {
       const wrapper = mountAppsView();
       const routerLinks = wrapper.findAllComponents({ name: 'RouterLink' });
-      expect(routerLinks.length).toBe(2); // RPS and Cityscape
+      expect(routerLinks.length).toBe(1); // RPS only
     });
   });
 
@@ -175,8 +140,8 @@ describe('AppsView', () => {
     it('app tiles have dark mode hover classes', () => {
       const wrapper = mountAppsView();
       const links = wrapper.findAllComponents({ name: 'RouterLink' });
-      const cityscapeLink = links.find((link) => link.props('to') === '/apps/cityscape');
-      expect(cityscapeLink?.classes()).toContain('dark:hover:border-primary-500');
+      const rpsLink = links.find((link) => link.props('to') === '/apps/rock-paper-scissors');
+      expect(rpsLink?.classes()).toContain('dark:hover:border-primary-500');
     });
 
     it('app tile text has dark mode classes', () => {
@@ -242,24 +207,6 @@ describe('AppsView', () => {
       expect(description?.exists()).toBe(true);
       expect(description?.classes()).toContain('text-sm');
     });
-
-    it('Cityscape tile has correct structure', () => {
-      const wrapper = mountAppsView();
-      const links = wrapper.findAllComponents({ name: 'RouterLink' });
-      const cityscapeLink = links.find((link) => link.props('to') === '/apps/cityscape');
-
-      // Should have emoji div
-      const emoji = cityscapeLink?.find('.text-4xl');
-      expect(emoji?.exists()).toBe(true);
-
-      // Should have title
-      const title = cityscapeLink?.find('h3');
-      expect(title?.exists()).toBe(true);
-
-      // Should have description
-      const description = cityscapeLink?.find('p');
-      expect(description?.exists()).toBe(true);
-    });
   });
 
   describe('Tile Order', () => {
@@ -271,18 +218,15 @@ describe('AppsView', () => {
       // First child should be Rock-Paper-Scissors
       expect(children[0].textContent).toContain('Rock-Paper-Scissors');
 
-      // Second child should be Cityscape
-      expect(children[1].textContent).toContain('Cityscape');
-
-      // Third child should be Coming Soon
-      expect(children[2].textContent).toContain('Coming Soon');
+      // Second child should be Coming Soon
+      expect(children[1].textContent).toContain('Coming Soon');
     });
 
-    it('has exactly 3 tiles', () => {
+    it('has exactly 2 tiles', () => {
       const wrapper = mountAppsView();
       const routerLinks = wrapper.findAllComponents({ name: 'RouterLink' });
       const comingSoon = wrapper.find('.border-dashed');
-      expect(routerLinks.length + (comingSoon.exists() ? 1 : 0)).toBe(3);
+      expect(routerLinks.length + (comingSoon.exists() ? 1 : 0)).toBe(2);
     });
   });
 
@@ -290,19 +234,19 @@ describe('AppsView', () => {
     it('app tiles are semantic links', () => {
       const wrapper = mountAppsView();
       const links = wrapper.findAll('a');
-      expect(links.length).toBeGreaterThanOrEqual(2);
+      expect(links.length).toBeGreaterThanOrEqual(1);
     });
 
     it('tile titles use semantic heading elements', () => {
       const wrapper = mountAppsView();
       const headings = wrapper.findAll('h3');
-      expect(headings.length).toBe(3); // RPS, Cityscape, Coming Soon
+      expect(headings.length).toBe(2); // RPS, Coming Soon
     });
 
     it('descriptions use semantic paragraph elements', () => {
       const wrapper = mountAppsView();
       const paragraphs = wrapper.findAll('p');
-      expect(paragraphs.length).toBe(3);
+      expect(paragraphs.length).toBe(2);
     });
   });
 });
