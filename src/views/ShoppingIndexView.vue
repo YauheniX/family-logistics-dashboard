@@ -1,22 +1,50 @@
 <template>
   <div class="space-y-6">
     <BaseCard>
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Shopping Lists</h3>
-        <BaseButton variant="primary" @click="showCreateListModal = true"> + New List </BaseButton>
+      <div class="flex flex-col gap-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+            Shopping Lists
+          </h3>
+          <BaseButton variant="primary" @click="showCreateListModal = true">
+            + New List
+          </BaseButton>
+        </div>
+
+        <!-- Status Tabs -->
+        <div
+          class="flex rounded-lg border border-neutral-200 dark:border-neutral-700 p-1 bg-neutral-50 dark:bg-neutral-800"
+        >
+          <button
+            type="button"
+            class="status-tab-btn"
+            :class="{ active: statusFilter === 'active' }"
+            @click="statusFilter = 'active'"
+          >
+            📝 Active
+          </button>
+          <button
+            type="button"
+            class="status-tab-btn"
+            :class="{ active: statusFilter === 'archived' }"
+            @click="statusFilter = 'archived'"
+          >
+            📦 Archived
+          </button>
+        </div>
       </div>
 
       <div
         v-if="!householdStore.currentHousehold"
-        class="text-sm text-neutral-500 dark:text-neutral-400"
+        class="text-sm text-neutral-500 dark:text-neutral-400 mt-4"
       >
         No household selected. Please select a household to view shopping lists.
       </div>
 
-      <div v-else>
-        <div v-if="shoppingStore.lists.length" class="space-y-2">
+      <div v-else class="mt-4">
+        <div v-if="filteredLists.length" class="space-y-2">
           <RouterLink
-            v-for="list in shoppingStore.lists"
+            v-for="list in filteredLists"
             :key="list.id"
             :to="{ name: 'shopping-list', params: { listId: list.id } }"
             class="flex items-center justify-between rounded-lg border border-neutral-200 dark:border-neutral-700 p-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
@@ -32,7 +60,9 @@
             }}</BaseBadge>
           </RouterLink>
         </div>
-        <p v-else class="text-sm text-neutral-500 dark:text-neutral-400">No shopping lists yet.</p>
+        <p v-else class="text-sm text-neutral-500 dark:text-neutral-400">
+          No {{ statusFilter }} shopping lists.
+        </p>
       </div>
     </BaseCard>
   </div>
@@ -65,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
@@ -82,6 +112,11 @@ const shoppingStore = useShoppingStore();
 const showCreateListModal = ref(false);
 const newListTitle = ref('');
 const newListDescription = ref('');
+const statusFilter = ref<'active' | 'archived'>('active');
+
+const filteredLists = computed(() => {
+  return shoppingStore.lists.filter((list) => list.status === statusFilter.value);
+});
 
 const handleCreateList = async () => {
   const currentHousehold = householdStore.currentHousehold;
@@ -121,3 +156,48 @@ watch(
   },
 );
 </script>
+
+<style scoped>
+.status-tab-btn {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(100 116 139);
+  background-color: transparent;
+  transition: all 0.2s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
+.status-tab-btn:hover {
+  color: rgb(51 65 85);
+}
+
+.status-tab-btn.active {
+  background-color: rgb(255 255 255);
+  color: rgb(59 130 246);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.dark .status-tab-btn {
+  color: rgb(148 163 184);
+}
+
+.dark .status-tab-btn:hover {
+  color: rgb(203 213 225);
+}
+
+.dark .status-tab-btn.active {
+  background-color: rgb(51 65 85);
+  color: rgb(96 165 250);
+}
+
+@media (max-width: 640px) {
+  .status-tab-btn {
+    padding: 0.625rem 1rem;
+  }
+}
+</style>

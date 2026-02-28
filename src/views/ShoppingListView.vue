@@ -2,29 +2,70 @@
   <div v-if="shoppingStore.currentList" class="space-y-6">
     <BaseCard>
       <template #header>
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-          <div class="min-w-0">
-            <p class="text-sm text-neutral-500 dark:text-neutral-400">Shopping List</p>
-            <h2 class="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
-              {{ shoppingStore.currentList.title }}
-            </h2>
-            <p
-              v-if="shoppingStore.currentList.description"
-              class="mt-1 text-sm text-neutral-600 dark:text-neutral-400"
+        <div class="flex flex-col gap-3 sm:gap-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-sm text-neutral-500 dark:text-neutral-400">Shopping List</p>
+              <h2 class="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
+                {{ shoppingStore.currentList.title }}
+              </h2>
+              <p
+                v-if="shoppingStore.currentList.description"
+                class="mt-1 text-sm text-neutral-600 dark:text-neutral-400"
+              >
+                {{ shoppingStore.currentList.description }}
+              </p>
+            </div>
+            <!-- Mode Toggle -->
+            <div
+              class="flex rounded-lg border border-neutral-200 dark:border-neutral-700 p-1 bg-neutral-50 dark:bg-neutral-800 w-full sm:w-auto"
             >
-              {{ shoppingStore.currentList.description }}
-            </p>
+              <button
+                type="button"
+                class="mode-toggle-btn"
+                :class="{ active: !isEditMode }"
+                @click="isEditMode = false"
+              >
+                🛒 Shopping
+              </button>
+              <button
+                type="button"
+                class="mode-toggle-btn"
+                :class="{ active: isEditMode }"
+                @click="isEditMode = true"
+              >
+                ✏️ Edit
+              </button>
+            </div>
           </div>
+          <!-- Edit Mode Actions -->
           <div
+            v-if="isEditMode"
             class="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 w-full sm:w-auto"
           >
             <BaseButton variant="ghost" class="w-full xs:w-auto" @click="showEditListModal = true"
               >✏️ Edit List</BaseButton
             >
+            <BaseButton
+              v-if="shoppingStore.currentList?.status === 'archived'"
+              variant="secondary"
+              class="w-full xs:w-auto"
+              @click="handleUnarchiveList"
+            >
+              📂 Unarchive
+            </BaseButton>
+            <BaseButton
+              v-else
+              variant="secondary"
+              class="w-full xs:w-auto"
+              @click="handleArchiveList"
+            >
+              📦 Archive
+            </BaseButton>
             <BaseButton variant="danger" class="w-full xs:w-auto" @click="showDeleteModal = true"
               >🗑️ Delete</BaseButton
             >
-            <BaseButton variant="primary" class="w-full xs:w-auto" @click="openAddItemModal">
+            <BaseButton variant="primary" class="w-full xs:w-auto" @click="openAddItemModal()">
               + Add Item
             </BaseButton>
           </div>
@@ -52,8 +93,19 @@
       :key="category"
       :padding="false"
     >
-      <div class="border-b border-neutral-200 dark:border-neutral-700 px-4 py-3">
+      <div
+        class="border-b border-neutral-200 dark:border-neutral-700 px-4 py-3 flex items-center justify-between"
+      >
         <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50">{{ category }}</h3>
+        <button
+          v-if="isEditMode"
+          type="button"
+          class="rounded-lg px-3 py-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+          aria-label="Add item to category"
+          @click="openAddItemModal(category)"
+        >
+          + Add
+        </button>
       </div>
       <div class="divide-y divide-neutral-200 dark:divide-neutral-700">
         <div
@@ -81,6 +133,7 @@
           </label>
           <BaseBadge v-if="item.quantity > 1" variant="neutral">×{{ item.quantity }}</BaseBadge>
           <button
+            v-if="isEditMode"
             type="button"
             class="rounded-md px-2 py-1 text-neutral-400 hover:text-primary-500 dark:hover:text-primary-400 transition-colors"
             aria-label="Edit item"
@@ -89,6 +142,7 @@
             ✏️
           </button>
           <button
+            v-if="isEditMode"
             type="button"
             class="rounded-md px-2 py-1 text-neutral-400 hover:text-danger-500 dark:hover:text-danger-400 transition-colors"
             aria-label="Remove item"
@@ -153,7 +207,28 @@
             </button>
           </div>
         </div>
-        <BaseInput v-model="newItemCategory" placeholder="Category (e.g. Produce, Dairy)" />
+        <div>
+          <label class="label mb-2 block">Category</label>
+          <BaseInput
+            v-model="newItemCategory"
+            placeholder="Type category or select below"
+            :disabled="isCategoryLocked"
+          />
+          <!-- Quick category buttons -->
+          <div v-if="!isCategoryLocked" class="mt-2 flex flex-wrap gap-1.5 sm:gap-2">
+            <button
+              v-for="cat in categoryOptions"
+              :key="cat.value"
+              type="button"
+              class="category-chip"
+              :class="{ active: newItemCategory === cat.value }"
+              @click="newItemCategory = cat.value"
+            >
+              <span class="text-base sm:text-lg">{{ cat.emoji }}</span>
+              <span class="text-xs sm:text-sm">{{ cat.label }}</span>
+            </button>
+          </div>
+        </div>
         <div class="flex gap-3">
           <BaseButton type="submit" variant="primary">
             {{ editingItemId ? 'Update Item' : 'Add Item' }}
@@ -250,11 +325,30 @@ const showEditListModal = ref(false);
 const showDeleteModal = ref(false);
 const showItemModal = ref(false);
 const editingItemId = ref<string | null>(null);
+const isEditMode = ref(false);
 const newItemTitle = ref('');
 const newItemQuantity = ref(1);
 const newItemCategory = ref('');
+const isCategoryLocked = ref(false);
 const editListTitle = ref('');
 const editListDescription = ref('');
+
+// Category options with emojis for quick selection
+const categoryOptions = [
+  { value: 'fruits&vegetables', label: 'Fruits&Vegetables', emoji: '🥕' },
+  { value: 'bakery', label: 'Bakery', emoji: '🍞' },
+  { value: 'meat&fish', label: 'Meat&Fish', emoji: '🥩' },
+  { value: 'beverages', label: 'Beverages', emoji: '🥤' },
+  { value: 'snacks', label: 'Snacks', emoji: '🍿' },
+  { value: 'care', label: 'Care', emoji: '🧴' },
+  { value: 'pharmacy', label: 'Pharmacy', emoji: '💊' },
+  { value: 'gadgets', label: 'Gadgets', emoji: '📱' },
+  { value: 'books', label: 'Books', emoji: '📚' },
+  { value: 'tickets', label: 'Tickets', emoji: '🎫' },
+  { value: 'clothes', label: 'Clothes', emoji: '👕' },
+  { value: 'toys', label: 'Toys', emoji: '🧸' },
+  { value: 'other', label: 'Other', emoji: '📦' },
+];
 
 onMounted(async () => {
   await shoppingStore.loadList(props.listId);
@@ -299,11 +393,12 @@ const handleEditItem = (item: ShoppingItem) => {
   showItemModal.value = true;
 };
 
-const openAddItemModal = () => {
+const openAddItemModal = (category?: string) => {
   editingItemId.value = null;
   newItemTitle.value = '';
   newItemQuantity.value = 1;
-  newItemCategory.value = '';
+  newItemCategory.value = category || '';
+  isCategoryLocked.value = !!category;
   showItemModal.value = true;
 };
 
@@ -312,6 +407,7 @@ const resetForm = () => {
   newItemTitle.value = '';
   newItemQuantity.value = 1;
   newItemCategory.value = '';
+  isCategoryLocked.value = false;
   showItemModal.value = false;
 };
 
@@ -351,16 +447,22 @@ const handleUpdateList = async () => {
   showEditListModal.value = false;
 };
 
+const handleArchiveList = async () => {
+  await shoppingStore.updateList(props.listId, { status: 'archived' });
+  toastStore.success('List archived successfully');
+  router.push({ name: 'shopping' });
+};
+
+const handleUnarchiveList = async () => {
+  await shoppingStore.updateList(props.listId, { status: 'active' });
+  toastStore.success('List unarchived successfully');
+  // Stay on the list page after unarchiving
+};
+
 const handleDeleteList = async () => {
-  const householdId = shoppingStore.currentList?.household_id;
   await shoppingStore.removeList(props.listId);
   showDeleteModal.value = false;
-  // Navigate back to household detail or shopping index
-  if (householdId) {
-    router.push({ name: 'household-detail', params: { id: householdId } });
-  } else {
-    router.push({ name: 'shopping' });
-  }
+  router.push({ name: 'shopping' });
 };
 
 // Watch for household changes and redirect if the list doesn't belong to the new household
@@ -382,3 +484,106 @@ watch(
   },
 );
 </script>
+
+<style scoped>
+.category-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgb(226 232 240);
+  background-color: rgb(255 255 255);
+  color: rgb(71 85 105);
+  font-weight: 500;
+  transition: all 0.2s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 44px; /* Touch-friendly minimum size */
+}
+
+.category-chip:hover {
+  background-color: rgb(248 250 252);
+  border-color: rgb(59 130 246);
+  transform: translateY(-1px);
+}
+
+.category-chip:active {
+  transform: translateY(0);
+}
+
+.category-chip.active {
+  background-color: rgb(59 130 246);
+  border-color: rgb(59 130 246);
+  color: rgb(255 255 255);
+}
+
+.dark .category-chip {
+  border-color: rgb(74 85 104);
+  background-color: rgb(26 32 44);
+  color: rgb(203 213 225);
+}
+
+.dark .category-chip:hover {
+  background-color: rgb(51 65 85);
+  border-color: rgb(59 130 246);
+}
+
+.dark .category-chip.active {
+  background-color: rgb(59 130 246);
+  border-color: rgb(59 130 246);
+  color: rgb(255 255 255);
+}
+
+/* Mobile optimization */
+@media (max-width: 640px) {
+  .category-chip {
+    padding: 0.625rem 0.875rem;
+    min-height: 48px; /* Larger touch target on mobile */
+  }
+}
+
+/* Mode toggle buttons */
+.mode-toggle-btn {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(100 116 139);
+  background-color: transparent;
+  transition: all 0.2s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
+.mode-toggle-btn:hover {
+  color: rgb(51 65 85);
+}
+
+.mode-toggle-btn.active {
+  background-color: rgb(255 255 255);
+  color: rgb(59 130 246);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.dark .mode-toggle-btn {
+  color: rgb(148 163 184);
+}
+
+.dark .mode-toggle-btn:hover {
+  color: rgb(203 213 225);
+}
+
+.dark .mode-toggle-btn.active {
+  background-color: rgb(51 65 85);
+  color: rgb(96 165 250);
+}
+
+@media (max-width: 640px) {
+  .mode-toggle-btn {
+    padding: 0.625rem 1rem;
+  }
+}
+</style>
