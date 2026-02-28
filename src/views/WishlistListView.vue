@@ -14,8 +14,14 @@
         <BaseButton
           variant="primary"
           class="w-full sm:w-auto"
-          :disabled="!currentHouseholdId"
-          :title="!currentHouseholdId ? 'Select a household first' : undefined"
+          :disabled="!isHouseholdReady"
+          :title="
+            !householdStore.initialized
+              ? 'Loading household...'
+              : !currentHouseholdId
+                ? 'Select a household first'
+                : undefined
+          "
           @click="showCreatePersonalModal = true"
         >
           ➕ Create Wishlist
@@ -304,6 +310,9 @@ const { members, fetchMembers } = useMembers();
 const { currentHousehold } = storeToRefs(householdStore);
 const currentHouseholdId = computed(() => currentHousehold.value?.id);
 
+// Check if household is ready for data creation (initialized + household selected)
+const isHouseholdReady = computed(() => householdStore.initialized && !!currentHouseholdId.value);
+
 // Filter for child members only
 const childMembers = computed(() =>
   (members.value || []).filter((m) => m.role === 'child' && m.is_active),
@@ -325,10 +334,18 @@ const previewImages = ref<Record<string, string>>({});
 
 const handleCreatePersonal = async () => {
   if (!newTitle.value.trim()) return;
+
+  // CRITICAL: Wait for household store initialization before creating wishlist
+  if (!householdStore.initialized) {
+    useToastStore().warning('Loading household data, please wait...');
+    return;
+  }
+
   if (!currentHouseholdId.value) {
     useToastStore().warning('Please select a household first');
     return;
   }
+
   const created = await wishlistStore.createWishlist({
     title: newTitle.value.trim(),
     description: newDescription.value.trim() || null,
@@ -350,10 +367,18 @@ const handleCreateChild = async () => {
     useToastStore().warning('Please select a child');
     return;
   }
+
+  // CRITICAL: Wait for household store initialization before creating wishlist
+  if (!householdStore.initialized) {
+    useToastStore().warning('Loading household data, please wait...');
+    return;
+  }
+
   if (!currentHouseholdId.value) {
     useToastStore().warning('Please select a household first');
     return;
   }
+
   const created = await wishlistStore.createWishlist({
     title: newTitle.value.trim(),
     description: newDescription.value.trim() || null,

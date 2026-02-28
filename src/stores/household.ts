@@ -24,9 +24,35 @@ export const useHouseholdStore = defineStore('household', () => {
   const currentHousehold = ref<Household | null>(null);
   const households = ref<Household[]>([]);
   const loading = ref(false);
+  const initialized = ref(false);
 
   // Track the user we're currently initializing for (prevents race conditions on logout)
   const _activeUserId = ref<string | null>(null);
+
+  // ─── Early Restoration ───────────────────────────────────
+  // Attempt to restore currentHousehold from localStorage synchronously on store creation
+  // This provides immediate state for components before async initialization completes
+  const _restoreFromLocalStorage = () => {
+    const savedId = localStorage.getItem('current_household_id');
+    const savedName = localStorage.getItem('current_household_name');
+    const savedSlug = localStorage.getItem('current_household_slug');
+    const savedRole = localStorage.getItem('current_household_role');
+
+    if (savedId && savedName) {
+      // Create a minimal household object from localStorage
+      // This will be replaced with full data when initializeForUser completes
+      currentHousehold.value = {
+        id: savedId,
+        name: savedName,
+        slug: savedSlug || savedId,
+        role: (savedRole as Household['role']) || 'member',
+      };
+      console.log('[household] Restored from localStorage:', currentHousehold.value);
+    }
+  };
+
+  // Restore immediately on store creation
+  _restoreFromLocalStorage();
 
   // ─── Getters ─────────────────────────────────────────────
   const hasMultipleHouseholds = computed(() => households.value.length > 1);
@@ -50,18 +76,28 @@ export const useHouseholdStore = defineStore('household', () => {
     currentHousehold.value = null;
     households.value = [];
     loading.value = false;
+    initialized.value = false;
     localStorage.removeItem('current_household_id');
+    localStorage.removeItem('current_household_name');
+    localStorage.removeItem('current_household_slug');
+    localStorage.removeItem('current_household_role');
   }
 
   // ─── Actions ─────────────────────────────────────────────
   function setCurrentHousehold(household: Household | null) {
     currentHousehold.value = household;
 
-    // Persist to localStorage
+    // Persist to localStorage for synchronous restoration on page reload
     if (household) {
       localStorage.setItem('current_household_id', household.id);
+      localStorage.setItem('current_household_name', household.name);
+      localStorage.setItem('current_household_slug', household.slug);
+      localStorage.setItem('current_household_role', household.role);
     } else {
       localStorage.removeItem('current_household_id');
+      localStorage.removeItem('current_household_name');
+      localStorage.removeItem('current_household_slug');
+      localStorage.removeItem('current_household_role');
     }
   }
 
@@ -95,6 +131,7 @@ export const useHouseholdStore = defineStore('household', () => {
     if (!userId) {
       loadHouseholds([]);
       setCurrentHousehold(null);
+      initialized.value = true;
       return;
     }
 
@@ -103,6 +140,7 @@ export const useHouseholdStore = defineStore('household', () => {
 
     if (isMockMode()) {
       initializeMockHouseholds();
+      initialized.value = true;
       return;
     }
 
@@ -125,6 +163,7 @@ export const useHouseholdStore = defineStore('household', () => {
         console.error('Failed to load households:', error);
         loadHouseholds([]);
         setCurrentHousehold(null);
+        initialized.value = true;
         return;
       }
 
@@ -143,6 +182,7 @@ export const useHouseholdStore = defineStore('household', () => {
         .filter(Boolean) as Household[];
 
       loadHouseholds(mapped);
+      initialized.value = true;
     } finally {
       loading.value = false;
     }
@@ -396,6 +436,7 @@ export const useHouseholdStore = defineStore('household', () => {
     currentHousehold,
     households,
     loading,
+    initialized,
     // Getters
     hasMultipleHouseholds,
     currentRole,

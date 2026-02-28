@@ -14,7 +14,11 @@
     <!-- Pending Invitations -->
     <PendingInvitationsCard @invitation-accepted="handleInvitationAccepted" />
 
-    <LoadingState v-if="householdEntityStore.loading" message="Loading your data..." />
+    <!-- Loading state while household is initializing -->
+    <LoadingState
+      v-if="!householdStore.initialized || householdEntityStore.loading"
+      message="Loading your data..."
+    />
 
     <template v-else>
       <!-- Active Shopping Lists -->
@@ -172,6 +176,13 @@ watch(
 
 // Watch for household switches
 watch(currentHouseholdId, async (householdId) => {
+  // CRITICAL: Wait for household store initialization before loading data
+  // This prevents loading data for stale household ID from localStorage
+  if (!householdStore.initialized) {
+    console.log('[Dashboard] Waiting for household store initialization before loading data');
+    return;
+  }
+
   // Clear tracking if household is deselected
   if (!householdId) {
     lastLoadedHouseholdId.value = null;
@@ -188,6 +199,7 @@ watch(currentHouseholdId, async (householdId) => {
     const userId = authStore.user?.id;
     if (!userId) return;
 
+    console.log('[Dashboard] Loading data for household:', householdId);
     await Promise.all([
       shoppingStore.loadLists(householdId),
       wishlistStore.loadWishlistsByHousehold(userId, householdId),
@@ -198,4 +210,30 @@ watch(currentHouseholdId, async (householdId) => {
     console.error('Failed to load data for household:', error);
   }
 });
+
+// When household store is initialized, trigger data load for current household
+watch(
+  () => householdStore.initialized,
+  async (isInitialized) => {
+    if (isInitialized && currentHouseholdId.value) {
+      const userId = authStore.user?.id;
+      if (!userId) return;
+
+      console.log(
+        '[Dashboard] Household store initialized, loading data for:',
+        currentHouseholdId.value,
+      );
+      try {
+        await Promise.all([
+          shoppingStore.loadLists(currentHouseholdId.value),
+          wishlistStore.loadWishlistsByHousehold(userId, currentHouseholdId.value),
+          wishlistStore.loadHouseholdWishlists(currentHouseholdId.value, userId),
+        ]);
+        lastLoadedHouseholdId.value = currentHouseholdId.value;
+      } catch (error) {
+        console.error('Failed to load data after initialization:', error);
+      }
+    }
+  },
+);
 </script>

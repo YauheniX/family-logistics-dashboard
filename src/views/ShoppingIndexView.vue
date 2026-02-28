@@ -6,7 +6,18 @@
           <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
             Shopping Lists
           </h3>
-          <BaseButton variant="primary" @click="showCreateListModal = true">
+          <BaseButton
+            variant="primary"
+            :disabled="!isHouseholdReady"
+            :title="
+              !householdStore.initialized
+                ? 'Loading household...'
+                : !householdStore.currentHousehold
+                  ? 'Select a household first'
+                  : undefined
+            "
+            @click="showCreateListModal = true"
+          >
             + New List
           </BaseButton>
         </div>
@@ -35,7 +46,14 @@
       </div>
 
       <div
-        v-if="!householdStore.currentHousehold"
+        v-if="!householdStore.initialized"
+        class="text-sm text-neutral-500 dark:text-neutral-400 mt-4"
+      >
+        ⏳ Loading household data...
+      </div>
+
+      <div
+        v-else-if="!householdStore.currentHousehold"
         class="text-sm text-neutral-500 dark:text-neutral-400 mt-4"
       >
         No household selected. Please select a household to view shopping lists.
@@ -104,23 +122,37 @@ import BaseInput from '@/components/shared/BaseInput.vue';
 import ModalDialog from '@/components/shared/ModalDialog.vue';
 import { useHouseholdStore } from '@/stores/household';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
+import { useToastStore } from '@/stores/toast';
 
 const router = useRouter();
 const householdStore = useHouseholdStore();
 const shoppingStore = useShoppingStore();
+const toastStore = useToastStore();
 
 const showCreateListModal = ref(false);
 const newListTitle = ref('');
 const newListDescription = ref('');
 const statusFilter = ref<'active' | 'archived'>('active');
 
+// Computed: Check if household is ready for operations
+const isHouseholdReady = computed(
+  () => householdStore.initialized && !!householdStore.currentHousehold,
+);
+
 const filteredLists = computed(() => {
   return shoppingStore.lists.filter((list) => list.status === statusFilter.value);
 });
 
 const handleCreateList = async () => {
+  // CRITICAL: Wait for household store initialization before creating list
+  if (!householdStore.initialized) {
+    toastStore.warning('Loading household data, please wait...');
+    return;
+  }
+
   const currentHousehold = householdStore.currentHousehold;
   if (!newListTitle.value.trim() || !currentHousehold?.id) return;
+
   const result = await shoppingStore.createList({
     household_id: String(currentHousehold.id),
     title: newListTitle.value.trim(),
@@ -137,9 +169,29 @@ const handleCreateList = async () => {
 };
 
 onMounted(async () => {
-  const currentHousehold = householdStore.currentHousehold;
-  if (currentHousehold?.id) {
-    await shoppingStore.loadLists(currentHousehold.id);
+  // Wait for household store initialization if needed
+  if (!householdStore.initialized) {
+    console.log('[ShoppingIndex] Waiting for household store initialization...');
+    // Watch for initialization to complete
+    const unwatch = watch(
+      () => householdStore.initialized,
+      async (isInitialized) => {
+        if (isInitialized) {
+          unwatch();
+          const currentHousehold = householdStore.currentHousehold;
+          if (currentHousehold?.id) {
+            await shoppingStore.loadLists(currentHousehold.id);
+          }
+        }
+      },
+      { immediate: true },
+    );
+  } else {
+    // Already initialized, proceed normally
+    const currentHousehold = householdStore.currentHousehold;
+    if (currentHousehold?.id) {
+      await shoppingStore.loadLists(currentHousehold.id);
+    }
   }
 });
 
@@ -147,6 +199,9 @@ onMounted(async () => {
 watch(
   () => householdStore.currentHousehold,
   async (newHousehold) => {
+    // Only proceed if store is initialized
+    if (!householdStore.initialized) return;
+
     if (newHousehold?.id) {
       await shoppingStore.loadLists(newHousehold.id);
     } else {

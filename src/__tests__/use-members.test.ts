@@ -170,6 +170,10 @@ describe('useMembers', () => {
 
   describe('createChild', () => {
     it('should fail when no household is selected', async () => {
+      const householdStore = useHouseholdStore();
+      // Clear any household that may have been restored from localStorage
+      householdStore.setCurrentHousehold(null);
+
       const { createChild } = useMembers();
       const toastStore = useToastStore();
 
@@ -293,6 +297,10 @@ describe('useMembers', () => {
 
   describe('inviteMember', () => {
     it('should fail when no household is selected', async () => {
+      const householdStore = useHouseholdStore();
+      // Clear any household that may have been restored from localStorage
+      householdStore.setCurrentHousehold(null);
+
       const { inviteMember } = useMembers();
       const toastStore = useToastStore();
 

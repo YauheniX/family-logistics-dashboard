@@ -66,6 +66,10 @@ async function mountDashboard() {
   const householdStore = useHouseholdStore();
   const shoppingStore = useShoppingStore();
 
+  // IMPORTANT: Set household store as initialized to allow data loading
+  // This simulates the completed initialization that happens in App.vue
+  householdStore.initialized = true;
+
   // Mock loadLists to prevent real service calls
   const loadListsSpy = vi.spyOn(shoppingStore, 'loadLists').mockResolvedValue(undefined);
 
