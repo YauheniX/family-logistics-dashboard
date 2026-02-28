@@ -78,7 +78,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
-import { useHouseholdStore } from '@/stores/household';
 
 const route = useRoute();
 const showMoreMenu = ref(false);

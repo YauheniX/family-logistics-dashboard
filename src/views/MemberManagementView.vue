@@ -326,13 +326,13 @@ const displayMembers = computed(() => {
   });
 });
 
-// Track last loaded household to force refresh on navigation
-let lastLoadedHouseholdId: string | null = null;
+// Track last loaded household to force refresh on navigation (component-scoped)
+const lastLoadedHouseholdId = ref<string | null>(null);
 
 async function loadHouseholdData() {
-  if (householdId.value && householdId.value !== lastLoadedHouseholdId) {
+  if (householdId.value && householdId.value !== lastLoadedHouseholdId.value) {
     await householdEntityStore.loadHousehold(householdId.value);
-    lastLoadedHouseholdId = householdId.value;
+    lastLoadedHouseholdId.value = householdId.value;
   }
 }
 
@@ -343,7 +343,7 @@ onMounted(async () => {
 // Re-load data when component is activated (e.g., navigating back via browser back button)
 onActivated(async () => {
   // Reset to force reload on navigation
-  lastLoadedHouseholdId = null;
+  lastLoadedHouseholdId.value = null;
   await loadHouseholdData();
 });
 
@@ -351,7 +351,7 @@ onActivated(async () => {
 watch(
   () => route.params.id,
   async (newId) => {
-    if (newId && newId !== lastLoadedHouseholdId) {
+    if (newId && newId !== lastLoadedHouseholdId.value) {
       await loadHouseholdData();
     }
   },

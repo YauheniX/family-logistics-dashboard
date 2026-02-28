@@ -30,6 +30,21 @@ type WishlistWithMember = {
 };
 
 /**
+ * Transform Supabase query result with nested member to normalized wishlist format.
+ * Converts nullable fields to undefined and extracts member_name from nested member.
+ */
+function transformWishlistWithMember(w: WishlistWithMember) {
+  return {
+    ...w,
+    member_id: w.member_id ?? undefined,
+    household_id: w.household_id ?? undefined,
+    updated_at: w.updated_at ?? undefined,
+    member_name: w.member?.display_name ?? undefined,
+    member: undefined, // Remove nested object
+  };
+}
+
+/**
  * Add computed is_public property based on visibility for frontend display compatibility.
  */
 function addIsPublic<T extends { visibility?: string | null }>(
@@ -93,16 +108,7 @@ export class WishlistRepository extends BaseRepository<
     if (result.data) {
       const personalWishlists = (result.data as unknown as WishlistWithMember[])
         .filter((w) => w.member?.role !== 'child')
-        .map((w) =>
-          addIsPublic({
-            ...w,
-            member_id: w.member_id ?? undefined,
-            household_id: w.household_id ?? undefined,
-            updated_at: w.updated_at ?? undefined,
-            member_name: w.member?.display_name ?? undefined,
-            member: undefined, // Remove nested object
-          }),
-        );
+        .map((w) => addIsPublic(transformWishlistWithMember(w)));
       return { ...result, data: personalWishlists };
     }
     return { data: null, error: result.error };
@@ -299,28 +305,12 @@ export class WishlistRepository extends BaseRepository<
     if (result.data && currentUserMemberId) {
       const filteredWishlists = (result.data as unknown as WishlistWithMember[])
         .filter((w) => w.member_id !== currentUserMemberId) // Exclude user's own wishlists
-        .map((w) =>
-          addIsPublic({
-            ...w,
-            member_id: w.member_id ?? undefined,
-            household_id: w.household_id ?? undefined,
-            updated_at: w.updated_at ?? undefined,
-            member_name: w.member?.display_name ?? undefined,
-            member: undefined, // Remove nested object
-          }),
-        );
+        .map((w) => addIsPublic(transformWishlistWithMember(w)));
       return { ...result, data: filteredWishlists };
     } else if (result.data && !currentUserMemberId) {
       // User not in household, return all shared wishlists
       const allWishlists = (result.data as unknown as WishlistWithMember[]).map((w) =>
-        addIsPublic({
-          ...w,
-          member_id: w.member_id ?? undefined,
-          household_id: w.household_id ?? undefined,
-          updated_at: w.updated_at ?? undefined,
-          member_name: w.member?.display_name ?? undefined,
-          member: undefined,
-        }),
+        addIsPublic(transformWishlistWithMember(w)),
       );
       return { ...result, data: allWishlists };
     }
@@ -359,16 +349,7 @@ export class WishlistRepository extends BaseRepository<
     if (result.data) {
       const childWishlists = (result.data as unknown as WishlistWithMember[])
         .filter((w) => w.member?.role === 'child')
-        .map((w) =>
-          addIsPublic({
-            ...w,
-            member_id: w.member_id ?? undefined,
-            household_id: w.household_id ?? undefined,
-            updated_at: w.updated_at ?? undefined,
-            member_name: w.member?.display_name ?? undefined,
-            member: undefined, // Remove nested object
-          }),
-        );
+        .map((w) => addIsPublic(transformWishlistWithMember(w)));
       return { ...result, data: childWishlists };
     }
     return { data: null, error: result.error };

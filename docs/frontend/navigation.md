@@ -47,7 +47,8 @@ The sidebar uses intelligent active state highlighting:
 // SidebarNav.vue
 function isActive(itemName: string): boolean {
   const currentRouteName = route.name as string;
-  return currentRouteName === itemName;
+  // Match exact route.name or any matched route record name (for nested routes)
+  return currentRouteName === itemName || route.matched.some((record) => record.name === itemName);
 }
 
 // BottomNav.vue

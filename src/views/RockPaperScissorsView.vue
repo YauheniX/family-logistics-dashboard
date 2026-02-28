@@ -162,6 +162,9 @@ function getHandClass(hand: 'user' | 'computer'): string {
   return `show-${choice.toLowerCase()}`;
 }
 
+// Animation delay after choices are shown before revealing winner
+const ROUND_RESULT_DELAY_MS = 500;
+
 function play(choice: Choice) {
   if (isPlaying.value || result.value) return;
 
@@ -175,7 +178,7 @@ function play(choice: Choice) {
     result.value = determineWinner(choice, computer);
     isPlaying.value = false;
     winnerTimeoutId = null;
-  }, 500);
+  }, ROUND_RESULT_DELAY_MS);
 }
 
 function resetRound() {

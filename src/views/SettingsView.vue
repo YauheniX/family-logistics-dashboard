@@ -288,11 +288,15 @@ const confirmEditName = async () => {
       profileForm.value.name = result.data.display_name || '';
       profileForm.value.avatarUrl = result.data.avatar_url;
       originalName.value = result.data.display_name || '';
-
-      // Refresh global user profile to update header
-      await loadUserProfile(authStore.user.id);
       toastStore.success('Profile updated successfully!');
       showEditNameModal.value = false;
+
+      // Refresh global user profile to update header (non-blocking)
+      try {
+        await loadUserProfile(authStore.user.id);
+      } catch {
+        toastStore.error('Profile refresh failed, but changes were saved');
+      }
     }
   } catch {
     toastStore.error('An unexpected error occurred');
