@@ -63,10 +63,7 @@ export class WishlistRepository extends BaseRepository<
         .select(
           `
           *,
-          member:members!wishlists_member_id_fkey (
-            display_name,
-            role
-          )
+          member:members(display_name, role)
         `,
         )
         .eq('user_id', userId)
@@ -81,6 +78,7 @@ export class WishlistRepository extends BaseRepository<
         .map((w: any) =>
           addIsPublic({
             ...w,
+            member_id: w.member_id ?? undefined, // Convert null to undefined
             member_name: w.member?.display_name || null,
             member: undefined, // Remove nested object
           }),
@@ -268,11 +266,7 @@ export class WishlistRepository extends BaseRepository<
         .select(
           `
           *,
-          member:members!wishlists_member_id_fkey (
-            id,
-            display_name,
-            role
-          )
+          member:members(id, display_name, role)
         `,
         )
         .eq('household_id', householdId)
@@ -288,6 +282,7 @@ export class WishlistRepository extends BaseRepository<
         .map((w: any) =>
           addIsPublic({
             ...w,
+            member_id: w.member_id ?? undefined, // Convert null to undefined
             member_name: w.member?.display_name || null,
             member: undefined, // Remove nested object
           }),
@@ -298,6 +293,7 @@ export class WishlistRepository extends BaseRepository<
       const allWishlists = result.data.map((w: any) =>
         addIsPublic({
           ...w,
+          member_id: w.member_id ?? undefined, // Convert null to undefined
           member_name: w.member?.display_name || null,
           member: undefined,
         }),
@@ -327,11 +323,7 @@ export class WishlistRepository extends BaseRepository<
         .select(
           `
           *,
-          member:members!wishlists_member_id_fkey (
-            id,
-            display_name,
-            role
-          )
+          member:members(id, display_name, role)
         `,
         )
         .eq('user_id', userId)
@@ -346,6 +338,7 @@ export class WishlistRepository extends BaseRepository<
         .map((w: any) =>
           addIsPublic({
             ...w,
+            member_id: w.member_id ?? undefined, // Convert null to undefined
             member_name: w.member?.display_name || null,
             member: undefined, // Remove nested object
           }),

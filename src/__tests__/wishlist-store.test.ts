@@ -8,6 +8,7 @@ vi.mock('@/features/wishlist/domain/wishlist.service', () => ({
     getWishlist: vi.fn(),
     getWishlistBySlug: vi.fn(),
     getHouseholdWishlists: vi.fn(),
+    getChildrenWishlists: vi.fn(),
     createWishlist: vi.fn(),
     updateWishlist: vi.fn(),
     deleteWishlist: vi.fn(),
