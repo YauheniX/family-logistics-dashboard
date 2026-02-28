@@ -62,7 +62,7 @@
             type="button"
             @click="$emit('view-wishlist', member)"
           >
-            <span class="group-hover/btn:animate-bounce-subtle">🎁</span>
+            <span class="group-hover/btn:animate-bounce-subtle">🎁 </span>
             <span>Wishlist</span>
           </button>
           <button
@@ -70,7 +70,7 @@
             type="button"
             @click="$emit('view-achievements', member)"
           >
-            <span class="group-hover/btn:animate-bounce-subtle">🏆</span>
+            <span class="group-hover/btn:animate-bounce-subtle">🏆 </span>
             <span>Achievements</span>
           </button>
         </div>
