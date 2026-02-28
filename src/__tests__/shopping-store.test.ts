@@ -441,4 +441,44 @@ describe('Shopping Store', () => {
     expect(store.purchasedItems).toEqual([purchased]);
     expect(store.unpurchasedItems).toEqual([mockItem]);
   });
+
+  // ─── Utility Actions ──────────────────────────────────────
+
+  it('clears lists', () => {
+    const store = useShoppingStore();
+    store.lists = [mockList];
+    expect(store.lists).toHaveLength(1);
+
+    store.clearLists();
+
+    expect(store.lists).toEqual([]);
+  });
+
+  it('sets current list', () => {
+    const store = useShoppingStore();
+    expect(store.currentList).toBeNull();
+
+    store.setCurrentList(mockList);
+    expect(store.currentList).toEqual(mockList);
+
+    store.setCurrentList(null);
+    expect(store.currentList).toBeNull();
+  });
+
+  it('resets store state', () => {
+    const store = useShoppingStore();
+    store.lists = [mockList];
+    store.currentList = mockList;
+    store.items = [mockItem];
+    store.loading = true;
+    store.error = 'Some error';
+
+    store.$reset();
+
+    expect(store.lists).toEqual([]);
+    expect(store.currentList).toBeNull();
+    expect(store.items).toEqual([]);
+    expect(store.loading).toBe(false);
+    expect(store.error).toBeNull();
+  });
 });
