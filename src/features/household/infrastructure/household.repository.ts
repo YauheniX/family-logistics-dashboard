@@ -213,18 +213,17 @@ export class MemberRepository extends BaseRepository<Member, CreateMemberDto, Pa
     dateOfBirth: string,
     avatarUrl?: string | null,
   ): Promise<ApiResponse<string>> {
-    const response = await this.execute<string>(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return await (supabase.rpc as any)('create_child_member', {
-        p_household_id: householdId,
-        p_name: name,
-        p_date_of_birth: dateOfBirth,
-        p_avatar_url: avatarUrl ?? null,
-      });
-    });
-
-    if (!response.error) this.invalidateTable();
-    return response;
+    return this.writeThrough(() =>
+      this.execute<string>(async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return await (supabase.rpc as any)('create_child_member', {
+          p_household_id: householdId,
+          p_name: name,
+          p_date_of_birth: dateOfBirth,
+          p_avatar_url: avatarUrl ?? null,
+        });
+      }),
+    );
   }
 
   /**
@@ -237,17 +236,16 @@ export class MemberRepository extends BaseRepository<Member, CreateMemberDto, Pa
     email: string,
     role: string = 'member',
   ): Promise<ApiResponse<string>> {
-    const response = await this.execute<string>(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return await (supabase.rpc as any)('invite_member', {
-        p_household_id: householdId,
-        p_email: email,
-        p_role: role,
-      });
-    });
-
-    if (!response.error) this.invalidateTable();
-    return response;
+    return this.writeThrough(() =>
+      this.execute<string>(async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return await (supabase.rpc as any)('invite_member', {
+          p_household_id: householdId,
+          p_email: email,
+          p_role: role,
+        });
+      }),
+    );
   }
 
   /**

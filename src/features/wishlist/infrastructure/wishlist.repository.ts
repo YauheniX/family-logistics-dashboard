@@ -198,9 +198,10 @@ export class WishlistRepository extends BaseRepository<
         .single();
     });
 
+    if (!result.error) this.invalidateTable();
+
     // Add is_public computed property for frontend compatibility
     if (result.data) {
-      this.invalidateTable();
       return { data: addIsPublic(result.data), error: null };
     }
     return { data: null, error: result.error };
@@ -398,46 +399,49 @@ export class WishlistItemRepository extends BaseRepository<
    * Requires email for both reserving and unreserving (owner can unreserve without email)
    */
   async reserveItem(id: string, dto: ReserveWishlistItemDto): Promise<ApiResponse<WishlistItem>> {
-    const result = await this.query(async () => {
-      // Call the RPC function to update reservation
-      const { data: rpcData, error: rpcError } = await this.supabase.rpc('reserve_wishlist_item', {
-        p_item_id: id,
-        p_reserved: dto.is_reserved,
-        p_email: dto.reserved_by_email || null,
-        p_name: dto.reserved_by_name || null,
-        p_code: null, // Backward compatibility parameter, ignored by function
-      });
+    return this.writeThrough(() =>
+      this.query(async () => {
+        // Call the RPC function to update reservation
+        const { data: rpcData, error: rpcError } = await this.supabase.rpc(
+          'reserve_wishlist_item',
+          {
+            p_item_id: id,
+            p_reserved: dto.is_reserved,
+            p_email: dto.reserved_by_email || null,
+            p_name: dto.reserved_by_name || null,
+            p_code: null, // Backward compatibility parameter, ignored by function
+          },
+        );
 
-      if (rpcError) throw rpcError;
+        if (rpcError) throw rpcError;
 
-      // Check if the operation failed (e.g., already reserved)
-      if (
-        rpcData &&
-        typeof rpcData === 'object' &&
-        'success' in rpcData &&
-        rpcData.success === false
-      ) {
-        throw new Error((rpcData as { error?: string }).error || 'Reservation failed');
-      }
+        // Check if the operation failed (e.g., already reserved)
+        if (
+          rpcData &&
+          typeof rpcData === 'object' &&
+          'success' in rpcData &&
+          rpcData.success === false
+        ) {
+          throw new Error((rpcData as { error?: string }).error || 'Reservation failed');
+        }
 
-      // Fetch and return the updated item
-      const itemResponse = await this.supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(this.tableName as any)
-        .select()
-        .eq('id', id)
-        .single();
+        // Fetch and return the updated item
+        const itemResponse = await this.supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from(this.tableName as any)
+          .select()
+          .eq('id', id)
+          .single();
 
-      if (itemResponse.error) throw itemResponse.error;
-      if (!itemResponse.data) throw new Error('Item not found');
+        if (itemResponse.error) throw itemResponse.error;
+        if (!itemResponse.data) throw new Error('Item not found');
 
-      const item = itemResponse.data as unknown as WishlistItem;
-      return {
-        data: item,
-        error: null,
-      };
-    });
-    if (!result.error) this.invalidateTable();
-    return result;
+        const item = itemResponse.data as unknown as WishlistItem;
+        return {
+          data: item,
+          error: null,
+        };
+      }),
+    );
   }
 }

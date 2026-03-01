@@ -85,8 +85,9 @@ export abstract class BaseRepository<
 
   /**
    * Wrap a write operation so the table cache is invalidated on success.
+   * Protected so subclasses can use it for custom write methods.
    */
-  private async writeThrough<T>(op: () => Promise<ApiResponse<T>>): Promise<ApiResponse<T>> {
+  protected async writeThrough<T>(op: () => Promise<ApiResponse<T>>): Promise<ApiResponse<T>> {
     const result = await op();
     if (!result.error) this.invalidateTable();
     return result;

@@ -40,18 +40,18 @@ export class ShoppingListRepository extends BaseRepository<
     }
     const userId = userIdResponse.data;
 
-    const result: ApiResponse<ShoppingList> = await this.execute(async () => {
-      return await supabase
-        .from('shopping_lists')
-        .insert({
-          ...dto,
-          created_by: userId,
-        })
-        .select()
-        .single();
-    });
-    if (!result.error) this.invalidateTable();
-    return result;
+    return this.writeThrough(() =>
+      this.execute(async () => {
+        return await supabase
+          .from('shopping_lists')
+          .insert({
+            ...dto,
+            created_by: userId,
+          })
+          .select()
+          .single();
+      }),
+    );
   }
 }
 
@@ -85,17 +85,17 @@ export class ShoppingItemRepository extends BaseRepository<
     }
     const userId = userIdResponse.data;
 
-    const result: ApiResponse<ShoppingItem> = await this.execute(async () => {
-      return await supabase
-        .from('shopping_items')
-        .insert({
-          ...dto,
-          added_by: userId,
-        })
-        .select()
-        .single();
-    });
-    if (!result.error) this.invalidateTable();
-    return result;
+    return this.writeThrough(() =>
+      this.execute(async () => {
+        return await supabase
+          .from('shopping_items')
+          .insert({
+            ...dto,
+            added_by: userId,
+          })
+          .select()
+          .single();
+      }),
+    );
   }
 }

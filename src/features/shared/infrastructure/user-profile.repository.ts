@@ -30,22 +30,22 @@ export class UserProfileRepository extends BaseRepository<
    * Create a new user profile
    */
   async create(dto: CreateUserProfileDto): Promise<ApiResponse<UserProfile>> {
-    const result: ApiResponse<UserProfile> = await this.query(async () => {
-      return await supabase.from('user_profiles').insert(dto).select().single();
-    });
-    if (!result.error) this.invalidateTable();
-    return result;
+    return this.writeThrough(() =>
+      this.query(async () => {
+        return await supabase.from('user_profiles').insert(dto).select().single();
+      }),
+    );
   }
 
   /**
    * Update user profile
    */
   async update(userId: string, dto: UpdateUserProfileDto): Promise<ApiResponse<UserProfile>> {
-    const result: ApiResponse<UserProfile> = await this.query(async () => {
-      return await supabase.from('user_profiles').update(dto).eq('id', userId).select().single();
-    });
-    if (!result.error) this.invalidateTable();
-    return result;
+    return this.writeThrough(() =>
+      this.query(async () => {
+        return await supabase.from('user_profiles').update(dto).eq('id', userId).select().single();
+      }),
+    );
   }
 
   /**
