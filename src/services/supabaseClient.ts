@@ -9,7 +9,7 @@ export const supabase = isMockMode()
   ? createClient<Database>('https://mock.supabase.co', 'mock-key', {
       auth: {
         persistSession: true,
-        detectSessionInUrl: true,
+        detectSessionInUrl: false,
         autoRefreshToken: true,
         storage: window.localStorage,
       },
@@ -17,7 +17,7 @@ export const supabase = isMockMode()
   : createClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
-        detectSessionInUrl: true,
+        detectSessionInUrl: false,
         autoRefreshToken: true,
         storage: window.localStorage,
       },

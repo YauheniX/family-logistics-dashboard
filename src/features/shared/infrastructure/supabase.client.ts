@@ -23,7 +23,11 @@ export const supabase: SupabaseClient<Database> = isMockMode()
   ? (createClient<Database>('https://mock.supabase.co', 'mock-key', {
       auth: {
         persistSession: true,
-        detectSessionInUrl: true,
+        // OAuth redirects are parsed centrally in `handleSupabaseAuthRedirect()`
+        // before router bootstrapping, including hash-router variants like
+        // '#/access_token=...'. Keep this off to avoid race conditions with
+        // Supabase's built-in URL parsing.
+        detectSessionInUrl: false,
         autoRefreshToken: true,
         storageKey: 'sb-mock-auth',
         storage: window.localStorage,
@@ -32,7 +36,11 @@ export const supabase: SupabaseClient<Database> = isMockMode()
   : createClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
-        detectSessionInUrl: true,
+        // OAuth redirects are parsed centrally in `handleSupabaseAuthRedirect()`
+        // before router bootstrapping, including hash-router variants like
+        // '#/access_token=...'. Keep this off to avoid race conditions with
+        // Supabase's built-in URL parsing.
+        detectSessionInUrl: false,
         autoRefreshToken: true,
         storageKey: getAuthStorageKey(supabaseUrl),
         storage: window.localStorage,
