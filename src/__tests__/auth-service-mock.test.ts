@@ -3,9 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 // Mock createStorageAdapter to use InMemoryAdapter so tests are isolated
 vi.mock('@/features/shared/infrastructure/mock-storage.adapter', async (importOriginal) => {
   const original =
-    await importOriginal<
-      typeof import('@/features/shared/infrastructure/mock-storage.adapter')
-    >();
+    await importOriginal<typeof import('@/features/shared/infrastructure/mock-storage.adapter')>();
   return {
     ...original,
     createStorageAdapter: () => new original.InMemoryAdapter(),
@@ -164,4 +162,3 @@ describe('MockAuthService', () => {
     });
   });
 });
-
