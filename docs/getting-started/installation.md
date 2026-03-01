@@ -112,9 +112,11 @@ VITE_SUPABASE_STORAGE_BUCKET=wishlist-images
 
 1. [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services** → **Credentials**
 2. Create an OAuth 2.0 Client ID
-3. Authorized redirect URIs: `http://localhost:5173`, `https://your-production-url.com`
+3. Authorized redirect URI: `https://<your-project-ref>.supabase.co/auth/v1/callback`
 4. Supabase Dashboard → **Authentication** → **Providers** → **Google**
 5. Enter Client ID and Client Secret
+6. Supabase Dashboard → **Authentication** → **URL Configuration**
+7. Add app URLs to Redirect URLs allow-list: `http://localhost:5173`, `https://your-production-url.com`
 
 ### Step 8: Start the App
 

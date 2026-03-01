@@ -81,6 +81,11 @@ The application uses **Supabase Auth** with:
    - Click **Save**
    - ✅ Google OAuth active!
 
+5. **Configure Supabase URL Settings**
+   - Open **Authentication → URL Configuration**
+   - Set **Site URL** to your main frontend URL
+   - Add all app domains in **Redirect URLs** (e.g. `http://localhost:5173`, production domain)
+
 ---
 
 ## Email/Password Authentication
