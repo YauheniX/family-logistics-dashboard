@@ -76,7 +76,14 @@ export async function handleSupabaseAuthRedirect(): Promise<void> {
       return;
     }
   } catch {
-    // ignore
+    // Code exchange failed – remove any partially-written session so the app
+    // does not get stuck on a corrupted auth state that only a cache-clear
+    // would fix (see: white-screen-on-mobile issue).
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // best-effort cleanup
+    }
   }
 
   // Implicit flow: #access_token=... or #/access_token=...
@@ -104,6 +111,13 @@ export async function handleSupabaseAuthRedirect(): Promise<void> {
       cleanToHomeHash();
     }
   } catch {
-    // ignore
+    // Session set failed – clean up corrupted state so subsequent loads
+    // can start fresh rather than rendering a white screen.
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // best-effort cleanup
+    }
+    cleanToHomeHash();
   }
 }

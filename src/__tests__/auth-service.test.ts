@@ -270,6 +270,60 @@ describe('AuthService', () => {
       expect(result.error?.message).toBe('User error');
     });
 
+    it('cleans up invalid session when getUser fails (prevents white-screen-on-mobile)', async () => {
+      const { supabase } = await import('@/features/shared/infrastructure/supabase.client');
+      vi.mocked(supabase.auth.getSession).mockResolvedValue({
+        data: { session: { access_token: 'bad-token' } },
+        error: null,
+      } as never);
+      vi.mocked(supabase.auth.getUser).mockResolvedValue({
+        data: { user: null },
+        error: { message: 'Invalid token' },
+      } as never);
+      vi.mocked(supabase.auth.signOut).mockResolvedValue({ error: null } as never);
+
+      await service.getCurrentUser();
+
+      expect(supabase.auth.signOut).toHaveBeenCalled();
+    });
+
+    it('cleans up session when getUser returns no user', async () => {
+      const { supabase } = await import('@/features/shared/infrastructure/supabase.client');
+      vi.mocked(supabase.auth.getSession).mockResolvedValue({
+        data: { session: { access_token: 'token' } },
+        error: null,
+      } as never);
+      vi.mocked(supabase.auth.getUser).mockResolvedValue({
+        data: { user: null },
+        error: null,
+      } as never);
+      vi.mocked(supabase.auth.signOut).mockResolvedValue({ error: null } as never);
+
+      const result = await service.getCurrentUser();
+
+      expect(result.data).toBeNull();
+      expect(result.error?.message).toBe('Not authenticated');
+      expect(supabase.auth.signOut).toHaveBeenCalled();
+    });
+
+    it('still returns original error even if signOut cleanup throws', async () => {
+      const { supabase } = await import('@/features/shared/infrastructure/supabase.client');
+      vi.mocked(supabase.auth.getSession).mockResolvedValue({
+        data: { session: { access_token: 'bad' } },
+        error: null,
+      } as never);
+      vi.mocked(supabase.auth.getUser).mockResolvedValue({
+        data: { user: null },
+        error: { message: 'Expired' },
+      } as never);
+      vi.mocked(supabase.auth.signOut).mockRejectedValue(new Error('signOut failed'));
+
+      const result = await service.getCurrentUser();
+
+      expect(result.data).toBeNull();
+      expect(result.error?.message).toBe('Expired');
+    });
+
     it('returns error when no user returned from getUser', async () => {
       const { supabase } = await import('@/features/shared/infrastructure/supabase.client');
       vi.mocked(supabase.auth.getSession).mockResolvedValue({

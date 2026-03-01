@@ -39,13 +39,10 @@ export const useAuthStore = defineStore('auth', {
       if (this.initialized) return;
       this.loading = true;
       try {
-        const response = await authService.getCurrentUser();
-        if (!response.error && response.data) {
-          this.user = response.data;
-          // Session will be set via onAuthStateChange callback
-        }
-
-        // Set up auth state change listener
+        // Register the auth-state-change listener FIRST so that any session
+        // events fired by Supabase during the (potentially slow) getCurrentUser
+        // call are not missed – e.g. the client finishing its own
+        // `detectSessionInUrl` processing on a slow mobile connection.
         authService.onAuthStateChange((user, session) => {
           if (user && session) {
             this.user = user;
@@ -55,6 +52,12 @@ export const useAuthStore = defineStore('auth', {
             this.session = null;
           }
         });
+
+        const response = await authService.getCurrentUser();
+        if (!response.error && response.data) {
+          this.user = response.data;
+          // Session will be set via onAuthStateChange callback
+        }
 
         this.initialized = true;
       } finally {
