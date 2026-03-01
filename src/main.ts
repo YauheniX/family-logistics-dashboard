@@ -6,11 +6,13 @@ import './styles/main.css';
 import { useAuthStore } from '@/stores/auth';
 import { handleSupabaseAuthRedirect } from '@/utils/supabaseAuthRedirect';
 import { normalizeRedirectParam } from '@/utils/pathValidation';
+import i18n from './i18n';
 
 const app = createApp(App);
 const pinia = createPinia();
 
 app.use(pinia);
+app.use(i18n);
 
 // IMPORTANT bootstrap order:
 // 1) Handle Supabase OAuth redirect hash (tokens/code) and clean URL

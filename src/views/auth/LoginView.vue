@@ -2,9 +2,9 @@
   <div class="mx-auto max-w-md space-y-6">
     <!-- Header Card -->
     <div class="glass-card p-6 text-center">
-      <h1 class="text-h1 text-neutral-900 dark:text-neutral-50 mb-2">Welcome Back</h1>
+      <h1 class="text-h1 text-neutral-900 dark:text-neutral-50 mb-2">{{ $t('auth.login.title') }}</h1>
       <p class="text-body text-neutral-700 dark:text-neutral-300">
-        Sign in to manage your household
+        {{ $t('auth.login.subtitle') }}
       </p>
     </div>
 
@@ -14,23 +14,23 @@
         <BaseInput
           v-model="email"
           type="email"
-          label="Email"
-          placeholder="your@email.com"
+          :label="$t('auth.login.emailLabel')"
+          :placeholder="$t('auth.login.emailPlaceholder')"
           :disabled="loading"
           :error="validationErrors.email"
           :required="true"
-          aria-label="Email address"
+          :aria-label="$t('auth.login.emailLabel')"
         />
 
         <BaseInput
           v-model="password"
           type="password"
-          label="Password"
-          placeholder="Min. 6 characters"
+          :label="$t('auth.login.passwordLabel')"
+          :placeholder="$t('auth.login.passwordPlaceholder')"
           :disabled="loading"
           :error="validationErrors.password"
           :required="true"
-          aria-label="Password"
+          :aria-label="$t('auth.login.passwordLabel')"
         />
 
         <BaseButton
@@ -40,7 +40,7 @@
           :disabled="loading"
           :full-width="true"
         >
-          {{ loading ? 'Signing in...' : 'Sign In' }}
+          {{ loading ? $t('auth.login.signingIn') : $t('auth.login.signIn') }}
         </BaseButton>
 
         <p v-if="error" class="text-sm text-danger-500 dark:text-danger-400 text-center">
@@ -55,7 +55,7 @@
         </div>
         <div class="relative flex justify-center text-sm">
           <span class="bg-white dark:bg-neutral-800 px-2 text-neutral-500 dark:text-neutral-400">
-            OR
+            {{ $t('common.or') }}
           </span>
         </div>
       </div>
@@ -87,18 +87,18 @@
             />
           </svg>
         </template>
-        Sign in with Google
+        {{ $t('auth.login.signInWithGoogle') }}
       </BaseButton>
 
       <!-- Footer -->
       <div class="text-center">
         <p class="text-small text-neutral-600 dark:text-neutral-400">
-          Don't have an account?
+          {{ $t('auth.login.noAccount') }}
           <router-link
             to="/register"
             class="text-primary-500 dark:text-primary-400 hover:text-primary-600 dark:hover:text-primary-300 font-medium"
           >
-            Create account
+            {{ $t('auth.login.createAccount') }}
           </router-link>
         </p>
       </div>
@@ -109,6 +109,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import BaseInput from '@/components/shared/BaseInput.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import { authService } from '@/features/auth';
@@ -116,6 +117,7 @@ import { useToastStore } from '@/stores/toast';
 import { isValidEmail, isValidPassword, MIN_PASSWORD_LENGTH } from '@/utils/validation';
 import { normalizeRedirectParam } from '@/utils/pathValidation';
 
+const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
 const toastStore = useToastStore();
@@ -135,19 +137,19 @@ const validateForm = (): boolean => {
 
   // Email validation
   if (!email.value) {
-    validationErrors.value.email = 'Email is required';
+    validationErrors.value.email = t('auth.login.emailRequired');
     isValid = false;
   } else if (!isValidEmail(email.value)) {
-    validationErrors.value.email = 'Please enter a valid email address';
+    validationErrors.value.email = t('auth.login.emailInvalid');
     isValid = false;
   }
 
   // Password validation
   if (!password.value) {
-    validationErrors.value.password = 'Password is required';
+    validationErrors.value.password = t('auth.login.passwordRequired');
     isValid = false;
   } else if (!isValidPassword(password.value)) {
-    validationErrors.value.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters`;
+    validationErrors.value.password = t('auth.login.passwordTooShort', { min: MIN_PASSWORD_LENGTH });
     isValid = false;
   }
 
@@ -170,7 +172,7 @@ const handleEmailLogin = async () => {
       error.value = response.error.message;
       toastStore.error(error.value);
     } else {
-      toastStore.success('Successfully signed in!');
+      toastStore.success(t('auth.login.signedInSuccess'));
       const redirectParam =
         route.query.redirect && typeof route.query.redirect === 'string'
           ? route.query.redirect
@@ -179,7 +181,7 @@ const handleEmailLogin = async () => {
       router.push(redirect);
     }
   } catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : 'Failed to sign in';
+    error.value = err instanceof Error ? err.message : t('auth.login.failedToSignIn');
     toastStore.error(error.value);
   } finally {
     loading.value = false;
@@ -203,7 +205,7 @@ const handleGoogleLogin = async () => {
       toastStore.error(error.value);
     }
   } catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : 'Failed to sign in with Google';
+    error.value = err instanceof Error ? err.message : t('auth.login.failedToSignInWithGoogle');
     toastStore.error(error.value);
   } finally {
     loading.value = false;

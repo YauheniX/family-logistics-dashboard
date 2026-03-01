@@ -3,10 +3,10 @@
     <BaseCard>
       <div class="p-6">
         <h2 class="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
-          Good morning, {{ userName }}!
+          {{ $t('dashboard.greeting', { name: userName }) }}
         </h2>
         <p class="text-neutral-600 dark:text-neutral-400">
-          Manage your household, shopping lists, and wishlists in one place.
+          {{ $t('dashboard.subtitle') }}
         </p>
       </div>
     </BaseCard>
@@ -17,7 +17,7 @@
     <!-- Loading state while household is initializing -->
     <LoadingState
       v-if="!householdStore.initialized || householdEntityStore.loading"
-      message="Loading your data..."
+      :message="$t('dashboard.loadingData')"
     />
 
     <template v-else>
@@ -26,9 +26,9 @@
         <div class="p-5">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-              Active Shopping Lists
+              {{ $t('dashboard.activeShoppingLists') }}
             </h3>
-            <RouterLink to="/shopping" class="btn-ghost text-sm">View All</RouterLink>
+            <RouterLink to="/shopping" class="btn-ghost text-sm">{{ $t('dashboard.viewAll') }}</RouterLink>
           </div>
           <div v-if="allActiveLists.length" class="mt-3 space-y-2">
             <RouterLink
@@ -57,7 +57,7 @@
             </RouterLink>
           </div>
           <p v-else class="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
-            No active shopping lists.
+            {{ $t('dashboard.noActiveLists') }}
           </p>
         </div>
       </BaseCard>
@@ -67,7 +67,7 @@
         <div class="p-5">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-              Household Wishlists
+              {{ $t('dashboard.householdWishlists') }}
             </h3>
           </div>
           <div v-if="wishlistStore.householdWishlists.length" class="mt-3 space-y-2">
@@ -89,7 +89,7 @@
             </RouterLink>
           </div>
           <p v-else class="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
-            No shared wishlists from household members.
+            {{ $t('dashboard.noWishlists') }}
           </p>
         </div>
       </BaseCard>
@@ -101,9 +101,9 @@
         !householdEntityStore.households.length &&
         !wishlistStore.wishlists.length
       "
-      title="Welcome!"
-      description="Get started by creating a household or a wishlist."
-      cta="Create a Household"
+      :title="$t('dashboard.welcomeTitle')"
+      :description="$t('dashboard.welcomeDescription')"
+      :cta="$t('dashboard.createHousehold')"
       @action="() => router.push('/households')"
     />
   </div>
@@ -113,6 +113,7 @@
 import { computed, ref, watch, onMounted, onActivated } from 'vue';
 import { storeToRefs } from 'pinia';
 import { RouterLink, useRouter, useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';
@@ -134,6 +135,7 @@ const shoppingStore = useShoppingStore();
 const wishlistStore = useWishlistStore();
 const router = useRouter();
 const route = useRoute();
+const { t } = useI18n();
 const { userDisplayName, userAvatarUrl: profileAvatarUrl } = useUserProfile();
 
 // Use storeToRefs for proper reactivity with Pinia

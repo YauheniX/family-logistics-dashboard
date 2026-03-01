@@ -55,7 +55,7 @@
           aria-hidden="true"
           >⋯</span
         >
-        <span class="text-[10px] sm:text-xs font-medium">More</span>
+        <span class="text-[10px] sm:text-xs font-medium">{{ $t('nav.more') }}</span>
       </button>
     </div>
 
@@ -99,7 +99,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const route = useRoute();
 const showMoreMenu = ref(false);
 
@@ -112,17 +114,17 @@ interface NavItem {
 
 // Primary navigation items (always visible)
 const navItems = computed<NavItem[]>(() => [
-  { name: 'dashboard', label: 'Home', to: { name: 'dashboard' }, emoji: '🏠' },
-  { name: 'shopping', label: 'Shopping', to: { name: 'shopping' }, emoji: '🛒' },
-  { name: 'wishlist-list', label: 'Wishlists', to: '/wishlists', emoji: '🎁' },
+  { name: 'dashboard', label: t('nav.home'), to: { name: 'dashboard' }, emoji: '🏠' },
+  { name: 'shopping', label: t('nav.shopping'), to: { name: 'shopping' }, emoji: '🛒' },
+  { name: 'wishlist-list', label: t('nav.wishlists'), to: '/wishlists', emoji: '🎁' },
 ]);
 
 // Additional items in "More" menu
-const moreItems: NavItem[] = [
-  { name: 'household-list', label: 'Households', to: '/households', emoji: '🏠' },
-  { name: 'apps', label: 'Apps', to: '/apps', emoji: '📱' },
-  { name: 'settings', label: 'Settings', to: '/settings', emoji: '⚙️' },
-];
+const moreItems = computed<NavItem[]>(() => [
+  { name: 'household-list', label: t('nav.households'), to: '/households', emoji: '🏠' },
+  { name: 'apps', label: t('nav.apps'), to: '/apps', emoji: '📱' },
+  { name: 'settings', label: t('nav.settings'), to: '/settings', emoji: '⚙️' },
+]);
 
 function isActive(routeName: string): boolean {
   const currentRouteName = route.name as string;

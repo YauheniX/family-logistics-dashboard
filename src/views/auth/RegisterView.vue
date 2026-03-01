@@ -2,8 +2,8 @@
   <div class="mx-auto max-w-md space-y-6">
     <!-- Header Card -->
     <div class="glass-card p-6 text-center">
-      <h1 class="text-h1 text-neutral-900 dark:text-neutral-50 mb-2">Create Account</h1>
-      <p class="text-body text-neutral-700 dark:text-neutral-300">Join to manage your household</p>
+      <h1 class="text-h1 text-neutral-900 dark:text-neutral-50 mb-2">{{ $t('auth.register.title') }}</h1>
+      <p class="text-body text-neutral-700 dark:text-neutral-300">{{ $t('auth.register.subtitle') }}</p>
     </div>
 
     <!-- Register Form Card -->
@@ -12,34 +12,34 @@
         <BaseInput
           v-model="email"
           type="email"
-          label="Email"
-          placeholder="your@email.com"
+          :label="$t('auth.login.emailLabel')"
+          :placeholder="$t('auth.login.emailPlaceholder')"
           :disabled="loading"
           :error="validationErrors.email"
           :required="true"
-          aria-label="Email address"
+          :aria-label="$t('auth.login.emailLabel')"
         />
 
         <BaseInput
           v-model="password"
           type="password"
-          label="Password"
-          placeholder="Min. 6 characters"
+          :label="$t('auth.login.passwordLabel')"
+          :placeholder="$t('auth.login.passwordPlaceholder')"
           :disabled="loading"
           :error="validationErrors.password"
           :required="true"
-          aria-label="Password"
+          :aria-label="$t('auth.login.passwordLabel')"
         />
 
         <BaseInput
           v-model="confirmPassword"
           type="password"
-          label="Confirm Password"
-          placeholder="Re-enter your password"
+          :label="$t('auth.register.confirmPasswordLabel')"
+          :placeholder="$t('auth.register.confirmPasswordPlaceholder')"
           :disabled="loading"
           :error="validationErrors.confirmPassword"
           :required="true"
-          aria-label="Confirm password"
+          :aria-label="$t('auth.register.confirmPasswordLabel')"
         />
 
         <BaseButton
@@ -49,7 +49,7 @@
           :disabled="loading"
           :full-width="true"
         >
-          {{ loading ? 'Creating account...' : 'Create Account' }}
+          {{ loading ? $t('auth.register.creatingAccount') : $t('auth.register.createAccount') }}
         </BaseButton>
 
         <p v-if="error" class="text-sm text-danger-500 dark:text-danger-400 text-center">
@@ -67,7 +67,7 @@
         </div>
         <div class="relative flex justify-center text-sm">
           <span class="bg-white dark:bg-neutral-800 px-2 text-neutral-500 dark:text-neutral-400">
-            OR
+            {{ $t('common.or') }}
           </span>
         </div>
       </div>
@@ -99,18 +99,18 @@
             />
           </svg>
         </template>
-        Sign up with Google
+        {{ $t('auth.register.signUpWithGoogle') }}
       </BaseButton>
 
       <!-- Footer -->
       <div class="text-center">
         <p class="text-small text-neutral-600 dark:text-neutral-400">
-          Already have an account?
+          {{ $t('auth.register.alreadyHaveAccount') }}
           <router-link
             to="/login"
             class="text-primary-500 dark:text-primary-400 hover:text-primary-600 dark:hover:text-primary-300 font-medium"
           >
-            Sign in
+            {{ $t('auth.register.signIn') }}
           </router-link>
         </p>
       </div>
@@ -121,6 +121,7 @@
 <script setup lang="ts">
 import { ref, onBeforeUnmount } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import BaseInput from '@/components/shared/BaseInput.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import { authService } from '@/features/auth';
@@ -129,6 +130,7 @@ import { useHouseholdStore } from '@/stores/household';
 import { isValidEmail, isValidPassword, MIN_PASSWORD_LENGTH } from '@/utils/validation';
 import { normalizeRedirectParam } from '@/utils/pathValidation';
 
+const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
 const toastStore = useToastStore();
@@ -160,28 +162,28 @@ const validateForm = (): boolean => {
 
   // Email validation
   if (!email.value) {
-    validationErrors.value.email = 'Email is required';
+    validationErrors.value.email = t('auth.login.emailRequired');
     isValid = false;
   } else if (!isValidEmail(email.value)) {
-    validationErrors.value.email = 'Please enter a valid email address';
+    validationErrors.value.email = t('auth.login.emailInvalid');
     isValid = false;
   }
 
   // Password validation
   if (!password.value) {
-    validationErrors.value.password = 'Password is required';
+    validationErrors.value.password = t('auth.login.passwordRequired');
     isValid = false;
   } else if (!isValidPassword(password.value)) {
-    validationErrors.value.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters`;
+    validationErrors.value.password = t('auth.login.passwordTooShort', { min: MIN_PASSWORD_LENGTH });
     isValid = false;
   }
 
   // Confirm password validation
   if (!confirmPassword.value) {
-    validationErrors.value.confirmPassword = 'Please confirm your password';
+    validationErrors.value.confirmPassword = t('auth.register.confirmPasswordRequired');
     isValid = false;
   } else if (password.value !== confirmPassword.value) {
-    validationErrors.value.confirmPassword = 'Passwords do not match';
+    validationErrors.value.confirmPassword = t('auth.register.passwordsDoNotMatch');
     isValid = false;
   }
 
@@ -205,8 +207,7 @@ const handleRegister = async () => {
       error.value = response.error.message;
       toastStore.error(error.value);
     } else {
-      success.value =
-        'Account created successfully! Please check your email to confirm your account.';
+      success.value = t('auth.register.successMessage');
       toastStore.success(success.value);
 
       if (response.data?.id) {
@@ -224,7 +225,7 @@ const handleRegister = async () => {
       }, 2000);
     }
   } catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : 'Failed to create account';
+    error.value = err instanceof Error ? err.message : t('auth.register.failedToCreateAccount');
     toastStore.error(error.value);
   } finally {
     loading.value = false;
@@ -248,7 +249,7 @@ const handleGoogleRegister = async () => {
       toastStore.error(error.value);
     }
   } catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : 'Failed to sign up with Google';
+    error.value = err instanceof Error ? err.message : t('auth.register.failedToSignUpWithGoogle');
     toastStore.error(error.value);
   } finally {
     loading.value = false;
