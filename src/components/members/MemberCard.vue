@@ -22,6 +22,8 @@
             :show-role-badge="false"
           />
         </div>
+      </div>
+
       <!-- Info -->
       <div class="flex-1 min-w-0">
         <h3
