@@ -158,17 +158,20 @@ export class AuthService {
       // Session exists, now validate it with getUser()
       const { data, error } = await supabase.auth.getUser();
 
-      if (error) {
-        return {
-          data: null,
-          error: { message: error.message, details: error },
-        };
-      }
+      if (error || !data.user) {
+        // Session exists in storage but is invalid (expired, corrupted, or
+        // partially written during an interrupted mobile redirect).  Sign out
+        // to remove the stale entry so subsequent loads start fresh instead of
+        // being stuck in a broken state that only a manual cache-clear fixes.
+        try {
+          await supabase.auth.signOut();
+        } catch {
+          // Best-effort cleanup – swallow so we still return the original error.
+        }
 
-      if (!data.user) {
         return {
           data: null,
-          error: { message: 'Not authenticated' },
+          error: { message: error?.message ?? 'Not authenticated', details: error },
         };
       }
 
