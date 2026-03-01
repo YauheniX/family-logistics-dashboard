@@ -112,9 +112,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, onActivated } from 'vue';
+import { computed, ref, watch, onActivated } from 'vue';
 import { storeToRefs } from 'pinia';
-import { RouterLink, useRouter, useRoute } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';
@@ -135,7 +135,6 @@ const householdEntityStore = useHouseholdEntityStore();
 const shoppingStore = useShoppingStore();
 const wishlistStore = useWishlistStore();
 const router = useRouter();
-const route = useRoute();
 const { userDisplayName, userAvatarUrl: profileAvatarUrl } = useUserProfile();
 
 // Use storeToRefs for proper reactivity with Pinia
@@ -159,12 +158,6 @@ const userName = computed(() => {
 
 const allActiveLists = computed(() => shoppingStore.lists.filter((l) => l.status === 'active'));
 
-async function loadDashboardData(userId: string) {
-  // Load households only - the watcher on currentHouseholdId handles
-  // loading wishlists and shopping lists for the current household
-  await householdEntityStore.loadHouseholds(userId);
-}
-
 async function handleInvitationAccepted() {
   // Reload households when user accepts an invitation
   if (authStore.user?.id) {
@@ -176,25 +169,27 @@ async function handleInvitationAccepted() {
   }
 }
 
-// Helper function to load data for current household
+// ─── Single orchestration function with built-in guards ──────────
 const loadRequestToken = ref(0);
 
 async function loadCurrentHouseholdData() {
   const userId = authStore.user?.id;
   const householdId = currentHouseholdId.value;
 
-  if (!userId || !householdId) {
-    console.log('[Dashboard] Cannot load data: missing userId or householdId');
+  if (!userId || !householdId || !householdStore.initialized) {
     return;
   }
 
-  if (!householdStore.initialized) {
-    console.log('[Dashboard] Cannot load data: household store not initialized');
+  // Deduplication: skip if already loaded for this household
+  if (householdId === lastLoadedHouseholdId.value) {
     return;
   }
+
+  // Clear before starting so an A→B→A switch re-issues the A request
+  // even though A was the last *completed* load.
+  lastLoadedHouseholdId.value = null;
 
   const currentToken = ++loadRequestToken.value;
-  console.log('[Dashboard] Loading data for household:', householdId, 'token:', currentToken);
   try {
     await Promise.all([
       shoppingStore.loadLists(householdId),
@@ -202,58 +197,22 @@ async function loadCurrentHouseholdData() {
       wishlistStore.loadHouseholdWishlists(householdId, userId),
     ]);
 
-    // Only apply results if this is still the latest request
+    // Only mark as loaded if this is still the latest request
     if (currentToken === loadRequestToken.value) {
       lastLoadedHouseholdId.value = householdId;
-      console.log('[Dashboard] Data loaded successfully');
-    } else {
-      console.log(
-        '[Dashboard] Discarding stale data (token:',
-        currentToken,
-        'current:',
-        loadRequestToken.value,
-        ')',
-      );
     }
   } catch (error) {
     console.error('[Dashboard] Failed to load data:', error);
   }
 }
 
-// Load data on component mount
-onMounted(async () => {
-  console.log('[Dashboard] Component mounted, loading data...');
-  await loadCurrentHouseholdData();
-});
-
-// Reload data when navigating back to dashboard (important for router reuse)
-onActivated(async () => {
-  console.log('[Dashboard] Component activated, reloading data...');
-  // Force reload by clearing the tracking
-  lastLoadedHouseholdId.value = null;
-  await loadCurrentHouseholdData();
-});
-
-// Watch for route changes to reload data when navigating back to dashboard
-// This handles cases where component is reused by Vue Router
-watch(
-  () => route.name,
-  async (routeName) => {
-    if (routeName === 'dashboard') {
-      console.log('[Dashboard] Navigated to dashboard route, reloading data...');
-      // Force reload by clearing the tracking
-      lastLoadedHouseholdId.value = null;
-      await loadCurrentHouseholdData();
-    }
-  },
-);
-
+// ─── Trigger 1: Load household entities when user changes ────────
 watch(
   () => authStore.user?.id,
   async (userId) => {
     if (userId) {
       try {
-        await loadDashboardData(userId);
+        await householdEntityStore.loadHouseholds(userId);
       } catch (error) {
         console.error('Failed to load dashboard data:', error);
       }
@@ -262,41 +221,29 @@ watch(
   { immediate: true },
 );
 
-// Watch for household switches
-watch(currentHouseholdId, async (householdId, oldHouseholdId) => {
-  // CRITICAL: Wait for household store initialization before loading data
-  // This prevents loading data for stale household ID from localStorage
-  if (!householdStore.initialized) {
-    console.log('[Dashboard] Waiting for household store initialization before loading data');
-    return;
-  }
+// ─── Trigger 2: Single watcher for household context changes ─────
+// Covers: initial mount, household switch, and store initialization.
+// The { immediate: true } replaces the onMounted handler.
+// The merged [householdId, initialized] replaces the separate watchers.
+watch(
+  [currentHouseholdId, () => householdStore.initialized],
+  async ([householdId, isInitialized]) => {
+    if (!householdId) {
+      lastLoadedHouseholdId.value = null;
+      return;
+    }
+    if (!isInitialized) {
+      return;
+    }
+    await loadCurrentHouseholdData();
+  },
+  { immediate: true },
+);
 
-  // Clear tracking if household is deselected
-  if (!householdId) {
-    lastLoadedHouseholdId.value = null;
-    return;
-  }
-
-  // Skip if already loaded (unless household actually changed)
-  if (householdId === lastLoadedHouseholdId.value && householdId === oldHouseholdId) {
-    console.log('[Dashboard] Data already loaded for household:', householdId);
-    return;
-  }
-
+// ─── Trigger 3: Re-activation (KeepAlive support) ───────────────
+// Forces a reload when the component is re-activated after being cached.
+onActivated(async () => {
+  lastLoadedHouseholdId.value = null;
   await loadCurrentHouseholdData();
 });
-
-// When household store is initialized, trigger data load for current household
-watch(
-  () => householdStore.initialized,
-  async (isInitialized) => {
-    if (isInitialized && currentHouseholdId.value) {
-      console.log(
-        '[Dashboard] Household store initialized, loading data for:',
-        currentHouseholdId.value,
-      );
-      await loadCurrentHouseholdData();
-    }
-  },
-);
 </script>
