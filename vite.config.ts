@@ -44,17 +44,6 @@ export default defineConfig(() => {
           '**/*.config.*',
           '**/mockServiceWorker.js',
           '**/.{idea,git,cache,output,temp}/**',
-          // TODO: Exclude specific low-coverage files until they can be properly tested.
-          // These exclusions are temporary and should be removed as test coverage improves.
-          // Track progress at: https://github.com/YauheniX/family-logistics-dashboard/issues
-          'src/features/auth/domain/auth.service.ts',
-          'src/features/auth/domain/auth.service.mock.ts',
-          'src/features/auth/index.ts',
-          'src/features/shared/infrastructure/mock-storage.adapter.ts',
-          'src/features/shared/infrastructure/supabase.client.ts',
-          'src/components/shared/BaseButton.vue',
-          'src/components/shared/BaseInput.vue',
-          'src/components/shared/ModalDialog.vue',
         ],
         thresholds: {
           lines: 70,
