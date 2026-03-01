@@ -8,6 +8,10 @@ import { useHouseholdStore } from '@/stores/household';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
 import i18n from '@/i18n';
 
+// Shared mock functions for wishlist store
+const loadWishlistsByHouseholdMock = vi.fn().mockResolvedValue(undefined);
+const loadHouseholdWishlistsMock = vi.fn().mockResolvedValue(undefined);
+
 // Mock the composables and stores
 vi.mock('@/composables/useUserProfile', () => ({
   useUserProfile: () => ({
@@ -33,7 +37,9 @@ vi.mock('@/features/household/presentation/household.store', () => ({
 vi.mock('@/features/wishlist/presentation/wishlist.store', () => ({
   useWishlistStore: () => ({
     wishlists: [],
-    loadWishlists: vi.fn(),
+    householdWishlists: [],
+    loadWishlistsByHousehold: loadWishlistsByHouseholdMock,
+    loadHouseholdWishlists: loadHouseholdWishlistsMock,
   }),
 }));
 
@@ -80,6 +86,8 @@ async function mountDashboard() {
 
   // Clear any calls from initial mount
   loadListsSpy.mockClear();
+  loadWishlistsByHouseholdMock.mockClear();
+  loadHouseholdWishlistsMock.mockClear();
 
   return { wrapper, householdStore, shoppingStore, loadListsSpy };
 }
@@ -87,6 +95,9 @@ async function mountDashboard() {
 describe('DashboardView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    loadWishlistsByHouseholdMock.mockReset().mockResolvedValue(undefined);
+    loadHouseholdWishlistsMock.mockReset().mockResolvedValue(undefined);
+    localStorage.clear();
   });
 
   describe('Household Switching', () => {
@@ -195,6 +206,177 @@ describe('DashboardView', () => {
 
       expect(loadListsSpy).toHaveBeenCalledWith('h3');
       expect(loadListsSpy).toHaveBeenCalledTimes(3);
+
+      wrapper.unmount();
+    });
+
+    it('household switch triggers exactly one load sequence', async () => {
+      const { wrapper, householdStore, loadListsSpy } = await mountDashboard();
+
+      // Switch to household 'h1'
+      householdStore.setCurrentHousehold({
+        id: 'h1',
+        name: 'Household 1',
+        slug: 'household-1',
+        role: 'owner',
+      });
+
+      await flushPromises();
+      await nextTick();
+
+      // All three data-loading functions should be called exactly once
+      expect(loadListsSpy).toHaveBeenCalledTimes(1);
+      expect(loadListsSpy).toHaveBeenCalledWith('h1');
+      expect(loadWishlistsByHouseholdMock).toHaveBeenCalledTimes(1);
+      expect(loadWishlistsByHouseholdMock).toHaveBeenCalledWith('u1', 'h1');
+      expect(loadHouseholdWishlistsMock).toHaveBeenCalledTimes(1);
+      expect(loadHouseholdWishlistsMock).toHaveBeenCalledWith('h1', 'u1');
+
+      wrapper.unmount();
+    });
+  });
+
+  describe('Deduplication', () => {
+    it('should not duplicate loads when household is already loaded', async () => {
+      const { wrapper, householdStore, loadListsSpy } = await mountDashboard();
+
+      // Switch to household 'h1'
+      householdStore.setCurrentHousehold({
+        id: 'h1',
+        name: 'Household 1',
+        slug: 'household-1',
+        role: 'owner',
+      });
+
+      await flushPromises();
+      await nextTick();
+
+      expect(loadListsSpy).toHaveBeenCalledTimes(1);
+
+      // Setting the same household again should NOT trigger another load
+      householdStore.setCurrentHousehold({
+        id: 'h1',
+        name: 'Household 1',
+        slug: 'household-1',
+        role: 'owner',
+      });
+
+      await flushPromises();
+      await nextTick();
+
+      // Still only 1 call - deduplication prevents redundant load
+      expect(loadListsSpy).toHaveBeenCalledTimes(1);
+
+      wrapper.unmount();
+    });
+  });
+
+  describe('Stale Requests', () => {
+    it('should ignore stale request results via token pattern', async () => {
+      const { wrapper, householdStore, loadListsSpy } = await mountDashboard();
+
+      // Simulate a slow loadLists for household 'h1'
+      let resolveH1: () => void = () => {};
+      const h1Promise = new Promise<void>((resolve) => {
+        resolveH1 = resolve;
+      });
+      loadListsSpy.mockImplementationOnce(() => h1Promise);
+
+      // Switch to household h1 (starts slow load)
+      householdStore.setCurrentHousehold({
+        id: 'h1',
+        name: 'Household 1',
+        slug: 'household-1',
+        role: 'owner',
+      });
+      await nextTick();
+
+      // Before h1 finishes, switch to h2 (this invalidates h1's token)
+      loadListsSpy.mockResolvedValueOnce(undefined);
+      loadWishlistsByHouseholdMock.mockResolvedValueOnce(undefined);
+      loadHouseholdWishlistsMock.mockResolvedValueOnce(undefined);
+
+      householdStore.setCurrentHousehold({
+        id: 'h2',
+        name: 'Household 2',
+        slug: 'household-2',
+        role: 'member',
+      });
+
+      await flushPromises();
+      await nextTick();
+
+      // Now resolve h1's slow response
+      resolveH1();
+      await flushPromises();
+      await nextTick();
+
+      // The latest call should be for h2, confirming h1's stale result was superseded
+      const lastCall = loadListsSpy.mock.calls[loadListsSpy.mock.calls.length - 1];
+      expect(lastCall[0]).toBe('h2');
+
+      wrapper.unmount();
+    });
+
+    it('should reload household A in an A→B→A switch while B is in flight', async () => {
+      const { wrapper, householdStore, loadListsSpy } = await mountDashboard();
+
+      // 1. Load household A (completes successfully)
+      householdStore.setCurrentHousehold({
+        id: 'hA',
+        name: 'Household A',
+        slug: 'household-a',
+        role: 'owner',
+      });
+      await flushPromises();
+      await nextTick();
+
+      expect(loadListsSpy).toHaveBeenCalledWith('hA');
+      loadListsSpy.mockClear();
+      loadWishlistsByHouseholdMock.mockClear();
+      loadHouseholdWishlistsMock.mockClear();
+
+      // 2. Switch to household B with a slow response (stays in flight)
+      let resolveB: () => void = () => {};
+      const bPromise = new Promise<void>((resolve) => {
+        resolveB = resolve;
+      });
+      loadListsSpy.mockImplementationOnce(() => bPromise);
+
+      householdStore.setCurrentHousehold({
+        id: 'hB',
+        name: 'Household B',
+        slug: 'household-b',
+        role: 'member',
+      });
+      await nextTick();
+
+      // 3. While B is still in flight, switch back to A
+      loadListsSpy.mockResolvedValueOnce(undefined);
+      loadWishlistsByHouseholdMock.mockResolvedValueOnce(undefined);
+      loadHouseholdWishlistsMock.mockResolvedValueOnce(undefined);
+
+      householdStore.setCurrentHousehold({
+        id: 'hA',
+        name: 'Household A',
+        slug: 'household-a',
+        role: 'owner',
+      });
+
+      await flushPromises();
+      await nextTick();
+
+      // A must have been re-issued despite being the last *completed* load
+      expect(loadListsSpy).toHaveBeenCalledWith('hA');
+
+      // 4. Resolve the stale B response — it should not overwrite A
+      resolveB();
+      await flushPromises();
+      await nextTick();
+
+      // The most recent successful call is for A, not B
+      const lastCall = loadListsSpy.mock.calls[loadListsSpy.mock.calls.length - 1];
+      expect(lastCall[0]).toBe('hA');
 
       wrapper.unmount();
     });

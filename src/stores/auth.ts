@@ -8,6 +8,7 @@ import { defineStore } from 'pinia';
 import type { Session, User } from '@supabase/supabase-js';
 import { authService, type AuthUser } from '@/features/auth';
 import { useToastStore } from '@/stores/toast';
+import type { ApiResponse } from '@/features/shared/domain/repository.interface';
 
 interface LegacyAuthState {
   session: Session | null;
@@ -60,6 +61,22 @@ export const useAuthStore = defineStore('auth', {
         }
 
         this.initialized = true;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async signIn(email: string, password: string): Promise<ApiResponse<AuthUser>> {
+      this.error = null;
+      this.loading = true;
+      try {
+        const response = await authService.signIn(email, password);
+        if (!response.error && response.data) {
+          this.user = response.data;
+        } else if (response.error) {
+          this.error = response.error.message;
+        }
+        return response;
       } finally {
         this.loading = false;
       }
