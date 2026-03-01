@@ -276,7 +276,7 @@ describe('DashboardView', () => {
       const { wrapper, householdStore, loadListsSpy } = await mountDashboard();
 
       // Simulate a slow loadLists for household 'h1'
-      let resolveH1!: () => void;
+      let resolveH1: () => void = () => {};
       const h1Promise = new Promise<void>((resolve) => {
         resolveH1 = resolve;
       });
