@@ -317,5 +317,68 @@ describe('DashboardView', () => {
 
       wrapper.unmount();
     });
+
+    it('should reload household A in an A→B→A switch while B is in flight', async () => {
+      const { wrapper, householdStore, loadListsSpy } = await mountDashboard();
+
+      // 1. Load household A (completes successfully)
+      householdStore.setCurrentHousehold({
+        id: 'hA',
+        name: 'Household A',
+        slug: 'household-a',
+        role: 'owner',
+      });
+      await flushPromises();
+      await nextTick();
+
+      expect(loadListsSpy).toHaveBeenCalledWith('hA');
+      loadListsSpy.mockClear();
+      loadWishlistsByHouseholdMock.mockClear();
+      loadHouseholdWishlistsMock.mockClear();
+
+      // 2. Switch to household B with a slow response (stays in flight)
+      let resolveB: () => void = () => {};
+      const bPromise = new Promise<void>((resolve) => {
+        resolveB = resolve;
+      });
+      loadListsSpy.mockImplementationOnce(() => bPromise);
+
+      householdStore.setCurrentHousehold({
+        id: 'hB',
+        name: 'Household B',
+        slug: 'household-b',
+        role: 'member',
+      });
+      await nextTick();
+
+      // 3. While B is still in flight, switch back to A
+      loadListsSpy.mockResolvedValueOnce(undefined);
+      loadWishlistsByHouseholdMock.mockResolvedValueOnce(undefined);
+      loadHouseholdWishlistsMock.mockResolvedValueOnce(undefined);
+
+      householdStore.setCurrentHousehold({
+        id: 'hA',
+        name: 'Household A',
+        slug: 'household-a',
+        role: 'owner',
+      });
+
+      await flushPromises();
+      await nextTick();
+
+      // A must have been re-issued despite being the last *completed* load
+      expect(loadListsSpy).toHaveBeenCalledWith('hA');
+
+      // 4. Resolve the stale B response — it should not overwrite A
+      resolveB();
+      await flushPromises();
+      await nextTick();
+
+      // The most recent successful call is for A, not B
+      const lastCall = loadListsSpy.mock.calls[loadListsSpy.mock.calls.length - 1];
+      expect(lastCall[0]).toBe('hA');
+
+      wrapper.unmount();
+    });
   });
 });

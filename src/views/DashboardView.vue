@@ -185,6 +185,10 @@ async function loadCurrentHouseholdData() {
     return;
   }
 
+  // Clear before starting so an A→B→A switch re-issues the A request
+  // even though A was the last *completed* load.
+  lastLoadedHouseholdId.value = null;
+
   const currentToken = ++loadRequestToken.value;
   try {
     await Promise.all([
@@ -193,7 +197,7 @@ async function loadCurrentHouseholdData() {
       wishlistStore.loadHouseholdWishlists(householdId, userId),
     ]);
 
-    // Only apply results if this is still the latest request
+    // Only mark as loaded if this is still the latest request
     if (currentToken === loadRequestToken.value) {
       lastLoadedHouseholdId.value = householdId;
     }
