@@ -14,6 +14,9 @@ on:
 #   name: production
 #   url: https://app.supabase.com/project/${{ secrets.SUPABASE_PROJECT_ID }}
 
+permissions:
+  contents: read
+
 jobs:
   # Security check before applying migrations
   security-scan:
@@ -63,10 +66,47 @@ jobs:
 
           echo "✅ Security scan complete"
 
+  # Shared change detection to avoid duplication across apply jobs
+  detect-changes:
+    name: Detect Migration Changes
+    runs-on: ubuntu-latest
+    needs: security-scan
+    outputs:
+      has_changes: ${{ steps.detect.outputs.has_changes }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed migrations
+        id: detect
+        run: |
+          echo "🔍 Detecting migration changes..."
+
+          CHANGED_MIGRATIONS=$(git diff --name-only HEAD~1 HEAD | grep 'supabase/migrations/.*\.sql' || true)
+
+          if [ -z "$CHANGED_MIGRATIONS" ]; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "✅ No migration changes detected"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "📝 Changed migrations:"
+            echo "$CHANGED_MIGRATIONS"
+            echo "$CHANGED_MIGRATIONS" > changed_migrations.txt
+          fi
+
+      - name: Upload changed migrations list
+        if: steps.detect.outputs.has_changes == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: changed-migrations-list
+          path: changed_migrations.txt
+
   apply-migrations:
     name: Apply Database Migrations
     runs-on: ubuntu-latest
-    needs: security-scan
+    needs: detect-changes
 
     # Only run if migrations were changed
     steps:
@@ -75,34 +115,20 @@ jobs:
         with:
           fetch-depth: 2 # Need 2 commits to detect changes
 
-      - name: Detect changed migrations
-        id: detect-changes
-        run: |
-          echo "Checking for migration changes..."
-
-          # Get list of changed migration files
-          CHANGED_MIGRATIONS=$(git diff --name-only HEAD~1 HEAD | grep 'supabase/migrations/.*\.sql' || true)
-
-          if [ -z "$CHANGED_MIGRATIONS" ]; then
-            echo "No migration files changed"
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-          else
-            echo "Migration files changed:"
-            echo "$CHANGED_MIGRATIONS"
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-            
-            # Save changed files for later use
-            echo "$CHANGED_MIGRATIONS" > changed_migrations.txt
-          fi
+      - name: Download changed migrations list
+        if: needs.detect-changes.outputs.has_changes == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: changed-migrations-list
 
       - name: Setup Supabase CLI
-        if: steps.detect-changes.outputs.has_changes == 'true'
+        if: needs.detect-changes.outputs.has_changes == 'true'
         uses: supabase/setup-cli@v1
         with:
           version: latest
 
       - name: Apply migrations to Supabase (Production)
-        if: steps.detect-changes.outputs.has_changes == 'true'
+        if: needs.detect-changes.outputs.has_changes == 'true'
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.PRODUCTION_DB_PASSWORD }}
@@ -133,7 +159,7 @@ jobs:
           echo "✅ Migrations applied successfully"
 
       - name: Verify migration success
-        if: steps.detect-changes.outputs.has_changes == 'true'
+        if: needs.detect-changes.outputs.has_changes == 'true'
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
@@ -146,7 +172,7 @@ jobs:
           echo "✅ Verification complete"
 
       - name: Notify on success
-        if: steps.detect-changes.outputs.has_changes == 'true' && success()
+        if: needs.detect-changes.outputs.has_changes == 'true' && success()
         run: |
           echo "::notice::✅ Database migrations applied successfully to production"
           cat changed_migrations.txt | while read file; do
@@ -154,7 +180,7 @@ jobs:
           done
 
       - name: Notify on failure
-        if: steps.detect-changes.outputs.has_changes == 'true' && failure()
+        if: needs.detect-changes.outputs.has_changes == 'true' && failure()
         run: |
           echo "::error::❌ Failed to apply database migrations"
           echo "::error::Please check the logs and apply migrations manually"
@@ -165,7 +191,7 @@ jobs:
     name: Apply to Staging (Optional)
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    needs: security-scan
+    needs: detect-changes
 
     steps:
       - name: Checkout code
@@ -173,31 +199,14 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Detect migration changes
-        id: detect-changes-staging
-        run: |
-          echo "🔍 Detecting migration changes..."
-
-          # Get list of changed SQL files in migrations folder
-          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD -- supabase/migrations/*.sql || echo "")
-
-          if [ -n "$CHANGED_FILES" ]; then
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-            echo "📝 Changed migrations:"
-            echo "$CHANGED_FILES"
-          else
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-            echo "✅ No migration changes detected"
-          fi
-
       - name: Setup Supabase CLI
-        if: steps.detect-changes-staging.outputs.has_changes == 'true'
+        if: needs.detect-changes.outputs.has_changes == 'true'
         uses: supabase/setup-cli@v1
         with:
           version: latest
 
       - name: Apply to staging
-        if: steps.detect-changes-staging.outputs.has_changes == 'true'
+        if: needs.detect-changes.outputs.has_changes == 'true'
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_STAGING_PROJECT_ID: ${{ secrets.SUPABASE_STAGING_PROJECT_ID }}

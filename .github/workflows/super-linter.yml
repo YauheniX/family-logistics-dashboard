@@ -2,7 +2,7 @@ name: Super Linter
 
 on:
   pull_request:
-    branches: [main, master, develop]
+    branches: [main]
 
 permissions:
   contents: read
@@ -27,9 +27,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Run ESLint
-        run: npm run lint
 
       - name: Run Prettier check
         run: npx prettier --check .

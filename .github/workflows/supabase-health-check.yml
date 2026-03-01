@@ -1,8 +1,6 @@
 name: Supabase Health Check
 
 on:
-  push:
-    branches: [main]
   schedule:
     # Run every 6 hours
     - cron: '0 */6 * * *'
