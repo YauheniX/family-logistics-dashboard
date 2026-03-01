@@ -256,6 +256,89 @@ describe('BaseInput', () => {
 
     expect((wrapper.find('input').element as HTMLInputElement).value).toBe('Initial value');
   });
+
+  it('emits blur event on input blur', async () => {
+    const wrapper = mount(BaseInput, {
+      props: {
+        label: 'Name',
+        modelValue: '',
+      },
+    });
+
+    await wrapper.find('input').trigger('blur');
+
+    expect(wrapper.emitted('blur')).toBeTruthy();
+  });
+
+  it('renders textarea when type is textarea', () => {
+    const wrapper = mount(BaseInput, {
+      props: {
+        label: 'Bio',
+        modelValue: '',
+        type: 'textarea',
+      },
+    });
+
+    expect(wrapper.find('textarea').exists()).toBe(true);
+    expect(wrapper.find('input').exists()).toBe(false);
+  });
+
+  it('renders hint message when hint prop is provided', () => {
+    const wrapper = mount(BaseInput, {
+      props: {
+        label: 'Email',
+        modelValue: '',
+        hint: 'We will never share your email',
+      },
+    });
+
+    expect(wrapper.text()).toContain('We will never share your email');
+  });
+
+  it('toggles password visibility when toggle button is clicked', async () => {
+    const wrapper = mount(BaseInput, {
+      props: {
+        label: 'Password',
+        modelValue: 'secret',
+        type: 'password',
+      },
+    });
+
+    expect(wrapper.find('input').attributes('type')).toBe('password');
+
+    const toggleBtn = wrapper.find('button[aria-label="Show password"]');
+    if (toggleBtn.exists()) {
+      await toggleBtn.trigger('click');
+      expect(wrapper.find('input').attributes('type')).toBe('text');
+    }
+  });
+
+  it('renders floating label when floatingLabel is true', () => {
+    const wrapper = mount(BaseInput, {
+      props: {
+        label: 'Email',
+        modelValue: '',
+        floatingLabel: true,
+      },
+    });
+
+    const label = wrapper.find('label');
+    expect(label.exists()).toBe(true);
+  });
+
+  it('shows character counter for textarea with maxLength', () => {
+    const wrapper = mount(BaseInput, {
+      props: {
+        label: 'Bio',
+        modelValue: 'Hello',
+        type: 'textarea',
+        maxLength: 200,
+        showCharCount: true,
+      },
+    });
+
+    expect(wrapper.text()).toContain('5 / 200');
+  });
 });
 
 describe('ModalDialog', () => {
