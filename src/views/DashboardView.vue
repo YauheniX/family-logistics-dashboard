@@ -115,7 +115,6 @@
 import { computed, ref, watch, onMounted, onActivated } from 'vue';
 import { storeToRefs } from 'pinia';
 import { RouterLink, useRouter, useRoute } from 'vue-router';
-import { useI18n } from 'vue-i18n';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';
