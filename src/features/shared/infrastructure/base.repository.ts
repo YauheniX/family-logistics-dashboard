@@ -5,7 +5,7 @@ import type { ApiResponse, ApiError, QueryBuilder } from '../domain/repository.i
 /**
  * Converts Supabase PostgrestError to our ApiError format
  */
-function toApiError(error: PostgrestError | Error | unknown): ApiError {
+export function toApiError(error: PostgrestError | Error | unknown): ApiError {
   if (!error) {
     return { message: 'An unknown error occurred' };
   }
