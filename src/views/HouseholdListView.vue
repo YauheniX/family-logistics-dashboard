@@ -69,7 +69,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
-import { useI18n } from 'vue-i18n';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';
@@ -79,7 +78,6 @@ import { useAuthStore } from '@/stores/auth';
 import { useHouseholdStore } from '@/stores/household';
 import { useHouseholdEntityStore } from '@/features/household/presentation/household.store';
 
-const { t: _t } = useI18n();
 const authStore = useAuthStore();
 const householdStore = useHouseholdStore();
 const householdEntityStore = useHouseholdEntityStore();
