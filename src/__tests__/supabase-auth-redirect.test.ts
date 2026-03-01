@@ -25,6 +25,7 @@ describe('handleSupabaseAuthRedirect', () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     Object.defineProperty(window, 'location', {
       value: originalLocation,
       writable: true,
