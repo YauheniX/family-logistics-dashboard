@@ -7,9 +7,9 @@ member lookups, wishlists) while keeping the repository pattern intact.
 
 ## Location
 
-| File | Purpose |
-|---|---|
-| `src/utils/cache.ts` | `ReadCache` class + `repositoryCache` singleton |
+| File                                                    | Purpose                                                              |
+| ------------------------------------------------------- | -------------------------------------------------------------------- |
+| `src/utils/cache.ts`                                    | `ReadCache` class + `repositoryCache` singleton                      |
 | `src/features/shared/infrastructure/base.repository.ts` | `cachedQuery`, `cacheKey`, `invalidateTable`, `writeThrough` helpers |
 
 ## How It Works
@@ -53,20 +53,20 @@ Keys are built with `BaseRepository.cacheKey(...segments)` using the pattern:
 
 Examples:
 
-| Repository Method | Cache Key |
-|---|---|
-| `ShoppingListRepo.findByHouseholdId('h1')` | `shopping_lists:household:h1` |
-| `ShoppingItemRepo.findByListId('l1')` | `shopping_items:list:l1` |
-| `WishlistRepo.findByUserId('u1')` | `wishlists:user:u1` |
-| `WishlistRepo.findByUserIdAndHouseholdId('u1','h1')` | `wishlists:user-household:u1:h1` |
-| `WishlistRepo.findByHouseholdId('h1','u2')` | `wishlists:household:h1:exclude:u2` |
-| `WishlistRepo.findChildrenWishlists('u1','h1')` | `wishlists:children:u1:h1` |
-| `WishlistItemRepo.findByWishlistId('w1')` | `wishlist_items:wishlist:w1` |
-| `HouseholdRepo.findByUserId('u1')` | `households:user:u1` |
-| `MemberRepo.findByHouseholdId('h1')` | `members:household:h1` |
-| `MemberRepo.getMembersWithProfiles('h1')` | `members:profiles:h1` |
-| `UserProfileRepo.findById('u1')` | `user_profiles:id:u1` |
-| `BaseRepository.findById('x')` | `<table>:id:x` |
+| Repository Method                                    | Cache Key                           |
+| ---------------------------------------------------- | ----------------------------------- |
+| `ShoppingListRepo.findByHouseholdId('h1')`           | `shopping_lists:household:h1`       |
+| `ShoppingItemRepo.findByListId('l1')`                | `shopping_items:list:l1`            |
+| `WishlistRepo.findByUserId('u1')`                    | `wishlists:user:u1`                 |
+| `WishlistRepo.findByUserIdAndHouseholdId('u1','h1')` | `wishlists:user-household:u1:h1`    |
+| `WishlistRepo.findByHouseholdId('h1','u2')`          | `wishlists:household:h1:exclude:u2` |
+| `WishlistRepo.findChildrenWishlists('u1','h1')`      | `wishlists:children:u1:h1`          |
+| `WishlistItemRepo.findByWishlistId('w1')`            | `wishlist_items:wishlist:w1`        |
+| `HouseholdRepo.findByUserId('u1')`                   | `households:user:u1`                |
+| `MemberRepo.findByHouseholdId('h1')`                 | `members:household:h1`              |
+| `MemberRepo.getMembersWithProfiles('h1')`            | `members:profiles:h1`               |
+| `UserProfileRepo.findById('u1')`                     | `user_profiles:id:u1`               |
+| `BaseRepository.findById('x')`                       | `<table>:id:x`                      |
 
 Because the household/user/list ID is part of the key, **data from different
 tenants is never mixed** — each household's data lives under its own key
@@ -86,10 +86,10 @@ The cache is **tenant-safe by design**:
 
 `ReadCache` accepts optional configuration:
 
-| Option | Default | Description |
-|---|---|---|
-| `defaultTtlMs` | `30 000` (30 s) | Time-to-live for each entry |
-| `maxEntries` | `500` | Maximum cached entries (LRU-style eviction) |
+| Option         | Default         | Description                                 |
+| -------------- | --------------- | ------------------------------------------- |
+| `defaultTtlMs` | `30 000` (30 s) | Time-to-live for each entry                 |
+| `maxEntries`   | `500`           | Maximum cached entries (LRU-style eviction) |
 
 The shared `repositoryCache` singleton uses the defaults.
 
@@ -101,14 +101,14 @@ return this.cachedQuery(key, fetcher, 60_000); // 60 s TTL
 
 ## Invalidation Strategy
 
-| Trigger | Scope |
-|---|---|
-| `create` / `createMany` | All entries for the table (`tableName:*`) |
-| `update` | All entries for the table |
-| `upsert` | All entries for the table |
-| `delete` | All entries for the table |
-| Feature-specific writes (e.g. `reserveItem`, `createChild`) | All entries for the table |
-| Manual | `repositoryCache.invalidate(key)` or `repositoryCache.invalidateByPrefix(prefix)` |
+| Trigger                                                     | Scope                                                                             |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `create` / `createMany`                                     | All entries for the table (`tableName:*`)                                         |
+| `update`                                                    | All entries for the table                                                         |
+| `upsert`                                                    | All entries for the table                                                         |
+| `delete`                                                    | All entries for the table                                                         |
+| Feature-specific writes (e.g. `reserveItem`, `createChild`) | All entries for the table                                                         |
+| Manual                                                      | `repositoryCache.invalidate(key)` or `repositoryCache.invalidateByPrefix(prefix)` |
 
 **Error responses are never cached.** Only successful `ApiResponse` objects
 (where `error === null`) are stored.
@@ -122,7 +122,7 @@ return this.cachedQuery(key, fetcher, 60_000); // 60 s TTL
    does not invalidate the cache in the other. This is acceptable because the
    TTL is short (30 s) and the next navigation/fetch will refresh.
 
-3. **Broad invalidation** — writes invalidate *all* entries for the affected
+3. **Broad invalidation** — writes invalidate _all_ entries for the affected
    table, not just the specific household. This is a deliberate trade-off for
    simplicity; a more granular approach can be added later if profiling shows
    it's needed.
