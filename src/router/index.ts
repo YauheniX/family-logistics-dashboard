@@ -1,19 +1,4 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
-import DashboardView from '@/views/DashboardView.vue';
-import HouseholdListView from '@/views/HouseholdListView.vue';
-import HouseholdDetailView from '@/views/HouseholdDetailView.vue';
-import MemberManagementView from '@/views/MemberManagementView.vue';
-import ShoppingListView from '@/views/ShoppingListView.vue';
-import ShoppingIndexView from '@/views/ShoppingIndexView.vue';
-import WishlistListView from '@/views/WishlistListView.vue';
-import WishlistEditView from '@/views/WishlistEditView.vue';
-import PublicWishlistView from '@/views/PublicWishlistView.vue';
-import LoginView from '@/views/auth/LoginView.vue';
-import RegisterView from '@/views/auth/RegisterView.vue';
-import SettingsView from '@/views/SettingsView.vue';
-import AppsView from '@/views/AppsView.vue';
-import RockPaperScissorsView from '@/views/RockPaperScissorsView.vue';
-import NavigationDemoView from '@/views/NavigationDemoView.vue';
 import { useAuthStore } from '@/stores/auth';
 
 const router = createRouter({
@@ -22,101 +7,101 @@ const router = createRouter({
     {
       path: '/demo',
       name: 'navigation-demo',
-      component: NavigationDemoView,
+      component: () => import('@/views/NavigationDemoView.vue'),
     },
     {
       path: '/login',
       name: 'login',
-      component: LoginView,
+      component: () => import('@/views/auth/LoginView.vue'),
       meta: { guestOnly: true },
     },
     {
       path: '/register',
       name: 'register',
-      component: RegisterView,
+      component: () => import('@/views/auth/RegisterView.vue'),
       meta: { guestOnly: true },
     },
     {
       path: '/',
       name: 'dashboard',
-      component: DashboardView,
+      component: () => import('@/views/DashboardView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/households',
       name: 'household-list',
-      component: HouseholdListView,
+      component: () => import('@/views/HouseholdListView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/households/:id',
       name: 'household-detail',
-      component: HouseholdDetailView,
+      component: () => import('@/views/HouseholdDetailView.vue'),
       props: true,
       meta: { requiresAuth: true },
     },
     {
       path: '/households/:id/members',
       name: 'member-management',
-      component: MemberManagementView,
+      component: () => import('@/views/MemberManagementView.vue'),
       props: true,
       meta: { requiresAuth: true },
     },
     {
       path: '/shopping',
       name: 'shopping',
-      component: ShoppingIndexView,
+      component: () => import('@/views/ShoppingIndexView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/shopping/:listId',
       name: 'shopping-list',
-      component: ShoppingListView,
+      component: () => import('@/views/ShoppingListView.vue'),
       props: true,
       meta: { requiresAuth: true },
     },
     {
       path: '/wishlists',
       name: 'wishlist-list',
-      component: WishlistListView,
+      component: () => import('@/views/WishlistListView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/wishlists/:id/edit',
       name: 'wishlist-edit',
-      component: WishlistEditView,
+      component: () => import('@/views/WishlistEditView.vue'),
       props: true,
       meta: { requiresAuth: true },
     },
     {
       path: '/wishlists/:id',
       name: 'wishlist-detail',
-      component: WishlistEditView,
+      component: () => import('@/views/WishlistEditView.vue'),
       props: true,
       meta: { requiresAuth: true },
     },
     {
       path: '/wishlist/:shareSlug',
       name: 'public-wishlist',
-      component: PublicWishlistView,
+      component: () => import('@/views/PublicWishlistView.vue'),
       props: true,
     },
     {
       path: '/settings',
       name: 'settings',
-      component: SettingsView,
+      component: () => import('@/views/SettingsView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/apps',
       name: 'apps',
-      component: AppsView,
+      component: () => import('@/views/AppsView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/apps/rock-paper-scissors',
       name: 'rock-paper-scissors',
-      component: RockPaperScissorsView,
+      component: () => import('@/views/RockPaperScissorsView.vue'),
       meta: { requiresAuth: true },
     },
     {

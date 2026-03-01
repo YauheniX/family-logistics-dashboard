@@ -31,6 +31,26 @@ export default defineConfig(() => {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
       },
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('@supabase')) return 'supabase-vendor';
+              if (id.includes('vue-i18n') || id.includes('@intlify')) return 'i18n-vendor';
+              if (
+                id.includes('node_modules/vue/') ||
+                id.includes('node_modules/vue-router/') ||
+                id.includes('node_modules/@vue/')
+              )
+                return 'vue-vendor';
+              if (id.includes('pinia')) return 'pinia-vendor';
+              return 'vendor';
+            }
+          },
+        },
+      },
+    },
     test: {
       environment: 'jsdom',
       globals: true,
