@@ -394,3 +394,28 @@ Public  → Anonymous (public wishlists only)
 - [ ] All RLS predicate columns are indexed
 - [ ] Migration files numbered sequentially (000-999)
 - [ ] Utility scripts in `scripts/db/` not `migrations/`
+
+### Mandatory Local Quality Gate (ALWAYS RUN)
+
+Before completing ANY task, you MUST run:
+
+```bash
+npm run format
+npm run lint
+npm run type-check
+npm test:coverage
+
+All must pass.
+Hard Requirements
+✅ No ESLint errors
+✅ No TypeScript errors
+✅ Tests pass
+✅ Coverage ≥ 70%
+✅ No skipped tests unless explicitly justified
+❌ Do NOT assume code works
+❌ Do NOT skip type-checking
+❌ Do NOT leave failing tests
+If working in cloud / remote agent:
+You must simulate full validation reasoning
+You must not claim "it should work"
+You must behave as if CI will immediately reject the PR
