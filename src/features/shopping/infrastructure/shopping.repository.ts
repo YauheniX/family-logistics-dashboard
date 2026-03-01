@@ -40,7 +40,7 @@ export class ShoppingListRepository extends BaseRepository<
     }
     const userId = userIdResponse.data;
 
-    const result = await this.execute(async () => {
+    const result: ApiResponse<ShoppingList> = await this.execute(async () => {
       return await supabase
         .from('shopping_lists')
         .insert({
@@ -85,7 +85,7 @@ export class ShoppingItemRepository extends BaseRepository<
     }
     const userId = userIdResponse.data;
 
-    const result = await this.execute(async () => {
+    const result: ApiResponse<ShoppingItem> = await this.execute(async () => {
       return await supabase
         .from('shopping_items')
         .insert({

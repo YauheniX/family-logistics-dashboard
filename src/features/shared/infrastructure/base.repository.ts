@@ -84,6 +84,15 @@ export abstract class BaseRepository<
   }
 
   /**
+   * Wrap a write operation so the table cache is invalidated on success.
+   */
+  private async writeThrough<T>(op: () => Promise<ApiResponse<T>>): Promise<ApiResponse<T>> {
+    const result = await op();
+    if (!result.error) this.invalidateTable();
+    return result;
+  }
+
+  /**
    * Execute a query and return a typed response with error handling
    */
   protected async query<T>(
@@ -147,89 +156,89 @@ export abstract class BaseRepository<
    * Create a new record
    */
   async create(dto: TCreateDto): Promise<ApiResponse<TEntity>> {
-    const result = await this.query(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return await this.supabase
+    return this.writeThrough(() =>
+      this.query(async () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(this.tableName as any)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .insert(dto as any)
-        .select()
-        .single();
-    });
-    if (!result.error) this.invalidateTable();
-    return result;
+        return await this.supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from(this.tableName as any)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .insert(dto as any)
+          .select()
+          .single();
+      }),
+    );
   }
 
   /**
    * Create multiple records
    */
   async createMany(dtos: TCreateDto[]): Promise<ApiResponse<TEntity[]>> {
-    const result = await this.query(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return await this.supabase
+    return this.writeThrough(() =>
+      this.query(async () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(this.tableName as any)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .insert(dtos as any)
-        .select();
-    });
-    if (!result.error) this.invalidateTable();
-    return result;
+        return await this.supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from(this.tableName as any)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .insert(dtos as any)
+          .select();
+      }),
+    );
   }
 
   /**
    * Update a record by ID
    */
   async update(id: string, dto: TUpdateDto): Promise<ApiResponse<TEntity>> {
-    const result = await this.query(async () => {
-      return await this.supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(this.tableName as any)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .update(dto as any)
-        .eq('id', id)
-        .select()
-        .single();
-    });
-    if (!result.error) this.invalidateTable();
-    return result;
+    return this.writeThrough(() =>
+      this.query(async () => {
+        return await this.supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from(this.tableName as any)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .update(dto as any)
+          .eq('id', id)
+          .select()
+          .single();
+      }),
+    );
   }
 
   /**
    * Upsert a record
    */
   async upsert(dto: Partial<TEntity>): Promise<ApiResponse<TEntity>> {
-    const result = await this.query(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return await this.supabase
+    return this.writeThrough(() =>
+      this.query(async () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(this.tableName as any)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .upsert(dto as any)
-        .select()
-        .single();
-    });
-    if (!result.error) this.invalidateTable();
-    return result;
+        return await this.supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from(this.tableName as any)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .upsert(dto as any)
+          .select()
+          .single();
+      }),
+    );
   }
 
   /**
    * Delete a record by ID
    */
   async delete(id: string): Promise<ApiResponse<void>> {
-    const result = await this.query(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await this.supabase
+    return this.writeThrough(() =>
+      this.query(async () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(this.tableName as any)
-        .delete()
-        .eq('id', id);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return { data: null as any, error };
-    });
-    if (!result.error) this.invalidateTable();
-    return result;
+        const { error } = await this.supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from(this.tableName as any)
+          .delete()
+          .eq('id', id);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return { data: null as any, error };
+      }),
+    );
   }
 
   /**

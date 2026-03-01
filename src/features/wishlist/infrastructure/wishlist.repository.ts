@@ -210,7 +210,7 @@ export class WishlistRepository extends BaseRepository<
    * Find a wishlist by its share slug (public access, no auth required)
    */
   async findBySlug(slug: string): Promise<ApiResponse<Wishlist>> {
-    return this.cachedQuery(this.cacheKey('slug', slug), async () => {
+    return this.cachedQuery<Wishlist>(this.cacheKey('slug', slug), async () => {
       const result = await this.query(async () => {
         return await this.supabase
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -223,9 +223,9 @@ export class WishlistRepository extends BaseRepository<
 
       // Add is_public computed property for frontend compatibility
       if (result.data) {
-        return { data: addIsPublic(result.data), error: null };
+        return { data: addIsPublic(result.data), error: null } as ApiResponse<Wishlist>;
       }
-      return { data: null, error: result.error };
+      return { data: null, error: result.error } as ApiResponse<Wishlist>;
     });
   }
 
@@ -343,33 +343,30 @@ export class WishlistRepository extends BaseRepository<
     userId: string,
     householdId: string,
   ): Promise<ApiResponse<Wishlist[]>> {
-    return this.cachedQuery(
-      this.cacheKey('children', userId, householdId),
-      async () => {
-        const result = await this.query(async () => {
-          return await supabase
-            .from('wishlists')
-            .select(
-              `
+    return this.cachedQuery(this.cacheKey('children', userId, householdId), async () => {
+      const result = await this.query(async () => {
+        return await supabase
+          .from('wishlists')
+          .select(
+            `
               *,
               member:members(id, display_name, role)
             `,
-            )
-            .eq('user_id', userId)
-            .eq('household_id', householdId)
-            .order('created_at', { ascending: false });
-        });
+          )
+          .eq('user_id', userId)
+          .eq('household_id', householdId)
+          .order('created_at', { ascending: false });
+      });
 
-        // Filter for wishlists where member is a child and transform data
-        if (result.data) {
-          const childWishlists = (result.data as unknown as WishlistWithMember[])
-            .filter((w) => w.member?.role === 'child')
-            .map((w) => addIsPublic(transformWishlistWithMember(w)));
-          return { ...result, data: childWishlists };
-        }
-        return { data: null, error: result.error };
-      },
-    );
+      // Filter for wishlists where member is a child and transform data
+      if (result.data) {
+        const childWishlists = (result.data as unknown as WishlistWithMember[])
+          .filter((w) => w.member?.role === 'child')
+          .map((w) => addIsPublic(transformWishlistWithMember(w)));
+        return { ...result, data: childWishlists };
+      }
+      return { data: null, error: result.error };
+    });
   }
 }
 

@@ -30,7 +30,7 @@ export class UserProfileRepository extends BaseRepository<
    * Create a new user profile
    */
   async create(dto: CreateUserProfileDto): Promise<ApiResponse<UserProfile>> {
-    const result = await this.query(async () => {
+    const result: ApiResponse<UserProfile> = await this.query(async () => {
       return await supabase.from('user_profiles').insert(dto).select().single();
     });
     if (!result.error) this.invalidateTable();
@@ -41,7 +41,7 @@ export class UserProfileRepository extends BaseRepository<
    * Update user profile
    */
   async update(userId: string, dto: UpdateUserProfileDto): Promise<ApiResponse<UserProfile>> {
-    const result = await this.query(async () => {
+    const result: ApiResponse<UserProfile> = await this.query(async () => {
       return await supabase.from('user_profiles').update(dto).eq('id', userId).select().single();
     });
     if (!result.error) this.invalidateTable();
