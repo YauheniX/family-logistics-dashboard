@@ -395,7 +395,7 @@ Public  → Anonymous (public wishlists only)
 - [ ] Migration files numbered sequentially (000-999)
 - [ ] Utility scripts in `scripts/db/` not `migrations/`
 
-### Mandatory Local Quality Gate (ALWAYS RUN)
+## Mandatory Local Quality Gate (ALWAYS RUN)
 
 Before completing ANY task, you MUST run:
 
@@ -404,9 +404,10 @@ npm run format
 npm run lint
 npm run type-check
 npm test:coverage
+```
 
-All must pass.
-Hard Requirements
+### Apply requirements: all must pass.
+
 ✅ No ESLint errors
 ✅ No TypeScript errors
 ✅ Tests pass
@@ -415,8 +416,9 @@ Hard Requirements
 ❌ Do NOT assume code works
 ❌ Do NOT skip type-checking
 ❌ Do NOT leave failing tests
-If working in cloud / remote agent:
-You must simulate full validation reasoning
-You must not claim "it should work"
-You must behave as if CI will immediately reject the PR
-```
+
+**If working in cloud / remote agent:**
+
+- You must simulate full validation reasoning
+- You must not claim "it should work"
+- You must behave as if CI will immediately reject the PR
