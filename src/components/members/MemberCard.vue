@@ -22,14 +22,6 @@
             :show-role-badge="false"
           />
         </div>
-        <!-- Online Status Badge (Future) -->
-        <div
-          v-if="member.role !== 'child' && isOnline"
-          class="absolute bottom-0 right-0 w-4 h-4 bg-success-500 border-2 border-white dark:border-neutral-800 rounded-full animate-pulse-slow"
-          title="Online"
-        />
-      </div>
-
       <!-- Info -->
       <div class="flex-1 min-w-0">
         <h3
@@ -146,10 +138,6 @@ defineEmits<{
 
 const resolvedProfile = computed(() => resolveMemberProfile(props.member));
 const memberName = computed(() => resolvedProfile.value.name);
-
-// Future: Online status indicator
-const isOnline = computed(() => false); // TODO: Implement real-time presence
-
 // Determine role type
 const isChild = computed(() => props.member.role === 'child');
 const isViewer = computed(() => props.member.role === 'viewer');
