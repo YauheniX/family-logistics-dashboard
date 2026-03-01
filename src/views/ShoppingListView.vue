@@ -5,7 +5,9 @@
         <div class="flex flex-col gap-3 sm:gap-4">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="min-w-0">
-              <p class="text-sm text-neutral-500 dark:text-neutral-400">Shopping List</p>
+              <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                {{ $t('shopping.list.shoppingLabel') }}
+              </p>
               <h2 class="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
                 {{ shoppingStore.currentList.title }}
               </h2>
@@ -26,7 +28,7 @@
                 :class="{ active: !isEditMode }"
                 @click="isEditMode = false"
               >
-                🛒 Shopping
+                {{ $t('shopping.list.modeShopping') }}
               </button>
               <button
                 type="button"
@@ -34,7 +36,7 @@
                 :class="{ active: isEditMode }"
                 @click="isEditMode = true"
               >
-                ✏️ Edit
+                {{ $t('shopping.list.modeEdit') }}
               </button>
             </div>
           </div>
@@ -43,8 +45,11 @@
             v-if="isEditMode"
             class="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 w-full sm:w-auto"
           >
-            <BaseButton variant="ghost" class="w-full xs:w-auto" @click="showEditListModal = true"
-              >✏️ Edit List</BaseButton
+            <BaseButton
+              variant="ghost"
+              class="w-full xs:w-auto"
+              @click="showEditListModal = true"
+              >{{ $t('shopping.list.editList') }}</BaseButton
             >
             <BaseButton
               v-if="shoppingStore.currentList?.status === 'archived'"
@@ -52,7 +57,7 @@
               class="w-full xs:w-auto"
               @click="handleUnarchiveList"
             >
-              📂 Unarchive
+              {{ $t('shopping.list.unarchive') }}
             </BaseButton>
             <BaseButton
               v-else
@@ -60,13 +65,13 @@
               class="w-full xs:w-auto"
               @click="handleArchiveList"
             >
-              📦 Archive
+              {{ $t('shopping.list.archive') }}
             </BaseButton>
-            <BaseButton variant="danger" class="w-full xs:w-auto" @click="showDeleteModal = true"
-              >🗑️ Delete</BaseButton
-            >
+            <BaseButton variant="danger" class="w-full xs:w-auto" @click="showDeleteModal = true">{{
+              $t('shopping.list.delete')
+            }}</BaseButton>
             <BaseButton variant="primary" class="w-full xs:w-auto" @click="openAddItemModal()">
-              + Add Item
+              {{ $t('shopping.list.addItem') }}
             </BaseButton>
           </div>
         </div>
@@ -78,11 +83,11 @@
       <div class="flex flex-wrap gap-4">
         <label class="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
           <input v-model="showPurchased" type="checkbox" class="checkbox" />
-          Show purchased
+          {{ $t('shopping.list.showPurchased') }}
         </label>
         <label class="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
           <input v-model="showOnlyMine" type="checkbox" class="checkbox" />
-          Show only mine
+          {{ $t('shopping.list.showOnlyMine') }}
         </label>
       </div>
     </BaseCard>
@@ -156,21 +161,25 @@
 
     <EmptyState
       v-if="!shoppingStore.items.length"
-      title="No items yet"
-      description="Add items to your shopping list below."
+      :title="$t('shopping.list.noItems')"
+      :description="$t('shopping.list.noItemsDescription')"
       badge="Shopping"
     />
 
     <!-- Add/Edit Item Modal -->
     <ModalDialog
       :open="showItemModal"
-      :title="editingItemId ? 'Edit Item' : 'Add Item'"
+      :title="editingItemId ? $t('shopping.list.editItemTitle') : $t('shopping.list.addItemTitle')"
       @close="resetForm"
     >
       <form class="space-y-4" @submit.prevent="handleSubmitItem">
-        <BaseInput v-model="newItemTitle" placeholder="Item name" required />
+        <BaseInput
+          v-model="newItemTitle"
+          :placeholder="$t('shopping.list.itemPlaceholder')"
+          required
+        />
         <div>
-          <label id="quantity-label" class="label">Quantity</label>
+          <label id="quantity-label" class="label">{{ $t('shopping.list.quantityLabel') }}</label>
           <div role="group" aria-labelledby="quantity-label" class="flex items-center gap-3">
             <button
               type="button"
@@ -208,10 +217,10 @@
           </div>
         </div>
         <div>
-          <label class="label mb-2 block">Category</label>
+          <label class="label mb-2 block">{{ $t('shopping.list.categoryLabel') }}</label>
           <BaseInput
             v-model="newItemCategory"
-            placeholder="Type category or select below"
+            :placeholder="$t('shopping.list.categoryPlaceholder')"
             :disabled="isCategoryLocked"
           />
           <!-- Quick category buttons -->
@@ -231,9 +240,15 @@
         </div>
         <div class="flex gap-3">
           <BaseButton type="submit" variant="primary">
-            {{ editingItemId ? 'Update Item' : 'Add Item' }}
+            {{
+              editingItemId
+                ? $t('shopping.list.updateItemAction')
+                : $t('shopping.list.addItemAction')
+            }}
           </BaseButton>
-          <BaseButton type="button" variant="ghost" @click="resetForm">Cancel</BaseButton>
+          <BaseButton type="button" variant="ghost" @click="resetForm">{{
+            $t('common.cancel')
+          }}</BaseButton>
         </div>
       </form>
     </ModalDialog>
@@ -241,31 +256,35 @@
     <!-- Edit List Modal -->
     <ModalDialog
       :open="showEditListModal"
-      title="Edit Shopping List"
+      :title="$t('shopping.list.editListTitle')"
       @close="showEditListModal = false"
     >
       <form class="space-y-4" @submit.prevent="handleUpdateList">
         <div>
-          <label class="label" for="edit-list-title">Title</label>
+          <label class="label" for="edit-list-title">{{
+            $t('shopping.list.listTitleLabel')
+          }}</label>
           <BaseInput
             id="edit-list-title"
             v-model="editListTitle"
             required
-            placeholder="Weekly groceries"
+            :placeholder="$t('shopping.list.listTitlePlaceholder')"
           />
         </div>
         <div>
-          <label class="label" for="edit-list-description">Description</label>
+          <label class="label" for="edit-list-description">{{
+            $t('shopping.list.listDescriptionLabel')
+          }}</label>
           <BaseInput
             id="edit-list-description"
             v-model="editListDescription"
-            placeholder="Optional description"
+            :placeholder="$t('shopping.list.listDescriptionPlaceholder')"
           />
         </div>
         <div class="flex gap-3">
-          <BaseButton type="submit">Update</BaseButton>
+          <BaseButton type="submit">{{ $t('common.update') }}</BaseButton>
           <BaseButton variant="ghost" @click.prevent="showEditListModal = false">
-            Cancel
+            {{ $t('common.cancel') }}
           </BaseButton>
         </div>
       </form>
@@ -274,28 +293,31 @@
     <!-- Delete Confirmation Modal -->
     <ModalDialog
       :open="showDeleteModal"
-      title="Delete Shopping List"
+      :title="$t('shopping.list.deleteListTitle')"
       @close="showDeleteModal = false"
     >
       <div class="space-y-4">
         <p class="text-sm text-neutral-600 dark:text-neutral-300">
-          Are you sure you want to delete
-          <span class="font-semibold">{{ shoppingStore.currentList?.title }}</span
-          >? This action cannot be undone.
+          {{ $t('shopping.list.deleteConfirm', { title: shoppingStore.currentList?.title }) }}
         </p>
         <div class="flex gap-3">
-          <BaseButton variant="danger" @click="handleDeleteList">Delete</BaseButton>
-          <BaseButton variant="ghost" @click="showDeleteModal = false">Cancel</BaseButton>
+          <BaseButton variant="danger" @click="handleDeleteList">{{
+            $t('common.delete')
+          }}</BaseButton>
+          <BaseButton variant="ghost" @click="showDeleteModal = false">{{
+            $t('common.cancel')
+          }}</BaseButton>
         </div>
       </div>
     </ModalDialog>
   </div>
-  <LoadingState v-else message="Loading shopping list..." />
+  <LoadingState v-else :message="$t('shopping.list.loading')" />
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseInput from '@/components/shared/BaseInput.vue';
@@ -312,6 +334,7 @@ import type { ShoppingItem } from '@/features/shared/domain/entities';
 const props = defineProps<{ listId: string }>();
 
 const router = useRouter();
+const { t } = useI18n();
 const authStore = useAuthStore();
 const shoppingStore = useShoppingStore();
 const toastStore = useToastStore();
@@ -334,21 +357,21 @@ const editListTitle = ref('');
 const editListDescription = ref('');
 
 // Category options with emojis for quick selection
-const categoryOptions = [
-  { value: 'fruits&vegetables', label: 'Fruits&Vegetables', emoji: '🥕' },
-  { value: 'bakery', label: 'Bakery', emoji: '🍞' },
-  { value: 'meat&fish', label: 'Meat&Fish', emoji: '🥩' },
-  { value: 'beverages', label: 'Beverages', emoji: '🥤' },
-  { value: 'snacks', label: 'Snacks', emoji: '🍿' },
-  { value: 'care', label: 'Care', emoji: '🧴' },
-  { value: 'pharmacy', label: 'Pharmacy', emoji: '💊' },
-  { value: 'gadgets', label: 'Gadgets', emoji: '📱' },
-  { value: 'books', label: 'Books', emoji: '📚' },
-  { value: 'tickets', label: 'Tickets', emoji: '🎫' },
-  { value: 'clothes', label: 'Clothes', emoji: '👕' },
-  { value: 'toys', label: 'Toys', emoji: '🧸' },
-  { value: 'other', label: 'Other', emoji: '📦' },
-];
+const categoryOptions = computed(() => [
+  { value: 'fruits&vegetables', label: t('shopping.categories.fruitsVegetables'), emoji: '🥕' },
+  { value: 'bakery', label: t('shopping.categories.bakery'), emoji: '🍞' },
+  { value: 'meat&fish', label: t('shopping.categories.meatFish'), emoji: '🥩' },
+  { value: 'beverages', label: t('shopping.categories.beverages'), emoji: '🥤' },
+  { value: 'snacks', label: t('shopping.categories.snacks'), emoji: '🍿' },
+  { value: 'care', label: t('shopping.categories.care'), emoji: '🧴' },
+  { value: 'pharmacy', label: t('shopping.categories.pharmacy'), emoji: '💊' },
+  { value: 'gadgets', label: t('shopping.categories.gadgets'), emoji: '📱' },
+  { value: 'books', label: t('shopping.categories.books'), emoji: '📚' },
+  { value: 'tickets', label: t('shopping.categories.tickets'), emoji: '🎫' },
+  { value: 'clothes', label: t('shopping.categories.clothes'), emoji: '👕' },
+  { value: 'toys', label: t('shopping.categories.toys'), emoji: '🧸' },
+  { value: 'other', label: t('shopping.categories.other'), emoji: '📦' },
+]);
 
 onMounted(async () => {
   await shoppingStore.loadList(props.listId);
@@ -433,7 +456,7 @@ const handleSubmitItem = async () => {
     }
     resetForm();
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to save item';
+    const message = error instanceof Error ? error.message : t('shopping.list.failedToSave');
     toastStore.error(message);
   }
 };
@@ -449,13 +472,13 @@ const handleUpdateList = async () => {
 
 const handleArchiveList = async () => {
   await shoppingStore.updateList(props.listId, { status: 'archived' });
-  toastStore.success('List archived successfully');
+  toastStore.success(t('shopping.list.archiveSuccess'));
   router.push({ name: 'shopping' });
 };
 
 const handleUnarchiveList = async () => {
   await shoppingStore.updateList(props.listId, { status: 'active' });
-  toastStore.success('List unarchived successfully');
+  toastStore.success(t('shopping.list.unarchiveSuccess'));
   // Stay on the list page after unarchiving
 };
 

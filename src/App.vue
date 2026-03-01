@@ -68,9 +68,9 @@
                 class="ring-2 ring-transparent hover:ring-primary-500/20 transition-all duration-normal"
               />
 
-              <BaseButton variant="ghost" class="text-sm px-2 sm:px-3" @click="logout"
-                >Logout</BaseButton
-              >
+              <BaseButton variant="ghost" class="text-sm px-2 sm:px-3" @click="logout">{{
+                $t('common.logout')
+              }}</BaseButton>
             </div>
           </div>
         </header>

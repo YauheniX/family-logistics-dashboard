@@ -2,16 +2,18 @@
   <div class="max-w-3xl mx-auto space-y-6">
     <!-- Page Header -->
     <BaseCard>
-      <h1 class="text-h1 text-neutral-900 dark:text-neutral-50 mb-2">Settings</h1>
+      <h1 class="text-h1 text-neutral-900 dark:text-neutral-50 mb-2">{{ $t('settings.title') }}</h1>
       <p class="text-body text-neutral-600 dark:text-neutral-400">
-        Manage your profile and preferences
+        {{ $t('settings.subtitle') }}
       </p>
     </BaseCard>
 
     <!-- Profile Section -->
     <BaseCard>
       <template #header>
-        <h2 class="text-h2 text-neutral-900 dark:text-neutral-50">Profile</h2>
+        <h2 class="text-h2 text-neutral-900 dark:text-neutral-50">
+          {{ $t('settings.profile.title') }}
+        </h2>
       </template>
 
       <div class="space-y-4">
@@ -45,26 +47,30 @@
                   d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
                 />
               </svg>
-              Change Photo
+              {{ $t('settings.profile.changePhoto') }}
             </BaseButton>
             <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-              JPG, PNG or GIF. Max 2MB.
+              {{ $t('settings.profile.photoHint') }}
             </p>
           </div>
         </div>
 
         <!-- Name Display with Edit Button -->
         <div>
-          <label class="label">Full Name</label>
+          <label class="label">{{ $t('settings.profile.fullNameLabel') }}</label>
           <div class="flex items-center gap-3">
             <BaseInput
               :model-value="profileForm.name"
               type="text"
-              placeholder="Your full name"
+              :placeholder="$t('settings.profile.fullNamePlaceholder')"
               :disabled="true"
               class="flex-1"
             />
-            <BaseButton variant="secondary" aria-label="Edit name" @click="openEditNameModal">
+            <BaseButton
+              variant="secondary"
+              :aria-label="$t('settings.profile.editName')"
+              @click="openEditNameModal"
+            >
               <svg
                 class="h-4 w-4"
                 fill="none"
@@ -87,9 +93,9 @@
         <BaseInput
           v-model="profileForm.email"
           type="email"
-          label="Email"
+          :label="$t('settings.profile.emailLabel')"
           :disabled="true"
-          hint="Email cannot be changed"
+          :hint="$t('settings.profile.emailHint')"
         />
       </div>
     </BaseCard>
@@ -97,16 +103,18 @@
     <!-- Security Section -->
     <BaseCard>
       <template #header>
-        <h2 class="text-h2 text-neutral-900 dark:text-neutral-50">Security</h2>
+        <h2 class="text-h2 text-neutral-900 dark:text-neutral-50">
+          {{ $t('settings.security.title') }}
+        </h2>
       </template>
 
       <div class="space-y-4">
         <div>
           <p class="text-body text-neutral-700 dark:text-neutral-300 mb-2">
-            Change your password to keep your account secure
+            {{ $t('settings.security.changePasswordHint') }}
           </p>
           <BaseButton variant="secondary" @click="handleChangePassword">
-            Change Password
+            {{ $t('settings.security.changePassword') }}
           </BaseButton>
         </div>
       </div>
@@ -115,13 +123,15 @@
     <!-- Preferences Section -->
     <BaseCard>
       <template #header>
-        <h2 class="text-h2 text-neutral-900 dark:text-neutral-50">Preferences</h2>
+        <h2 class="text-h2 text-neutral-900 dark:text-neutral-50">
+          {{ $t('settings.preferences.title') }}
+        </h2>
       </template>
 
       <div class="space-y-4">
         <!-- Theme Selection -->
         <div>
-          <label class="label mb-2">Theme</label>
+          <label class="label mb-2">{{ $t('settings.preferences.themeLabel') }}</label>
           <div class="space-y-2">
             <label
               v-for="option in themeOptions"
@@ -155,21 +165,27 @@
   </div>
 
   <!-- Edit Name Modal -->
-  <ModalDialog :open="showEditNameModal" title="Edit Full Name" @close="showEditNameModal = false">
+  <ModalDialog
+    :open="showEditNameModal"
+    :title="$t('settings.profile.editNameModal.title')"
+    @close="showEditNameModal = false"
+  >
     <form class="space-y-4" @submit.prevent="confirmEditName">
       <BaseInput
         v-model="editNameForm"
         type="text"
-        label="Full Name"
-        placeholder="Enter your full name"
+        :label="$t('settings.profile.editNameModal.label')"
+        :placeholder="$t('settings.profile.editNameModal.placeholder')"
         :error="errors.name"
         :disabled="saving"
         required
       />
       <div class="flex gap-3">
-        <BaseButton type="submit" :loading="saving">Save Changes</BaseButton>
+        <BaseButton type="submit" :loading="saving">{{
+          $t('settings.profile.editNameModal.save')
+        }}</BaseButton>
         <BaseButton variant="ghost" type="button" @click="showEditNameModal = false">
-          Cancel
+          {{ $t('common.cancel') }}
         </BaseButton>
       </div>
     </form>
@@ -178,6 +194,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseInput from '@/components/shared/BaseInput.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
@@ -194,6 +211,7 @@ const authStore = useAuthStore();
 const toastStore = useToastStore();
 const { currentTheme, setTheme } = useTheme();
 const { loadUserProfile } = useUserProfile();
+const { t } = useI18n();
 const profileRepository = new UserProfileRepository();
 
 const profileForm = ref({
@@ -211,23 +229,23 @@ const editNameForm = ref('');
 
 const selectedTheme = ref(currentTheme.value);
 
-const themeOptions = [
+const themeOptions = computed(() => [
   {
     value: 'light',
-    label: 'Light',
-    description: 'Light theme for bright environments',
+    label: t('settings.themes.light'),
+    description: t('settings.themes.lightDesc'),
   },
   {
     value: 'dark',
-    label: 'Dark',
-    description: 'Dark theme for low-light environments',
+    label: t('settings.themes.dark'),
+    description: t('settings.themes.darkDesc'),
   },
   {
     value: 'system',
-    label: 'System Default',
-    description: 'Follow your system preference',
+    label: t('settings.themes.system'),
+    description: t('settings.themes.systemDesc'),
   },
-];
+]);
 
 // Resolve avatar with Google fallback
 const resolvedAvatar = computed(() => {
@@ -243,7 +261,7 @@ const resolvedAvatar = computed(() => {
 });
 
 const handleAvatarUpload = () => {
-  toastStore.info('Avatar upload feature coming soon!');
+  toastStore.info(t('settings.profile.avatarComingSoon'));
 };
 
 const openEditNameModal = () => {
@@ -262,12 +280,12 @@ const confirmEditName = async () => {
   }
 
   if (!editNameForm.value || editNameForm.value.trim().length < 2) {
-    errors.value.name = 'Name must be at least 2 characters';
+    errors.value.name = t('settings.profile.nameTooShort');
     return;
   }
 
   if (!authStore.user?.id) {
-    toastStore.error('User not authenticated');
+    toastStore.error(t('settings.profile.notAuthenticated'));
     return;
   }
 
@@ -280,7 +298,7 @@ const confirmEditName = async () => {
     });
 
     if (result.error) {
-      toastStore.error(`Failed to save profile: ${result.error.message}`);
+      toastStore.error(t('settings.profile.updateFailed', { error: result.error.message }));
       return;
     }
 
@@ -288,30 +306,30 @@ const confirmEditName = async () => {
       profileForm.value.name = result.data.display_name || '';
       profileForm.value.avatarUrl = result.data.avatar_url;
       originalName.value = result.data.display_name || '';
-      toastStore.success('Profile updated successfully!');
+      toastStore.success(t('settings.profile.updateSuccess'));
       showEditNameModal.value = false;
 
       // Refresh global user profile to update header (non-blocking)
       try {
         await loadUserProfile(authStore.user.id);
       } catch {
-        toastStore.error('Profile refresh failed, but changes were saved');
+        toastStore.error(t('settings.profile.refreshFailed'));
       }
     }
   } catch {
-    toastStore.error('An unexpected error occurred');
+    toastStore.error(t('settings.profile.unexpectedError'));
   } finally {
     saving.value = false;
   }
 };
 
 const handleChangePassword = () => {
-  toastStore.info('Change password feature coming soon!');
+  toastStore.info(t('settings.security.changePasswordComingSoon'));
 };
 
 const handleThemeChange = () => {
   setTheme(selectedTheme.value);
-  toastStore.success(`Theme changed to ${selectedTheme.value}`);
+  toastStore.success(t('settings.preferences.themeChanged', { theme: selectedTheme.value }));
 };
 
 onMounted(async () => {
@@ -331,7 +349,7 @@ onMounted(async () => {
       }
     } catch {
       // Handle exceptions from repository
-      toastStore.error('Failed to load profile. Please refresh the page.');
+      toastStore.error(t('settings.profile.loadFailed'));
     } finally {
       loading.value = false;
     }

@@ -3,12 +3,14 @@
     <BaseCard>
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div class="min-w-0">
-          <p class="text-sm text-neutral-500 dark:text-neutral-400">Wishlists</p>
+          <p class="text-sm text-neutral-500 dark:text-neutral-400">
+            {{ $t('wishlists.myTitle') }}
+          </p>
           <h2 class="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
-            My Wishlists
+            {{ $t('wishlists.myTitle') }}
           </h2>
           <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-            Create and manage your personal wishlists.
+            {{ $t('wishlists.subtitle') }}
           </p>
         </div>
         <BaseButton
@@ -17,19 +19,19 @@
           :disabled="!isHouseholdReady"
           :title="
             !householdStore.initialized
-              ? 'Loading household...'
+              ? $t('wishlists.loadingHouseholdTooltip')
               : !currentHouseholdId
-                ? 'Select a household first'
+                ? $t('wishlists.selectHouseholdTooltip')
                 : undefined
           "
           @click="showCreatePersonalModal = true"
         >
-          ➕ Create Wishlist
+          {{ $t('wishlists.createWishlist') }}
         </BaseButton>
       </div>
     </BaseCard>
 
-    <LoadingState v-if="wishlistStore.loading" message="Loading wishlists..." />
+    <LoadingState v-if="wishlistStore.loading" :message="$t('wishlists.loadingWishlists')" />
 
     <div
       v-else-if="wishlistStore.wishlists.length"
@@ -76,14 +78,14 @@
               class="flex-1 text-sm"
               @click.stop="$router.push({ name: 'wishlist-edit', params: { id: wishlist.id } })"
             >
-              Edit
+              {{ $t('wishlists.edit') }}
             </BaseButton>
             <BaseButton
               variant="danger"
               class="flex-1 text-sm"
               @click.stop="handleDelete(wishlist.id)"
             >
-              Delete
+              {{ $t('wishlists.delete') }}
             </BaseButton>
           </div>
         </template>
@@ -92,8 +94,8 @@
 
     <EmptyState
       v-else
-      title="No wishlists yet"
-      description="Create your first wishlist to start tracking gift ideas."
+      :title="$t('wishlists.noTitle')"
+      :description="$t('wishlists.noDescription')"
     />
 
     <!-- Children's Wishlists Section -->
@@ -101,12 +103,14 @@
       <BaseCard>
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div class="min-w-0">
-            <p class="text-sm text-neutral-500 dark:text-neutral-400">Children</p>
+            <p class="text-sm text-neutral-500 dark:text-neutral-400">
+              {{ $t('wishlists.children.subtitle') }}
+            </p>
             <h2 class="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
-              Children's Wishlists
+              {{ $t('wishlists.children.title') }}
             </h2>
             <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-              Wishlists you manage for your children.
+              {{ $t('wishlists.children.description') }}
             </p>
           </div>
           <BaseButton
@@ -115,14 +119,14 @@
             :disabled="!currentHouseholdId || childMembers.length === 0"
             :title="
               !currentHouseholdId
-                ? 'Select a household first'
+                ? $t('wishlists.selectHouseholdTooltip')
                 : childMembers.length === 0
-                  ? 'No children in household'
+                  ? $t('wishlists.children.noChildrenTooltip')
                   : undefined
             "
             @click="showCreateChildModal = true"
           >
-            👶 Create for Child
+            {{ $t('wishlists.children.createForChild') }}
           </BaseButton>
         </div>
       </BaseCard>
@@ -177,14 +181,14 @@
                 class="flex-1 text-sm"
                 @click.stop="$router.push({ name: 'wishlist-edit', params: { id: wishlist.id } })"
               >
-                Edit
+                {{ $t('wishlists.edit') }}
               </BaseButton>
               <BaseButton
                 variant="danger"
                 class="flex-1 text-sm"
                 @click.stop="handleDelete(wishlist.id)"
               >
-                Delete
+                {{ $t('wishlists.delete') }}
               </BaseButton>
             </div>
           </template>
@@ -193,41 +197,46 @@
 
       <EmptyState
         v-else
-        title="No children's wishlists yet"
-        description="Click 'Create for Child' to create a wishlist for one of your children."
+        :title="$t('wishlists.children.noTitle')"
+        :description="$t('wishlists.children.noDescription')"
       />
     </template>
 
     <!-- Personal Wishlist Modal -->
     <ModalDialog
       :open="showCreatePersonalModal"
-      title="Create Wishlist"
+      :title="$t('wishlists.createModal.title')"
       @close="showCreatePersonalModal = false"
     >
       <form class="space-y-4" @submit.prevent="handleCreatePersonal">
-        <BaseInput v-model="newTitle" label="Title" placeholder="Birthday wishlist" required />
+        <BaseInput
+          v-model="newTitle"
+          :label="$t('wishlists.createModal.titleLabel')"
+          :placeholder="$t('wishlists.createModal.titlePlaceholder')"
+          required
+        />
         <BaseInput
           v-model="newDescription"
-          label="Description"
-          placeholder="Optional description"
+          :label="$t('wishlists.createModal.descriptionLabel')"
+          :placeholder="$t('wishlists.createModal.descriptionPlaceholder')"
         />
         <div class="space-y-2">
-          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
-            >Visibility</label
-          >
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">{{
+            $t('wishlists.createModal.visibilityLabel')
+          }}</label>
           <select v-model="newVisibility" class="input w-full">
-            <option value="private">Private (only you)</option>
-            <option value="household">Household (all members)</option>
-            <option value="public">Public (shareable link)</option>
+            <option value="private">{{ $t('wishlists.visibility.private') }}</option>
+            <option value="household">{{ $t('wishlists.visibility.household') }}</option>
+            <option value="public">{{ $t('wishlists.visibility.public') }}</option>
           </select>
         </div>
         <div class="flex gap-3">
           <BaseButton variant="primary" type="submit" :disabled="wishlistStore.loading">
-            Create
+            {{ $t('common.create') }}
           </BaseButton>
-          <BaseButton variant="ghost" type="button" @click="showCreatePersonalModal = false"
-            >Cancel</BaseButton
-          >
+          <BaseButton variant="ghost" type="button" @click="showCreatePersonalModal = false">{{
+            $t('common.cancel')
+          }}</BaseButton>
         </div>
       </form>
     </ModalDialog>
@@ -235,33 +244,42 @@
     <!-- Child Wishlist Modal -->
     <ModalDialog
       :open="showCreateChildModal"
-      title="Create Wishlist for Child"
+      :title="$t('wishlists.children.createModal.title')"
       @close="showCreateChildModal = false"
     >
       <form class="space-y-4" @submit.prevent="handleCreateChild">
         <div class="space-y-2">
-          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Child</label>
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">{{
+            $t('wishlists.children.createModal.childLabel')
+          }}</label>
           <select v-model="selectedMemberId" class="input w-full" required>
-            <option :value="null" disabled selected>Choose which child...</option>
+            <option :value="null" disabled selected>
+              {{ $t('wishlists.children.createModal.choosePlaceholder') }}
+            </option>
             <option v-for="child in childMembers" :key="child.id" :value="child.id">
               {{ child.display_name }}
             </option>
           </select>
         </div>
-        <BaseInput v-model="newTitle" label="Title" placeholder="Birthday wishlist" required />
+        <BaseInput
+          v-model="newTitle"
+          :label="$t('wishlists.createModal.titleLabel')"
+          :placeholder="$t('wishlists.createModal.titlePlaceholder')"
+          required
+        />
         <BaseInput
           v-model="newDescription"
-          label="Description"
-          placeholder="Optional description"
+          :label="$t('wishlists.createModal.descriptionLabel')"
+          :placeholder="$t('wishlists.createModal.descriptionPlaceholder')"
         />
         <div class="space-y-2">
-          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300"
-            >Visibility</label
-          >
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">{{
+            $t('wishlists.createModal.visibilityLabel')
+          }}</label>
           <select v-model="newVisibility" class="input w-full">
-            <option value="private">Private (only you)</option>
-            <option value="household">Household (all members)</option>
-            <option value="public">Public (shareable link)</option>
+            <option value="private">{{ $t('wishlists.visibility.private') }}</option>
+            <option value="household">{{ $t('wishlists.visibility.household') }}</option>
+            <option value="public">{{ $t('wishlists.visibility.public') }}</option>
           </select>
         </div>
         <div class="flex gap-3">
@@ -270,11 +288,11 @@
             type="submit"
             :disabled="wishlistStore.loading || !selectedMemberId"
           >
-            Create
+            {{ $t('common.create') }}
           </BaseButton>
-          <BaseButton variant="ghost" type="button" @click="showCreateChildModal = false"
-            >Cancel</BaseButton
-          >
+          <BaseButton variant="ghost" type="button" @click="showCreateChildModal = false">{{
+            $t('common.cancel')
+          }}</BaseButton>
         </div>
       </form>
     </ModalDialog>
@@ -284,6 +302,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
 import { storeToRefs } from 'pinia';
+import { useI18n } from 'vue-i18n';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
@@ -305,6 +324,7 @@ const authStore = useAuthStore();
 const householdStore = useHouseholdStore();
 const wishlistStore = useWishlistStore();
 const { members, fetchMembers } = useMembers();
+const { t } = useI18n();
 
 // Use storeToRefs for proper reactivity with Pinia
 const { currentHousehold } = storeToRefs(householdStore);
@@ -337,12 +357,12 @@ const handleCreatePersonal = async () => {
 
   // CRITICAL: Wait for household store initialization before creating wishlist
   if (!householdStore.initialized) {
-    useToastStore().warning('Loading household data, please wait...');
+    useToastStore().warning(t('shopping.loadingHouseholdWait'));
     return;
   }
 
   if (!currentHouseholdId.value) {
-    useToastStore().warning('Please select a household first');
+    useToastStore().warning(t('wishlists.selectHouseholdTooltip'));
     return;
   }
 
@@ -364,18 +384,18 @@ const handleCreatePersonal = async () => {
 const handleCreateChild = async () => {
   if (!newTitle.value.trim()) return;
   if (!selectedMemberId.value) {
-    useToastStore().warning('Please select a child');
+    useToastStore().warning(t('wishlists.children.createModal.choosePlaceholder'));
     return;
   }
 
   // CRITICAL: Wait for household store initialization before creating wishlist
   if (!householdStore.initialized) {
-    useToastStore().warning('Loading household data, please wait...');
+    useToastStore().warning(t('shopping.loadingHouseholdWait'));
     return;
   }
 
   if (!currentHouseholdId.value) {
-    useToastStore().warning('Please select a household first');
+    useToastStore().warning(t('wishlists.selectHouseholdTooltip'));
     return;
   }
 
@@ -396,7 +416,7 @@ const handleCreateChild = async () => {
 };
 
 const handleDelete = async (wishlistId: string) => {
-  if (!confirm('Are you sure you want to delete this wishlist? This action cannot be undone.')) {
+  if (!confirm(t('wishlists.deleteConfirm'))) {
     return;
   }
 

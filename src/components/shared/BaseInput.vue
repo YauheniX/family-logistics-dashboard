@@ -90,8 +90,8 @@
         type="button"
         class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
         :class="{ 'right-10': $slots.iconRight }"
-        @click="togglePasswordVisibility"
         :aria-label="showPassword ? 'Hide password' : 'Show password'"
+        @click="togglePasswordVisibility"
       >
         <svg
           class="w-5 h-5 transition-transform duration-200"
@@ -137,8 +137,8 @@
     <!-- Character Counter (for textarea) -->
     <div
       v-if="type === 'textarea' && maxLength && showCharCount"
-      class="flex justify-end"
       :id="`${inputId}-char-count`"
+      class="flex justify-end"
     >
       <span
         class="text-xs transition-colors duration-200"

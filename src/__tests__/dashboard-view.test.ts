@@ -6,6 +6,7 @@ import { createRouter, createMemoryHistory } from 'vue-router';
 import DashboardView from '@/views/DashboardView.vue';
 import { useHouseholdStore } from '@/stores/household';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
+import i18n from '@/i18n';
 
 // Mock the composables and stores
 vi.mock('@/composables/useUserProfile', () => ({
@@ -51,7 +52,7 @@ async function mountDashboard() {
 
   const wrapper = mount(DashboardView, {
     global: {
-      plugins: [pinia, router],
+      plugins: [pinia, router, i18n],
       stubs: {
         RouterLink: true,
         BaseCard: true,

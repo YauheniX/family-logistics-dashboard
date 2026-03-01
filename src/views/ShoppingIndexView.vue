@@ -4,21 +4,21 @@
       <div class="flex flex-col gap-4">
         <div class="flex items-center justify-between">
           <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-            Shopping Lists
+            {{ $t('shopping.title') }}
           </h3>
           <BaseButton
             variant="primary"
             :disabled="!isHouseholdReady"
             :title="
               !householdStore.initialized
-                ? 'Loading household...'
+                ? $t('shopping.loadingHouseholdTooltip')
                 : !householdStore.currentHousehold
-                  ? 'Select a household first'
+                  ? $t('shopping.selectHouseholdTooltip')
                   : undefined
             "
             @click="showCreateListModal = true"
           >
-            + New List
+            {{ $t('shopping.newList') }}
           </BaseButton>
         </div>
 
@@ -32,7 +32,7 @@
             :class="{ active: statusFilter === 'active' }"
             @click="statusFilter = 'active'"
           >
-            📝 Active
+            {{ $t('shopping.active') }}
           </button>
           <button
             type="button"
@@ -40,7 +40,7 @@
             :class="{ active: statusFilter === 'archived' }"
             @click="statusFilter = 'archived'"
           >
-            📦 Archived
+            {{ $t('shopping.archived') }}
           </button>
         </div>
       </div>
@@ -49,14 +49,14 @@
         v-if="!householdStore.initialized"
         class="text-sm text-neutral-500 dark:text-neutral-400 mt-4"
       >
-        ⏳ Loading household data...
+        {{ $t('shopping.loadingHousehold') }}
       </div>
 
       <div
         v-else-if="!householdStore.currentHousehold"
         class="text-sm text-neutral-500 dark:text-neutral-400 mt-4"
       >
-        No household selected. Please select a household to view shopping lists.
+        {{ $t('shopping.noHousehold') }}
       </div>
 
       <div v-else class="mt-4">
@@ -79,33 +79,40 @@
           </RouterLink>
         </div>
         <p v-else class="text-sm text-neutral-500 dark:text-neutral-400">
-          No {{ statusFilter }} shopping lists.
+          {{ $t('shopping.noLists', { status: statusFilter }) }}
         </p>
       </div>
     </BaseCard>
   </div>
   <ModalDialog
     :open="showCreateListModal"
-    title="New Shopping List"
+    :title="$t('shopping.createModal.title')"
     @close="showCreateListModal = false"
   >
     <form class="space-y-4" @submit.prevent="handleCreateList">
       <div>
-        <label class="label" for="list-title">Title</label>
-        <BaseInput id="list-title" v-model="newListTitle" required placeholder="Weekly groceries" />
+        <label class="label" for="list-title">{{ $t('shopping.createModal.titleLabel') }}</label>
+        <BaseInput
+          id="list-title"
+          v-model="newListTitle"
+          required
+          :placeholder="$t('shopping.createModal.titlePlaceholder')"
+        />
       </div>
       <div>
-        <label class="label" for="list-description">Description</label>
+        <label class="label" for="list-description">{{
+          $t('shopping.createModal.descriptionLabel')
+        }}</label>
         <BaseInput
           id="list-description"
           v-model="newListDescription"
-          placeholder="Optional description"
+          :placeholder="$t('shopping.createModal.descriptionPlaceholder')"
         />
       </div>
       <div class="flex gap-3">
-        <BaseButton type="submit"> Create </BaseButton>
+        <BaseButton type="submit"> {{ $t('common.create') }} </BaseButton>
         <BaseButton variant="ghost" @click.prevent="showCreateListModal = false">
-          Cancel
+          {{ $t('common.cancel') }}
         </BaseButton>
       </div>
     </form>
@@ -115,6 +122,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
@@ -125,6 +133,7 @@ import { useShoppingStore } from '@/features/shopping/presentation/shopping.stor
 import { useToastStore } from '@/stores/toast';
 
 const router = useRouter();
+const { t } = useI18n();
 const householdStore = useHouseholdStore();
 const shoppingStore = useShoppingStore();
 const toastStore = useToastStore();
@@ -146,7 +155,7 @@ const filteredLists = computed(() => {
 const handleCreateList = async () => {
   // CRITICAL: Wait for household store initialization before creating list
   if (!householdStore.initialized) {
-    toastStore.warning('Loading household data, please wait...');
+    toastStore.warning(t('shopping.loadingHouseholdWait'));
     return;
   }
 

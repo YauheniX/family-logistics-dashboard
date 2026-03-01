@@ -3,21 +3,26 @@
     <BaseCard>
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div class="min-w-0">
-          <p class="text-sm text-neutral-500 dark:text-neutral-400">Households</p>
+          <p class="text-sm text-neutral-500 dark:text-neutral-400">
+            {{ $t('households.subtitle') }}
+          </p>
           <h2 class="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-            Households
+            {{ $t('households.title') }}
           </h2>
           <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
-            Manage your household groups.
+            {{ $t('households.description') }}
           </p>
         </div>
         <BaseButton class="w-full sm:w-auto" @click="showCreateModal = true">
-          ➕ Create Household
+          {{ $t('households.createHousehold') }}
         </BaseButton>
       </div>
     </BaseCard>
 
-    <LoadingState v-if="householdEntityStore.loading" message="Loading households..." />
+    <LoadingState
+      v-if="householdEntityStore.loading"
+      :message="$t('households.loadingHouseholds')"
+    />
 
     <div v-else-if="householdEntityStore.households.length" class="page-grid">
       <RouterLink
@@ -31,7 +36,11 @@
             {{ household.name }}
           </h3>
           <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-            Created {{ new Date(household.created_at).toLocaleDateString() }}
+            {{
+              $t('households.created', {
+                date: new Date(household.created_at).toLocaleDateString(),
+              })
+            }}
           </p>
         </BaseCard>
       </RouterLink>
@@ -39,27 +48,35 @@
 
     <EmptyState
       v-else
-      title="No households yet"
-      description="Create your first household to start managing shopping lists together."
-      cta="Create a Household"
+      :title="$t('households.noHouseholdsTitle')"
+      :description="$t('households.noHouseholdsDescription')"
+      :cta="$t('households.createCta')"
       @action="showCreateModal = true"
     />
 
-    <ModalDialog :open="showCreateModal" title="Create Household" @close="showCreateModal = false">
+    <ModalDialog
+      :open="showCreateModal"
+      :title="$t('households.modalTitle')"
+      @close="showCreateModal = false"
+    >
       <form class="space-y-4" @submit.prevent="handleCreate">
         <div>
-          <label class="label" for="household-name">Household name</label>
+          <label class="label" for="household-name">{{ $t('households.nameLabel') }}</label>
           <input
             id="household-name"
             v-model="newHouseholdName"
             class="input"
             required
-            placeholder="e.g. The Smiths"
+            :placeholder="$t('households.namePlaceholder')"
           />
         </div>
         <div class="flex gap-3">
-          <BaseButton type="submit" :disabled="householdEntityStore.loading">Create</BaseButton>
-          <BaseButton variant="ghost" @click="showCreateModal = false">Cancel</BaseButton>
+          <BaseButton type="submit" :disabled="householdEntityStore.loading">{{
+            $t('common.create')
+          }}</BaseButton>
+          <BaseButton variant="ghost" @click="showCreateModal = false">{{
+            $t('common.cancel')
+          }}</BaseButton>
         </div>
       </form>
     </ModalDialog>

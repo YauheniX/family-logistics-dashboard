@@ -15,10 +15,12 @@
     <div class="mb-6">
       <div class="flex items-center gap-2 mb-1">
         <span class="text-2xl" aria-hidden="true">🏡</span>
-        <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-50">HouseholdBoard</h2>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-50">
+          {{ $t('nav.brandName') }}
+        </h2>
       </div>
       <p class="text-xs text-neutral-500 dark:text-neutral-400 ml-8">
-        Keeping households connected
+        {{ $t('nav.brandTagline') }}
       </p>
     </div>
 
@@ -69,10 +71,12 @@
     <div class="mb-6">
       <div class="flex items-center gap-2 mb-1">
         <span class="text-2xl" aria-hidden="true">🏡</span>
-        <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-50">HouseholdBoard</h2>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-50">
+          {{ $t('nav.brandName') }}
+        </h2>
       </div>
       <p class="text-xs text-neutral-500 dark:text-neutral-400 ml-8">
-        Keeping households connected
+        {{ $t('nav.brandTagline') }}
       </p>
     </div>
 
@@ -119,6 +123,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useHouseholdStore } from '@/stores/household';
 
 withDefaults(
@@ -136,6 +141,7 @@ const emit = defineEmits<{
   close: [];
 }>();
 
+const { t } = useI18n();
 const route = useRoute();
 const householdStore = useHouseholdStore();
 
@@ -149,13 +155,13 @@ function isActive(itemName: string): boolean {
 const items = computed(() => [
   {
     name: 'household-list',
-    label: 'Households',
+    label: t('nav.households'),
     to: '/households',
     emoji: '🏘️',
   },
-  { name: 'shopping', label: 'Shopping', to: { name: 'shopping' }, emoji: '🛒' },
-  { name: 'wishlist-list', label: 'Wishlists', to: '/wishlists', emoji: '🎁' },
-  { name: 'apps', label: 'Apps', to: '/apps', emoji: '🎮' },
-  { name: 'settings', label: 'Settings', to: '/settings', emoji: '⚙️' },
+  { name: 'shopping', label: t('nav.shopping'), to: { name: 'shopping' }, emoji: '🛒' },
+  { name: 'wishlist-list', label: t('nav.wishlists'), to: '/wishlists', emoji: '🎁' },
+  { name: 'apps', label: t('nav.apps'), to: '/apps', emoji: '🎮' },
+  { name: 'settings', label: t('nav.settings'), to: '/settings', emoji: '⚙️' },
 ]);
 </script>
