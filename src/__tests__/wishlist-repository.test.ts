@@ -150,10 +150,7 @@ describe('WishlistRepository', () => {
   describe('findById', () => {
     it('adds is_public', async () => {
       // Mock the parent class findById via the prototype
-      vi.spyOn(
-        Object.getPrototypeOf(Object.getPrototypeOf(repo)),
-        'findById',
-      ).mockResolvedValue({
+      vi.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(repo)), 'findById').mockResolvedValue({
         data: mockWishlist,
         error: null,
       });
@@ -165,10 +162,7 @@ describe('WishlistRepository', () => {
     });
 
     it('propagates error', async () => {
-      vi.spyOn(
-        Object.getPrototypeOf(Object.getPrototypeOf(repo)),
-        'findById',
-      ).mockResolvedValue({
+      vi.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(repo)), 'findById').mockResolvedValue({
         data: null,
         error: { message: 'Not found' },
       });
@@ -181,10 +175,7 @@ describe('WishlistRepository', () => {
 
   describe('update', () => {
     it('adds is_public', async () => {
-      vi.spyOn(
-        Object.getPrototypeOf(Object.getPrototypeOf(repo)),
-        'update',
-      ).mockResolvedValue({
+      vi.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(repo)), 'update').mockResolvedValue({
         data: { ...mockWishlist, title: 'Updated' },
         error: null,
       });
@@ -196,10 +187,7 @@ describe('WishlistRepository', () => {
     });
 
     it('propagates error', async () => {
-      vi.spyOn(
-        Object.getPrototypeOf(Object.getPrototypeOf(repo)),
-        'update',
-      ).mockResolvedValue({
+      vi.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(repo)), 'update').mockResolvedValue({
         data: null,
         error: { message: 'Update failed' },
       });
@@ -297,9 +285,7 @@ describe('WishlistRepository', () => {
         share_slug: 'abc12345',
       });
 
-      expect(result.error?.message).toBe(
-        'User must belong to this household to create wishlists',
-      );
+      expect(result.error?.message).toBe('User must belong to this household to create wishlists');
     });
 
     it('uses first membership when no household_id provided', async () => {
@@ -374,10 +360,7 @@ describe('WishlistRepository', () => {
       };
 
       vi.spyOn(repo as any, 'query').mockResolvedValue({
-        data: [
-          { ...mockWishlistWithMember, visibility: 'household' },
-          otherWishlist,
-        ],
+        data: [{ ...mockWishlistWithMember, visibility: 'household' }, otherWishlist],
         error: null,
       });
 

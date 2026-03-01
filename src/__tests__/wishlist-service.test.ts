@@ -62,9 +62,8 @@ describe('WishlistService', () => {
   // ─── getUserWishlists ─────────────────────────────────────
 
   it('returns wishlists for a user', async () => {
-    const { wishlistRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistRepository.findByUserId).mockResolvedValue({
       data: [mockWishlist],
       error: null,
@@ -78,9 +77,8 @@ describe('WishlistService', () => {
   });
 
   it('handles getUserWishlists error', async () => {
-    const { wishlistRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistRepository.findByUserId).mockResolvedValue({
       data: null,
       error: { message: 'Network error' },
@@ -95,9 +93,8 @@ describe('WishlistService', () => {
   // ─── getUserWishlistsByHousehold ───────────────────────────
 
   it('returns wishlists for a user in a household', async () => {
-    const { wishlistRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistRepository.findByUserIdAndHouseholdId).mockResolvedValue({
       data: [mockWishlist],
       error: null,
@@ -111,9 +108,8 @@ describe('WishlistService', () => {
   });
 
   it('handles getUserWishlistsByHousehold error', async () => {
-    const { wishlistRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistRepository.findByUserIdAndHouseholdId).mockResolvedValue({
       data: null,
       error: { message: 'Network error' },
@@ -128,9 +124,8 @@ describe('WishlistService', () => {
   // ─── getWishlist ──────────────────────────────────────────
 
   it('returns a single wishlist by id', async () => {
-    const { wishlistRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistRepository.findById).mockResolvedValue({
       data: mockWishlist,
       error: null,
@@ -144,9 +139,8 @@ describe('WishlistService', () => {
   });
 
   it('handles getWishlist error', async () => {
-    const { wishlistRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistRepository.findById).mockResolvedValue({
       data: null,
       error: { message: 'Not found' },
@@ -161,9 +155,8 @@ describe('WishlistService', () => {
   // ─── getWishlistBySlug ────────────────────────────────────
 
   it('returns a wishlist by share slug', async () => {
-    const { wishlistRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistRepository.findBySlug).mockResolvedValue({
       data: mockWishlist,
       error: null,
@@ -177,9 +170,8 @@ describe('WishlistService', () => {
   });
 
   it('handles getWishlistBySlug error', async () => {
-    const { wishlistRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistRepository.findBySlug).mockResolvedValue({
       data: null,
       error: { message: 'Not found' },
@@ -194,9 +186,8 @@ describe('WishlistService', () => {
   // ─── getHouseholdWishlists ────────────────────────────────
 
   it('returns wishlists for a household excluding a user', async () => {
-    const { wishlistRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistRepository.findByHouseholdId).mockResolvedValue({
       data: [mockWishlist],
       error: null,
@@ -210,9 +201,8 @@ describe('WishlistService', () => {
   });
 
   it('handles getHouseholdWishlists error', async () => {
-    const { wishlistRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistRepository.findByHouseholdId).mockResolvedValue({
       data: null,
       error: { message: 'Network error' },
@@ -227,9 +217,8 @@ describe('WishlistService', () => {
   // ─── getChildrenWishlists ─────────────────────────────────
 
   it('returns children wishlists for a user in a household', async () => {
-    const { wishlistRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistRepository.findChildrenWishlists).mockResolvedValue({
       data: [mockWishlist],
       error: null,
@@ -243,9 +232,8 @@ describe('WishlistService', () => {
   });
 
   it('handles getChildrenWishlists error', async () => {
-    const { wishlistRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistRepository.findChildrenWishlists).mockResolvedValue({
       data: null,
       error: { message: 'Network error' },
@@ -260,9 +248,8 @@ describe('WishlistService', () => {
   // ─── createWishlist ───────────────────────────────────────
 
   it('creates a wishlist with auto-generated share_slug', async () => {
-    const { wishlistRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistRepository.create).mockResolvedValue({
       data: mockWishlist,
       error: null,
@@ -271,19 +258,21 @@ describe('WishlistService', () => {
     const dto = { household_id: 'h1', title: 'Birthday Wishes', description: null };
     const result = await service.createWishlist(dto);
 
-    const callArg = vi.mocked(wishlistRepository.create).mock.calls[0][0] as Record<string, unknown>;
+    const callArg = vi.mocked(wishlistRepository.create).mock.calls[0][0] as Record<
+      string,
+      unknown
+    >;
     expect(callArg).toMatchObject(dto);
     expect(callArg.share_slug).toBeDefined();
     expect(typeof callArg.share_slug).toBe('string');
-    expect((callArg.share_slug as string)).toMatch(/^[a-z0-9]{8}$/);
+    expect(callArg.share_slug as string).toMatch(/^[a-z0-9]{8}$/);
     expect(result.data).toEqual(mockWishlist);
     expect(result.error).toBeNull();
   });
 
   it('handles createWishlist error', async () => {
-    const { wishlistRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistRepository.create).mockResolvedValue({
       data: null,
       error: { message: 'Creation failed' },
@@ -302,9 +291,8 @@ describe('WishlistService', () => {
   // ─── updateWishlist ───────────────────────────────────────
 
   it('updates a wishlist successfully', async () => {
-    const { wishlistRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     const updated = { ...mockWishlist, title: 'Updated Wishes' };
     vi.mocked(wishlistRepository.update).mockResolvedValue({
       data: updated,
@@ -319,9 +307,8 @@ describe('WishlistService', () => {
   });
 
   it('handles updateWishlist error', async () => {
-    const { wishlistRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistRepository.update).mockResolvedValue({
       data: null,
       error: { message: 'Update failed' },
@@ -336,9 +323,8 @@ describe('WishlistService', () => {
   // ─── deleteWishlist ───────────────────────────────────────
 
   it('deletes a wishlist successfully', async () => {
-    const { wishlistRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistRepository.delete).mockResolvedValue({
       data: undefined,
       error: null,
@@ -351,9 +337,8 @@ describe('WishlistService', () => {
   });
 
   it('handles deleteWishlist error', async () => {
-    const { wishlistRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistRepository.delete).mockResolvedValue({
       data: null,
       error: { message: 'Delete failed' },
@@ -368,9 +353,8 @@ describe('WishlistService', () => {
   // ─── getWishlistItems ─────────────────────────────────────
 
   it('returns items for a wishlist', async () => {
-    const { wishlistItemRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistItemRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistItemRepository.findByWishlistId).mockResolvedValue({
       data: [mockItem],
       error: null,
@@ -384,9 +368,8 @@ describe('WishlistService', () => {
   });
 
   it('handles getWishlistItems error', async () => {
-    const { wishlistItemRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistItemRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistItemRepository.findByWishlistId).mockResolvedValue({
       data: null,
       error: { message: 'Load failed' },
@@ -401,15 +384,22 @@ describe('WishlistService', () => {
   // ─── addItem ──────────────────────────────────────────────
 
   it('adds an item successfully', async () => {
-    const { wishlistItemRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistItemRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistItemRepository.create).mockResolvedValue({
       data: mockItem,
       error: null,
     });
 
-    const dto = { wishlist_id: 'w1', title: 'New Book', description: null, link: null, price: 19.99, currency: 'USD', priority: 'medium' as const };
+    const dto = {
+      wishlist_id: 'w1',
+      title: 'New Book',
+      description: null,
+      link: null,
+      price: 19.99,
+      currency: 'USD',
+      priority: 'medium' as const,
+    };
     const result = await service.addItem(dto);
 
     expect(wishlistItemRepository.create).toHaveBeenCalledWith(dto);
@@ -418,9 +408,8 @@ describe('WishlistService', () => {
   });
 
   it('handles addItem error', async () => {
-    const { wishlistItemRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistItemRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistItemRepository.create).mockResolvedValue({
       data: null,
       error: { message: 'Add failed' },
@@ -443,9 +432,8 @@ describe('WishlistService', () => {
   // ─── updateItem ───────────────────────────────────────────
 
   it('updates an item successfully', async () => {
-    const { wishlistItemRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistItemRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     const updated = { ...mockItem, title: 'Updated Book', price: 24.99 };
     vi.mocked(wishlistItemRepository.update).mockResolvedValue({
       data: updated,
@@ -463,9 +451,8 @@ describe('WishlistService', () => {
   });
 
   it('handles updateItem error', async () => {
-    const { wishlistItemRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistItemRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistItemRepository.update).mockResolvedValue({
       data: null,
       error: { message: 'Update failed' },
@@ -480,9 +467,8 @@ describe('WishlistService', () => {
   // ─── deleteItem ───────────────────────────────────────────
 
   it('deletes an item successfully', async () => {
-    const { wishlistItemRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistItemRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistItemRepository.delete).mockResolvedValue({
       data: undefined,
       error: null,
@@ -495,9 +481,8 @@ describe('WishlistService', () => {
   });
 
   it('handles deleteItem error', async () => {
-    const { wishlistItemRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistItemRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistItemRepository.delete).mockResolvedValue({
       data: null,
       error: { message: 'Delete failed' },
@@ -512,9 +497,8 @@ describe('WishlistService', () => {
   // ─── reserveItem ──────────────────────────────────────────
 
   it('reserves an unreserved item', async () => {
-    const { wishlistItemRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistItemRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     const reservedItem = {
       ...mockItem,
       is_reserved: true,
@@ -544,9 +528,8 @@ describe('WishlistService', () => {
   });
 
   it('unreserves a reserved item', async () => {
-    const { wishlistItemRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistItemRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     const unreservedItem = {
       ...mockItem,
       is_reserved: false,
@@ -555,7 +538,12 @@ describe('WishlistService', () => {
     };
 
     vi.mocked(wishlistItemRepository.findById).mockResolvedValue({
-      data: { ...mockItem, is_reserved: true, reserved_by_email: 'friend@example.com', reserved_by_name: 'Friend' },
+      data: {
+        ...mockItem,
+        is_reserved: true,
+        reserved_by_email: 'friend@example.com',
+        reserved_by_name: 'Friend',
+      },
       error: null,
     });
     vi.mocked(wishlistItemRepository.reserveItem).mockResolvedValue({
@@ -575,9 +563,8 @@ describe('WishlistService', () => {
   });
 
   it('returns error when findById fails during reserveItem', async () => {
-    const { wishlistItemRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistItemRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistItemRepository.findById).mockResolvedValue({
       data: null,
       error: { message: 'Not found' },
@@ -591,9 +578,8 @@ describe('WishlistService', () => {
   });
 
   it('returns error when reserving with empty email', async () => {
-    const { wishlistItemRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistItemRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistItemRepository.findById).mockResolvedValue({
       data: { ...mockItem, is_reserved: false },
       error: null,
@@ -607,9 +593,8 @@ describe('WishlistService', () => {
   });
 
   it('returns error when reserving with undefined email', async () => {
-    const { wishlistItemRepository } = await import(
-      '@/features/wishlist/infrastructure/wishlist.factory'
-    );
+    const { wishlistItemRepository } =
+      await import('@/features/wishlist/infrastructure/wishlist.factory');
     vi.mocked(wishlistItemRepository.findById).mockResolvedValue({
       data: { ...mockItem, is_reserved: false },
       error: null,

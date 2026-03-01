@@ -52,9 +52,8 @@ describe('HouseholdService', () => {
   // ─── getUserHouseholds ──────────────────────────────────
 
   it('returns households for a user', async () => {
-    const { householdRepository } = await import(
-      '@/features/household/infrastructure/household.factory'
-    );
+    const { householdRepository } =
+      await import('@/features/household/infrastructure/household.factory');
     vi.mocked(householdRepository.findByUserId).mockResolvedValue({
       data: [mockHousehold],
       error: null,
@@ -68,9 +67,8 @@ describe('HouseholdService', () => {
   });
 
   it('handles getUserHouseholds error', async () => {
-    const { householdRepository } = await import(
-      '@/features/household/infrastructure/household.factory'
-    );
+    const { householdRepository } =
+      await import('@/features/household/infrastructure/household.factory');
     vi.mocked(householdRepository.findByUserId).mockResolvedValue({
       data: null,
       error: { message: 'Network error' },
@@ -85,9 +83,8 @@ describe('HouseholdService', () => {
   // ─── getHousehold ───────────────────────────────────────
 
   it('returns a single household by id', async () => {
-    const { householdRepository } = await import(
-      '@/features/household/infrastructure/household.factory'
-    );
+    const { householdRepository } =
+      await import('@/features/household/infrastructure/household.factory');
     vi.mocked(householdRepository.findById).mockResolvedValue({
       data: mockHousehold,
       error: null,
@@ -101,9 +98,8 @@ describe('HouseholdService', () => {
   });
 
   it('handles getHousehold error', async () => {
-    const { householdRepository } = await import(
-      '@/features/household/infrastructure/household.factory'
-    );
+    const { householdRepository } =
+      await import('@/features/household/infrastructure/household.factory');
     vi.mocked(householdRepository.findById).mockResolvedValue({
       data: null,
       error: { message: 'Not found' },
@@ -118,9 +114,8 @@ describe('HouseholdService', () => {
   // ─── createHousehold ────────────────────────────────────
 
   it('creates a household successfully', async () => {
-    const { householdRepository } = await import(
-      '@/features/household/infrastructure/household.factory'
-    );
+    const { householdRepository } =
+      await import('@/features/household/infrastructure/household.factory');
     vi.mocked(householdRepository.createWithOwner).mockResolvedValue({
       data: mockHousehold,
       error: null,
@@ -134,9 +129,8 @@ describe('HouseholdService', () => {
   });
 
   it('handles createHousehold error', async () => {
-    const { householdRepository } = await import(
-      '@/features/household/infrastructure/household.factory'
-    );
+    const { householdRepository } =
+      await import('@/features/household/infrastructure/household.factory');
     vi.mocked(householdRepository.createWithOwner).mockResolvedValue({
       data: null,
       error: { message: 'Creation failed' },
@@ -151,9 +145,8 @@ describe('HouseholdService', () => {
   // ─── updateHousehold ────────────────────────────────────
 
   it('updates a household successfully', async () => {
-    const { householdRepository } = await import(
-      '@/features/household/infrastructure/household.factory'
-    );
+    const { householdRepository } =
+      await import('@/features/household/infrastructure/household.factory');
     const updated = { ...mockHousehold, name: 'Updated Family' };
     vi.mocked(householdRepository.update).mockResolvedValue({
       data: updated,
@@ -168,9 +161,8 @@ describe('HouseholdService', () => {
   });
 
   it('handles updateHousehold error', async () => {
-    const { householdRepository } = await import(
-      '@/features/household/infrastructure/household.factory'
-    );
+    const { householdRepository } =
+      await import('@/features/household/infrastructure/household.factory');
     vi.mocked(householdRepository.update).mockResolvedValue({
       data: null,
       error: { message: 'Update failed' },
@@ -185,9 +177,8 @@ describe('HouseholdService', () => {
   // ─── deleteHousehold ────────────────────────────────────
 
   it('deletes a household successfully', async () => {
-    const { householdRepository } = await import(
-      '@/features/household/infrastructure/household.factory'
-    );
+    const { householdRepository } =
+      await import('@/features/household/infrastructure/household.factory');
     vi.mocked(householdRepository.delete).mockResolvedValue({
       data: undefined,
       error: null,
@@ -200,9 +191,8 @@ describe('HouseholdService', () => {
   });
 
   it('handles deleteHousehold error', async () => {
-    const { householdRepository } = await import(
-      '@/features/household/infrastructure/household.factory'
-    );
+    const { householdRepository } =
+      await import('@/features/household/infrastructure/household.factory');
     vi.mocked(householdRepository.delete).mockResolvedValue({
       data: null,
       error: { message: 'Delete failed' },
@@ -217,9 +207,8 @@ describe('HouseholdService', () => {
   // ─── getMembers ─────────────────────────────────────────
 
   it('returns members for a household', async () => {
-    const { memberRepository } = await import(
-      '@/features/household/infrastructure/household.factory'
-    );
+    const { memberRepository } =
+      await import('@/features/household/infrastructure/household.factory');
     vi.mocked(memberRepository.findByHouseholdId).mockResolvedValue({
       data: [mockMember],
       error: null,
@@ -233,9 +222,8 @@ describe('HouseholdService', () => {
   });
 
   it('handles getMembers error', async () => {
-    const { memberRepository } = await import(
-      '@/features/household/infrastructure/household.factory'
-    );
+    const { memberRepository } =
+      await import('@/features/household/infrastructure/household.factory');
     vi.mocked(memberRepository.findByHouseholdId).mockResolvedValue({
       data: null,
       error: { message: 'Load failed' },
@@ -250,10 +238,16 @@ describe('HouseholdService', () => {
   // ─── inviteMemberByEmail ────────────────────────────────
 
   it('invites a member by email successfully', async () => {
-    const { memberRepository } = await import(
-      '@/features/household/infrastructure/household.factory'
-    );
-    const invitedMember = { ...mockMember, id: 'm2', user_id: 'u2', role: 'member' as const, display_name: 'Jane Doe', invited_by: 'u1' };
+    const { memberRepository } =
+      await import('@/features/household/infrastructure/household.factory');
+    const invitedMember = {
+      ...mockMember,
+      id: 'm2',
+      user_id: 'u2',
+      role: 'member' as const,
+      display_name: 'Jane Doe',
+      invited_by: 'u1',
+    };
     vi.mocked(memberRepository.inviteByEmail).mockResolvedValue({
       data: invitedMember,
       error: null,
@@ -267,9 +261,8 @@ describe('HouseholdService', () => {
   });
 
   it('handles inviteMemberByEmail error', async () => {
-    const { memberRepository } = await import(
-      '@/features/household/infrastructure/household.factory'
-    );
+    const { memberRepository } =
+      await import('@/features/household/infrastructure/household.factory');
     vi.mocked(memberRepository.inviteByEmail).mockResolvedValue({
       data: null,
       error: { message: 'Invite failed' },
@@ -284,9 +277,8 @@ describe('HouseholdService', () => {
   // ─── removeMember ───────────────────────────────────────
 
   it('removes a member successfully', async () => {
-    const { memberRepository } = await import(
-      '@/features/household/infrastructure/household.factory'
-    );
+    const { memberRepository } =
+      await import('@/features/household/infrastructure/household.factory');
     vi.mocked(memberRepository.softDelete).mockResolvedValue({
       data: undefined,
       error: null,
@@ -299,9 +291,8 @@ describe('HouseholdService', () => {
   });
 
   it('handles removeMember error', async () => {
-    const { memberRepository } = await import(
-      '@/features/household/infrastructure/household.factory'
-    );
+    const { memberRepository } =
+      await import('@/features/household/infrastructure/household.factory');
     vi.mocked(memberRepository.softDelete).mockResolvedValue({
       data: null,
       error: { message: 'Remove failed' },

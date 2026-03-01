@@ -52,7 +52,11 @@ describe('MockRepository', () => {
 
   describe('createMany', () => {
     it('should create multiple records', async () => {
-      const result = await repo.createMany([{ name: 'Item 1' }, { name: 'Item 2' }, { name: 'Item 3' }]);
+      const result = await repo.createMany([
+        { name: 'Item 1' },
+        { name: 'Item 2' },
+        { name: 'Item 3' },
+      ]);
 
       expect(result.error).toBeNull();
       expect(result.data).toHaveLength(3);

@@ -51,9 +51,8 @@ describe('ShoppingService', () => {
   // ─── getHouseholdLists ──────────────────────────────────
 
   it('returns lists for a household', async () => {
-    const { shoppingListRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingListRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     vi.mocked(shoppingListRepository.findByHouseholdId).mockResolvedValue({
       data: [mockList],
       error: null,
@@ -67,9 +66,8 @@ describe('ShoppingService', () => {
   });
 
   it('handles getHouseholdLists error', async () => {
-    const { shoppingListRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingListRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     vi.mocked(shoppingListRepository.findByHouseholdId).mockResolvedValue({
       data: null,
       error: { message: 'Network error' },
@@ -84,9 +82,8 @@ describe('ShoppingService', () => {
   // ─── getList ────────────────────────────────────────────
 
   it('returns a single list by id', async () => {
-    const { shoppingListRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingListRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     vi.mocked(shoppingListRepository.findById).mockResolvedValue({
       data: mockList,
       error: null,
@@ -100,9 +97,8 @@ describe('ShoppingService', () => {
   });
 
   it('handles getList error', async () => {
-    const { shoppingListRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingListRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     vi.mocked(shoppingListRepository.findById).mockResolvedValue({
       data: null,
       error: { message: 'Not found' },
@@ -117,9 +113,8 @@ describe('ShoppingService', () => {
   // ─── createList ─────────────────────────────────────────
 
   it('creates a list successfully', async () => {
-    const { shoppingListRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingListRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     vi.mocked(shoppingListRepository.create).mockResolvedValue({
       data: mockList,
       error: null,
@@ -134,9 +129,8 @@ describe('ShoppingService', () => {
   });
 
   it('handles createList error', async () => {
-    const { shoppingListRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingListRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     vi.mocked(shoppingListRepository.create).mockResolvedValue({
       data: null,
       error: { message: 'Creation failed' },
@@ -155,9 +149,8 @@ describe('ShoppingService', () => {
   // ─── updateList ─────────────────────────────────────────
 
   it('updates a list successfully', async () => {
-    const { shoppingListRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingListRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     const updated = { ...mockList, title: 'Updated List' };
     vi.mocked(shoppingListRepository.update).mockResolvedValue({
       data: updated,
@@ -172,9 +165,8 @@ describe('ShoppingService', () => {
   });
 
   it('handles updateList error', async () => {
-    const { shoppingListRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingListRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     vi.mocked(shoppingListRepository.update).mockResolvedValue({
       data: null,
       error: { message: 'Update failed' },
@@ -189,9 +181,8 @@ describe('ShoppingService', () => {
   // ─── archiveList ────────────────────────────────────────
 
   it('archives a list by setting status to archived', async () => {
-    const { shoppingListRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingListRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     const archivedList = { ...mockList, status: 'archived' as const };
     vi.mocked(shoppingListRepository.update).mockResolvedValue({
       data: archivedList,
@@ -206,9 +197,8 @@ describe('ShoppingService', () => {
   });
 
   it('handles archiveList error', async () => {
-    const { shoppingListRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingListRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     vi.mocked(shoppingListRepository.update).mockResolvedValue({
       data: null,
       error: { message: 'Archive failed' },
@@ -223,9 +213,8 @@ describe('ShoppingService', () => {
   // ─── deleteList ─────────────────────────────────────────
 
   it('deletes a list successfully', async () => {
-    const { shoppingListRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingListRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     vi.mocked(shoppingListRepository.delete).mockResolvedValue({
       data: undefined,
       error: null,
@@ -238,9 +227,8 @@ describe('ShoppingService', () => {
   });
 
   it('handles deleteList error', async () => {
-    const { shoppingListRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingListRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     vi.mocked(shoppingListRepository.delete).mockResolvedValue({
       data: null,
       error: { message: 'Delete failed' },
@@ -255,9 +243,8 @@ describe('ShoppingService', () => {
   // ─── getListItems ───────────────────────────────────────
 
   it('returns items for a list', async () => {
-    const { shoppingItemRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingItemRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     vi.mocked(shoppingItemRepository.findByListId).mockResolvedValue({
       data: [mockItem],
       error: null,
@@ -271,9 +258,8 @@ describe('ShoppingService', () => {
   });
 
   it('handles getListItems error', async () => {
-    const { shoppingItemRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingItemRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     vi.mocked(shoppingItemRepository.findByListId).mockResolvedValue({
       data: null,
       error: { message: 'Load failed' },
@@ -288,9 +274,8 @@ describe('ShoppingService', () => {
   // ─── addItem ────────────────────────────────────────────
 
   it('adds an item successfully', async () => {
-    const { shoppingItemRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingItemRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     vi.mocked(shoppingItemRepository.create).mockResolvedValue({
       data: mockItem,
       error: null,
@@ -305,9 +290,8 @@ describe('ShoppingService', () => {
   });
 
   it('handles addItem error', async () => {
-    const { shoppingItemRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingItemRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     vi.mocked(shoppingItemRepository.create).mockResolvedValue({
       data: null,
       error: { message: 'Add failed' },
@@ -327,9 +311,8 @@ describe('ShoppingService', () => {
   // ─── updateItem ─────────────────────────────────────────
 
   it('updates an item successfully', async () => {
-    const { shoppingItemRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingItemRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     const updated = { ...mockItem, title: 'Updated Milk', quantity: 3 };
     vi.mocked(shoppingItemRepository.update).mockResolvedValue({
       data: updated,
@@ -347,9 +330,8 @@ describe('ShoppingService', () => {
   });
 
   it('handles updateItem error', async () => {
-    const { shoppingItemRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingItemRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     vi.mocked(shoppingItemRepository.update).mockResolvedValue({
       data: null,
       error: { message: 'Update failed' },
@@ -364,9 +346,8 @@ describe('ShoppingService', () => {
   // ─── togglePurchased ────────────────────────────────────
 
   it('toggles an unpurchased item to purchased', async () => {
-    const { shoppingItemRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingItemRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     const purchasedItem = { ...mockItem, is_purchased: true, purchased_by: 'u1' };
 
     vi.mocked(shoppingItemRepository.findById).mockResolvedValue({
@@ -389,9 +370,8 @@ describe('ShoppingService', () => {
   });
 
   it('toggles a purchased item to unpurchased', async () => {
-    const { shoppingItemRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingItemRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     const unpurchasedItem = { ...mockItem, is_purchased: false, purchased_by: null };
 
     vi.mocked(shoppingItemRepository.findById).mockResolvedValue({
@@ -414,9 +394,8 @@ describe('ShoppingService', () => {
   });
 
   it('returns error when findById fails during togglePurchased', async () => {
-    const { shoppingItemRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingItemRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     vi.mocked(shoppingItemRepository.findById).mockResolvedValue({
       data: null,
       error: { message: 'Not found' },
@@ -430,9 +409,8 @@ describe('ShoppingService', () => {
   });
 
   it('handles togglePurchased update error', async () => {
-    const { shoppingItemRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingItemRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     vi.mocked(shoppingItemRepository.findById).mockResolvedValue({
       data: mockItem,
       error: null,
@@ -451,9 +429,8 @@ describe('ShoppingService', () => {
   // ─── deleteItem ─────────────────────────────────────────
 
   it('deletes an item successfully', async () => {
-    const { shoppingItemRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingItemRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     vi.mocked(shoppingItemRepository.delete).mockResolvedValue({
       data: undefined,
       error: null,
@@ -466,9 +443,8 @@ describe('ShoppingService', () => {
   });
 
   it('handles deleteItem error', async () => {
-    const { shoppingItemRepository } = await import(
-      '@/features/shopping/infrastructure/shopping.factory'
-    );
+    const { shoppingItemRepository } =
+      await import('@/features/shopping/infrastructure/shopping.factory');
     vi.mocked(shoppingItemRepository.delete).mockResolvedValue({
       data: null,
       error: { message: 'Delete failed' },

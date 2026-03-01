@@ -77,10 +77,30 @@ describe('MockWishlistRepository', () => {
 
   describe('findByUserIdAndHouseholdId', () => {
     it('should filter by both user_id and household_id', async () => {
-      await repo.create({ title: 'A', description: null, user_id: 'u1', household_id: 'h1' } as any);
-      await repo.create({ title: 'B', description: null, user_id: 'u1', household_id: 'h2' } as any);
-      await repo.create({ title: 'C', description: null, user_id: 'u2', household_id: 'h1' } as any);
-      await repo.create({ title: 'D', description: null, user_id: 'u1', household_id: 'h1' } as any);
+      await repo.create({
+        title: 'A',
+        description: null,
+        user_id: 'u1',
+        household_id: 'h1',
+      } as any);
+      await repo.create({
+        title: 'B',
+        description: null,
+        user_id: 'u1',
+        household_id: 'h2',
+      } as any);
+      await repo.create({
+        title: 'C',
+        description: null,
+        user_id: 'u2',
+        household_id: 'h1',
+      } as any);
+      await repo.create({
+        title: 'D',
+        description: null,
+        user_id: 'u1',
+        household_id: 'h1',
+      } as any);
 
       const result = await repo.findByUserIdAndHouseholdId('u1', 'h1');
 
@@ -90,7 +110,12 @@ describe('MockWishlistRepository', () => {
     });
 
     it('should return empty array when no match', async () => {
-      await repo.create({ title: 'A', description: null, user_id: 'u1', household_id: 'h1' } as any);
+      await repo.create({
+        title: 'A',
+        description: null,
+        user_id: 'u1',
+        household_id: 'h1',
+      } as any);
 
       const result = await repo.findByUserIdAndHouseholdId('u1', 'no-match');
 
@@ -102,10 +127,20 @@ describe('MockWishlistRepository', () => {
       vi.useFakeTimers();
 
       vi.setSystemTime(new Date('2024-01-01T00:00:00.000Z'));
-      await repo.create({ title: 'Oldest', description: null, user_id: 'u1', household_id: 'h1' } as any);
+      await repo.create({
+        title: 'Oldest',
+        description: null,
+        user_id: 'u1',
+        household_id: 'h1',
+      } as any);
 
       vi.setSystemTime(new Date('2024-03-01T00:00:00.000Z'));
-      await repo.create({ title: 'Newest', description: null, user_id: 'u1', household_id: 'h1' } as any);
+      await repo.create({
+        title: 'Newest',
+        description: null,
+        user_id: 'u1',
+        household_id: 'h1',
+      } as any);
 
       const result = await repo.findByUserIdAndHouseholdId('u1', 'h1');
 
@@ -118,7 +153,13 @@ describe('MockWishlistRepository', () => {
 
   describe('findBySlug', () => {
     it('should find wishlist by share_slug with public visibility', async () => {
-      await repo.create({ title: 'Public', description: null, share_slug: 'slug1', visibility: 'public', is_public: false } as any);
+      await repo.create({
+        title: 'Public',
+        description: null,
+        share_slug: 'slug1',
+        visibility: 'public',
+        is_public: false,
+      } as any);
 
       const result = await repo.findBySlug('slug1');
 
@@ -128,7 +169,13 @@ describe('MockWishlistRepository', () => {
     });
 
     it('should find wishlist by share_slug with is_public true', async () => {
-      await repo.create({ title: 'IsPublic', description: null, share_slug: 'slug2', visibility: 'private', is_public: true } as any);
+      await repo.create({
+        title: 'IsPublic',
+        description: null,
+        share_slug: 'slug2',
+        visibility: 'private',
+        is_public: true,
+      } as any);
 
       const result = await repo.findBySlug('slug2');
 
@@ -146,7 +193,13 @@ describe('MockWishlistRepository', () => {
     });
 
     it('should return error when wishlist is private', async () => {
-      await repo.create({ title: 'Private', description: null, share_slug: 'slug3', visibility: 'private', is_public: false } as any);
+      await repo.create({
+        title: 'Private',
+        description: null,
+        share_slug: 'slug3',
+        visibility: 'private',
+        is_public: false,
+      } as any);
 
       const result = await repo.findBySlug('slug3');
 
@@ -158,9 +211,27 @@ describe('MockWishlistRepository', () => {
 
   describe('findByHouseholdId', () => {
     it('should filter by household_id and exclude specified user', async () => {
-      await repo.create({ title: 'Mine', description: null, user_id: 'u1', household_id: 'h1', visibility: 'household' } as any);
-      await repo.create({ title: 'Theirs', description: null, user_id: 'u2', household_id: 'h1', visibility: 'household' } as any);
-      await repo.create({ title: 'Other HH', description: null, user_id: 'u3', household_id: 'h2', visibility: 'household' } as any);
+      await repo.create({
+        title: 'Mine',
+        description: null,
+        user_id: 'u1',
+        household_id: 'h1',
+        visibility: 'household',
+      } as any);
+      await repo.create({
+        title: 'Theirs',
+        description: null,
+        user_id: 'u2',
+        household_id: 'h1',
+        visibility: 'household',
+      } as any);
+      await repo.create({
+        title: 'Other HH',
+        description: null,
+        user_id: 'u3',
+        household_id: 'h2',
+        visibility: 'household',
+      } as any);
 
       const result = await repo.findByHouseholdId('h1', 'u1');
 
@@ -170,9 +241,27 @@ describe('MockWishlistRepository', () => {
     });
 
     it('should only return household or public visibility', async () => {
-      await repo.create({ title: 'Household', description: null, user_id: 'u2', household_id: 'h1', visibility: 'household' } as any);
-      await repo.create({ title: 'Public', description: null, user_id: 'u2', household_id: 'h1', visibility: 'public' } as any);
-      await repo.create({ title: 'Private', description: null, user_id: 'u2', household_id: 'h1', visibility: 'private' } as any);
+      await repo.create({
+        title: 'Household',
+        description: null,
+        user_id: 'u2',
+        household_id: 'h1',
+        visibility: 'household',
+      } as any);
+      await repo.create({
+        title: 'Public',
+        description: null,
+        user_id: 'u2',
+        household_id: 'h1',
+        visibility: 'public',
+      } as any);
+      await repo.create({
+        title: 'Private',
+        description: null,
+        user_id: 'u2',
+        household_id: 'h1',
+        visibility: 'private',
+      } as any);
 
       const result = await repo.findByHouseholdId('h1', 'u1');
 
@@ -195,10 +284,22 @@ describe('MockWishlistRepository', () => {
       vi.useFakeTimers();
 
       vi.setSystemTime(new Date('2024-01-01T00:00:00.000Z'));
-      await repo.create({ title: 'Oldest', description: null, user_id: 'u2', household_id: 'h1', visibility: 'public' } as any);
+      await repo.create({
+        title: 'Oldest',
+        description: null,
+        user_id: 'u2',
+        household_id: 'h1',
+        visibility: 'public',
+      } as any);
 
       vi.setSystemTime(new Date('2024-03-01T00:00:00.000Z'));
-      await repo.create({ title: 'Newest', description: null, user_id: 'u2', household_id: 'h1', visibility: 'public' } as any);
+      await repo.create({
+        title: 'Newest',
+        description: null,
+        user_id: 'u2',
+        household_id: 'h1',
+        visibility: 'public',
+      } as any);
 
       const result = await repo.findByHouseholdId('h1', 'u1');
 
@@ -211,9 +312,24 @@ describe('MockWishlistRepository', () => {
 
   describe('findChildrenWishlists', () => {
     it('should filter by userId and householdId', async () => {
-      await repo.create({ title: 'Child A', description: null, user_id: 'child1', household_id: 'h1' } as any);
-      await repo.create({ title: 'Child B', description: null, user_id: 'child1', household_id: 'h2' } as any);
-      await repo.create({ title: 'Other', description: null, user_id: 'child2', household_id: 'h1' } as any);
+      await repo.create({
+        title: 'Child A',
+        description: null,
+        user_id: 'child1',
+        household_id: 'h1',
+      } as any);
+      await repo.create({
+        title: 'Child B',
+        description: null,
+        user_id: 'child1',
+        household_id: 'h2',
+      } as any);
+      await repo.create({
+        title: 'Other',
+        description: null,
+        user_id: 'child2',
+        household_id: 'h1',
+      } as any);
 
       const result = await repo.findChildrenWishlists('child1', 'h1');
 
@@ -243,9 +359,33 @@ describe('MockWishlistItemRepository', () => {
 
   describe('findByWishlistId', () => {
     it('should filter items by wishlist_id', async () => {
-      await repo.create({ wishlist_id: 'w1', title: 'Book', description: null, link: null, price: 10, currency: 'USD', priority: 'medium' } as any);
-      await repo.create({ wishlist_id: 'w2', title: 'Game', description: null, link: null, price: 20, currency: 'USD', priority: 'low' } as any);
-      await repo.create({ wishlist_id: 'w1', title: 'Toy', description: null, link: null, price: 15, currency: 'USD', priority: 'high' } as any);
+      await repo.create({
+        wishlist_id: 'w1',
+        title: 'Book',
+        description: null,
+        link: null,
+        price: 10,
+        currency: 'USD',
+        priority: 'medium',
+      } as any);
+      await repo.create({
+        wishlist_id: 'w2',
+        title: 'Game',
+        description: null,
+        link: null,
+        price: 20,
+        currency: 'USD',
+        priority: 'low',
+      } as any);
+      await repo.create({
+        wishlist_id: 'w1',
+        title: 'Toy',
+        description: null,
+        link: null,
+        price: 15,
+        currency: 'USD',
+        priority: 'high',
+      } as any);
 
       const result = await repo.findByWishlistId('w1');
 
@@ -255,7 +395,15 @@ describe('MockWishlistItemRepository', () => {
     });
 
     it('should return empty array when no matching items', async () => {
-      await repo.create({ wishlist_id: 'w1', title: 'Book', description: null, link: null, price: 10, currency: 'USD', priority: 'medium' } as any);
+      await repo.create({
+        wishlist_id: 'w1',
+        title: 'Book',
+        description: null,
+        link: null,
+        price: 10,
+        currency: 'USD',
+        priority: 'medium',
+      } as any);
 
       const result = await repo.findByWishlistId('no-match');
 
@@ -267,13 +415,37 @@ describe('MockWishlistItemRepository', () => {
       vi.useFakeTimers();
 
       vi.setSystemTime(new Date('2024-03-01T00:00:00.000Z'));
-      await repo.create({ wishlist_id: 'w1', title: 'Newest', description: null, link: null, price: 10, currency: 'USD', priority: 'medium' } as any);
+      await repo.create({
+        wishlist_id: 'w1',
+        title: 'Newest',
+        description: null,
+        link: null,
+        price: 10,
+        currency: 'USD',
+        priority: 'medium',
+      } as any);
 
       vi.setSystemTime(new Date('2024-01-01T00:00:00.000Z'));
-      await repo.create({ wishlist_id: 'w1', title: 'Oldest', description: null, link: null, price: 10, currency: 'USD', priority: 'medium' } as any);
+      await repo.create({
+        wishlist_id: 'w1',
+        title: 'Oldest',
+        description: null,
+        link: null,
+        price: 10,
+        currency: 'USD',
+        priority: 'medium',
+      } as any);
 
       vi.setSystemTime(new Date('2024-02-01T00:00:00.000Z'));
-      await repo.create({ wishlist_id: 'w1', title: 'Middle', description: null, link: null, price: 10, currency: 'USD', priority: 'medium' } as any);
+      await repo.create({
+        wishlist_id: 'w1',
+        title: 'Middle',
+        description: null,
+        link: null,
+        price: 10,
+        currency: 'USD',
+        priority: 'medium',
+      } as any);
 
       const result = await repo.findByWishlistId('w1');
 
@@ -304,7 +476,15 @@ describe('MockWishlistItemRepository', () => {
 
   describe('reserveItem', () => {
     it('should reserve an item', async () => {
-      const created = await repo.create({ wishlist_id: 'w1', title: 'Book', description: null, link: null, price: 10, currency: 'USD', priority: 'medium' } as any);
+      const created = await repo.create({
+        wishlist_id: 'w1',
+        title: 'Book',
+        description: null,
+        link: null,
+        price: 10,
+        currency: 'USD',
+        priority: 'medium',
+      } as any);
       const itemId = created.data!.id;
 
       const result = await repo.reserveItem(itemId, {
@@ -321,7 +501,15 @@ describe('MockWishlistItemRepository', () => {
     });
 
     it('should unreserve an item with matching email', async () => {
-      const created = await repo.create({ wishlist_id: 'w1', title: 'Book', description: null, link: null, price: 10, currency: 'USD', priority: 'medium' } as any);
+      const created = await repo.create({
+        wishlist_id: 'w1',
+        title: 'Book',
+        description: null,
+        link: null,
+        price: 10,
+        currency: 'USD',
+        priority: 'medium',
+      } as any);
       const itemId = created.data!.id;
 
       await repo.reserveItem(itemId, {
@@ -356,7 +544,15 @@ describe('MockWishlistItemRepository', () => {
     });
 
     it('should return error when unreserving with mismatched email', async () => {
-      const created = await repo.create({ wishlist_id: 'w1', title: 'Book', description: null, link: null, price: 10, currency: 'USD', priority: 'medium' } as any);
+      const created = await repo.create({
+        wishlist_id: 'w1',
+        title: 'Book',
+        description: null,
+        link: null,
+        price: 10,
+        currency: 'USD',
+        priority: 'medium',
+      } as any);
       const itemId = created.data!.id;
 
       await repo.reserveItem(itemId, {
@@ -377,7 +573,15 @@ describe('MockWishlistItemRepository', () => {
     });
 
     it('should return error when unreserving without providing email', async () => {
-      const created = await repo.create({ wishlist_id: 'w1', title: 'Book', description: null, link: null, price: 10, currency: 'USD', priority: 'medium' } as any);
+      const created = await repo.create({
+        wishlist_id: 'w1',
+        title: 'Book',
+        description: null,
+        link: null,
+        price: 10,
+        currency: 'USD',
+        priority: 'medium',
+      } as any);
       const itemId = created.data!.id;
 
       await repo.reserveItem(itemId, {
@@ -398,7 +602,15 @@ describe('MockWishlistItemRepository', () => {
     });
 
     it('should persist reservation changes', async () => {
-      const created = await repo.create({ wishlist_id: 'w1', title: 'Book', description: null, link: null, price: 10, currency: 'USD', priority: 'medium' } as any);
+      const created = await repo.create({
+        wishlist_id: 'w1',
+        title: 'Book',
+        description: null,
+        link: null,
+        price: 10,
+        currency: 'USD',
+        priority: 'medium',
+      } as any);
       const itemId = created.data!.id;
 
       await repo.reserveItem(itemId, {

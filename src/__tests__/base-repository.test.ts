@@ -12,14 +12,10 @@ vi.mock('@/features/shared/infrastructure/supabase.client', () => ({
 }));
 
 // We need to import after the mock is set up
-const { BaseRepository } = await import(
-  '@/features/shared/infrastructure/base.repository'
-);
+const { BaseRepository } = await import('@/features/shared/infrastructure/base.repository');
 
 // Re-export toApiError for direct testing
-const { toApiError } = await import(
-  '@/features/shared/infrastructure/base.repository'
-);
+const { toApiError } = await import('@/features/shared/infrastructure/base.repository');
 
 interface TestEntity {
   id: string;
@@ -36,7 +32,12 @@ class TestRepository extends BaseRepository<TestEntity, Partial<TestEntity>> {
     return this.getAuthenticatedUserId();
   }
 
-  public async testExecute<T>(op: () => Promise<{ data: T | null; error: import('@supabase/supabase-js').PostgrestError | null }>) {
+  public async testExecute<T>(
+    op: () => Promise<{
+      data: T | null;
+      error: import('@supabase/supabase-js').PostgrestError | null;
+    }>,
+  ) {
     return this.execute(op);
   }
 }
