@@ -66,12 +66,16 @@ Supabase Dashboard → **Authentication** → **Providers** → **Email** → En
 
 1. [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services** → **Credentials**
 2. Create an **OAuth 2.0 Client ID**
-3. Set **Authorized redirect URIs**:
-   - `http://localhost:5173` (development)
-   - `https://your-production-domain.com` (production)
+3. Set **Authorized redirect URIs** to Supabase callback:
+   - `https://<your-project-ref>.supabase.co/auth/v1/callback`
 4. Copy the **Client ID** and **Client Secret**
 5. Supabase Dashboard → **Authentication** → **Providers** → **Google**
 6. Enter Client ID and Client Secret → **Save**
+7. Supabase Dashboard → **Authentication** → **URL Configuration**
+   - Set **Site URL** to your app URL
+   - Add allow-listed **Redirect URLs**:
+     - `http://localhost:5173` (development)
+     - `https://your-production-domain.com` (production)
 
 ---
 

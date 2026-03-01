@@ -146,9 +146,13 @@ npm run type-check
 **Solution**:
 
 1. [Google Cloud Console](https://console.cloud.google.com/) → OAuth credentials
-2. Add your app's URL to **Authorized redirect URIs**:
-   - `http://localhost:5173` for development
-   - `https://your-domain.com` for production
+2. In Google OAuth client, set **Authorized redirect URI** to your Supabase callback:
+   - `https://<your-project-ref>.supabase.co/auth/v1/callback`
+3. Supabase Dashboard → **Authentication** → **URL Configuration**
+   - Add app URLs to **Redirect URLs** allow-list (for post-login return):
+     - `http://localhost:5173`
+     - `https://your-domain.com`
+   - Set **Site URL** to your main app URL
 
 ---
 
