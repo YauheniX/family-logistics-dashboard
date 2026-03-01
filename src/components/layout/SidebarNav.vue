@@ -15,7 +15,9 @@
     <div class="mb-6">
       <div class="flex items-center gap-2 mb-1">
         <span class="text-2xl" aria-hidden="true">🏡</span>
-        <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-50">{{ $t('nav.brandName') }}</h2>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-50">
+          {{ $t('nav.brandName') }}
+        </h2>
       </div>
       <p class="text-xs text-neutral-500 dark:text-neutral-400 ml-8">
         {{ $t('nav.brandTagline') }}
@@ -69,7 +71,9 @@
     <div class="mb-6">
       <div class="flex items-center gap-2 mb-1">
         <span class="text-2xl" aria-hidden="true">🏡</span>
-        <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-50">{{ $t('nav.brandName') }}</h2>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-50">
+          {{ $t('nav.brandName') }}
+        </h2>
       </div>
       <p class="text-xs text-neutral-500 dark:text-neutral-400 ml-8">
         {{ $t('nav.brandTagline') }}

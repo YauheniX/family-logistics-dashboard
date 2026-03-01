@@ -63,7 +63,7 @@
     }
   },
   "dashboard": {
-    "greeting": "Good morning, {name}!",
+    "greeting": "Welcome, {name}!",
     "subtitle": "Manage your household, shopping lists, and wishlists in one place.",
     "loadingData": "Loading your data...",
     "activeShoppingLists": "Active Shopping Lists",

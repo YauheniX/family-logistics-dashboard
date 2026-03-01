@@ -28,7 +28,9 @@
             <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
               {{ $t('dashboard.activeShoppingLists') }}
             </h3>
-            <RouterLink to="/shopping" class="btn-ghost text-sm">{{ $t('dashboard.viewAll') }}</RouterLink>
+            <RouterLink to="/shopping" class="btn-ghost text-sm">{{
+              $t('dashboard.viewAll')
+            }}</RouterLink>
           </div>
           <div v-if="allActiveLists.length" class="mt-3 space-y-2">
             <RouterLink
@@ -135,7 +137,6 @@ const shoppingStore = useShoppingStore();
 const wishlistStore = useWishlistStore();
 const router = useRouter();
 const route = useRoute();
-const { t } = useI18n();
 const { userDisplayName, userAvatarUrl: profileAvatarUrl } = useUserProfile();
 
 // Use storeToRefs for proper reactivity with Pinia

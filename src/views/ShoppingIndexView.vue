@@ -92,10 +92,17 @@
     <form class="space-y-4" @submit.prevent="handleCreateList">
       <div>
         <label class="label" for="list-title">{{ $t('shopping.createModal.titleLabel') }}</label>
-        <BaseInput id="list-title" v-model="newListTitle" required :placeholder="$t('shopping.createModal.titlePlaceholder')" />
+        <BaseInput
+          id="list-title"
+          v-model="newListTitle"
+          required
+          :placeholder="$t('shopping.createModal.titlePlaceholder')"
+        />
       </div>
       <div>
-        <label class="label" for="list-description">{{ $t('shopping.createModal.descriptionLabel') }}</label>
+        <label class="label" for="list-description">{{
+          $t('shopping.createModal.descriptionLabel')
+        }}</label>
         <BaseInput
           id="list-description"
           v-model="newListDescription"

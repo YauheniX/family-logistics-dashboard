@@ -5,7 +5,9 @@
         <div class="flex flex-col gap-3 sm:gap-4">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="min-w-0">
-              <p class="text-sm text-neutral-500 dark:text-neutral-400">{{ $t('shopping.list.shoppingLabel') }}</p>
+              <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                {{ $t('shopping.list.shoppingLabel') }}
+              </p>
               <h2 class="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
                 {{ shoppingStore.currentList.title }}
               </h2>
@@ -43,7 +45,12 @@
             v-if="isEditMode"
             class="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 w-full sm:w-auto"
           >
-            <BaseButton variant="ghost" class="w-full xs:w-auto" @click="showEditListModal = true">{{ $t('shopping.list.editList') }}</BaseButton>
+            <BaseButton
+              variant="ghost"
+              class="w-full xs:w-auto"
+              @click="showEditListModal = true"
+              >{{ $t('shopping.list.editList') }}</BaseButton
+            >
             <BaseButton
               v-if="shoppingStore.currentList?.status === 'archived'"
               variant="secondary"
@@ -60,7 +67,9 @@
             >
               {{ $t('shopping.list.archive') }}
             </BaseButton>
-            <BaseButton variant="danger" class="w-full xs:w-auto" @click="showDeleteModal = true">{{ $t('shopping.list.delete') }}</BaseButton>
+            <BaseButton variant="danger" class="w-full xs:w-auto" @click="showDeleteModal = true">{{
+              $t('shopping.list.delete')
+            }}</BaseButton>
             <BaseButton variant="primary" class="w-full xs:w-auto" @click="openAddItemModal()">
               {{ $t('shopping.list.addItem') }}
             </BaseButton>
@@ -164,7 +173,11 @@
       @close="resetForm"
     >
       <form class="space-y-4" @submit.prevent="handleSubmitItem">
-        <BaseInput v-model="newItemTitle" :placeholder="$t('shopping.list.itemPlaceholder')" required />
+        <BaseInput
+          v-model="newItemTitle"
+          :placeholder="$t('shopping.list.itemPlaceholder')"
+          required
+        />
         <div>
           <label id="quantity-label" class="label">{{ $t('shopping.list.quantityLabel') }}</label>
           <div role="group" aria-labelledby="quantity-label" class="flex items-center gap-3">
@@ -227,9 +240,15 @@
         </div>
         <div class="flex gap-3">
           <BaseButton type="submit" variant="primary">
-            {{ editingItemId ? $t('shopping.list.updateItemAction') : $t('shopping.list.addItemAction') }}
+            {{
+              editingItemId
+                ? $t('shopping.list.updateItemAction')
+                : $t('shopping.list.addItemAction')
+            }}
           </BaseButton>
-          <BaseButton type="button" variant="ghost" @click="resetForm">{{ $t('common.cancel') }}</BaseButton>
+          <BaseButton type="button" variant="ghost" @click="resetForm">{{
+            $t('common.cancel')
+          }}</BaseButton>
         </div>
       </form>
     </ModalDialog>
@@ -242,7 +261,9 @@
     >
       <form class="space-y-4" @submit.prevent="handleUpdateList">
         <div>
-          <label class="label" for="edit-list-title">{{ $t('shopping.list.listTitleLabel') }}</label>
+          <label class="label" for="edit-list-title">{{
+            $t('shopping.list.listTitleLabel')
+          }}</label>
           <BaseInput
             id="edit-list-title"
             v-model="editListTitle"
@@ -251,7 +272,9 @@
           />
         </div>
         <div>
-          <label class="label" for="edit-list-description">{{ $t('shopping.list.listDescriptionLabel') }}</label>
+          <label class="label" for="edit-list-description">{{
+            $t('shopping.list.listDescriptionLabel')
+          }}</label>
           <BaseInput
             id="edit-list-description"
             v-model="editListDescription"
@@ -278,8 +301,12 @@
           {{ $t('shopping.list.deleteConfirm', { title: shoppingStore.currentList?.title }) }}
         </p>
         <div class="flex gap-3">
-          <BaseButton variant="danger" @click="handleDeleteList">{{ $t('common.delete') }}</BaseButton>
-          <BaseButton variant="ghost" @click="showDeleteModal = false">{{ $t('common.cancel') }}</BaseButton>
+          <BaseButton variant="danger" @click="handleDeleteList">{{
+            $t('common.delete')
+          }}</BaseButton>
+          <BaseButton variant="ghost" @click="showDeleteModal = false">{{
+            $t('common.cancel')
+          }}</BaseButton>
         </div>
       </div>
     </ModalDialog>

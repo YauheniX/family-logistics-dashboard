@@ -11,7 +11,9 @@
     <!-- Profile Section -->
     <BaseCard>
       <template #header>
-        <h2 class="text-h2 text-neutral-900 dark:text-neutral-50">{{ $t('settings.profile.title') }}</h2>
+        <h2 class="text-h2 text-neutral-900 dark:text-neutral-50">
+          {{ $t('settings.profile.title') }}
+        </h2>
       </template>
 
       <div class="space-y-4">
@@ -64,7 +66,11 @@
               :disabled="true"
               class="flex-1"
             />
-            <BaseButton variant="secondary" :aria-label="$t('settings.profile.editName')" @click="openEditNameModal">
+            <BaseButton
+              variant="secondary"
+              :aria-label="$t('settings.profile.editName')"
+              @click="openEditNameModal"
+            >
               <svg
                 class="h-4 w-4"
                 fill="none"
@@ -97,7 +103,9 @@
     <!-- Security Section -->
     <BaseCard>
       <template #header>
-        <h2 class="text-h2 text-neutral-900 dark:text-neutral-50">{{ $t('settings.security.title') }}</h2>
+        <h2 class="text-h2 text-neutral-900 dark:text-neutral-50">
+          {{ $t('settings.security.title') }}
+        </h2>
       </template>
 
       <div class="space-y-4">
@@ -115,7 +123,9 @@
     <!-- Preferences Section -->
     <BaseCard>
       <template #header>
-        <h2 class="text-h2 text-neutral-900 dark:text-neutral-50">{{ $t('settings.preferences.title') }}</h2>
+        <h2 class="text-h2 text-neutral-900 dark:text-neutral-50">
+          {{ $t('settings.preferences.title') }}
+        </h2>
       </template>
 
       <div class="space-y-4">
@@ -155,7 +165,11 @@
   </div>
 
   <!-- Edit Name Modal -->
-  <ModalDialog :open="showEditNameModal" :title="$t('settings.profile.editNameModal.title')" @close="showEditNameModal = false">
+  <ModalDialog
+    :open="showEditNameModal"
+    :title="$t('settings.profile.editNameModal.title')"
+    @close="showEditNameModal = false"
+  >
     <form class="space-y-4" @submit.prevent="confirmEditName">
       <BaseInput
         v-model="editNameForm"
@@ -167,7 +181,9 @@
         required
       />
       <div class="flex gap-3">
-        <BaseButton type="submit" :loading="saving">{{ $t('settings.profile.editNameModal.save') }}</BaseButton>
+        <BaseButton type="submit" :loading="saving">{{
+          $t('settings.profile.editNameModal.save')
+        }}</BaseButton>
         <BaseButton variant="ghost" type="button" @click="showEditNameModal = false">
           {{ $t('common.cancel') }}
         </BaseButton>

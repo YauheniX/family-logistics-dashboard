@@ -3,7 +3,9 @@
     <BaseCard>
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div class="min-w-0">
-          <p class="text-sm text-neutral-500 dark:text-neutral-400">{{ $t('households.subtitle') }}</p>
+          <p class="text-sm text-neutral-500 dark:text-neutral-400">
+            {{ $t('households.subtitle') }}
+          </p>
           <h2 class="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
             {{ $t('households.title') }}
           </h2>
@@ -17,7 +19,10 @@
       </div>
     </BaseCard>
 
-    <LoadingState v-if="householdEntityStore.loading" :message="$t('households.loadingHouseholds')" />
+    <LoadingState
+      v-if="householdEntityStore.loading"
+      :message="$t('households.loadingHouseholds')"
+    />
 
     <div v-else-if="householdEntityStore.households.length" class="page-grid">
       <RouterLink
@@ -31,7 +36,11 @@
             {{ household.name }}
           </h3>
           <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-            {{ $t('households.created', { date: new Date(household.created_at).toLocaleDateString() }) }}
+            {{
+              $t('households.created', {
+                date: new Date(household.created_at).toLocaleDateString(),
+              })
+            }}
           </p>
         </BaseCard>
       </RouterLink>
@@ -45,7 +54,11 @@
       @action="showCreateModal = true"
     />
 
-    <ModalDialog :open="showCreateModal" :title="$t('households.modalTitle')" @close="showCreateModal = false">
+    <ModalDialog
+      :open="showCreateModal"
+      :title="$t('households.modalTitle')"
+      @close="showCreateModal = false"
+    >
       <form class="space-y-4" @submit.prevent="handleCreate">
         <div>
           <label class="label" for="household-name">{{ $t('households.nameLabel') }}</label>
@@ -58,8 +71,12 @@
           />
         </div>
         <div class="flex gap-3">
-          <BaseButton type="submit" :disabled="householdEntityStore.loading">{{ $t('common.create') }}</BaseButton>
-          <BaseButton variant="ghost" @click="showCreateModal = false">{{ $t('common.cancel') }}</BaseButton>
+          <BaseButton type="submit" :disabled="householdEntityStore.loading">{{
+            $t('common.create')
+          }}</BaseButton>
+          <BaseButton variant="ghost" @click="showCreateModal = false">{{
+            $t('common.cancel')
+          }}</BaseButton>
         </div>
       </form>
     </ModalDialog>

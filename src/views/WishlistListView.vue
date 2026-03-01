@@ -3,7 +3,9 @@
     <BaseCard>
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div class="min-w-0">
-          <p class="text-sm text-neutral-500 dark:text-neutral-400">{{ $t('wishlists.myTitle') }}</p>
+          <p class="text-sm text-neutral-500 dark:text-neutral-400">
+            {{ $t('wishlists.myTitle') }}
+          </p>
           <h2 class="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
             {{ $t('wishlists.myTitle') }}
           </h2>
@@ -101,7 +103,9 @@
       <BaseCard>
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div class="min-w-0">
-            <p class="text-sm text-neutral-500 dark:text-neutral-400">{{ $t('wishlists.children.subtitle') }}</p>
+            <p class="text-sm text-neutral-500 dark:text-neutral-400">
+              {{ $t('wishlists.children.subtitle') }}
+            </p>
             <h2 class="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
               {{ $t('wishlists.children.title') }}
             </h2>
@@ -205,14 +209,21 @@
       @close="showCreatePersonalModal = false"
     >
       <form class="space-y-4" @submit.prevent="handleCreatePersonal">
-        <BaseInput v-model="newTitle" :label="$t('wishlists.createModal.titleLabel')" :placeholder="$t('wishlists.createModal.titlePlaceholder')" required />
+        <BaseInput
+          v-model="newTitle"
+          :label="$t('wishlists.createModal.titleLabel')"
+          :placeholder="$t('wishlists.createModal.titlePlaceholder')"
+          required
+        />
         <BaseInput
           v-model="newDescription"
           :label="$t('wishlists.createModal.descriptionLabel')"
           :placeholder="$t('wishlists.createModal.descriptionPlaceholder')"
         />
         <div class="space-y-2">
-          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ $t('wishlists.createModal.visibilityLabel') }}</label>
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">{{
+            $t('wishlists.createModal.visibilityLabel')
+          }}</label>
           <select v-model="newVisibility" class="input w-full">
             <option value="private">{{ $t('wishlists.visibility.private') }}</option>
             <option value="household">{{ $t('wishlists.visibility.household') }}</option>
@@ -223,7 +234,9 @@
           <BaseButton variant="primary" type="submit" :disabled="wishlistStore.loading">
             {{ $t('common.create') }}
           </BaseButton>
-          <BaseButton variant="ghost" type="button" @click="showCreatePersonalModal = false">{{ $t('common.cancel') }}</BaseButton>
+          <BaseButton variant="ghost" type="button" @click="showCreatePersonalModal = false">{{
+            $t('common.cancel')
+          }}</BaseButton>
         </div>
       </form>
     </ModalDialog>
@@ -236,22 +249,33 @@
     >
       <form class="space-y-4" @submit.prevent="handleCreateChild">
         <div class="space-y-2">
-          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ $t('wishlists.children.createModal.childLabel') }}</label>
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">{{
+            $t('wishlists.children.createModal.childLabel')
+          }}</label>
           <select v-model="selectedMemberId" class="input w-full" required>
-            <option :value="null" disabled selected>{{ $t('wishlists.children.createModal.choosePlaceholder') }}</option>
+            <option :value="null" disabled selected>
+              {{ $t('wishlists.children.createModal.choosePlaceholder') }}
+            </option>
             <option v-for="child in childMembers" :key="child.id" :value="child.id">
               {{ child.display_name }}
             </option>
           </select>
         </div>
-        <BaseInput v-model="newTitle" :label="$t('wishlists.createModal.titleLabel')" :placeholder="$t('wishlists.createModal.titlePlaceholder')" required />
+        <BaseInput
+          v-model="newTitle"
+          :label="$t('wishlists.createModal.titleLabel')"
+          :placeholder="$t('wishlists.createModal.titlePlaceholder')"
+          required
+        />
         <BaseInput
           v-model="newDescription"
           :label="$t('wishlists.createModal.descriptionLabel')"
           :placeholder="$t('wishlists.createModal.descriptionPlaceholder')"
         />
         <div class="space-y-2">
-          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ $t('wishlists.createModal.visibilityLabel') }}</label>
+          <label class="text-sm font-medium text-neutral-700 dark:text-neutral-300">{{
+            $t('wishlists.createModal.visibilityLabel')
+          }}</label>
           <select v-model="newVisibility" class="input w-full">
             <option value="private">{{ $t('wishlists.visibility.private') }}</option>
             <option value="household">{{ $t('wishlists.visibility.household') }}</option>
@@ -266,7 +290,9 @@
           >
             {{ $t('common.create') }}
           </BaseButton>
-          <BaseButton variant="ghost" type="button" @click="showCreateChildModal = false">{{ $t('common.cancel') }}</BaseButton>
+          <BaseButton variant="ghost" type="button" @click="showCreateChildModal = false">{{
+            $t('common.cancel')
+          }}</BaseButton>
         </div>
       </form>
     </ModalDialog>

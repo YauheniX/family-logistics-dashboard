@@ -39,18 +39,6 @@ describe('i18n', () => {
       const { default: i18n } = await import('@/i18n/index');
       expect(i18n.global.locale.value).toBe('ru');
     });
-
-    it('maps Ukrainian BCP47 tag "uk" to "ua" locale', async () => {
-      mockNavigator(['uk-UA', 'uk'], 'uk-UA');
-      const { default: i18n } = await import('@/i18n/index');
-      expect(i18n.global.locale.value).toBe('ua');
-    });
-
-    it('maps Belarusian BCP47 tag "be" to "by" locale', async () => {
-      mockNavigator(['be-BY', 'be'], 'be-BY');
-      const { default: i18n } = await import('@/i18n/index');
-      expect(i18n.global.locale.value).toBe('by');
-    });
   });
 
   describe('translation messages', () => {
@@ -76,15 +64,15 @@ describe('i18n', () => {
       expect(result).toContain('6');
     });
 
-    it('has all 5 locales loaded (en, pl, ru, ua, by)', async () => {
+    it('has all 5 locales loaded (en, pl, ru, uk, be)', async () => {
       mockNavigator(['en'], 'en');
       const { default: i18n } = await import('@/i18n/index');
       const availableLocales = i18n.global.availableLocales;
       expect(availableLocales).toContain('en');
       expect(availableLocales).toContain('pl');
       expect(availableLocales).toContain('ru');
-      expect(availableLocales).toContain('ua');
-      expect(availableLocales).toContain('by');
+      expect(availableLocales).toContain('uk');
+      expect(availableLocales).toContain('be');
     });
 
     it('Polish translations are present', async () => {
@@ -106,7 +94,7 @@ describe('i18n', () => {
     it('Ukrainian translations are present', async () => {
       mockNavigator(['uk'], 'uk');
       const { default: i18n } = await import('@/i18n/index');
-      i18n.global.locale.value = 'ua';
+      i18n.global.locale.value = 'uk';
       expect(i18n.global.t('common.cancel')).toBe('Скасувати');
       expect(i18n.global.t('nav.settings')).toBe('Налаштування');
     });
@@ -114,7 +102,7 @@ describe('i18n', () => {
     it('Belarusian translations are present', async () => {
       mockNavigator(['be'], 'be');
       const { default: i18n } = await import('@/i18n/index');
-      i18n.global.locale.value = 'by';
+      i18n.global.locale.value = 'be';
       expect(i18n.global.t('common.cancel')).toBe('Адмяніць');
       expect(i18n.global.t('nav.home')).toBe('Галоўная');
     });

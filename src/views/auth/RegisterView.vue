@@ -2,8 +2,12 @@
   <div class="mx-auto max-w-md space-y-6">
     <!-- Header Card -->
     <div class="glass-card p-6 text-center">
-      <h1 class="text-h1 text-neutral-900 dark:text-neutral-50 mb-2">{{ $t('auth.register.title') }}</h1>
-      <p class="text-body text-neutral-700 dark:text-neutral-300">{{ $t('auth.register.subtitle') }}</p>
+      <h1 class="text-h1 text-neutral-900 dark:text-neutral-50 mb-2">
+        {{ $t('auth.register.title') }}
+      </h1>
+      <p class="text-body text-neutral-700 dark:text-neutral-300">
+        {{ $t('auth.register.subtitle') }}
+      </p>
     </div>
 
     <!-- Register Form Card -->
@@ -174,7 +178,9 @@ const validateForm = (): boolean => {
     validationErrors.value.password = t('auth.login.passwordRequired');
     isValid = false;
   } else if (!isValidPassword(password.value)) {
-    validationErrors.value.password = t('auth.login.passwordTooShort', { min: MIN_PASSWORD_LENGTH });
+    validationErrors.value.password = t('auth.login.passwordTooShort', {
+      min: MIN_PASSWORD_LENGTH,
+    });
     isValid = false;
   }
 

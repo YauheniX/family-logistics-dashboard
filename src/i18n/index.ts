@@ -2,15 +2,15 @@ import { createI18n } from 'vue-i18n';
 import en from './en.json';
 import pl from './pl.json';
 import ru from './ru.json';
-import ua from './ua.json';
-import by from './by.json';
+import uk from './uk.json';
+import be from './be.json';
 
 /**
  * Detect the best matching locale from the browser's language settings.
  * Falls back to 'en' if no supported locale is found.
  */
 function detectLocale(): string {
-  const supported = ['en', 'pl', 'ru', 'ua', 'by'];
+  const supported = ['en', 'pl', 'ru', 'uk', 'be'];
 
   // navigator.languages is an ordered list of preferred languages
   const browserLanguages =
@@ -27,8 +27,8 @@ function detectLocale(): string {
       en: 'en',
       pl: 'pl',
       ru: 'ru',
-      uk: 'ua', // Ukrainian BCP 47 tag is 'uk'
-      be: 'by', // Belarusian BCP 47 tag is 'be'
+      uk: 'uk',
+      be: 'be',
     };
 
     const mapped = mapping[base];
@@ -48,8 +48,8 @@ const i18n = createI18n({
     en,
     pl,
     ru,
-    ua,
-    by,
+    uk,
+    be,
   },
 });
 

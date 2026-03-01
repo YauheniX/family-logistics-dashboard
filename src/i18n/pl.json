@@ -63,7 +63,7 @@
     }
   },
   "dashboard": {
-    "greeting": "Dzień dobry, {name}!",
+    "greeting": "Witaj, {name}!",
     "subtitle": "Zarządzaj gospodarstwem, listami zakupów i listami życzeń w jednym miejscu.",
     "loadingData": "Ładowanie Twoich danych...",
     "activeShoppingLists": "Aktywne listy zakupów",
