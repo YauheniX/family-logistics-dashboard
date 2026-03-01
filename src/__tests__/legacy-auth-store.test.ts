@@ -108,6 +108,41 @@ describe('Legacy Auth Store', () => {
     expect(authService.getCurrentUser).toHaveBeenCalledTimes(1);
   });
 
+  describe('signIn', () => {
+    it('sets user on successful sign in', async () => {
+      const { authService } = await import('@/features/auth');
+      vi.mocked(authService.signIn).mockResolvedValue({
+        data: { id: 'u1', email: 'a@b.com' },
+        error: null,
+      });
+
+      const store = useAuthStore();
+      const result = await store.signIn('a@b.com', 'password');
+
+      expect(result.data).toEqual({ id: 'u1', email: 'a@b.com' });
+      expect(store.user).toEqual({ id: 'u1', email: 'a@b.com' });
+      expect(store.isAuthenticated).toBe(true);
+      expect(store.loading).toBe(false);
+    });
+
+    it('does not set user on failed sign in', async () => {
+      const { authService } = await import('@/features/auth');
+      vi.mocked(authService.signIn).mockResolvedValue({
+        data: null,
+        error: { message: 'Invalid credentials' },
+      });
+
+      const store = useAuthStore();
+      const result = await store.signIn('a@b.com', 'wrong');
+
+      expect(result.error?.message).toBe('Invalid credentials');
+      expect(store.user).toBeNull();
+      expect(store.isAuthenticated).toBe(false);
+      expect(store.error).toBe('Invalid credentials');
+      expect(store.loading).toBe(false);
+    });
+  });
+
   describe('loginWithGoogle', () => {
     it('should call signInWith OAuth and handle success', async () => {
       const { authService } = await import('@/features/auth');
