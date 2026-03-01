@@ -402,7 +402,7 @@ Before completing ANY task, you MUST run:
 ```bash
 npm run format
 npm run lint
-npm run type-check
+npm run typecheck
 npm test:coverage
 ```
 

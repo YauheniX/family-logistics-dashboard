@@ -364,7 +364,7 @@ See [Deployment Guide](docs/deployment/overview.md) for full deployment instruct
 ```bash
 npm run format       # Format code
 npm run lint         # Check for lint errors
-npm run type-check   # Check TypeScript types
+npm run typecheck   # Check TypeScript types
 npm run test:coverage  # Run tests with coverage
 ```
 
@@ -383,7 +383,7 @@ npm run test:coverage  # Run tests with coverage
 - [ ] Tests pass (`npm test`)
 - [ ] Coverage ≥ 70%
 - [ ] Lint passes (`npm run lint`)
-- [ ] No TypeScript errors (`npm run type-check`)
+- [ ] No TypeScript errors (`npm run typecheck`)
 - [ ] Documentation updated if architecture changed
 - [ ] No `families` references (use `households`)
 - [ ] All data scoped to `household_id`
@@ -403,7 +403,7 @@ For AI agents: see [AGENTS.md](AGENTS.md).
 | `npm run test:coverage` | Run tests with coverage report                   |
 | `npm run lint`          | Run ESLint                                       |
 | `npm run format`        | Format code with Prettier                        |
-| `npm run type-check`    | TypeScript type checking                         |
+| `npm run typecheck`     | TypeScript type checking                         |
 
 ---
 
