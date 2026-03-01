@@ -242,6 +242,7 @@ describe('WishlistRepository', () => {
 
       const result = await repo.create({
         title: 'Birthday Wishes',
+        description: null,
         household_id: 'h1',
         share_slug: 'abc12345',
       });
@@ -258,6 +259,7 @@ describe('WishlistRepository', () => {
 
       const result = await repo.create({
         title: 'Birthday Wishes',
+        description: null,
         share_slug: 'abc12345',
       });
 
@@ -290,6 +292,7 @@ describe('WishlistRepository', () => {
 
       const result = await repo.create({
         title: 'Birthday Wishes',
+        description: null,
         household_id: 'h1',
         share_slug: 'abc12345',
       });
@@ -331,6 +334,7 @@ describe('WishlistRepository', () => {
 
       const result = await repo.create({
         title: 'Birthday Wishes',
+        description: null,
         share_slug: 'abc12345',
       });
 
@@ -569,6 +573,7 @@ describe('WishlistItemRepository', () => {
       const result = await repo.reserveItem('wi1', {
         is_reserved: true,
         reserved_by_email: 'friend@test.com',
+        reserved_by_name: null,
       });
 
       expect(result.error?.message).toBe('RPC failed');
@@ -584,6 +589,7 @@ describe('WishlistItemRepository', () => {
       const result = await repo.reserveItem('wi1', {
         is_reserved: true,
         reserved_by_email: 'friend@test.com',
+        reserved_by_name: null,
       });
 
       expect(result.error?.message).toBe('Already reserved by someone else');

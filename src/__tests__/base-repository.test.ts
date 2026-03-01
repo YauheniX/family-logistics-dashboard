@@ -36,7 +36,7 @@ class TestRepository extends BaseRepository<TestEntity, Partial<TestEntity>> {
     return this.getAuthenticatedUserId();
   }
 
-  public async testExecute<T>(op: () => Promise<{ data: T | null; error: unknown }>) {
+  public async testExecute<T>(op: () => Promise<{ data: T | null; error: import('@supabase/supabase-js').PostgrestError | null }>) {
     return this.execute(op);
   }
 }

@@ -268,14 +268,14 @@ describe('WishlistService', () => {
       error: null,
     });
 
-    const dto = { user_id: 'u1', household_id: 'h1', title: 'Birthday Wishes' };
+    const dto = { household_id: 'h1', title: 'Birthday Wishes', description: null };
     const result = await service.createWishlist(dto);
 
-    const callArg = vi.mocked(wishlistRepository.create).mock.calls[0][0];
+    const callArg = vi.mocked(wishlistRepository.create).mock.calls[0][0] as Record<string, unknown>;
     expect(callArg).toMatchObject(dto);
     expect(callArg.share_slug).toBeDefined();
-    expect(callArg.share_slug).toHaveLength(8);
-    expect(callArg.share_slug).toMatch(/^[a-z0-9]{8}$/);
+    expect(typeof callArg.share_slug).toBe('string');
+    expect((callArg.share_slug as string)).toMatch(/^[a-z0-9]{8}$/);
     expect(result.data).toEqual(mockWishlist);
     expect(result.error).toBeNull();
   });
@@ -290,9 +290,9 @@ describe('WishlistService', () => {
     });
 
     const result = await service.createWishlist({
-      user_id: 'u1',
       household_id: 'h1',
       title: 'Birthday Wishes',
+      description: null,
     });
 
     expect(result.data).toBeNull();
@@ -409,7 +409,7 @@ describe('WishlistService', () => {
       error: null,
     });
 
-    const dto = { wishlist_id: 'w1', title: 'New Book', price: 19.99, currency: 'USD', priority: 'medium' as const };
+    const dto = { wishlist_id: 'w1', title: 'New Book', description: null, link: null, price: 19.99, currency: 'USD', priority: 'medium' as const };
     const result = await service.addItem(dto);
 
     expect(wishlistItemRepository.create).toHaveBeenCalledWith(dto);
@@ -429,6 +429,8 @@ describe('WishlistService', () => {
     const result = await service.addItem({
       wishlist_id: 'w1',
       title: 'New Book',
+      description: null,
+      link: null,
       price: 19.99,
       currency: 'USD',
       priority: 'medium' as const,
