@@ -82,25 +82,67 @@ A **wishlist** is a personal list of desired items. Wishlists belong to individu
 
 An **invitation** is how new members join a household. An owner or admin creates an invitation for an email address. When that person logs in with that email, they see the pending invitation and can accept or decline.
 
+### Data Ownership & Tenant Isolation
+
+All data in the application belongs to a household. The database enforces this isolation using Row-Level Security (RLS) — even with valid credentials, a user cannot access another household's data.
+
+```mermaid
+graph TD
+    subgraph Household_A["🏠 Household A"]
+        A_Members["👥 Members"]
+        A_Shopping["🛒 Shopping Lists"]
+        A_Wishlists["🎁 Wishlists"]
+    end
+
+    subgraph Household_B["🏠 Household B"]
+        B_Members["👥 Members"]
+        B_Shopping["🛒 Shopping Lists"]
+        B_Wishlists["🎁 Wishlists"]
+    end
+
+    RLS["🔒 Row-Level Security"]
+
+    A_Members -.->|blocked| B_Shopping
+    B_Members -.->|blocked| A_Shopping
+    RLS --- Household_A
+    RLS --- Household_B
+
+    PublicWL["🌐 Public Wishlists"]
+    A_Wishlists -->|share link| PublicWL
+    B_Wishlists -->|share link| PublicWL
+    Guest["👤 Public Guest"] --> PublicWL
+
+    style RLS fill:#f44336,color:#fff
+    style PublicWL fill:#E8F5E9,color:#333
+```
+
+**Key ownership rules**:
+
+- **Shopping lists** belong to the household — any authorized member can contribute.
+- **Wishlists** belong to individual members but are scoped within a household context.
+- **Public wishlists** are the only cross-household exception — anyone with the share link can view them.
+- Deleting a household permanently deletes all its data (lists, items, members).
+
 ---
 
 ## 3. Roles & Permissions
 
 ### Role Hierarchy
 
-```
-┌───────────────────────────────────────────┐
-│  Owner   — Full control                   │  ← Highest
-├───────────────────────────────────────────┤
-│  Admin   — Manage members & all content   │
-├───────────────────────────────────────────┤
-│  Member  — Create & edit content          │
-├───────────────────────────────────────────┤
-│  Child   — Limited content, no invites    │
-├───────────────────────────────────────────┤
-│  Viewer  — Read-only                      │  ← Lowest (authenticated)
-└───────────────────────────────────────────┘
-              Public Guest — share link only
+```mermaid
+graph TD
+    Owner["👑 Owner — Full control"] --> Admin["🔧 Admin — Manage members & all content"]
+    Admin --> Member["👤 Member — Create & edit content"]
+    Member --> Child["🧒 Child — Limited content, no invites"]
+    Child --> Viewer["👁 Viewer — Read-only"]
+    Viewer -.->|share link only| Guest["🌐 Public Guest"]
+
+    style Owner fill:#4CAF50,color:#fff
+    style Admin fill:#2196F3,color:#fff
+    style Member fill:#FF9800,color:#fff
+    style Child fill:#9C27B0,color:#fff
+    style Viewer fill:#607D8B,color:#fff
+    style Guest fill:#E0E0E0,color:#333
 ```
 
 ### Role Descriptions
@@ -392,15 +434,23 @@ When someone views a public wishlist:
 
 ### Data Flow
 
-```
-Wishlist Owner
-  └── Sets visibility to "Public"
-        └── Share link generated (/w/:share_slug)
-              └── Guest visits link
-                    └── Guest reserves item
-                          └── Item marked as "reserved" in database
-                                └── Owner sees "1 item reserved" count
-                                      (but not WHO reserved it)
+```mermaid
+sequenceDiagram
+    participant Owner as Wishlist Owner
+    participant App as Application
+    participant DB as Database
+    participant Guest as Public Guest
+
+    Owner->>App: Set visibility to "Public"
+    App->>DB: Generate share_slug
+    App-->>Owner: Share link (/w/:share_slug)
+    Owner->>Guest: Share link (email, message, etc.)
+    Guest->>App: Visit share link
+    App->>DB: Fetch public wishlist
+    App-->>Guest: Display wishlist items
+    Guest->>App: Reserve item
+    App->>DB: Mark item as "reserved"
+    Note over Owner,DB: Owner sees "1 item reserved"<br/>but NOT who reserved it
 ```
 
 ### Privacy Notes
@@ -415,13 +465,28 @@ Wishlist Owner
 
 ### How Invitations Work
 
-```
-Admin/Owner creates invitation (email + role)
-  └── Invitation stored with 7-day expiry
-        └── Invitee logs in with that email
-              └── Sees "You have a pending invitation" notification
-                    └── Accepts or declines
-                          └── If accepted: member record created
+```mermaid
+sequenceDiagram
+    participant Admin as Owner / Admin
+    participant App as Application
+    participant DB as Database
+    participant Invitee as Invitee
+
+    Admin->>App: Create invitation (email + role)
+    App->>DB: Store invitation (7-day expiry)
+    App-->>Admin: Invitation created
+    Note over Admin,Invitee: Admin shares invitation details manually
+    Invitee->>App: Logs in with invited email
+    App->>DB: Check pending invitations
+    App-->>Invitee: "You have a pending invitation"
+    alt Accepts
+        Invitee->>App: Accept invitation
+        App->>DB: Create member record
+        App-->>Invitee: Welcome to household!
+    else Declines
+        Invitee->>App: Decline invitation
+        App->>DB: Mark as declined
+    end
 ```
 
 ### Invitation States
@@ -433,6 +498,21 @@ Admin/Owner creates invitation (email + role)
 | **Declined** | Invitee declined                           |
 | **Expired**  | Not responded to within 7 days             |
 | **Revoked**  | Cancelled by owner/admin before acceptance |
+
+#### Invitation State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Pending: Owner/Admin creates invitation
+    Pending --> Accepted: Invitee accepts
+    Pending --> Declined: Invitee declines
+    Pending --> Expired: 7 days pass without response
+    Pending --> Revoked: Owner/Admin cancels
+    Expired --> Pending: Owner/Admin resends
+    Accepted --> [*]
+    Declined --> [*]
+    Revoked --> [*]
+```
 
 ### Notes
 
