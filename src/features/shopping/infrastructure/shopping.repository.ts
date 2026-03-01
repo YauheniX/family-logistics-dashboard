@@ -26,8 +26,10 @@ export class ShoppingListRepository extends BaseRepository<
    * Find shopping lists by household ID
    */
   async findByHouseholdId(householdId: string): Promise<ApiResponse<ShoppingList[]>> {
-    return this.findAll((builder) =>
-      builder.eq('household_id', householdId).order('created_at', { ascending: false }),
+    return this.cachedQuery(this.cacheKey('household', householdId), () =>
+      this.findAll((builder) =>
+        builder.eq('household_id', householdId).order('created_at', { ascending: false }),
+      ),
     );
   }
 
@@ -38,7 +40,7 @@ export class ShoppingListRepository extends BaseRepository<
     }
     const userId = userIdResponse.data;
 
-    return await this.execute(async () => {
+    const result = await this.execute(async () => {
       return await supabase
         .from('shopping_lists')
         .insert({
@@ -48,6 +50,8 @@ export class ShoppingListRepository extends BaseRepository<
         .select()
         .single();
     });
+    if (!result.error) this.invalidateTable();
+    return result;
   }
 }
 
@@ -67,8 +71,10 @@ export class ShoppingItemRepository extends BaseRepository<
    * Find items by list ID
    */
   async findByListId(listId: string): Promise<ApiResponse<ShoppingItem[]>> {
-    return this.findAll((builder) =>
-      builder.eq('list_id', listId).order('created_at', { ascending: true }),
+    return this.cachedQuery(this.cacheKey('list', listId), () =>
+      this.findAll((builder) =>
+        builder.eq('list_id', listId).order('created_at', { ascending: true }),
+      ),
     );
   }
 
@@ -79,7 +85,7 @@ export class ShoppingItemRepository extends BaseRepository<
     }
     const userId = userIdResponse.data;
 
-    return await this.execute(async () => {
+    const result = await this.execute(async () => {
       return await supabase
         .from('shopping_items')
         .insert({
@@ -89,5 +95,7 @@ export class ShoppingItemRepository extends BaseRepository<
         .select()
         .single();
     });
+    if (!result.error) this.invalidateTable();
+    return result;
   }
 }

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { repositoryCache } from '@/utils/cache';
 
 vi.mock('@/features/shared/infrastructure/supabase.client', () => ({
   supabase: {
@@ -54,6 +55,7 @@ describe('WishlistRepository', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    repositoryCache.clear();
     repo = new WishlistRepository();
   });
 
@@ -501,6 +503,7 @@ describe('WishlistItemRepository', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    repositoryCache.clear();
     repo = new WishlistItemRepository();
   });
 

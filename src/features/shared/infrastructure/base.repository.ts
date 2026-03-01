@@ -1,6 +1,7 @@
 import { PostgrestError } from '@supabase/supabase-js';
 import type { TypedSupabaseClient } from './supabase.client';
 import type { ApiResponse, ApiError, QueryBuilder } from '../domain/repository.interface';
+import { repositoryCache } from '../../../utils/cache';
 
 /**
  * Converts Supabase PostgrestError to our ApiError format
@@ -38,10 +39,49 @@ export abstract class BaseRepository<
   TCreateDto = Partial<TEntity>,
   TUpdateDto = Partial<TEntity>,
 > {
+  /** Cache instance shared across all repositories */
+  protected readonly cache = repositoryCache;
+
   constructor(
     protected readonly supabase: TypedSupabaseClient,
     protected readonly tableName: string,
   ) {}
+
+  /**
+   * Build a cache key scoped to this table.
+   * Sub-classes should include tenant identifiers (e.g. householdId) for isolation.
+   */
+  protected cacheKey(...segments: string[]): string {
+    return [this.tableName, ...segments].join(':');
+  }
+
+  /**
+   * Read-through cache wrapper for repository queries.
+   * Only caches successful responses (where `error` is null).
+   */
+  protected async cachedQuery<T>(
+    key: string,
+    fetcher: () => Promise<ApiResponse<T>>,
+    ttlMs?: number,
+  ): Promise<ApiResponse<T>> {
+    const cached = this.cache.get<ApiResponse<T>>(key);
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    const result = await fetcher();
+    if (result.error === null) {
+      this.cache.set(key, result, ttlMs);
+    }
+    return result;
+  }
+
+  /**
+   * Invalidate all cache entries for this table.
+   */
+  protected invalidateTable(): void {
+    this.cache.invalidateByPrefix(this.tableName + ':');
+  }
 
   /**
    * Execute a query and return a typed response with error handling
@@ -91,21 +131,23 @@ export abstract class BaseRepository<
    * Find a single record by ID
    */
   async findById(id: string): Promise<ApiResponse<TEntity>> {
-    return this.query(async () => {
-      return await this.supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(this.tableName as any)
-        .select('*')
-        .eq('id', id)
-        .single();
-    });
+    return this.cachedQuery(this.cacheKey('id', id), () =>
+      this.query(async () => {
+        return await this.supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from(this.tableName as any)
+          .select('*')
+          .eq('id', id)
+          .single();
+      }),
+    );
   }
 
   /**
    * Create a new record
    */
   async create(dto: TCreateDto): Promise<ApiResponse<TEntity>> {
-    return this.query(async () => {
+    const result = await this.query(async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return await this.supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -115,13 +157,15 @@ export abstract class BaseRepository<
         .select()
         .single();
     });
+    if (!result.error) this.invalidateTable();
+    return result;
   }
 
   /**
    * Create multiple records
    */
   async createMany(dtos: TCreateDto[]): Promise<ApiResponse<TEntity[]>> {
-    return this.query(async () => {
+    const result = await this.query(async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return await this.supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -130,13 +174,15 @@ export abstract class BaseRepository<
         .insert(dtos as any)
         .select();
     });
+    if (!result.error) this.invalidateTable();
+    return result;
   }
 
   /**
    * Update a record by ID
    */
   async update(id: string, dto: TUpdateDto): Promise<ApiResponse<TEntity>> {
-    return this.query(async () => {
+    const result = await this.query(async () => {
       return await this.supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(this.tableName as any)
@@ -146,13 +192,15 @@ export abstract class BaseRepository<
         .select()
         .single();
     });
+    if (!result.error) this.invalidateTable();
+    return result;
   }
 
   /**
    * Upsert a record
    */
   async upsert(dto: Partial<TEntity>): Promise<ApiResponse<TEntity>> {
-    return this.query(async () => {
+    const result = await this.query(async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return await this.supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -162,13 +210,15 @@ export abstract class BaseRepository<
         .select()
         .single();
     });
+    if (!result.error) this.invalidateTable();
+    return result;
   }
 
   /**
    * Delete a record by ID
    */
   async delete(id: string): Promise<ApiResponse<void>> {
-    return this.query(async () => {
+    const result = await this.query(async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await this.supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -178,6 +228,8 @@ export abstract class BaseRepository<
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return { data: null as any, error };
     });
+    if (!result.error) this.invalidateTable();
+    return result;
   }
 
   /**

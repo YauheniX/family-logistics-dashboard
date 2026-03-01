@@ -4,6 +4,7 @@ import {
   ShoppingItemRepository,
 } from '@/features/shopping/infrastructure/shopping.repository';
 import type { ShoppingList, ShoppingItem } from '@/features/shared/domain/entities';
+import { repositoryCache } from '@/utils/cache';
 
 vi.mock('@/features/shared/infrastructure/supabase.client', () => ({
   supabase: {
@@ -54,6 +55,7 @@ describe('ShoppingListRepository', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    repositoryCache.clear();
     repository = new ShoppingListRepository();
   });
 
@@ -139,6 +141,7 @@ describe('ShoppingItemRepository', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    repositoryCache.clear();
     repository = new ShoppingItemRepository();
   });
 
