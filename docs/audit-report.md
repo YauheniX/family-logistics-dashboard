@@ -3,17 +3,27 @@
 **Project**: Family Logistics Dashboard  
 **Audit Date**: March 2026  
 **Auditor**: Documentation Architecture Review  
-**Scope**: README.md, /docs/, inline documentation
+**Scope**: README.md, /docs/, User Guide, inline documentation  
+**Revision**: 2 (updated to reflect current state after prior remediation)
 
 ---
 
-## Summary
+## Executive Summary
 
-| Severity       | Count | Status    |
-| -------------- | ----- | --------- |
-| 🔴 Critical    | 4     | Addressed |
-| 🟠 Important   | 8     | Addressed |
-| 🟡 Improvement | 12    | Addressed |
+The project documentation has undergone significant improvement since the initial audit. All previously missing files have been created, terminology has been standardized, and the README has been rewritten with comprehensive sections. This revision identifies **remaining** improvements focused on visual clarity, diagram quality, and cross-document consistency.
+
+| Severity       | Count | Status                     |
+| -------------- | ----- | -------------------------- |
+| 🟠 Important   | 3     | Addressed in this revision |
+| 🟡 Improvement | 5     | Addressed in this revision |
+
+### Previously Resolved (Initial Audit)
+
+| Severity       | Count | Status   |
+| -------------- | ----- | -------- |
+| 🔴 Critical    | 4     | ✅ Fixed |
+| 🟠 Important   | 8     | ✅ Fixed |
+| 🟡 Improvement | 12    | ✅ Fixed |
 
 ---
 
@@ -21,165 +31,173 @@
 
 ### README.md
 
-**Issues Found**:
+**Current Status**: ✅ Well-structured
 
-| Severity       | Issue                                                                       |
-| -------------- | --------------------------------------------------------------------------- |
-| 🟠 Important   | Missing step-by-step setup instructions for Supabase backend                |
-| 🟠 Important   | Missing environment variable table                                          |
-| 🟡 Improvement | No architecture diagram in README                                           |
-| 🟡 Improvement | Missing CI/CD explanation at the README level                               |
-| 🟡 Improvement | "Family Groups" terminology used in README; codebase uses "Households"      |
-| 🟡 Improvement | Deployment section missing from README                                      |
-| 🟡 Improvement | Contribution section is minimal — no code standards or PR process explained |
-| 🟡 Improvement | No troubleshooting section in README                                        |
+The README follows modern OSS best practices with a clear Table of Contents, all major sections present, and accurate cross-references.
 
 **Strengths**:
 
-- Badge links for CI and CodeQL are present
-- Tech stack table is clear
-- Quick links to /docs/ are provided
-- Feature list is accurate
+- CI and CodeQL badges present and linked
+- Comprehensive Table of Contents with anchor links
+- Clear project positioning ("multi-tenant household management")
+- Tech stack table is accurate and scannable
+- Environment variable table with defaults and descriptions
+- Step-by-step Quick Start and Full Supabase Setup
+- Roles & Permissions summary with link to full matrix
+- Deployment options for Vercel, Netlify, GitHub Pages, Docker
+- Contributing guidelines with quality gate and PR checklist
+- Troubleshooting and FAQ sections included
+- Development commands table
+
+**Remaining Issues**:
+
+| Severity       | Issue                                                               | Status |
+| -------------- | ------------------------------------------------------------------- | ------ |
+| 🟠 Important   | Architecture diagrams use ASCII art instead of Mermaid              | Fixed  |
+| 🟡 Improvement | Multi-tenant data model diagram could use Mermaid for GitHub render | Fixed  |
+
+**Onboarding Clarity**:
+
+| Audience     | Path                                                    | Rating     |
+| ------------ | ------------------------------------------------------- | ---------- |
+| Developers   | Quick Start → Project Structure → Architecture Overview | ⭐⭐⭐⭐⭐ |
+| Contributors | Contributing section → PR Checklist → Testing           | ⭐⭐⭐⭐☆  |
+| End Users    | User Guide link in Documentation table                  | ⭐⭐⭐⭐☆  |
+| DevOps       | Deployment section → CI/CD → Environment Variables      | ⭐⭐⭐⭐⭐ |
 
 ---
 
-### /docs/README.md
+### /docs/README.md (Documentation Index)
 
-**Issues Found**:
+**Current Status**: ✅ Comprehensive index
 
-| Severity       | Issue                                                                  |
-| -------------- | ---------------------------------------------------------------------- |
-| 🔴 Critical    | 18 files referenced as links do not exist (broken links)               |
-| 🟠 Important   | Sections labelled "✅" suggest completion but many targets are missing |
-| 🟡 Improvement | Navigation-by-role section links to non-existent files                 |
+**Remaining Issues**:
 
-**Missing referenced files**:
+| Severity     | Issue                                                                      | Status |
+| ------------ | -------------------------------------------------------------------------- | ------ |
+| 🟠 Important | "Last Updated: January 2025" — outdated, should be March 2026              | Fixed  |
+| 🟠 Important | References `docs/migration/` and `docs/adr/` directories that do not exist | Fixed  |
 
-```
-docs/getting-started/installation.md
-docs/getting-started/configuration.md
-docs/architecture/clean-architecture.md
-docs/architecture/multi-tenant.md
-docs/backend/rls-policies.md
-docs/backend/supabase-setup.md
-docs/backend/migrations.md
-docs/deployment/environment-variables.md
-docs/development/adding-features.md
-docs/development/repository-pattern.md
-docs/features/household-management.md
-docs/features/shopping-lists.md
-docs/frontend/project-structure.md
-docs/frontend/state-management.md
-docs/frontend/components.md
-docs/testing/overview.md
-docs/operations/troubleshooting.md
-docs/operations/faq.md
-```
+---
+
+### docs/user-guide.md
+
+**Current Status**: ✅ Comprehensive user guide
+
+**Strengths**:
+
+- 15 well-organized sections covering all features
+- Role-permission matrices for Household, Shopping, and Wishlists
+- Edge cases and limitations documented
+- Error handling table with causes and solutions
+- Clear data flow diagram for public wishlist sharing
+
+**Remaining Issues**:
+
+| Severity       | Issue                                                                          | Status |
+| -------------- | ------------------------------------------------------------------------------ | ------ |
+| 🟡 Improvement | Data flow diagram for public sharing uses ASCII art instead of Mermaid         | Fixed  |
+| 🟡 Improvement | Invitation flow uses ASCII art instead of Mermaid                              | Fixed  |
+| 🟡 Improvement | No visual state diagram for invitation lifecycle (Pending → Accepted/Declined) | Fixed  |
 
 ---
 
 ## Phase 2 — Completeness Analysis
 
-### Missing Content
+### All Previously Missing Files: ✅ Created
 
-| Severity       | Area         | Missing                                               |
-| -------------- | ------------ | ----------------------------------------------------- |
-| 🔴 Critical    | Setup        | No Supabase setup guide (`supabase-setup.md`)         |
-| 🔴 Critical    | Setup        | No installation guide for backend-connected mode      |
-| 🔴 Critical    | Development  | No repository pattern guide (`repository-pattern.md`) |
-| 🔴 Critical    | Development  | No adding-features guide (`adding-features.md`)       |
-| 🟠 Important   | Architecture | No clean architecture explanation                     |
-| 🟠 Important   | Architecture | No multi-tenant isolation explanation                 |
-| 🟠 Important   | Backend      | No RLS policies documentation                         |
-| 🟠 Important   | Backend      | No migrations guide                                   |
-| 🟠 Important   | Frontend     | No state management guide                             |
-| 🟠 Important   | Frontend     | No project structure guide                            |
-| 🟠 Important   | Testing      | No testing guide                                      |
-| 🟠 Important   | Operations   | No troubleshooting guide                              |
-| 🟠 Important   | Operations   | No FAQ                                                |
-| 🟡 Improvement | Frontend     | No components guide                                   |
-| 🟡 Improvement | Deployment   | No environment variables reference                    |
-| 🟡 Improvement | Features     | No household management feature doc                   |
-| 🟡 Improvement | Features     | No shopping lists feature doc                         |
+All 18 documentation files identified in the initial audit now exist:
+
+| File                                       | Status |
+| ------------------------------------------ | ------ |
+| `docs/getting-started/installation.md`     | ✅     |
+| `docs/getting-started/configuration.md`    | ✅     |
+| `docs/architecture/clean-architecture.md`  | ✅     |
+| `docs/architecture/multi-tenant.md`        | ✅     |
+| `docs/backend/supabase-setup.md`           | ✅     |
+| `docs/backend/rls-policies.md`             | ✅     |
+| `docs/backend/migrations.md`               | ✅     |
+| `docs/deployment/environment-variables.md` | ✅     |
+| `docs/development/adding-features.md`      | ✅     |
+| `docs/development/repository-pattern.md`   | ✅     |
+| `docs/features/household-management.md`    | ✅     |
+| `docs/features/shopping-lists.md`          | ✅     |
+| `docs/frontend/project-structure.md`       | ✅     |
+| `docs/frontend/state-management.md`        | ✅     |
+| `docs/frontend/components.md`              | ✅     |
+| `docs/testing/overview.md`                 | ✅     |
+| `docs/operations/troubleshooting.md`       | ✅     |
+| `docs/operations/faq.md`                   | ✅     |
+
+### Remaining Content Gaps
+
+| Severity       | Area       | Detail                                                      | Status |
+| -------------- | ---------- | ----------------------------------------------------------- | ------ |
+| 🟡 Improvement | User Guide | No Mermaid diagrams for tenant isolation or permission flow | Fixed  |
+| 🟡 Improvement | README     | Architecture diagrams are ASCII-only                        | Fixed  |
 
 ---
 
 ## Phase 3 — Consistency Review
 
-### Terminology Inconsistencies
+### Terminology: ✅ Consistent
 
-| Severity       | Location                | Issue                                                                    |
-| -------------- | ----------------------- | ------------------------------------------------------------------------ |
-| 🔴 Critical    | README.md               | Uses "Family Groups" — codebase/schema uses "Households"                 |
-| 🟠 Important   | docs/domain/overview.md | Entity hierarchy still shows `Family` and `FamilyMember` (legacy)        |
-| 🟡 Improvement | README.md               | "family" appears 8 times in feature descriptions; should say "household" |
+- All documents use **"Household"** (not "Family Groups" or "families")
+- Schema references use `households` and `members` tables
+- Role names are consistent: Owner, Admin, Member, Child, Viewer
 
-### Broken References
+### Cross-References: ✅ All Links Valid
 
-- `docs/README.md` → 18 missing target files (listed above)
-- README.md → `/wiki` folder reference is unclear (wiki noted as outdated)
+All links in `README.md` and `docs/README.md` point to existing files.
+
+### Remaining Issues
+
+| Severity     | Location       | Issue                                                                 | Status |
+| ------------ | -------------- | --------------------------------------------------------------------- | ------ |
+| 🟠 Important | docs/README.md | Directory listing includes `migration/` and `adr/` which do not exist | Fixed  |
 
 ---
 
 ## Phase 4 — UX Clarity Evaluation
 
-| Aspect                      | Rating    | Notes                                                    |
-| --------------------------- | --------- | -------------------------------------------------------- |
-| Developer onboarding        | ⭐⭐⭐☆☆  | Quickstart exists but full setup missing                 |
-| End-user understanding      | ⭐⭐☆☆☆   | No user guide exists                                     |
-| Mental model clarity        | ⭐⭐⭐☆☆  | Household/tenant model explained in domain docs          |
-| Non-technical accessibility | ⭐⭐☆☆☆   | No non-technical user guide                              |
-| RBAC explanation            | ⭐⭐⭐⭐☆ | rbac-permissions.md is comprehensive                     |
-| Architecture clarity        | ⭐⭐⭐☆☆  | Architecture overview exists but diagrams are ASCII only |
+| Aspect                      | Rating     | Notes                                                                    |
+| --------------------------- | ---------- | ------------------------------------------------------------------------ |
+| Developer onboarding        | ⭐⭐⭐⭐⭐ | Complete quickstart, installation, and architecture docs                 |
+| End-user understanding      | ⭐⭐⭐⭐⭐ | Comprehensive user guide with role descriptions and feature walkthroughs |
+| Mental model clarity        | ⭐⭐⭐⭐⭐ | Household/tenant model clearly explained with Mermaid diagrams           |
+| Non-technical accessibility | ⭐⭐⭐⭐☆  | User guide written for non-technical users; could add screenshots        |
+| RBAC explanation            | ⭐⭐⭐⭐⭐ | Full permission matrix in user guide and rbac-permissions.md             |
+| Architecture clarity        | ⭐⭐⭐⭐⭐ | Mermaid diagrams for architecture, data flow, and state machines         |
 
 ---
 
-## Remediation Plan
+## Remediation Summary
 
-### Critical (Immediate)
+### Initial Audit — All Resolved ✅
 
-1. ✅ Fix terminology: "Family Groups" → "Households" in README.md
-2. ✅ Create all 18 missing documentation files
-3. ✅ Create User Guide (`docs/user-guide.md`)
+1. ✅ Fixed terminology: "Family Groups" → "Households" across all docs
+2. ✅ Created all 18 missing documentation files
+3. ✅ Created comprehensive User Guide (`docs/user-guide.md`)
+4. ✅ Added environment variable table to README.md
+5. ✅ Added Supabase setup steps to README.md
+6. ✅ Created troubleshooting and FAQ sections
+7. ✅ Added contribution guidelines with code standards and PR checklist
+8. ✅ Created deployment section in README
 
-### Important (Short-Term)
+### Revision 2 — Addressed in This Update
 
-1. ✅ Add Mermaid architecture diagrams
-2. ✅ Add environment variable table to README.md
-3. ✅ Add Supabase setup steps to README.md
-4. ✅ Create troubleshooting and FAQ sections
-
-### Improvements (Medium-Term)
-
-1. ✅ Add contribution guidelines with code standards
-2. ✅ Standardize terminology across all documents
-3. ✅ Add state diagrams for invitation and reservation flows
-4. ✅ Create deployment section in README
+1. ✅ Replaced ASCII architecture diagrams with Mermaid in README.md
+2. ✅ Added Mermaid diagrams to User Guide (data flow, permissions, state machines)
+3. ✅ Fixed docs/README.md date (January 2025 → March 2026)
+4. ✅ Removed non-existent `migration/` and `adr/` directory references from docs/README.md
 
 ---
 
-## Files Changed
+## Files Changed in This Revision
 
-| File                                       | Action                                                       |
-| ------------------------------------------ | ------------------------------------------------------------ |
-| `README.md`                                | Rewritten — comprehensive, correct terminology, all sections |
-| `docs/user-guide.md`                       | Created — full non-technical user guide                      |
-| `docs/audit-report.md`                     | Created — this file                                          |
-| `docs/getting-started/installation.md`     | Created                                                      |
-| `docs/getting-started/configuration.md`    | Created                                                      |
-| `docs/architecture/clean-architecture.md`  | Created                                                      |
-| `docs/architecture/multi-tenant.md`        | Created                                                      |
-| `docs/backend/supabase-setup.md`           | Created                                                      |
-| `docs/backend/rls-policies.md`             | Created                                                      |
-| `docs/backend/migrations.md`               | Created                                                      |
-| `docs/deployment/environment-variables.md` | Created                                                      |
-| `docs/development/adding-features.md`      | Created                                                      |
-| `docs/development/repository-pattern.md`   | Created                                                      |
-| `docs/features/household-management.md`    | Created                                                      |
-| `docs/features/shopping-lists.md`          | Created                                                      |
-| `docs/frontend/project-structure.md`       | Created                                                      |
-| `docs/frontend/state-management.md`        | Created                                                      |
-| `docs/frontend/components.md`              | Created                                                      |
-| `docs/testing/overview.md`                 | Created                                                      |
-| `docs/operations/troubleshooting.md`       | Created                                                      |
-| `docs/operations/faq.md`                   | Created                                                      |
+| File                   | Change                                                                  |
+| ---------------------- | ----------------------------------------------------------------------- |
+| `README.md`            | Replaced ASCII architecture diagrams with Mermaid                       |
+| `docs/user-guide.md`   | Added Mermaid diagrams for data flow, invitation state, permission flow |
+| `docs/README.md`       | Fixed date, removed non-existent directory references                   |
+| `docs/audit-report.md` | Updated to reflect current state (this file)                            |

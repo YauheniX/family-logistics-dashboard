@@ -60,32 +60,39 @@ A **multi-tenant household management system** built for families and shared hou
 
 The application follows **Clean Architecture** with a feature-based module structure:
 
-```
-┌─────────────────────────────────────────────┐
-│              Presentation Layer              │
-│  Vue 3 Components • Pinia Stores • Composables │
-└────────────────────┬────────────────────────┘
-                     │
-┌────────────────────▼────────────────────────┐
-│               Domain Layer                   │
-│  Entities • DTOs • Service Interfaces        │
-└────────────────────┬────────────────────────┘
-                     │
-┌────────────────────▼────────────────────────┐
-│            Infrastructure Layer              │
-│  Supabase Repositories • Mock Repositories   │
-└─────────────────────────────────────────────┘
+```mermaid
+graph TD
+    subgraph Presentation["Presentation Layer"]
+        A[Vue 3 Components]
+        B[Pinia Stores]
+        C[Composables]
+    end
+
+    subgraph Domain["Domain Layer"]
+        D[Entities]
+        E[DTOs]
+        F[Service Interfaces]
+    end
+
+    subgraph Infrastructure["Infrastructure Layer"]
+        G[Supabase Repositories]
+        H[Mock Repositories]
+    end
+
+    Presentation --> Domain
+    Domain --> Infrastructure
 ```
 
 **Multi-Tenant Model**: Every piece of data (shopping lists, wishlists, members) belongs to a **household**. Row-Level Security (RLS) enforces tenant isolation at the database level — users can only access data belonging to their household.
 
-```
-Household (tenant)
-  ├── Members (with roles)
-  ├── Shopping Lists
-  │     └── Shopping Items
-  └── (Members have personal Wishlists)
-        └── Wishlist Items
+```mermaid
+graph TD
+    HH["🏠 Household (tenant)"]
+    HH --> M["👥 Members (with roles)"]
+    HH --> SL["🛒 Shopping Lists"]
+    SL --> SI["📝 Shopping Items"]
+    M -.-> WL["🎁 Wishlists (personal)"]
+    WL --> WI["📋 Wishlist Items"]
 ```
 
 See [Architecture Overview](docs/architecture/overview.md) for full details.

@@ -73,8 +73,7 @@ docs/
 ├── testing/            # Testing guides
 ├── deployment/         # Deployment guides
 ├── operations/         # Monitoring and troubleshooting
-├── migration/          # Migration guides
-└── adr/                # Architecture Decision Records
+└── ai/                 # AI agent instructions
 ```
 
 ---
@@ -146,7 +145,7 @@ A **production-grade Family Planning System** with:
 
 This documentation is **actively maintained** and reflects the **current state** of the codebase.
 
-**Last Updated**: January 2025
+**Last Updated**: March 2026
 
 ### Old Documentation
 
