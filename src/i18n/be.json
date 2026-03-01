@@ -29,7 +29,7 @@
       "title": "З вяртаннем",
       "subtitle": "Увайдзіце для кіравання хатняй гаспадаркай",
       "emailLabel": "Email",
-      "emailPlaceholder": "ваш@email.com",
+      "emailPlaceholder": "ваш{'@'}email.com",
       "passwordLabel": "Пароль",
       "passwordPlaceholder": "Мін. 6 сімвалаў",
       "signIn": "Увайсці",

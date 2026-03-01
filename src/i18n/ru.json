@@ -29,7 +29,7 @@
       "title": "С возвращением",
       "subtitle": "Войдите, чтобы управлять домохозяйством",
       "emailLabel": "Email",
-      "emailPlaceholder": "ваш@email.com",
+      "emailPlaceholder": "ваш{'@'}email.com",
       "passwordLabel": "Пароль",
       "passwordPlaceholder": "Мин. 6 символов",
       "signIn": "Войти",

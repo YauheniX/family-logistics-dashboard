@@ -29,7 +29,7 @@
       "title": "Witaj ponownie",
       "subtitle": "Zaloguj się, aby zarządzać swoim gospodarstwem",
       "emailLabel": "E-mail",
-      "emailPlaceholder": "twoj@email.com",
+      "emailPlaceholder": "twoj{'@'}email.com",
       "passwordLabel": "Hasło",
       "passwordPlaceholder": "Min. 6 znaków",
       "signIn": "Zaloguj się",

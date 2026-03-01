@@ -29,7 +29,7 @@
       "title": "З поверненням",
       "subtitle": "Увійдіть для керування домогосподарством",
       "emailLabel": "Email",
-      "emailPlaceholder": "ваш@email.com",
+      "emailPlaceholder": "ваш{'@'}email.com",
       "passwordLabel": "Пароль",
       "passwordPlaceholder": "Мін. 6 символів",
       "signIn": "Увійти",
