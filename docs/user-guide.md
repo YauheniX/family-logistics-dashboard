@@ -450,7 +450,7 @@ sequenceDiagram
     App-->>Guest: Display wishlist items
     Guest->>App: Reserve item
     App->>DB: Mark item as "reserved"
-    Note over Owner,DB: Owner sees "1 item reserved"<br/>but NOT who reserved it
+    Note over Owner,DB: Owner sees "1 item reserved" but NOT who reserved it
 ```
 
 ### Privacy Notes
