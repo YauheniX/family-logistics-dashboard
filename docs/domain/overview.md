@@ -25,13 +25,13 @@ User (Supabase Auth)
   │
   ├─── UserProfile (extended profile)
   │
-  └─── Family Membership
+  └─── Household Membership
          │
-         ├─── Family (multi-user group)
+         ├─── Household (multi-user group)
          │      │
-         │      ├─── FamilyMember (with role)
+         │      ├─── Member (with role)
          │      │
-         │      └─── ShoppingList (family shared)
+         │      └─── ShoppingList (household shared)
          │             │
          │             └─── ShoppingItem
          │

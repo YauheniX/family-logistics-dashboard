@@ -10,6 +10,11 @@ Welcome to the documentation for the Family Shopping & Wishlist Planner.
 
 - [📖 AI Agent Instructions](../AGENTS.md) - **START HERE** (single source of truth)
 
+### User Documentation
+
+- [User Guide](user-guide.md) - Complete guide for end users, roles, and features
+- [Documentation Audit Report](audit-report.md) - Documentation quality audit
+
 ### Getting Started
 
 - [Quickstart Guide](getting-started/quickstart.md) - Get running in 5 minutes
