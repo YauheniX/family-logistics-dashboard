@@ -143,11 +143,9 @@ initTheme();
 
 // Initialize household store (mock mode for now)
 onMounted(() => {
-  console.log('[App.vue] onMounted - authStore.user:', authStore.user);
   const userId = authStore.user?.id;
   const email = authStore.user?.email ?? null;
   if (userId) {
-    console.log('[App.vue] onMounted - Loading user profile for:', userId);
     loadUserProfile(userId);
     householdStore.ensureDefaultHouseholdForUser(userId, email).finally(() => {
       // Guard: only proceed if same user is still logged in
@@ -162,10 +160,8 @@ onMounted(() => {
 watch(
   () => authStore.user?.id,
   (userId, prevUserId) => {
-    console.log('[App.vue] watch authStore.user.id changed:', { userId, prevUserId });
     if (userId && !prevUserId) {
       const email = authStore.user?.email ?? null;
-      console.log('[App.vue] watch - Loading user profile for:', userId);
       loadUserProfile(userId);
       householdStore.ensureDefaultHouseholdForUser(userId, email).finally(() => {
         // Guard: only proceed if same user is still logged in
@@ -175,7 +171,6 @@ watch(
       });
     } else if (!userId && prevUserId) {
       // User just logged out - clear ALL store state to prevent data leakage
-      console.log('[App.vue] watch - User logged out, clearing all stores');
       clearUserProfile();
       householdStore.$reset();
       shoppingStore.$reset();

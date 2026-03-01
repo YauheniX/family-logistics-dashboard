@@ -115,6 +115,7 @@ import { useI18n } from 'vue-i18n';
 import BaseInput from '@/components/shared/BaseInput.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import { authService } from '@/features/auth';
+import { useAuthStore } from '@/stores/auth';
 import { useToastStore } from '@/stores/toast';
 import { isValidEmail, isValidPassword, MIN_PASSWORD_LENGTH } from '@/utils/validation';
 import { normalizeRedirectParam } from '@/utils/pathValidation';
@@ -123,6 +124,7 @@ const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
 const toastStore = useToastStore();
+const authStore = useAuthStore();
 
 const email = ref('');
 const password = ref('');
@@ -170,7 +172,7 @@ const handleEmailLogin = async () => {
   loading.value = true;
 
   try {
-    const response = await authService.signIn(email.value, password.value);
+    const response = await authStore.signIn(email.value, password.value);
 
     if (response.error) {
       error.value = response.error.message;
