@@ -8,14 +8,14 @@ Complete environment variable reference for all deployment environments.
 
 ## All Variables
 
-| Variable | Required | Default | Environments | Description |
-| -------- | -------- | ------- | ------------ | ----------- |
-| `VITE_SUPABASE_URL` | No* | — | All | Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | No* | — | All | Supabase anon/public key |
-| `VITE_USE_MOCK_BACKEND` | No | `false` | All | Force mock mode |
-| `VITE_SUPABASE_STORAGE_BUCKET` | No | `wishlist-images` | All | Storage bucket name |
-| `VITE_BASE_PATH` | No | `/` | All | App base URL path |
-| `VITE_MICROLINK_KEY` | No | — | All | Microlink Pro API key |
+| Variable                       | Required | Default           | Environments | Description              |
+| ------------------------------ | -------- | ----------------- | ------------ | ------------------------ |
+| `VITE_SUPABASE_URL`            | No\*     | —                 | All          | Supabase project URL     |
+| `VITE_SUPABASE_ANON_KEY`       | No\*     | —                 | All          | Supabase anon/public key |
+| `VITE_USE_MOCK_BACKEND`        | No       | `false`           | All          | Force mock mode          |
+| `VITE_SUPABASE_STORAGE_BUCKET` | No       | `wishlist-images` | All          | Storage bucket name      |
+| `VITE_BASE_PATH`               | No       | `/`               | All          | App base URL path        |
+| `VITE_MICROLINK_KEY`           | No       | —                 | All          | Microlink Pro API key    |
 
 > \* If absent, auto-falls back to Mock Mode.
 
@@ -62,6 +62,7 @@ VITE_USE_MOCK_BACKEND=false
 ```
 
 **Behaviour**:
+
 - `true` → Always use mock (localStorage)
 - `false` → Use Supabase if credentials present, else mock
 - Missing → Same as `false`
@@ -114,10 +115,10 @@ VITE_MICROLINK_KEY=your-pro-key-here
 
 Set secrets in **GitHub Repository** → **Settings** → **Secrets and variables** → **Actions**:
 
-| Secret Name | Value |
-| ----------- | ----- |
-| `VITE_SUPABASE_URL` | Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | Supabase anon key |
+| Secret Name              | Value                |
+| ------------------------ | -------------------- |
+| `VITE_SUPABASE_URL`      | Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anon key    |
 
 See [GitHub Secrets Setup](../deployment/github-secrets-setup.md) for details.
 
@@ -133,12 +134,12 @@ Set in Netlify Dashboard → **Site configuration** → **Environment variables*
 
 ## Environment Files
 
-| File | Committed | Purpose |
-| ---- | --------- | ------- |
-| `env.example` | ✅ | Template with documentation |
-| `.env.local` | ❌ | Local overrides (gitignored) |
-| `.env.production` | ❌ | Production build overrides (use CI secrets instead) |
-| `.env.test` | ❌ | Test environment variables |
+| File              | Committed | Purpose                                             |
+| ----------------- | --------- | --------------------------------------------------- |
+| `env.example`     | ✅        | Template with documentation                         |
+| `.env.local`      | ❌        | Local overrides (gitignored)                        |
+| `.env.production` | ❌        | Production build overrides (use CI secrets instead) |
+| `.env.test`       | ❌        | Test environment variables                          |
 
 ---
 

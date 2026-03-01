@@ -51,6 +51,7 @@ Presentation → Domain ← Infrastructure
 Located: `src/features/<feature>/domain/`
 
 Contains:
+
 - **Entities**: Pure TypeScript interfaces (e.g., `ShoppingList`, `Household`)
 - **DTOs**: Data Transfer Objects for create/update operations
 - **Service Interfaces**: TypeScript interfaces that infrastructure must implement
@@ -81,6 +82,7 @@ export interface IShoppingListRepository {
 Located: `src/features/<feature>/infrastructure/`
 
 Contains:
+
 - **Supabase Repository**: Implements the domain interface using Supabase
 - **Mock Repository**: Implements the domain interface using localStorage
 - **Factory**: Selects the correct implementation based on config
@@ -100,9 +102,7 @@ export class ShoppingListRepository implements IShoppingListRepository {
 
 // Example: Factory pattern — selects implementation
 export function createShoppingListRepository(): IShoppingListRepository {
-  return isMockMode()
-    ? new ShoppingListMockRepository()
-    : new ShoppingListRepository();
+  return isMockMode() ? new ShoppingListMockRepository() : new ShoppingListRepository();
 }
 ```
 
@@ -111,6 +111,7 @@ export function createShoppingListRepository(): IShoppingListRepository {
 Located: `src/features/<feature>/presentation/`
 
 Contains:
+
 - **Pinia Store**: State management; calls domain services/repositories
 - **Vue Components**: UI components specific to the feature
 
@@ -151,12 +152,12 @@ src/features/shopping/
 
 ## Benefits
 
-| Benefit | How |
-| ------- | --- |
-| Testability | Domain and stores can be tested without a real database |
-| Mock Mode | Swap Supabase with localStorage by changing the factory |
+| Benefit         | How                                                               |
+| --------------- | ----------------------------------------------------------------- |
+| Testability     | Domain and stores can be tested without a real database           |
+| Mock Mode       | Swap Supabase with localStorage by changing the factory           |
 | Maintainability | Clear separation; changes in Supabase don't affect business logic |
-| Portability | Replace Supabase with any backend by implementing the interface |
+| Portability     | Replace Supabase with any backend by implementing the interface   |
 
 ---
 

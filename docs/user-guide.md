@@ -37,13 +37,13 @@ The **Family Shopping & Wishlist Planner** is a collaborative household manageme
 
 ### Who Is This For?
 
-| User Type | Use Case |
-| --------- | -------- |
-| **Household owner** | Sets up the household, invites family members, manages roles |
-| **Adult member** | Contributes to shopping lists, creates wishlists |
-| **Child member** | Adds items to lists, maintains a personal wishlist |
-| **Viewer** | Reads shopping lists and wishlists (e.g., grandparent, caregiver) |
-| **Public guest** | Views and reserves items from a public wishlist (no account needed) |
+| User Type           | Use Case                                                            |
+| ------------------- | ------------------------------------------------------------------- |
+| **Household owner** | Sets up the household, invites family members, manages roles        |
+| **Adult member**    | Contributes to shopping lists, creates wishlists                    |
+| **Child member**    | Adds items to lists, maintains a personal wishlist                  |
+| **Viewer**          | Reads shopping lists and wishlists (e.g., grandparent, caregiver)   |
+| **Public guest**    | Views and reserves items from a public wishlist (no account needed) |
 
 ---
 
@@ -72,11 +72,11 @@ A **shopping list** is a shared list of items that household members collaborati
 
 A **wishlist** is a personal list of desired items. Wishlists belong to individual users, not to the household as a whole. They can have three visibility states:
 
-| Visibility | Who Can See |
-| ---------- | ----------- |
-| **Private** | Only the owner (and household owner/admin) |
-| **Household** | All household members |
-| **Public** | Anyone with the share link |
+| Visibility    | Who Can See                                |
+| ------------- | ------------------------------------------ |
+| **Private**   | Only the owner (and household owner/admin) |
+| **Household** | All household members                      |
+| **Public**    | Anyone with the share link                 |
 
 ### Invitation
 
@@ -108,6 +108,7 @@ An **invitation** is how new members join a household. An owner or admin creates
 #### Owner
 
 The person who created the household. Has complete control:
+
 - Can delete the household
 - Can transfer ownership
 - Can promote anyone to any role
@@ -118,6 +119,7 @@ The person who created the household. Has complete control:
 #### Admin
 
 A trusted co-manager. Can do everything except delete the household or transfer ownership:
+
 - Can invite and remove members
 - Can change member roles (up to admin level)
 - Can manage all household content
@@ -127,6 +129,7 @@ A trusted co-manager. Can do everything except delete the household or transfer 
 #### Member
 
 Standard household participant:
+
 - Can create, edit, and archive shopping lists
 - Can add items to any shopping list
 - Can mark items as purchased
@@ -138,6 +141,7 @@ Standard household participant:
 #### Child
 
 A member with limited capabilities (designed for children):
+
 - Can add items to shopping lists
 - Can mark items as purchased
 - Can create and manage own wishlists
@@ -149,6 +153,7 @@ A member with limited capabilities (designed for children):
 #### Viewer
 
 Read-only access:
+
 - Can see all shopping lists and public/household wishlists
 - Cannot create or modify any content
 
@@ -157,6 +162,7 @@ Read-only access:
 #### Public Guest
 
 Not a household member. Can only:
+
 - View public wishlists via a share link (`/w/:share_slug`)
 - Reserve wishlist items (marks them as claimed)
 
@@ -175,11 +181,13 @@ No account required.
 ### Step 2: Create or Join a Household
 
 **Create a new household**:
+
 1. After signing in, you will be prompted to create a household if you don't have one.
 2. Enter a household name (e.g., "Smith Family", "Apartment 4B").
 3. Click **Create**. You are now the **Owner**.
 
 **Join an existing household**:
+
 1. The household owner or admin must invite you by email first.
 2. After signing in with the invited email address, you will see a notification.
 3. Go to the notification or the **Household** page to accept.
@@ -220,14 +228,17 @@ A household is created during the onboarding flow. Each user who creates a house
 **Who can invite/remove**: Owner, Admin
 
 **To invite a member**:
+
 1. **Household** → **Members** → **Invite Member**
 2. Enter email, select role, confirm.
 
 **To change a member's role**:
+
 1. **Household** → **Members** → click member → **Change Role**
 2. Select new role, confirm.
 
 **To remove a member**:
+
 1. **Household** → **Members** → click member → **Remove**
 2. Confirm the action.
 
@@ -281,6 +292,7 @@ A shared list of items that household members can collaboratively build and chec
 ### Purchase Tracking
 
 When you mark an item as purchased, your name is recorded. This lets the household see:
+
 - Which items still need to be bought
 - Who completed each purchase
 
@@ -289,6 +301,7 @@ When you mark an item as purchased, your name is recorded. This lets the househo
 **Who can**: Owner, Admin, Member (own lists)
 
 When a shopping trip is complete, archive the list:
+
 1. Open the list.
 2. Click **Archive**.
 
@@ -332,28 +345,29 @@ A personal list of desired items — gifts, things to buy for yourself, or house
 2. Click **Add Item**.
 3. Enter item details:
 
-| Field | Description | Required |
-| ----- | ----------- | -------- |
-| Title | Item name | ✅ |
-| Description | Additional notes | No |
-| URL | Link to the item (auto-previews title/image) | No |
-| Price | Estimated price | No |
-| Priority | High / Medium / Low | No |
-| Image | Upload or URL | No |
+| Field       | Description                                  | Required |
+| ----------- | -------------------------------------------- | -------- |
+| Title       | Item name                                    | ✅       |
+| Description | Additional notes                             | No       |
+| URL         | Link to the item (auto-previews title/image) | No       |
+| Price       | Estimated price                              | No       |
+| Priority    | High / Medium / Low                          | No       |
+| Image       | Upload or URL                                | No       |
 
 ### Visibility Settings
 
-| Setting | Who Sees It |
-| ------- | ----------- |
-| **Private** | Only you (and household Owner/Admin for oversight) |
-| **Household** | All household members |
-| **Public** | Anyone with the share link |
+| Setting       | Who Sees It                                        |
+| ------------- | -------------------------------------------------- |
+| **Private**   | Only you (and household Owner/Admin for oversight) |
+| **Household** | All household members                              |
+| **Public**    | Anyone with the share link                         |
 
 Change visibility at any time via wishlist settings.
 
 ### Reserving Items (Public View)
 
 When someone views a public wishlist:
+
 - They can mark items as **Reserved** (claiming they will buy it).
 - This prevents gift duplication.
 - The wishlist owner cannot see who reserved what (to preserve surprise).
@@ -412,13 +426,13 @@ Admin/Owner creates invitation (email + role)
 
 ### Invitation States
 
-| State | Meaning |
-| ----- | ------- |
-| **Pending** | Sent, awaiting response |
-| **Accepted** | Invitee joined the household |
-| **Declined** | Invitee declined |
-| **Expired** | Not responded to within 7 days |
-| **Revoked** | Cancelled by owner/admin before acceptance |
+| State        | Meaning                                    |
+| ------------ | ------------------------------------------ |
+| **Pending**  | Sent, awaiting response                    |
+| **Accepted** | Invitee joined the household               |
+| **Declined** | Invitee declined                           |
+| **Expired**  | Not responded to within 7 days             |
+| **Revoked**  | Cancelled by owner/admin before acceptance |
 
 ### Notes
 
@@ -432,13 +446,13 @@ Admin/Owner creates invitation (email + role)
 
 The **Dashboard** is the home screen after login. It shows:
 
-| Widget | Description |
-| ------ | ----------- |
-| **Active Lists** | Count of active shopping lists in your household |
-| **Items to Buy** | Count of unpurchased items across all active lists |
-| **Wishlists** | Count of your wishlists |
-| **Reserved Items** | Count of reserved items on your public wishlists |
-| **Pending Invitations** | Invitations waiting for your response |
+| Widget                  | Description                                        |
+| ----------------------- | -------------------------------------------------- |
+| **Active Lists**        | Count of active shopping lists in your household   |
+| **Items to Buy**        | Count of unpurchased items across all active lists |
+| **Wishlists**           | Count of your wishlists                            |
+| **Reserved Items**      | Count of reserved items on your public wishlists   |
+| **Pending Invitations** | Invitations waiting for your response              |
 
 ---
 
@@ -528,13 +542,13 @@ You will see an info banner at the top of the screen when Mock Mode is active.
 
 ### Common Errors
 
-| Error | Cause | Solution |
-| ----- | ----- | -------- |
-| "Not authorized" | Trying to perform an action your role doesn't allow | Check your role and required permissions |
-| "Household not found" | Household was deleted or you were removed | Contact the household owner or create a new household |
-| "Invitation expired" | Invitation is older than 7 days | Ask the owner/admin to resend the invitation |
-| "Email already invited" | A pending invitation for this email exists | Wait for the existing invitation to expire or have the admin revoke it |
-| "Network error" | Lost internet connection or Supabase is unreachable | Check internet connection, try again |
+| Error                   | Cause                                               | Solution                                                               |
+| ----------------------- | --------------------------------------------------- | ---------------------------------------------------------------------- |
+| "Not authorized"        | Trying to perform an action your role doesn't allow | Check your role and required permissions                               |
+| "Household not found"   | Household was deleted or you were removed           | Contact the household owner or create a new household                  |
+| "Invitation expired"    | Invitation is older than 7 days                     | Ask the owner/admin to resend the invitation                           |
+| "Email already invited" | A pending invitation for this email exists          | Wait for the existing invitation to expire or have the admin revoke it |
+| "Network error"         | Lost internet connection or Supabase is unreachable | Check internet connection, try again                                   |
 
 ### What Happens if Supabase is Down?
 
@@ -548,47 +562,47 @@ You will see an info banner at the top of the screen when Mock Mode is active.
 
 ### Household & Members
 
-| Action | Owner | Admin | Member | Child | Viewer |
-| ------ | ----- | ----- | ------ | ----- | ------ |
-| View household | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Update household settings | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Delete household | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Invite member | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Remove member | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Change member role | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Leave household | ❌* | ✅ | ✅ | ✅ | ✅ |
+| Action                    | Owner | Admin | Member | Child | Viewer |
+| ------------------------- | ----- | ----- | ------ | ----- | ------ |
+| View household            | ✅    | ✅    | ✅     | ✅    | ✅     |
+| Update household settings | ✅    | ✅    | ❌     | ❌    | ❌     |
+| Delete household          | ✅    | ❌    | ❌     | ❌    | ❌     |
+| Invite member             | ✅    | ✅    | ❌     | ❌    | ❌     |
+| Remove member             | ✅    | ✅    | ❌     | ❌    | ❌     |
+| Change member role        | ✅    | ✅    | ❌     | ❌    | ❌     |
+| Leave household           | ❌\*  | ✅    | ✅     | ✅    | ✅     |
 
 > \* Owner must transfer ownership first.
 
 ### Shopping Lists
 
-| Action | Owner | Admin | Member | Child | Viewer |
-| ------ | ----- | ----- | ------ | ----- | ------ |
-| View lists | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Create list | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Edit any list | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Archive any list | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Delete any list | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Delete own list | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Add item | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Mark purchased | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Delete any item | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Delete own item | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Action           | Owner | Admin | Member | Child | Viewer |
+| ---------------- | ----- | ----- | ------ | ----- | ------ |
+| View lists       | ✅    | ✅    | ✅     | ✅    | ✅     |
+| Create list      | ✅    | ✅    | ✅     | ❌    | ❌     |
+| Edit any list    | ✅    | ✅    | ✅     | ❌    | ❌     |
+| Archive any list | ✅    | ✅    | ✅     | ❌    | ❌     |
+| Delete any list  | ✅    | ✅    | ❌     | ❌    | ❌     |
+| Delete own list  | ✅    | ✅    | ✅     | ❌    | ❌     |
+| Add item         | ✅    | ✅    | ✅     | ✅    | ❌     |
+| Mark purchased   | ✅    | ✅    | ✅     | ✅    | ❌     |
+| Delete any item  | ✅    | ✅    | ❌     | ❌    | ❌     |
+| Delete own item  | ✅    | ✅    | ✅     | ✅    | ❌     |
 
 ### Wishlists
 
-| Action | Owner | Admin | Member | Child | Viewer | Public |
-| ------ | ----- | ----- | ------ | ----- | ------ | ------ |
-| View own wishlist | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| View others' private | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| View household wishlist | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| View public wishlist | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Create wishlist | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Edit own wishlist | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Edit others' wishlist | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Delete own wishlist | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Reserve item (public) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Change visibility | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 | ❌ |
+| Action                  | Owner | Admin | Member | Child | Viewer | Public |
+| ----------------------- | ----- | ----- | ------ | ----- | ------ | ------ |
+| View own wishlist       | ✅    | ✅    | ✅     | ✅    | ✅     | ❌     |
+| View others' private    | ✅    | ✅    | ❌     | ❌    | ❌     | ❌     |
+| View household wishlist | ✅    | ✅    | ✅     | ✅    | ✅     | ❌     |
+| View public wishlist    | ✅    | ✅    | ✅     | ✅    | ✅     | ✅     |
+| Create wishlist         | ✅    | ✅    | ✅     | ✅    | ❌     | ❌     |
+| Edit own wishlist       | ✅    | ✅    | ✅     | ✅    | ✅     | ❌     |
+| Edit others' wishlist   | ✅    | ✅    | ❌     | ❌    | ❌     | ❌     |
+| Delete own wishlist     | ✅    | ✅    | ✅     | ✅    | ✅     | ❌     |
+| Reserve item (public)   | ✅    | ✅    | ✅     | ✅    | ✅     | ✅     |
+| Change visibility       | 🔒    | 🔒    | 🔒     | 🔒    | 🔒     | ❌     |
 
 > 🔒 = Own wishlists only.
 

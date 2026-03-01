@@ -72,9 +72,9 @@ import { useShoppingStore } from '../presentation/shopping.store';
 // Mock the repository factory
 vi.mock('../infrastructure/shopping.factory', () => ({
   createShoppingListRepository: () => ({
-    findByHouseholdId: vi.fn().mockResolvedValue([
-      { id: '1', title: 'Groceries', household_id: 'hh-1', status: 'active' },
-    ]),
+    findByHouseholdId: vi
+      .fn()
+      .mockResolvedValue([{ id: '1', title: 'Groceries', household_id: 'hh-1', status: 'active' }]),
     create: vi.fn().mockResolvedValue({ id: '2', title: 'Hardware', household_id: 'hh-1' }),
     delete: vi.fn().mockResolvedValue(undefined),
   }),
@@ -186,12 +186,12 @@ describe('ShoppingListMockRepository', () => {
 
 CI enforces 70% coverage across all metrics:
 
-| Metric | Threshold |
-| ------ | --------- |
-| Lines | 70% |
-| Branches | 70% |
-| Functions | 70% |
-| Statements | 70% |
+| Metric     | Threshold |
+| ---------- | --------- |
+| Lines      | 70%       |
+| Branches   | 70%       |
+| Functions  | 70%       |
+| Statements | 70%       |
 
 Coverage configuration is in `vite.config.ts`:
 

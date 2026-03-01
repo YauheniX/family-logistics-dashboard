@@ -8,11 +8,11 @@ Complete setup instructions for the Family Logistics Dashboard.
 
 ## Prerequisites
 
-| Tool | Version | Install |
-| ---- | ------- | ------- |
-| Node.js | 18+ | [nodejs.org](https://nodejs.org/) |
-| npm | 9+ | Included with Node.js |
-| Git | Any | [git-scm.com](https://git-scm.com/) |
+| Tool    | Version | Install                             |
+| ------- | ------- | ----------------------------------- |
+| Node.js | 18+     | [nodejs.org](https://nodejs.org/)   |
+| npm     | 9+      | Included with Node.js               |
+| Git     | Any     | [git-scm.com](https://git-scm.com/) |
 
 Verify your environment:
 
@@ -65,6 +65,7 @@ npm install
 ### Step 3: Get Your Credentials
 
 From your Supabase project dashboard:
+
 - **Project URL**: Settings → API → Project URL
 - **Anon Key**: Settings → API → Project API Keys → `anon` / `public`
 
@@ -125,16 +126,16 @@ npm run dev
 
 ## Development Commands
 
-| Command | Description |
-| ------- | ----------- |
-| `npm run dev` | Start development server |
-| `npm run build` | Production build |
-| `npm run preview` | Preview production build |
-| `npm test` | Run test suite |
+| Command                 | Description                    |
+| ----------------------- | ------------------------------ |
+| `npm run dev`           | Start development server       |
+| `npm run build`         | Production build               |
+| `npm run preview`       | Preview production build       |
+| `npm test`              | Run test suite                 |
 | `npm run test:coverage` | Run tests with coverage report |
-| `npm run lint` | ESLint check |
-| `npm run format` | Prettier formatting |
-| `npm run type-check` | TypeScript type checking |
+| `npm run lint`          | ESLint check                   |
+| `npm run format`        | Prettier formatting            |
+| `npm run type-check`    | TypeScript type checking       |
 
 ---
 

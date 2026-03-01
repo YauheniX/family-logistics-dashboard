@@ -22,6 +22,7 @@ npm install
 ```
 
 If you're on Node.js < 18, upgrade:
+
 ```bash
 nvm install 18
 nvm use 18
@@ -32,6 +33,7 @@ nvm use 18
 ### Port 5173 already in use
 
 **Error**:
+
 ```
 Port 5173 is in use, trying another one...
 ```
@@ -51,11 +53,13 @@ npm run dev -- --port 3000
 ### Blank white screen after `npm run dev`
 
 **Check**:
+
 1. Browser console (F12 → Console) for JavaScript errors
 2. Network tab for failed requests
 3. Terminal for Vite errors
 
 **Common causes**:
+
 - Missing environment variables
 - TypeScript compilation error
 - Failed import
@@ -65,11 +69,13 @@ npm run dev -- --port 3000
 ### TypeScript errors in IDE
 
 **Run the type checker**:
+
 ```bash
 npm run type-check
 ```
 
 **If `@/` imports are not resolved**: Check `tsconfig.json` has:
+
 ```json
 {
   "compilerOptions": {
@@ -89,6 +95,7 @@ npm run type-check
 **Expected**: Blue info banner at the top: "Mock Mode — Using localStorage"
 
 **Check**:
+
 1. Is `VITE_USE_MOCK_BACKEND=true` in `.env.local`?
 2. Are `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` absent or empty?
 
@@ -113,6 +120,7 @@ npm run type-check
 **Cause**: Wrong Supabase key in environment variables.
 
 **Check**:
+
 1. Verify `VITE_SUPABASE_ANON_KEY` is the **anon/public** key — not the `service_role` key
 2. No extra spaces in `.env.local`
 3. File is named `.env.local` (not `.env` or `.env.local.txt`)
@@ -124,6 +132,7 @@ npm run type-check
 **Cause**: RLS policies blocking access.
 
 **Solutions**:
+
 1. Verify the user is a member of the household they're querying
 2. Re-apply the schema: `npx supabase db push`
 3. Check RLS policies in Supabase Dashboard → Database → Policies
@@ -135,6 +144,7 @@ npm run type-check
 **Cause**: Redirect URI not configured.
 
 **Solution**:
+
 1. [Google Cloud Console](https://console.cloud.google.com/) → OAuth credentials
 2. Add your app's URL to **Authorized redirect URIs**:
    - `http://localhost:5173` for development
@@ -147,6 +157,7 @@ npm run type-check
 **Cause**: Storage bucket not created or not public.
 
 **Solution**:
+
 1. Supabase Dashboard → Storage → Create bucket named `wishlist-images`
 2. Set bucket to **Public**
 3. Verify `VITE_SUPABASE_STORAGE_BUCKET=wishlist-images`
@@ -158,6 +169,7 @@ npm run type-check
 ### Tests fail with "Cannot find module"
 
 **Solution**:
+
 ```bash
 npm install
 npm test
@@ -170,6 +182,7 @@ npm test
 **CI error**: "Coverage threshold not met"
 
 **Solution**: Add tests for uncovered code:
+
 ```bash
 # See which files need coverage
 npm run test:coverage
@@ -183,6 +196,7 @@ npm run test:coverage
 **Cause**: Pinia not initialised in test.
 
 **Fix**:
+
 ```typescript
 beforeEach(() => {
   setActivePinia(createPinia());
@@ -212,6 +226,7 @@ Fix all TypeScript and lint errors before building.
 **Solution**: Ensure GitHub Pages is configured with a `404.html` that redirects to `index.html`. This is handled automatically by the Vite build config.
 
 Check `VITE_BASE_PATH` matches your repository name:
+
 ```env
 VITE_BASE_PATH=/family-logistics-dashboard/
 ```
@@ -223,6 +238,7 @@ VITE_BASE_PATH=/family-logistics-dashboard/
 **Cause**: Variables not set in hosting dashboard.
 
 **Solution**:
+
 1. Set variables in the hosting provider's dashboard (not just `.env.local`)
 2. Redeploy after setting variables
 

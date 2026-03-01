@@ -11,6 +11,7 @@ Reusable Vue 3 components in the Family Logistics Dashboard.
 Reusable components are located in `src/components/`. They follow Vue 3 Composition API patterns and use TailwindCSS for styling.
 
 Components are divided into:
+
 - **Shared components** (`src/components/shared/`) — used across multiple features
 - **Feature components** — co-located with their feature in `src/features/<feature>/`
 
@@ -78,16 +79,16 @@ toast.info('Invitation sent');
 
 ## Key Composables
 
-| Composable | File | Purpose |
-| ---------- | ---- | ------- |
-| `useMembers` | `composables/useMembers.ts` | Load and manage household members |
-| `useInvitations` | `composables/useInvitations.ts` | Invitation management |
-| `useLinkPreview` | `composables/useLinkPreview.ts` | Microlink URL preview |
-| `useTheme` | `composables/useTheme.ts` | Dark/light theme toggle |
-| `useUserProfile` | `composables/useUserProfile.ts` | Current user profile |
-| `useAsyncHandler` | `composables/useAsyncHandler.ts` | Async error handling wrapper |
-| `useAsyncState` | `composables/useAsyncState.ts` | Async state management |
-| `useVisibilityDisplay` | `composables/useVisibilityDisplay.ts` | Wishlist visibility labels |
+| Composable             | File                                  | Purpose                           |
+| ---------------------- | ------------------------------------- | --------------------------------- |
+| `useMembers`           | `composables/useMembers.ts`           | Load and manage household members |
+| `useInvitations`       | `composables/useInvitations.ts`       | Invitation management             |
+| `useLinkPreview`       | `composables/useLinkPreview.ts`       | Microlink URL preview             |
+| `useTheme`             | `composables/useTheme.ts`             | Dark/light theme toggle           |
+| `useUserProfile`       | `composables/useUserProfile.ts`       | Current user profile              |
+| `useAsyncHandler`      | `composables/useAsyncHandler.ts`      | Async error handling wrapper      |
+| `useAsyncState`        | `composables/useAsyncState.ts`        | Async state management            |
+| `useVisibilityDisplay` | `composables/useVisibilityDisplay.ts` | Wishlist visibility labels        |
 
 ---
 

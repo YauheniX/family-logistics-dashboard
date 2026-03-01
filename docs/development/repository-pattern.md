@@ -11,6 +11,7 @@ How the repository pattern is used in the Family Logistics Dashboard.
 The **Repository Pattern** abstracts data access behind an interface. Application code (stores, services) calls the repository interface — it doesn't know or care whether the data comes from Supabase or localStorage.
 
 This enables:
+
 - **Mock Mode** — swap the real database for localStorage with no code changes
 - **Testability** — mock the repository in unit tests
 - **Portability** — replace Supabase with any other backend
@@ -57,7 +58,7 @@ export class ShoppingListRepository implements IShoppingListRepository {
     const { data, error } = await supabase
       .from('shopping_lists')
       .select('*')
-      .eq('household_id', householdId)  // ← Always scope to household
+      .eq('household_id', householdId) // ← Always scope to household
       .order('created_at', { ascending: false });
 
     if (error) throw new Error(error.message);
@@ -65,11 +66,7 @@ export class ShoppingListRepository implements IShoppingListRepository {
   }
 
   async create(dto: CreateShoppingListDto): Promise<ShoppingList> {
-    const { data, error } = await supabase
-      .from('shopping_lists')
-      .insert(dto)
-      .select()
-      .single();
+    const { data, error } = await supabase.from('shopping_lists').insert(dto).select().single();
 
     if (error) throw new Error(error.message);
     return data;
@@ -94,7 +91,7 @@ export class ShoppingListMockRepository implements IShoppingListRepository {
 
   async findByHouseholdId(householdId: string): Promise<ShoppingList[]> {
     // ← Same tenant filter as Supabase implementation
-    return this.getAll().filter(list => list.household_id === householdId);
+    return this.getAll().filter((list) => list.household_id === householdId);
   }
 
   async create(dto: CreateShoppingListDto): Promise<ShoppingList> {
@@ -124,9 +121,7 @@ The factory selects the correct implementation at runtime:
 import { isMockMode } from '@/config/backend.config';
 
 export function createShoppingListRepository(): IShoppingListRepository {
-  return isMockMode()
-    ? new ShoppingListMockRepository()
-    : new ShoppingListRepository();
+  return isMockMode() ? new ShoppingListMockRepository() : new ShoppingListRepository();
 }
 ```
 
@@ -159,9 +154,9 @@ In tests, mock the factory to inject a controlled repository:
 ```typescript
 vi.mock('@/features/shopping/infrastructure/shopping.factory', () => ({
   createShoppingListRepository: () => ({
-    findByHouseholdId: vi.fn().mockResolvedValue([
-      { id: '1', title: 'Groceries', household_id: 'hh-1', status: 'active' }
-    ]),
+    findByHouseholdId: vi
+      .fn()
+      .mockResolvedValue([{ id: '1', title: 'Groceries', household_id: 'hh-1', status: 'active' }]),
     create: vi.fn().mockResolvedValue({ id: '2', title: 'Hardware', household_id: 'hh-1' }),
   }),
 }));

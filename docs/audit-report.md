@@ -9,11 +9,11 @@
 
 ## Summary
 
-| Severity     | Count | Status        |
-| ------------ | ----- | ------------- |
-| 🔴 Critical  | 4     | Addressed     |
-| 🟠 Important | 8     | Addressed     |
-| 🟡 Improvement | 12  | Addressed     |
+| Severity       | Count | Status    |
+| -------------- | ----- | --------- |
+| 🔴 Critical    | 4     | Addressed |
+| 🟠 Important   | 8     | Addressed |
+| 🟡 Improvement | 12    | Addressed |
 
 ---
 
@@ -23,16 +23,16 @@
 
 **Issues Found**:
 
-| Severity | Issue |
-| -------- | ----- |
-| 🟠 Important | Missing step-by-step setup instructions for Supabase backend |
-| 🟠 Important | Missing environment variable table |
-| 🟡 Improvement | No architecture diagram in README |
-| 🟡 Improvement | Missing CI/CD explanation at the README level |
-| 🟡 Improvement | "Family Groups" terminology used in README; codebase uses "Households" |
-| 🟡 Improvement | Deployment section missing from README |
+| Severity       | Issue                                                                       |
+| -------------- | --------------------------------------------------------------------------- |
+| 🟠 Important   | Missing step-by-step setup instructions for Supabase backend                |
+| 🟠 Important   | Missing environment variable table                                          |
+| 🟡 Improvement | No architecture diagram in README                                           |
+| 🟡 Improvement | Missing CI/CD explanation at the README level                               |
+| 🟡 Improvement | "Family Groups" terminology used in README; codebase uses "Households"      |
+| 🟡 Improvement | Deployment section missing from README                                      |
 | 🟡 Improvement | Contribution section is minimal — no code standards or PR process explained |
-| 🟡 Improvement | No troubleshooting section in README |
+| 🟡 Improvement | No troubleshooting section in README                                        |
 
 **Strengths**:
 
@@ -47,11 +47,11 @@
 
 **Issues Found**:
 
-| Severity | Issue |
-| -------- | ----- |
-| 🔴 Critical | 18 files referenced as links do not exist (broken links) |
-| 🟠 Important | Sections labelled "✅" suggest completion but many targets are missing |
-| 🟡 Improvement | Navigation-by-role section links to non-existent files |
+| Severity       | Issue                                                                  |
+| -------------- | ---------------------------------------------------------------------- |
+| 🔴 Critical    | 18 files referenced as links do not exist (broken links)               |
+| 🟠 Important   | Sections labelled "✅" suggest completion but many targets are missing |
+| 🟡 Improvement | Navigation-by-role section links to non-existent files                 |
 
 **Missing referenced files**:
 
@@ -82,25 +82,25 @@ docs/operations/faq.md
 
 ### Missing Content
 
-| Severity | Area | Missing |
-| -------- | ---- | ------- |
-| 🔴 Critical | Setup | No Supabase setup guide (`supabase-setup.md`) |
-| 🔴 Critical | Setup | No installation guide for backend-connected mode |
-| 🔴 Critical | Development | No repository pattern guide (`repository-pattern.md`) |
-| 🔴 Critical | Development | No adding-features guide (`adding-features.md`) |
-| 🟠 Important | Architecture | No clean architecture explanation |
-| 🟠 Important | Architecture | No multi-tenant isolation explanation |
-| 🟠 Important | Backend | No RLS policies documentation |
-| 🟠 Important | Backend | No migrations guide |
-| 🟠 Important | Frontend | No state management guide |
-| 🟠 Important | Frontend | No project structure guide |
-| 🟠 Important | Testing | No testing guide |
-| 🟠 Important | Operations | No troubleshooting guide |
-| 🟠 Important | Operations | No FAQ |
-| 🟡 Improvement | Frontend | No components guide |
-| 🟡 Improvement | Deployment | No environment variables reference |
-| 🟡 Improvement | Features | No household management feature doc |
-| 🟡 Improvement | Features | No shopping lists feature doc |
+| Severity       | Area         | Missing                                               |
+| -------------- | ------------ | ----------------------------------------------------- |
+| 🔴 Critical    | Setup        | No Supabase setup guide (`supabase-setup.md`)         |
+| 🔴 Critical    | Setup        | No installation guide for backend-connected mode      |
+| 🔴 Critical    | Development  | No repository pattern guide (`repository-pattern.md`) |
+| 🔴 Critical    | Development  | No adding-features guide (`adding-features.md`)       |
+| 🟠 Important   | Architecture | No clean architecture explanation                     |
+| 🟠 Important   | Architecture | No multi-tenant isolation explanation                 |
+| 🟠 Important   | Backend      | No RLS policies documentation                         |
+| 🟠 Important   | Backend      | No migrations guide                                   |
+| 🟠 Important   | Frontend     | No state management guide                             |
+| 🟠 Important   | Frontend     | No project structure guide                            |
+| 🟠 Important   | Testing      | No testing guide                                      |
+| 🟠 Important   | Operations   | No troubleshooting guide                              |
+| 🟠 Important   | Operations   | No FAQ                                                |
+| 🟡 Improvement | Frontend     | No components guide                                   |
+| 🟡 Improvement | Deployment   | No environment variables reference                    |
+| 🟡 Improvement | Features     | No household management feature doc                   |
+| 🟡 Improvement | Features     | No shopping lists feature doc                         |
 
 ---
 
@@ -108,11 +108,11 @@ docs/operations/faq.md
 
 ### Terminology Inconsistencies
 
-| Severity | Location | Issue |
-| -------- | -------- | ----- |
-| 🔴 Critical | README.md | Uses "Family Groups" — codebase/schema uses "Households" |
-| 🟠 Important | docs/domain/overview.md | Entity hierarchy still shows `Family` and `FamilyMember` (legacy) |
-| 🟡 Improvement | README.md | "family" appears 8 times in feature descriptions; should say "household" |
+| Severity       | Location                | Issue                                                                    |
+| -------------- | ----------------------- | ------------------------------------------------------------------------ |
+| 🔴 Critical    | README.md               | Uses "Family Groups" — codebase/schema uses "Households"                 |
+| 🟠 Important   | docs/domain/overview.md | Entity hierarchy still shows `Family` and `FamilyMember` (legacy)        |
+| 🟡 Improvement | README.md               | "family" appears 8 times in feature descriptions; should say "household" |
 
 ### Broken References
 
@@ -123,14 +123,14 @@ docs/operations/faq.md
 
 ## Phase 4 — UX Clarity Evaluation
 
-| Aspect | Rating | Notes |
-| ------ | ------ | ----- |
-| Developer onboarding | ⭐⭐⭐☆☆ | Quickstart exists but full setup missing |
-| End-user understanding | ⭐⭐☆☆☆ | No user guide exists |
-| Mental model clarity | ⭐⭐⭐☆☆ | Household/tenant model explained in domain docs |
-| Non-technical accessibility | ⭐⭐☆☆☆ | No non-technical user guide |
-| RBAC explanation | ⭐⭐⭐⭐☆ | rbac-permissions.md is comprehensive |
-| Architecture clarity | ⭐⭐⭐☆☆ | Architecture overview exists but diagrams are ASCII only |
+| Aspect                      | Rating    | Notes                                                    |
+| --------------------------- | --------- | -------------------------------------------------------- |
+| Developer onboarding        | ⭐⭐⭐☆☆  | Quickstart exists but full setup missing                 |
+| End-user understanding      | ⭐⭐☆☆☆   | No user guide exists                                     |
+| Mental model clarity        | ⭐⭐⭐☆☆  | Household/tenant model explained in domain docs          |
+| Non-technical accessibility | ⭐⭐☆☆☆   | No non-technical user guide                              |
+| RBAC explanation            | ⭐⭐⭐⭐☆ | rbac-permissions.md is comprehensive                     |
+| Architecture clarity        | ⭐⭐⭐☆☆  | Architecture overview exists but diagrams are ASCII only |
 
 ---
 
@@ -160,26 +160,26 @@ docs/operations/faq.md
 
 ## Files Changed
 
-| File | Action |
-| ---- | ------ |
-| `README.md` | Rewritten — comprehensive, correct terminology, all sections |
-| `docs/user-guide.md` | Created — full non-technical user guide |
-| `docs/audit-report.md` | Created — this file |
-| `docs/getting-started/installation.md` | Created |
-| `docs/getting-started/configuration.md` | Created |
-| `docs/architecture/clean-architecture.md` | Created |
-| `docs/architecture/multi-tenant.md` | Created |
-| `docs/backend/supabase-setup.md` | Created |
-| `docs/backend/rls-policies.md` | Created |
-| `docs/backend/migrations.md` | Created |
-| `docs/deployment/environment-variables.md` | Created |
-| `docs/development/adding-features.md` | Created |
-| `docs/development/repository-pattern.md` | Created |
-| `docs/features/household-management.md` | Created |
-| `docs/features/shopping-lists.md` | Created |
-| `docs/frontend/project-structure.md` | Created |
-| `docs/frontend/state-management.md` | Created |
-| `docs/frontend/components.md` | Created |
-| `docs/testing/overview.md` | Created |
-| `docs/operations/troubleshooting.md` | Created |
-| `docs/operations/faq.md` | Created |
+| File                                       | Action                                                       |
+| ------------------------------------------ | ------------------------------------------------------------ |
+| `README.md`                                | Rewritten — comprehensive, correct terminology, all sections |
+| `docs/user-guide.md`                       | Created — full non-technical user guide                      |
+| `docs/audit-report.md`                     | Created — this file                                          |
+| `docs/getting-started/installation.md`     | Created                                                      |
+| `docs/getting-started/configuration.md`    | Created                                                      |
+| `docs/architecture/clean-architecture.md`  | Created                                                      |
+| `docs/architecture/multi-tenant.md`        | Created                                                      |
+| `docs/backend/supabase-setup.md`           | Created                                                      |
+| `docs/backend/rls-policies.md`             | Created                                                      |
+| `docs/backend/migrations.md`               | Created                                                      |
+| `docs/deployment/environment-variables.md` | Created                                                      |
+| `docs/development/adding-features.md`      | Created                                                      |
+| `docs/development/repository-pattern.md`   | Created                                                      |
+| `docs/features/household-management.md`    | Created                                                      |
+| `docs/features/shopping-lists.md`          | Created                                                      |
+| `docs/frontend/project-structure.md`       | Created                                                      |
+| `docs/frontend/state-management.md`        | Created                                                      |
+| `docs/frontend/components.md`              | Created                                                      |
+| `docs/testing/overview.md`                 | Created                                                      |
+| `docs/operations/troubleshooting.md`       | Created                                                      |
+| `docs/operations/faq.md`                   | Created                                                      |

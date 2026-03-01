@@ -94,14 +94,14 @@ See [Architecture Overview](docs/architecture/overview.md) for full details.
 
 ## 🛠 Tech Stack
 
-| Layer          | Technology                                              |
-| -------------- | ------------------------------------------------------- |
+| Layer          | Technology                                                 |
+| -------------- | ---------------------------------------------------------- |
 | **Frontend**   | Vue 3 (Composition API) • TypeScript • Pinia • TailwindCSS |
-| **Backend**    | Supabase (PostgreSQL + Auth + Storage + RLS)            |
-| **Validation** | Zod                                                     |
-| **Build**      | Vite                                                    |
-| **Testing**    | Vitest • Vue Test Utils                                 |
-| **Deployment** | Vercel / Netlify / GitHub Pages / Docker                |
+| **Backend**    | Supabase (PostgreSQL + Auth + Storage + RLS)               |
+| **Validation** | Zod                                                        |
+| **Build**      | Vite                                                       |
+| **Testing**    | Vitest • Vue Test Utils                                    |
+| **Deployment** | Vercel / Netlify / GitHub Pages / Docker                   |
 
 ---
 
@@ -186,14 +186,14 @@ See [Installation Guide](docs/getting-started/installation.md) and [Supabase Set
 
 ## 🔑 Environment Variables
 
-| Variable | Required | Default | Description |
-| -------- | -------- | ------- | ----------- |
-| `VITE_SUPABASE_URL` | No* | — | Supabase project URL (`https://xxx.supabase.co`) |
-| `VITE_SUPABASE_ANON_KEY` | No* | — | Supabase anon/public key (JWT) |
-| `VITE_USE_MOCK_BACKEND` | No | `false` | Force mock mode (`true` / `false`) |
-| `VITE_SUPABASE_STORAGE_BUCKET` | No | `wishlist-images` | Storage bucket for wishlist images |
-| `VITE_BASE_PATH` | No | `/` | Base URL path (use `/repo-name/` for GitHub Pages) |
-| `VITE_MICROLINK_KEY` | No | — | Microlink Pro API key (free tier requires no key) |
+| Variable                       | Required | Default           | Description                                        |
+| ------------------------------ | -------- | ----------------- | -------------------------------------------------- |
+| `VITE_SUPABASE_URL`            | No\*     | —                 | Supabase project URL (`https://xxx.supabase.co`)   |
+| `VITE_SUPABASE_ANON_KEY`       | No\*     | —                 | Supabase anon/public key (JWT)                     |
+| `VITE_USE_MOCK_BACKEND`        | No       | `false`           | Force mock mode (`true` / `false`)                 |
+| `VITE_SUPABASE_STORAGE_BUCKET` | No       | `wishlist-images` | Storage bucket for wishlist images                 |
+| `VITE_BASE_PATH`               | No       | `/`               | Base URL path (use `/repo-name/` for GitHub Pages) |
+| `VITE_MICROLINK_KEY`           | No       | —                 | Microlink Pro API key (free tier requires no key)  |
 
 > \* If Supabase credentials are absent, the app **automatically falls back to Mock Mode**.
 
@@ -247,13 +247,13 @@ See [Project Structure Guide](docs/frontend/project-structure.md) for details.
 
 The system uses a **five-tier role hierarchy**:
 
-| Role | Description | Can Invite | Can Edit Content | Admin Access |
-| ---- | ----------- | ---------- | ---------------- | ------------ |
-| **Owner** | Full control, created the household | ✅ | ✅ | ✅ |
-| **Admin** | Co-manager, can manage members | ✅ | ✅ | ✅ |
-| **Member** | Standard household member | ❌ | ✅ | ❌ |
-| **Child** | Limited access, no invitations | ❌ | Partial | ❌ |
-| **Viewer** | Read-only access | ❌ | ❌ | ❌ |
+| Role       | Description                         | Can Invite | Can Edit Content | Admin Access |
+| ---------- | ----------------------------------- | ---------- | ---------------- | ------------ |
+| **Owner**  | Full control, created the household | ✅         | ✅               | ✅           |
+| **Admin**  | Co-manager, can manage members      | ✅         | ✅               | ✅           |
+| **Member** | Standard household member           | ❌         | ✅               | ❌           |
+| **Child**  | Limited access, no invitations      | ❌         | Partial          | ❌           |
+| **Viewer** | Read-only access                    | ❌         | ❌               | ❌           |
 
 **Public Guest** (unauthenticated) can only access public wishlists via share link.
 
@@ -292,12 +292,13 @@ See [Testing Guide](docs/testing/overview.md) for the full testing strategy.
 
 Two GitHub Actions workflows run on every push and pull request to `main`:
 
-| Workflow | Trigger | Steps |
-| -------- | ------- | ----- |
-| **CI** | push/PR to `main` | Lint → Test → Coverage check |
+| Workflow   | Trigger           | Steps                           |
+| ---------- | ----------------- | ------------------------------- |
+| **CI**     | push/PR to `main` | Lint → Test → Coverage check    |
 | **CodeQL** | push/PR to `main` | Security vulnerability scanning |
 
 **CI fails if**:
+
 - ESLint reports errors
 - Any test fails
 - Code coverage drops below 70%
@@ -386,16 +387,16 @@ For AI agents: see [AGENTS.md](AGENTS.md).
 
 ## 🔧 Development Commands
 
-| Command | Description |
-| ------- | ----------- |
-| `npm run dev` | Start development server (http://localhost:5173) |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build locally |
-| `npm test` | Run all tests |
-| `npm run test:coverage` | Run tests with coverage report |
-| `npm run lint` | Run ESLint |
-| `npm run format` | Format code with Prettier |
-| `npm run type-check` | TypeScript type checking |
+| Command                 | Description                                      |
+| ----------------------- | ------------------------------------------------ |
+| `npm run dev`           | Start development server (http://localhost:5173) |
+| `npm run build`         | Build for production                             |
+| `npm run preview`       | Preview production build locally                 |
+| `npm test`              | Run all tests                                    |
+| `npm run test:coverage` | Run tests with coverage report                   |
+| `npm run lint`          | Run ESLint                                       |
+| `npm run format`        | Format code with Prettier                        |
+| `npm run type-check`    | TypeScript type checking                         |
 
 ---
 
@@ -458,16 +459,16 @@ See [FAQ](docs/operations/faq.md) for more answers.
 
 ## 📚 Documentation
 
-| Section | Link |
-| ------- | ---- |
-| Full docs index | [docs/README.md](docs/README.md) |
-| Quickstart | [docs/getting-started/quickstart.md](docs/getting-started/quickstart.md) |
-| User Guide | [docs/user-guide.md](docs/user-guide.md) |
-| Architecture | [docs/architecture/overview.md](docs/architecture/overview.md) |
-| Database Schema | [docs/backend/database-schema.md](docs/backend/database-schema.md) |
+| Section          | Link                                                                           |
+| ---------------- | ------------------------------------------------------------------------------ |
+| Full docs index  | [docs/README.md](docs/README.md)                                               |
+| Quickstart       | [docs/getting-started/quickstart.md](docs/getting-started/quickstart.md)       |
+| User Guide       | [docs/user-guide.md](docs/user-guide.md)                                       |
+| Architecture     | [docs/architecture/overview.md](docs/architecture/overview.md)                 |
+| Database Schema  | [docs/backend/database-schema.md](docs/backend/database-schema.md)             |
 | RBAC Permissions | [docs/architecture/rbac-permissions.md](docs/architecture/rbac-permissions.md) |
-| Deployment | [docs/deployment/overview.md](docs/deployment/overview.md) |
-| CI/CD | [docs/operations/ci-cd.md](docs/operations/ci-cd.md) |
+| Deployment       | [docs/deployment/overview.md](docs/deployment/overview.md)                     |
+| CI/CD            | [docs/operations/ci-cd.md](docs/operations/ci-cd.md)                           |
 
 ---
 

@@ -36,6 +36,7 @@ Examples:
 ```
 
 Rules:
+
 - Numbers are zero-padded to 3 digits
 - Descriptions are lowercase with underscores
 - Each file contains exactly one logical change

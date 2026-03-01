@@ -46,6 +46,7 @@ supabase db push
 ## 3. Get Your API Credentials
 
 From the Supabase Dashboard:
+
 1. Go to **Settings** → **API**
 2. Copy:
    - **Project URL** (e.g., `https://abc123.supabase.co`)
@@ -127,6 +128,7 @@ See [RLS Policies](rls-policies.md) for the full policy documentation.
 ## Production Deployment
 
 For production:
+
 1. Configure environment variables in your hosting provider (Vercel, Netlify, etc.)
 2. Update Google OAuth redirect URIs to include your production domain
 3. See [Deployment Guide](../deployment/overview.md)

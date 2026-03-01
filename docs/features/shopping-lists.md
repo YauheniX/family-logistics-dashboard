@@ -16,17 +16,17 @@ Shopping lists belong to the **household**, not an individual — any eligible m
 
 ## Feature Overview
 
-| Sub-Feature | Description | Who Can Use |
-| ----------- | ----------- | ----------- |
-| View lists | See all household shopping lists | All members |
-| Create list | Create a new shopping list | Owner, Admin, Member |
-| Edit list | Update title or description | Owner, Admin, Member |
-| Archive list | Mark list as completed/archived | Owner, Admin, Member |
-| Delete list | Permanently delete a list | Owner, Admin (any); Member (own) |
-| Add item | Add an item to a list | Owner, Admin, Member, Child |
-| Edit item | Update item details | Owner, Admin, Member (any); Child (own) |
-| Mark purchased | Toggle item as bought | Owner, Admin, Member, Child |
-| Delete item | Remove an item | Owner, Admin (any); Member, Child (own) |
+| Sub-Feature    | Description                      | Who Can Use                             |
+| -------------- | -------------------------------- | --------------------------------------- |
+| View lists     | See all household shopping lists | All members                             |
+| Create list    | Create a new shopping list       | Owner, Admin, Member                    |
+| Edit list      | Update title or description      | Owner, Admin, Member                    |
+| Archive list   | Mark list as completed/archived  | Owner, Admin, Member                    |
+| Delete list    | Permanently delete a list        | Owner, Admin (any); Member (own)        |
+| Add item       | Add an item to a list            | Owner, Admin, Member, Child             |
+| Edit item      | Update item details              | Owner, Admin, Member (any); Child (own) |
+| Mark purchased | Toggle item as bought            | Owner, Admin, Member, Child             |
+| Delete item    | Remove an item                   | Owner, Admin (any); Member, Child (own) |
 
 ---
 
@@ -45,9 +45,9 @@ The list is created with status `active` and is immediately visible to all house
 
 ### List Statuses
 
-| Status | Description |
-| ------ | ----------- |
-| `active` | Currently in use; shown in main list view |
+| Status     | Description                                                        |
+| ---------- | ------------------------------------------------------------------ |
+| `active`   | Currently in use; shown in main list view                          |
 | `archived` | Completed; hidden from main view; accessible via "Archived" filter |
 
 ### Archiving vs Deleting
@@ -67,23 +67,25 @@ Any eligible member (including Child) can add items:
 2. Click **Add Item** or use the quick-add input.
 3. Enter:
 
-| Field | Description | Required |
-| ----- | ----------- | -------- |
-| Name | Item name | ✅ |
-| Quantity | Amount to buy (e.g., "2", "1 kg") | No |
-| Category | Grouping (e.g., "Produce", "Dairy") | No |
-| Notes | Extra details | No |
+| Field    | Description                         | Required |
+| -------- | ----------------------------------- | -------- |
+| Name     | Item name                           | ✅       |
+| Quantity | Amount to buy (e.g., "2", "1 kg")   | No       |
+| Category | Grouping (e.g., "Produce", "Dairy") | No       |
+| Notes    | Extra details                       | No       |
 
 ### Marking as Purchased
 
 Click the checkbox next to an item to toggle its purchased state.
 
 When marked purchased:
+
 - Item is visually crossed out
 - The purchasing member's name is recorded
 - A `purchased_at` timestamp is set
 
 When unmarked:
+
 - `purchased_by` and `purchased_at` are cleared
 
 ### Item State Diagram
@@ -111,14 +113,15 @@ interface ShoppingItem {
   quantity: string | null;
   category: string | null;
   is_purchased: boolean;
-  added_by: string;       // member who added the item
-  purchased_by: string | null;  // member who marked it bought
+  added_by: string; // member who added the item
+  purchased_by: string | null; // member who marked it bought
   purchased_at: string | null;
   created_at: string;
 }
 ```
 
 This allows the household to see:
+
 - Who still needs to buy what
 - Who completed each purchase
 - Shopping contribution stats on the Dashboard
@@ -137,13 +140,13 @@ Shopping lists are designed for concurrent use:
 
 ## Edge Cases
 
-| Scenario | Behaviour |
-| -------- | --------- |
-| Two members mark same item purchased simultaneously | Last write wins; no conflict detection |
-| Member removed from household | Their items remain on the list; `added_by` still references them |
-| List deleted with purchased items | All items are permanently deleted (no confirmation prompt for items) |
-| Viewer marks item purchased | Denied — Viewer role cannot modify items |
-| Child creates a list | Denied — Child role cannot create lists (only add items) |
+| Scenario                                            | Behaviour                                                            |
+| --------------------------------------------------- | -------------------------------------------------------------------- |
+| Two members mark same item purchased simultaneously | Last write wins; no conflict detection                               |
+| Member removed from household                       | Their items remain on the list; `added_by` still references them     |
+| List deleted with purchased items                   | All items are permanently deleted (no confirmation prompt for items) |
+| Viewer marks item purchased                         | Denied — Viewer role cannot modify items                             |
+| Child creates a list                                | Denied — Child role cannot create lists (only add items)             |
 
 ---
 

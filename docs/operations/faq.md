@@ -17,6 +17,7 @@ To get real multi-user collaboration and cloud sync, you'll need a Supabase acco
 ### What is Mock Mode?
 
 Mock Mode replaces the Supabase backend with browser localStorage. The app looks and works identically, but:
+
 - Data is stored only in your browser
 - No real authentication (a demo user is created automatically)
 - Data is lost if localStorage is cleared
@@ -67,6 +68,7 @@ Note: no automated email is sent — you need to notify the person yourself (e.g
 ### Can I add a child who doesn't have an account?
 
 Yes. You can add a "soft member" — a member without an account. This is designed for young children:
+
 1. Go to **Household** → **Members** → **Add Member (no account)**
 2. Enter their display name and optional details
 
@@ -114,6 +116,7 @@ Yes — all eligible members (including Child role) can mark items as purchased 
 ### Who can see my wishlist?
 
 Depends on the visibility setting:
+
 - **Private**: Only you (+ household Owner/Admin)
 - **Household**: All household members
 - **Public**: Anyone with the share link (no account required)
@@ -130,7 +133,7 @@ Depends on the visibility setting:
 
 ### Can I see who reserved items on my wishlist?
 
-No — reservations are anonymous to preserve the gift surprise. You can see *how many* items are reserved but not by whom.
+No — reservations are anonymous to preserve the gift surprise. You can see _how many_ items are reserved but not by whom.
 
 ---
 
@@ -144,12 +147,12 @@ Yes. The Child role can create wishlists — great for birthday or holiday wish 
 
 ### What is the difference between Owner and Admin?
 
-| Capability | Owner | Admin |
-| ---------- | ----- | ----- |
-| Delete household | ✅ | ❌ |
-| Transfer ownership | ✅ | ❌ |
-| Promote to owner | ✅ | ❌ |
-| All other admin actions | ✅ | ✅ |
+| Capability              | Owner | Admin |
+| ----------------------- | ----- | ----- |
+| Delete household        | ✅    | ❌    |
+| Transfer ownership      | ✅    | ❌    |
+| Promote to owner        | ✅    | ❌    |
+| All other admin actions | ✅    | ✅    |
 
 ---
 

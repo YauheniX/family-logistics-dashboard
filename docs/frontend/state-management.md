@@ -20,21 +20,21 @@ Stores are divided into two categories:
 
 Application-wide state shared across all features:
 
-| File | Store ID | Responsibility |
-| ---- | -------- | -------------- |
-| `src/stores/auth.ts` | `auth` | User session, authentication state |
-| `src/stores/household.ts` | `household` | Current household, member list |
-| `src/stores/toast.ts` | `toast` | Toast notification queue |
+| File                      | Store ID    | Responsibility                     |
+| ------------------------- | ----------- | ---------------------------------- |
+| `src/stores/auth.ts`      | `auth`      | User session, authentication state |
+| `src/stores/household.ts` | `household` | Current household, member list     |
+| `src/stores/toast.ts`     | `toast`     | Toast notification queue           |
 
 ### Feature Stores (`src/features/*/presentation/`)
 
 Feature-scoped state:
 
-| File | Store ID | Responsibility |
-| ---- | -------- | -------------- |
-| `src/features/shopping/presentation/shopping.store.ts` | `shopping` | Shopping lists and items |
-| `src/features/wishlist/presentation/wishlist.store.ts` | `wishlist` | Wishlists and items |
-| `src/features/household/presentation/household.store.ts` | `household-feature` | (internal use) |
+| File                                                     | Store ID            | Responsibility           |
+| -------------------------------------------------------- | ------------------- | ------------------------ |
+| `src/features/shopping/presentation/shopping.store.ts`   | `shopping`          | Shopping lists and items |
+| `src/features/wishlist/presentation/wishlist.store.ts`   | `wishlist`          | Wishlists and items      |
+| `src/features/household/presentation/household.store.ts` | `household-feature` | (internal use)           |
 
 ---
 
@@ -121,7 +121,7 @@ export const useShoppingStore = defineStore('shopping', () => {
   const repo = createShoppingListRepository();
 
   // Computed (getters)
-  const activeLists = computed(() => lists.value.filter(l => l.status === 'active'));
+  const activeLists = computed(() => lists.value.filter((l) => l.status === 'active'));
 
   // Actions
   async function loadLists(householdId: string): Promise<void> {
@@ -175,9 +175,9 @@ The global auth store manages Supabase session state:
 import { useAuthStore } from '@/stores/auth';
 
 const auth = useAuthStore();
-auth.user        // current User | null
-auth.isLoggedIn  // boolean computed
-await auth.signOut()
+auth.user; // current User | null
+auth.isLoggedIn; // boolean computed
+await auth.signOut();
 ```
 
 ---
@@ -190,9 +190,9 @@ The global household store manages the active household and membership:
 import { useHouseholdStore } from '@/stores/household';
 
 const householdStore = useHouseholdStore();
-householdStore.currentHousehold  // Household | null
-householdStore.members           // Member[]
-householdStore.currentMember     // Member | null (current user's membership)
+householdStore.currentHousehold; // Household | null
+householdStore.members; // Member[]
+householdStore.currentMember; // Member | null (current user's membership)
 ```
 
 ---

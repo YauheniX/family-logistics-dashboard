@@ -14,16 +14,16 @@ A **household** is the primary tenant unit of the application. Every piece of da
 
 ## Feature Overview
 
-| Sub-Feature | Description | Who Can Use |
-| ----------- | ----------- | ----------- |
-| Create household | Start a new household (user becomes owner) | Any authenticated user |
-| View household | See household name, slug, member count | All members |
-| Update settings | Change household name | Owner, Admin |
-| Invite member | Send an invitation by email | Owner, Admin |
-| Manage member roles | Change a member's role | Owner, Admin |
-| Remove member | Remove a member from the household | Owner, Admin |
-| Leave household | Remove yourself | Member, Admin, Child, Viewer |
-| Delete household | Permanently destroy the household | Owner only |
+| Sub-Feature         | Description                                | Who Can Use                  |
+| ------------------- | ------------------------------------------ | ---------------------------- |
+| Create household    | Start a new household (user becomes owner) | Any authenticated user       |
+| View household      | See household name, slug, member count     | All members                  |
+| Update settings     | Change household name                      | Owner, Admin                 |
+| Invite member       | Send an invitation by email                | Owner, Admin                 |
+| Manage member roles | Change a member's role                     | Owner, Admin                 |
+| Remove member       | Remove a member from the household         | Owner, Admin                 |
+| Leave household     | Remove yourself                            | Member, Admin, Child, Viewer |
+| Delete household    | Permanently destroy the household          | Owner only                   |
 
 ---
 
@@ -56,6 +56,7 @@ A **household** is the primary tenant unit of the application. Every piece of da
 Invitations are the primary way to add members to a household.
 
 **Flow**:
+
 1. Owner/Admin goes to Household → Members → Invite Member.
 2. Enters invitee's email address and selects a role.
 3. An invitation record is created with a 7-day expiry.
@@ -65,6 +66,7 @@ Invitations are the primary way to add members to a household.
 7. On acceptance, a member record is created.
 
 **Notes**:
+
 - Only one pending invitation per email per household.
 - Invitation is tied to an email address, not an existing user account.
 - No automated email is sent — admin must notify the invitee manually.
@@ -88,6 +90,7 @@ Soft members appear in the household roster but cannot log in. Their data (e.g.,
 3. Confirm.
 
 **Role change rules**:
+
 - Owner can change any member's role.
 - Admin can change roles for members with equal or lower roles (cannot promote to owner).
 - A member cannot change their own role (except via ownership transfer).
@@ -104,6 +107,7 @@ Removed members lose access immediately. Their data (items they added to shoppin
 ### Ownership Transfer
 
 The owner can transfer ownership to another member:
+
 1. Household → Settings → Transfer Ownership.
 2. Select the new owner from existing admin/member list.
 3. Confirm.
@@ -126,6 +130,7 @@ The URL slug updates automatically (but old slug links may break).
 **Only the Owner can delete a household.**
 
 ⚠️ Deletion is **permanent and irreversible**. All data is destroyed:
+
 - All shopping lists and items
 - All wishlists and items
 - All member records
@@ -141,11 +146,11 @@ To delete: **Household** → **Settings** → **Delete Household** → Confirm.
 interface Household {
   id: string;
   name: string;
-  slug: string;           // URL-friendly unique identifier
-  created_by: string;     // User ID of creator
+  slug: string; // URL-friendly unique identifier
+  created_by: string; // User ID of creator
   created_at: string;
   updated_at: string;
-  is_active: boolean;     // Soft delete
+  is_active: boolean; // Soft delete
   settings: Record<string, unknown>;
 }
 

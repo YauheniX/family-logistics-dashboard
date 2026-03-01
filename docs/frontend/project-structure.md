@@ -110,11 +110,11 @@ src/features/shopping/
 
 These are application-level stores shared across features:
 
-| File | Store ID | Purpose |
-| ---- | -------- | ------- |
-| `auth.ts` | `auth` | User session, login state |
+| File           | Store ID    | Purpose                        |
+| -------------- | ----------- | ------------------------------ |
+| `auth.ts`      | `auth`      | User session, login state      |
 | `household.ts` | `household` | Current household, memberships |
-| `toast.ts` | `toast` | Toast notification queue |
+| `toast.ts`     | `toast`     | Toast notification queue       |
 
 Feature-level stores live in `src/features/<feature>/presentation/`.
 
@@ -156,14 +156,14 @@ docs/
 
 ## Configuration Files
 
-| File | Purpose |
-| ---- | ------- |
-| `vite.config.ts` | Vite dev server and build settings |
-| `tsconfig.json` | TypeScript compiler options |
-| `tailwind.config.cjs` | TailwindCSS theme and plugins |
-| `.eslintrc.cjs` | ESLint rules |
-| `.prettierrc` | Prettier formatting rules |
-| `env.example` | Environment variable template |
+| File                  | Purpose                            |
+| --------------------- | ---------------------------------- |
+| `vite.config.ts`      | Vite dev server and build settings |
+| `tsconfig.json`       | TypeScript compiler options        |
+| `tailwind.config.cjs` | TailwindCSS theme and plugins      |
+| `.eslintrc.cjs`       | ESLint rules                       |
+| `.prettierrc`         | Prettier formatting rules          |
+| `env.example`         | Environment variable template      |
 
 ---
 

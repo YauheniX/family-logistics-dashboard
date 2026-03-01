@@ -54,7 +54,7 @@ src/features/my-feature/
 
 export interface MyFeatureItem {
   id: string;
-  household_id: string;      // ← Always include this
+  household_id: string; // ← Always include this
   title: string;
   created_by: string;
   created_at: string;
@@ -72,7 +72,11 @@ export type UpdateMyFeatureItemDto = Partial<Pick<MyFeatureItem, 'title'>>;
 ```typescript
 // src/features/my-feature/domain/my-feature.repository.interface.ts
 
-import type { MyFeatureItem, CreateMyFeatureItemDto, UpdateMyFeatureItemDto } from './my-feature.entities';
+import type {
+  MyFeatureItem,
+  CreateMyFeatureItemDto,
+  UpdateMyFeatureItemDto,
+} from './my-feature.entities';
 
 export interface IMyFeatureRepository {
   findByHouseholdId(householdId: string): Promise<MyFeatureItem[]>;
@@ -92,7 +96,11 @@ export interface IMyFeatureRepository {
 
 import { supabase } from '@/services/supabaseClient';
 import type { IMyFeatureRepository } from '../domain/my-feature.repository.interface';
-import type { MyFeatureItem, CreateMyFeatureItemDto, UpdateMyFeatureItemDto } from '../domain/my-feature.entities';
+import type {
+  MyFeatureItem,
+  CreateMyFeatureItemDto,
+  UpdateMyFeatureItemDto,
+} from '../domain/my-feature.entities';
 
 export class MyFeatureRepository implements IMyFeatureRepository {
   async findByHouseholdId(householdId: string): Promise<MyFeatureItem[]> {
@@ -107,11 +115,7 @@ export class MyFeatureRepository implements IMyFeatureRepository {
   }
 
   async create(dto: CreateMyFeatureItemDto): Promise<MyFeatureItem> {
-    const { data, error } = await supabase
-      .from('my_feature_items')
-      .insert(dto)
-      .select()
-      .single();
+    const { data, error } = await supabase.from('my_feature_items').insert(dto).select().single();
 
     if (error) throw error;
     return data;
@@ -129,7 +133,11 @@ export class MyFeatureRepository implements IMyFeatureRepository {
 // src/features/my-feature/infrastructure/my-feature.mock-repository.ts
 
 import type { IMyFeatureRepository } from '../domain/my-feature.repository.interface';
-import type { MyFeatureItem, CreateMyFeatureItemDto, UpdateMyFeatureItemDto } from '../domain/my-feature.entities';
+import type {
+  MyFeatureItem,
+  CreateMyFeatureItemDto,
+  UpdateMyFeatureItemDto,
+} from '../domain/my-feature.entities';
 
 const STORAGE_KEY = 'mock_my_feature_items';
 
@@ -143,7 +151,7 @@ export class MyFeatureMockRepository implements IMyFeatureRepository {
   }
 
   async findByHouseholdId(householdId: string): Promise<MyFeatureItem[]> {
-    return this.getAll().filter(item => item.household_id === householdId);
+    return this.getAll().filter((item) => item.household_id === householdId);
   }
 
   async create(dto: CreateMyFeatureItemDto): Promise<MyFeatureItem> {
@@ -238,9 +246,9 @@ import { useMyFeatureStore } from '../presentation/my-feature.store';
 
 vi.mock('../infrastructure/my-feature.factory', () => ({
   createMyFeatureRepository: () => ({
-    findByHouseholdId: vi.fn().mockResolvedValue([
-      { id: '1', household_id: 'hh-1', title: 'Test Item' }
-    ]),
+    findByHouseholdId: vi
+      .fn()
+      .mockResolvedValue([{ id: '1', household_id: 'hh-1', title: 'Test Item' }]),
     create: vi.fn().mockResolvedValue({ id: '2', household_id: 'hh-1', title: 'New Item' }),
   }),
 }));

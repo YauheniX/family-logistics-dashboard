@@ -22,40 +22,42 @@ cp env.example .env.local
 
 ### Supabase
 
-| Variable | Required | Example | Description |
-| -------- | -------- | ------- | ----------- |
-| `VITE_SUPABASE_URL` | No* | `https://abc.supabase.co` | Your Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | No* | `eyJhb...` | Supabase anon/public JWT key |
-| `VITE_SUPABASE_STORAGE_BUCKET` | No | `wishlist-images` | Storage bucket for wishlist images |
+| Variable                       | Required | Example                   | Description                        |
+| ------------------------------ | -------- | ------------------------- | ---------------------------------- |
+| `VITE_SUPABASE_URL`            | No\*     | `https://abc.supabase.co` | Your Supabase project URL          |
+| `VITE_SUPABASE_ANON_KEY`       | No\*     | `eyJhb...`                | Supabase anon/public JWT key       |
+| `VITE_SUPABASE_STORAGE_BUCKET` | No       | `wishlist-images`         | Storage bucket for wishlist images |
 
 > \* If absent, the app falls back to Mock Mode automatically.
 
 ### Backend Mode
 
-| Variable | Required | Default | Description |
-| -------- | -------- | ------- | ----------- |
-| `VITE_USE_MOCK_BACKEND` | No | `false` | Force mock mode (`true`) or Supabase mode (`false`) |
+| Variable                | Required | Default | Description                                         |
+| ----------------------- | -------- | ------- | --------------------------------------------------- |
+| `VITE_USE_MOCK_BACKEND` | No       | `false` | Force mock mode (`true`) or Supabase mode (`false`) |
 
 **Mock Mode behaviour**:
+
 - `true` → Always use localStorage (no Supabase needed)
 - `false` or absent → Use Supabase if credentials are present, else mock
 - Missing credentials → Auto-fallback to mock mode
 
 ### Deployment
 
-| Variable | Required | Default | Description |
-| -------- | -------- | ------- | ----------- |
-| `VITE_BASE_PATH` | No | `/` | Base URL path for the app |
+| Variable         | Required | Default | Description               |
+| ---------------- | -------- | ------- | ------------------------- |
+| `VITE_BASE_PATH` | No       | `/`     | Base URL path for the app |
 
 **Base path examples**:
+
 - Root deployment (Vercel, Netlify): `/`
 - GitHub Pages: `/family-logistics-dashboard/`
 
 ### Link Preview (Microlink)
 
-| Variable | Required | Default | Description |
-| -------- | -------- | ------- | ----------- |
-| `VITE_MICROLINK_KEY` | No | — | Microlink Pro API key for higher rate limits |
+| Variable             | Required | Default | Description                                  |
+| -------------------- | -------- | ------- | -------------------------------------------- |
+| `VITE_MICROLINK_KEY` | No       | —       | Microlink Pro API key for higher rate limits |
 
 Free tier provides 50 requests/day per IP with no key required.
 
@@ -63,12 +65,12 @@ Free tier provides 50 requests/day per IP with no key required.
 
 ## Environment Files
 
-| File | Purpose | Committed? |
-| ---- | ------- | ---------- |
-| `env.example` | Template with documentation | ✅ Yes |
-| `.env.local` | Local development secrets | ❌ No (gitignored) |
-| `.env.production` | Production overrides | ❌ No (use CI secrets) |
-| `.env.test` | Test environment | ❌ No |
+| File              | Purpose                     | Committed?             |
+| ----------------- | --------------------------- | ---------------------- |
+| `env.example`     | Template with documentation | ✅ Yes                 |
+| `.env.local`      | Local development secrets   | ❌ No (gitignored)     |
+| `.env.production` | Production overrides        | ❌ No (use CI secrets) |
+| `.env.test`       | Test environment            | ❌ No                  |
 
 ---
 
@@ -82,11 +84,11 @@ supabase secrets set GITHUB_OWNER=YauheniX
 supabase secrets set GITHUB_REPO=family-logistics-dashboard
 ```
 
-| Secret | Purpose |
-| ------ | ------- |
+| Secret         | Purpose                                 |
+| -------------- | --------------------------------------- |
 | `GITHUB_TOKEN` | GitHub token for in-app issue reporting |
-| `GITHUB_OWNER` | GitHub owner for issue creation |
-| `GITHUB_REPO` | GitHub repo name for issue creation |
+| `GITHUB_OWNER` | GitHub owner for issue creation         |
+| `GITHUB_REPO`  | GitHub repo name for issue creation     |
 
 ---
 

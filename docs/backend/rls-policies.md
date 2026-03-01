@@ -15,6 +15,7 @@ Every table in the application has **Row-Level Security (RLS) enabled**. This en
 - Even if application code has a bug, the database prevents data leakage
 
 All policies follow these patterns:
+
 - Use `EXISTS` (not `IN`) for performance
 - Reference `auth.uid()` for the current user
 - Check `is_active = true` for soft-delete support
@@ -56,66 +57,66 @@ EXISTS (
 
 ### households
 
-| Operation | Policy |
-| --------- | ------ |
-| SELECT | User is a member of the household |
-| INSERT | User is authenticated (creates household for themselves) |
-| UPDATE | User is owner or admin of the household |
-| DELETE | User is owner of the household |
+| Operation | Policy                                                   |
+| --------- | -------------------------------------------------------- |
+| SELECT    | User is a member of the household                        |
+| INSERT    | User is authenticated (creates household for themselves) |
+| UPDATE    | User is owner or admin of the household                  |
+| DELETE    | User is owner of the household                           |
 
 ### members
 
-| Operation | Policy |
-| --------- | ------ |
-| SELECT | User is a member of the same household |
-| INSERT | User is owner or admin of the household |
-| UPDATE | User is owner/admin, or updating own record |
-| DELETE | User is owner or admin of the household |
+| Operation | Policy                                      |
+| --------- | ------------------------------------------- |
+| SELECT    | User is a member of the same household      |
+| INSERT    | User is owner or admin of the household     |
+| UPDATE    | User is owner/admin, or updating own record |
+| DELETE    | User is owner or admin of the household     |
 
 ### shopping_lists
 
-| Operation | Policy |
-| --------- | ------ |
-| SELECT | User is a member of the household |
-| INSERT | User is an active member (not viewer/child) |
-| UPDATE | User is a member with edit permissions |
-| DELETE | User is owner/admin, or is the creator |
+| Operation | Policy                                      |
+| --------- | ------------------------------------------- |
+| SELECT    | User is a member of the household           |
+| INSERT    | User is an active member (not viewer/child) |
+| UPDATE    | User is a member with edit permissions      |
+| DELETE    | User is owner/admin, or is the creator      |
 
 ### shopping_items
 
-| Operation | Policy |
-| --------- | ------ |
-| SELECT | User is a member of the household |
-| INSERT | User is a member (including child) |
-| UPDATE | User is a member with edit permissions, or own item |
-| DELETE | User is owner/admin, or is the item creator |
+| Operation | Policy                                              |
+| --------- | --------------------------------------------------- |
+| SELECT    | User is a member of the household                   |
+| INSERT    | User is a member (including child)                  |
+| UPDATE    | User is a member with edit permissions, or own item |
+| DELETE    | User is owner/admin, or is the item creator         |
 
 ### wishlists
 
-| Operation | Policy |
-| --------- | ------ |
-| SELECT | User is owner of wishlist, household member, or wishlist is public |
-| INSERT | User is authenticated member (not viewer) |
-| UPDATE | User is owner of wishlist, or household admin/owner |
-| DELETE | User is owner of wishlist, or household admin/owner |
+| Operation | Policy                                                             |
+| --------- | ------------------------------------------------------------------ |
+| SELECT    | User is owner of wishlist, household member, or wishlist is public |
+| INSERT    | User is authenticated member (not viewer)                          |
+| UPDATE    | User is owner of wishlist, or household admin/owner                |
+| DELETE    | User is owner of wishlist, or household admin/owner                |
 
 ### wishlist_items
 
-| Operation | Policy |
-| --------- | ------ |
-| SELECT | As per parent wishlist visibility |
-| INSERT | User is wishlist owner, or authenticated member |
-| UPDATE | User is wishlist owner or household admin/owner |
-| DELETE | User is wishlist owner or household admin/owner |
+| Operation | Policy                                          |
+| --------- | ----------------------------------------------- |
+| SELECT    | As per parent wishlist visibility               |
+| INSERT    | User is wishlist owner, or authenticated member |
+| UPDATE    | User is wishlist owner or household admin/owner |
+| DELETE    | User is wishlist owner or household admin/owner |
 
 ### invitations
 
-| Operation | Policy |
-| --------- | ------ |
-| SELECT | User is household owner/admin, or invited email matches user's email |
-| INSERT | User is household owner/admin |
-| UPDATE | User is household owner/admin, or accepting own invitation |
-| DELETE | User is household owner/admin |
+| Operation | Policy                                                               |
+| --------- | -------------------------------------------------------------------- |
+| SELECT    | User is household owner/admin, or invited email matches user's email |
+| INSERT    | User is household owner/admin                                        |
+| UPDATE    | User is household owner/admin, or accepting own invitation           |
+| DELETE    | User is household owner/admin                                        |
 
 ---
 

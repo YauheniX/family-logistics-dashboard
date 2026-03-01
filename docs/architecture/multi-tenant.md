@@ -76,6 +76,7 @@ CREATE POLICY "shopping_lists_select"
 ```
 
 Key points:
+
 - Uses `EXISTS` (not `IN`) for performance
 - Checks `is_active = true` to exclude removed members
 - References `auth.uid()` — Supabase's current authenticated user function
