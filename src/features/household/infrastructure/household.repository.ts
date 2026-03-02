@@ -26,47 +26,49 @@ export class HouseholdRepository extends BaseRepository<
    * Find households the user belongs to (as owner or member)
    */
   async findByUserId(userId: string): Promise<ApiResponse<Household[]>> {
-    // Fetch households created by user
-    const ownResponse = await this.findAll((builder) =>
-      builder.eq('created_by', userId).order('created_at', { ascending: true }),
-    );
-
-    if (ownResponse.error) {
-      return ownResponse;
-    }
-
-    // Fetch households user is a member of via members
-    const membershipsResponse = await this.execute<{ household_id: string }[]>(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return await (supabase.from('members') as any)
-        .select('household_id')
-        .eq('user_id', userId)
-        .eq('is_active', true);
-    });
-
-    if (membershipsResponse.error) {
-      return { data: ownResponse.data || [], error: null };
-    }
-
-    const memberHouseholdIds = (membershipsResponse.data ?? [])
-      .map((m) => m.household_id)
-      .filter((id) => !(ownResponse.data ?? []).some((household) => household.id === id));
-
-    let memberHouseholds: Household[] = [];
-    if (memberHouseholdIds.length) {
-      const memberResponse = await this.findAll((builder) =>
-        builder.in('id', memberHouseholdIds).order('created_at', { ascending: true }),
+    return this.cachedQuery(this.cacheKey('user', userId), async () => {
+      // Fetch households created by user
+      const ownResponse = await this.findAll((builder) =>
+        builder.eq('created_by', userId).order('created_at', { ascending: true }),
       );
 
-      if (!memberResponse.error) {
-        memberHouseholds = memberResponse.data ?? [];
+      if (ownResponse.error) {
+        return ownResponse;
       }
-    }
 
-    return {
-      data: [...(ownResponse.data ?? []), ...memberHouseholds],
-      error: null,
-    };
+      // Fetch households user is a member of via members
+      const membershipsResponse = await this.execute<{ household_id: string }[]>(async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return await (supabase.from('members') as any)
+          .select('household_id')
+          .eq('user_id', userId)
+          .eq('is_active', true);
+      });
+
+      if (membershipsResponse.error) {
+        return { data: ownResponse.data || [], error: null };
+      }
+
+      const memberHouseholdIds = (membershipsResponse.data ?? [])
+        .map((m) => m.household_id)
+        .filter((id) => !(ownResponse.data ?? []).some((household) => household.id === id));
+
+      let memberHouseholds: Household[] = [];
+      if (memberHouseholdIds.length) {
+        const memberResponse = await this.findAll((builder) =>
+          builder.in('id', memberHouseholdIds).order('created_at', { ascending: true }),
+        );
+
+        if (!memberResponse.error) {
+          memberHouseholds = memberResponse.data ?? [];
+        }
+      }
+
+      return {
+        data: [...(ownResponse.data ?? []), ...memberHouseholds],
+        error: null,
+      };
+    });
   }
 
   /**
@@ -98,6 +100,8 @@ export class HouseholdRepository extends BaseRepository<
       };
     }
 
+    this.invalidateTable();
+
     // Fetch the created household to return complete data
     return await this.findById(rpcResponse.data.household_id);
   }
@@ -115,34 +119,36 @@ export class MemberRepository extends BaseRepository<Member, CreateMemberDto, Pa
    * Find members by household ID with email populated
    */
   async findByHouseholdId(householdId: string): Promise<ApiResponse<Member[]>> {
-    // Use getMembersWithProfiles which includes user_profiles join for Google name/avatar fallback
-    const response = await this.getMembersWithProfiles(householdId);
+    return this.cachedQuery(this.cacheKey('household', householdId), async () => {
+      // Use getMembersWithProfiles which includes user_profiles join for Google name/avatar fallback
+      const response = await this.getMembersWithProfiles(householdId);
 
-    if (response.error || !response.data) {
-      return response;
-    }
+      if (response.error || !response.data) {
+        return response;
+      }
 
-    // Populate emails using the database function
-    const membersWithEmails = await Promise.all(
-      response.data.map(async (member) => {
-        if (!member.user_id) {
-          return { ...member, email: undefined };
-        }
+      // Populate emails using the database function
+      const membersWithEmails = await Promise.all(
+        response.data.map(async (member) => {
+          if (!member.user_id) {
+            return { ...member, email: undefined };
+          }
 
-        const emailResponse = await this.execute<string>(async () => {
-          return await supabase.rpc('get_email_by_user_id', {
-            lookup_user_id: member.user_id!,
+          const emailResponse = await this.execute<string>(async () => {
+            return await supabase.rpc('get_email_by_user_id', {
+              lookup_user_id: member.user_id!,
+            });
           });
-        });
 
-        return {
-          ...member,
-          email: emailResponse.data || undefined,
-        };
-      }),
-    );
+          return {
+            ...member,
+            email: emailResponse.data || undefined,
+          };
+        }),
+      );
 
-    return { data: membersWithEmails, error: null };
+      return { data: membersWithEmails, error: null };
+    });
   }
 
   /**
@@ -150,49 +156,51 @@ export class MemberRepository extends BaseRepository<Member, CreateMemberDto, Pa
    * Includes user_profiles.avatar_url for OAuth avatar fallback
    */
   async getMembersWithProfiles(householdId: string): Promise<ApiResponse<Member[]>> {
-    // First, get all members
-    const membersResponse = await this.findAll((builder) =>
-      builder.eq('household_id', householdId).eq('is_active', true).order('joined_at'),
-    );
+    return this.cachedQuery(this.cacheKey('profiles', householdId), async () => {
+      // First, get all members
+      const membersResponse = await this.findAll((builder) =>
+        builder.eq('household_id', householdId).eq('is_active', true).order('joined_at'),
+      );
 
-    if (membersResponse.error || !membersResponse.data) {
-      return membersResponse;
-    }
+      if (membersResponse.error || !membersResponse.data) {
+        return membersResponse;
+      }
 
-    // Get user IDs that we need to fetch profiles for
-    const userIds = membersResponse.data
-      .map((m) => m.user_id)
-      .filter((id): id is string => id !== null);
+      // Get user IDs that we need to fetch profiles for
+      const userIds = membersResponse.data
+        .map((m) => m.user_id)
+        .filter((id): id is string => id !== null);
 
-    if (userIds.length === 0) {
-      // No user IDs to fetch profiles for (all soft members)
-      return membersResponse;
-    }
+      if (userIds.length === 0) {
+        // No user IDs to fetch profiles for (all soft members)
+        return membersResponse;
+      }
 
-    // Fetch user profiles for those user IDs
-    const profilesResponse = await this.execute<
-      Array<{ id: string; display_name: string; avatar_url: string | null }>
-    >(async () => {
-      return await supabase
-        .from('user_profiles')
-        .select('id, display_name, avatar_url')
-        .in('id', userIds);
+      // Fetch user profiles for those user IDs
+      const profilesResponse = await this.execute<
+        Array<{ id: string; display_name: string; avatar_url: string | null }>
+      >(async () => {
+        return await supabase
+          .from('user_profiles')
+          .select('id, display_name, avatar_url')
+          .in('id', userIds);
+      });
+
+      // Merge profiles into members
+      const profilesMap = new Map(
+        (profilesResponse.data || []).map((p) => [
+          p.id,
+          { display_name: p.display_name, avatar_url: p.avatar_url },
+        ]),
+      );
+
+      const membersWithProfiles = membersResponse.data.map((member) => ({
+        ...member,
+        user_profiles: member.user_id ? profilesMap.get(member.user_id) : undefined,
+      }));
+
+      return { data: membersWithProfiles, error: null };
     });
-
-    // Merge profiles into members
-    const profilesMap = new Map(
-      (profilesResponse.data || []).map((p) => [
-        p.id,
-        { display_name: p.display_name, avatar_url: p.avatar_url },
-      ]),
-    );
-
-    const membersWithProfiles = membersResponse.data.map((member) => ({
-      ...member,
-      user_profiles: member.user_id ? profilesMap.get(member.user_id) : undefined,
-    }));
-
-    return { data: membersWithProfiles, error: null };
   }
 
   /**
@@ -205,17 +213,17 @@ export class MemberRepository extends BaseRepository<Member, CreateMemberDto, Pa
     dateOfBirth: string,
     avatarUrl?: string | null,
   ): Promise<ApiResponse<string>> {
-    const response = await this.execute<string>(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return await (supabase.rpc as any)('create_child_member', {
-        p_household_id: householdId,
-        p_name: name,
-        p_date_of_birth: dateOfBirth,
-        p_avatar_url: avatarUrl ?? null,
-      });
-    });
-
-    return response;
+    return this.writeThrough(() =>
+      this.execute<string>(async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return await (supabase.rpc as any)('create_child_member', {
+          p_household_id: householdId,
+          p_name: name,
+          p_date_of_birth: dateOfBirth,
+          p_avatar_url: avatarUrl ?? null,
+        });
+      }),
+    );
   }
 
   /**
@@ -228,16 +236,16 @@ export class MemberRepository extends BaseRepository<Member, CreateMemberDto, Pa
     email: string,
     role: string = 'member',
   ): Promise<ApiResponse<string>> {
-    const response = await this.execute<string>(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return await (supabase.rpc as any)('invite_member', {
-        p_household_id: householdId,
-        p_email: email,
-        p_role: role,
-      });
-    });
-
-    return response;
+    return this.writeThrough(() =>
+      this.execute<string>(async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return await (supabase.rpc as any)('invite_member', {
+          p_household_id: householdId,
+          p_email: email,
+          p_role: role,
+        });
+      }),
+    );
   }
 
   /**

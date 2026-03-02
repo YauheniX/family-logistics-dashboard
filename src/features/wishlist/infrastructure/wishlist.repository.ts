@@ -72,14 +72,16 @@ export class WishlistRepository extends BaseRepository<
    * Find wishlists by user ID
    */
   async findByUserId(userId: string): Promise<ApiResponse<Wishlist[]>> {
-    const result = await this.findAll((builder) =>
-      builder.eq('user_id', userId).order('created_at', { ascending: false }),
-    );
-    // Add is_public computed property for frontend compatibility
-    if (result.data) {
-      return { ...result, data: result.data.map(addIsPublic) };
-    }
-    return result;
+    return this.cachedQuery(this.cacheKey('user', userId), async () => {
+      const result = await this.findAll((builder) =>
+        builder.eq('user_id', userId).order('created_at', { ascending: false }),
+      );
+      // Add is_public computed property for frontend compatibility
+      if (result.data) {
+        return { ...result, data: result.data.map(addIsPublic) };
+      }
+      return result;
+    });
   }
 
   /**
@@ -90,28 +92,30 @@ export class WishlistRepository extends BaseRepository<
     userId: string,
     householdId: string,
   ): Promise<ApiResponse<Wishlist[]>> {
-    const result = await this.query(async () => {
-      return await supabase
-        .from('wishlists')
-        .select(
-          `
-          *,
-          member:members(display_name, role)
-        `,
-        )
-        .eq('user_id', userId)
-        .eq('household_id', householdId)
-        .order('created_at', { ascending: false });
-    });
+    return this.cachedQuery(this.cacheKey('user-household', userId, householdId), async () => {
+      const result = await this.query(async () => {
+        return await supabase
+          .from('wishlists')
+          .select(
+            `
+            *,
+            member:members(display_name, role)
+          `,
+          )
+          .eq('user_id', userId)
+          .eq('household_id', householdId)
+          .order('created_at', { ascending: false });
+      });
 
-    // Filter OUT children's wishlists (they're shown in separate section)
-    if (result.data) {
-      const personalWishlists = (result.data as unknown as WishlistWithMember[])
-        .filter((w) => w.member?.role !== 'child')
-        .map((w) => addIsPublic(transformWishlistWithMember(w)));
-      return { ...result, data: personalWishlists };
-    }
-    return { data: null, error: result.error };
+      // Filter OUT children's wishlists (they're shown in separate section)
+      if (result.data) {
+        const personalWishlists = (result.data as unknown as WishlistWithMember[])
+          .filter((w) => w.member?.role !== 'child')
+          .map((w) => addIsPublic(transformWishlistWithMember(w)));
+        return { ...result, data: personalWishlists };
+      }
+      return { data: null, error: result.error };
+    });
   }
 
   async create(dto: CreateWishlistDto & { share_slug: string }): Promise<ApiResponse<Wishlist>> {
@@ -194,6 +198,8 @@ export class WishlistRepository extends BaseRepository<
         .single();
     });
 
+    if (!result.error) this.invalidateTable();
+
     // Add is_public computed property for frontend compatibility
     if (result.data) {
       return { data: addIsPublic(result.data), error: null };
@@ -205,21 +211,23 @@ export class WishlistRepository extends BaseRepository<
    * Find a wishlist by its share slug (public access, no auth required)
    */
   async findBySlug(slug: string): Promise<ApiResponse<Wishlist>> {
-    const result = await this.query(async () => {
-      return await this.supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(this.tableName as any)
-        .select('*')
-        .eq('share_slug', slug)
-        .eq('visibility', 'public')
-        .single();
-    });
+    return this.cachedQuery<Wishlist>(this.cacheKey('slug', slug), async () => {
+      const result = await this.query(async () => {
+        return await this.supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from(this.tableName as any)
+          .select('*')
+          .eq('share_slug', slug)
+          .eq('visibility', 'public')
+          .single();
+      });
 
-    // Add is_public computed property for frontend compatibility
-    if (result.data) {
-      return { data: addIsPublic(result.data), error: null };
-    }
-    return { data: null, error: result.error };
+      // Add is_public computed property for frontend compatibility
+      if (result.data) {
+        return { data: addIsPublic(result.data), error: null } as ApiResponse<Wishlist>;
+      }
+      return { data: null, error: result.error } as ApiResponse<Wishlist>;
+    });
   }
 
   /**
@@ -262,59 +270,64 @@ export class WishlistRepository extends BaseRepository<
     householdId: string,
     excludeUserId: string,
   ): Promise<ApiResponse<Wishlist[]>> {
-    // First, get the current user's member_id in this household
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: memberData, error: memberError } = await (supabase as any)
-      .from('members')
-      .select('id')
-      .eq('user_id', excludeUserId)
-      .eq('household_id', householdId)
-      .eq('is_active', true)
-      .maybeSingle();
+    return this.cachedQuery(
+      this.cacheKey('household', householdId, 'exclude', excludeUserId),
+      async () => {
+        // First, get the current user's member_id in this household
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: memberData, error: memberError } = await (supabase as any)
+          .from('members')
+          .select('id')
+          .eq('user_id', excludeUserId)
+          .eq('household_id', householdId)
+          .eq('is_active', true)
+          .maybeSingle();
 
-    if (memberError) {
-      return {
-        data: null,
-        error: {
-          message: 'Failed to get user member',
-          code: memberError.code,
-          details: memberError.details,
-        },
-      };
-    }
+        if (memberError) {
+          return {
+            data: null,
+            error: {
+              message: 'Failed to get user member',
+              code: memberError.code,
+              details: memberError.details,
+            },
+          };
+        }
 
-    const currentUserMemberId = memberData?.id;
+        const currentUserMemberId = memberData?.id;
 
-    // Get wishlists with member info to properly filter
-    const result = await this.query(async () => {
-      return await supabase
-        .from('wishlists')
-        .select(
-          `
-          *,
-          member:members(id, display_name, role)
-        `,
-        )
-        .eq('household_id', householdId)
-        .in('visibility', ['household', 'public'])
-        .order('created_at', { ascending: false });
-    });
+        // Get wishlists with member info to properly filter
+        const result = await this.query(async () => {
+          return await supabase
+            .from('wishlists')
+            .select(
+              `
+              *,
+              member:members(id, display_name, role)
+            `,
+            )
+            .eq('household_id', householdId)
+            .in('visibility', ['household', 'public'])
+            .order('created_at', { ascending: false });
+        });
 
-    // Filter: exclude current user's PERSONAL wishlists (where member_id = current user's member)
-    // but INCLUDE children's wishlists (even if user_id = current user)
-    if (result.data && currentUserMemberId) {
-      const filteredWishlists = (result.data as unknown as WishlistWithMember[])
-        .filter((w) => w.member_id !== currentUserMemberId) // Exclude user's own wishlists
-        .map((w) => addIsPublic(transformWishlistWithMember(w)));
-      return { ...result, data: filteredWishlists };
-    } else if (result.data && !currentUserMemberId) {
-      // User not in household, return all shared wishlists
-      const allWishlists = (result.data as unknown as WishlistWithMember[]).map((w) =>
-        addIsPublic(transformWishlistWithMember(w)),
-      );
-      return { ...result, data: allWishlists };
-    }
-    return { data: null, error: result.error };
+        // Filter: exclude current user's PERSONAL wishlists (where member_id = current user's member)
+        // but INCLUDE children's wishlists (even if user_id = current user)
+        if (result.data && currentUserMemberId) {
+          const filteredWishlists = (result.data as unknown as WishlistWithMember[])
+            .filter((w) => w.member_id !== currentUserMemberId) // Exclude user's own wishlists
+            .map((w) => addIsPublic(transformWishlistWithMember(w)));
+          return { ...result, data: filteredWishlists };
+        } else if (result.data && !currentUserMemberId) {
+          // User not in household, return all shared wishlists
+          const allWishlists = (result.data as unknown as WishlistWithMember[]).map((w) =>
+            addIsPublic(transformWishlistWithMember(w)),
+          );
+          return { ...result, data: allWishlists };
+        }
+        return { data: null, error: result.error };
+      },
+    );
   }
 
   /**
@@ -331,28 +344,30 @@ export class WishlistRepository extends BaseRepository<
     userId: string,
     householdId: string,
   ): Promise<ApiResponse<Wishlist[]>> {
-    const result = await this.query(async () => {
-      return await supabase
-        .from('wishlists')
-        .select(
-          `
-          *,
-          member:members(id, display_name, role)
-        `,
-        )
-        .eq('user_id', userId)
-        .eq('household_id', householdId)
-        .order('created_at', { ascending: false });
-    });
+    return this.cachedQuery(this.cacheKey('children', userId, householdId), async () => {
+      const result = await this.query(async () => {
+        return await supabase
+          .from('wishlists')
+          .select(
+            `
+              *,
+              member:members(id, display_name, role)
+            `,
+          )
+          .eq('user_id', userId)
+          .eq('household_id', householdId)
+          .order('created_at', { ascending: false });
+      });
 
-    // Filter for wishlists where member is a child and transform data
-    if (result.data) {
-      const childWishlists = (result.data as unknown as WishlistWithMember[])
-        .filter((w) => w.member?.role === 'child')
-        .map((w) => addIsPublic(transformWishlistWithMember(w)));
-      return { ...result, data: childWishlists };
-    }
-    return { data: null, error: result.error };
+      // Filter for wishlists where member is a child and transform data
+      if (result.data) {
+        const childWishlists = (result.data as unknown as WishlistWithMember[])
+          .filter((w) => w.member?.role === 'child')
+          .map((w) => addIsPublic(transformWishlistWithMember(w)));
+        return { ...result, data: childWishlists };
+      }
+      return { data: null, error: result.error };
+    });
   }
 }
 
@@ -372,8 +387,10 @@ export class WishlistItemRepository extends BaseRepository<
    * Find items by wishlist ID
    */
   async findByWishlistId(wishlistId: string): Promise<ApiResponse<WishlistItem[]>> {
-    return this.findAll((builder) =>
-      builder.eq('wishlist_id', wishlistId).order('created_at', { ascending: true }),
+    return this.cachedQuery(this.cacheKey('wishlist', wishlistId), () =>
+      this.findAll((builder) =>
+        builder.eq('wishlist_id', wishlistId).order('created_at', { ascending: true }),
+      ),
     );
   }
 
@@ -382,44 +399,49 @@ export class WishlistItemRepository extends BaseRepository<
    * Requires email for both reserving and unreserving (owner can unreserve without email)
    */
   async reserveItem(id: string, dto: ReserveWishlistItemDto): Promise<ApiResponse<WishlistItem>> {
-    return this.query(async () => {
-      // Call the RPC function to update reservation
-      const { data: rpcData, error: rpcError } = await this.supabase.rpc('reserve_wishlist_item', {
-        p_item_id: id,
-        p_reserved: dto.is_reserved,
-        p_email: dto.reserved_by_email || null,
-        p_name: dto.reserved_by_name || null,
-        p_code: null, // Backward compatibility parameter, ignored by function
-      });
+    return this.writeThrough(() =>
+      this.query(async () => {
+        // Call the RPC function to update reservation
+        const { data: rpcData, error: rpcError } = await this.supabase.rpc(
+          'reserve_wishlist_item',
+          {
+            p_item_id: id,
+            p_reserved: dto.is_reserved,
+            p_email: dto.reserved_by_email || null,
+            p_name: dto.reserved_by_name || null,
+            p_code: null, // Backward compatibility parameter, ignored by function
+          },
+        );
 
-      if (rpcError) throw rpcError;
+        if (rpcError) throw rpcError;
 
-      // Check if the operation failed (e.g., already reserved)
-      if (
-        rpcData &&
-        typeof rpcData === 'object' &&
-        'success' in rpcData &&
-        rpcData.success === false
-      ) {
-        throw new Error((rpcData as { error?: string }).error || 'Reservation failed');
-      }
+        // Check if the operation failed (e.g., already reserved)
+        if (
+          rpcData &&
+          typeof rpcData === 'object' &&
+          'success' in rpcData &&
+          rpcData.success === false
+        ) {
+          throw new Error((rpcData as { error?: string }).error || 'Reservation failed');
+        }
 
-      // Fetch and return the updated item
-      const itemResponse = await this.supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(this.tableName as any)
-        .select()
-        .eq('id', id)
-        .single();
+        // Fetch and return the updated item
+        const itemResponse = await this.supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from(this.tableName as any)
+          .select()
+          .eq('id', id)
+          .single();
 
-      if (itemResponse.error) throw itemResponse.error;
-      if (!itemResponse.data) throw new Error('Item not found');
+        if (itemResponse.error) throw itemResponse.error;
+        if (!itemResponse.data) throw new Error('Item not found');
 
-      const item = itemResponse.data as unknown as WishlistItem;
-      return {
-        data: item,
-        error: null,
-      };
-    });
+        const item = itemResponse.data as unknown as WishlistItem;
+        return {
+          data: item,
+          error: null,
+        };
+      }),
+    );
   }
 }

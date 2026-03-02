@@ -4,6 +4,7 @@ import {
   MemberRepository,
 } from '@/features/household/infrastructure/household.repository';
 import type { Household, Member } from '@/features/shared/domain/entities';
+import { repositoryCache } from '@/utils/cache';
 
 const buildHousehold = (overrides: Partial<Household> = {}): Household => ({
   id: 'household-1',
@@ -42,6 +43,7 @@ describe('HouseholdRepository', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    repositoryCache.clear();
     repository = new HouseholdRepository();
   });
 
@@ -167,6 +169,7 @@ describe('MemberRepository', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    repositoryCache.clear();
     repository = new MemberRepository();
   });
 

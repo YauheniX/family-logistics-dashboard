@@ -19,27 +19,33 @@ export class UserProfileRepository extends BaseRepository<
    * Get profile by user ID
    */
   async findById(userId: string): Promise<ApiResponse<UserProfile>> {
-    return this.query(async () => {
-      return await supabase.from('user_profiles').select('*').eq('id', userId).maybeSingle();
-    });
+    return this.cachedQuery(this.cacheKey('id', userId), () =>
+      this.query(async () => {
+        return await supabase.from('user_profiles').select('*').eq('id', userId).maybeSingle();
+      }),
+    );
   }
 
   /**
    * Create a new user profile
    */
   async create(dto: CreateUserProfileDto): Promise<ApiResponse<UserProfile>> {
-    return this.query(async () => {
-      return await supabase.from('user_profiles').insert(dto).select().single();
-    });
+    return this.writeThrough(() =>
+      this.query(async () => {
+        return await supabase.from('user_profiles').insert(dto).select().single();
+      }),
+    );
   }
 
   /**
    * Update user profile
    */
   async update(userId: string, dto: UpdateUserProfileDto): Promise<ApiResponse<UserProfile>> {
-    return this.query(async () => {
-      return await supabase.from('user_profiles').update(dto).eq('id', userId).select().single();
-    });
+    return this.writeThrough(() =>
+      this.query(async () => {
+        return await supabase.from('user_profiles').update(dto).eq('id', userId).select().single();
+      }),
+    );
   }
 
   /**

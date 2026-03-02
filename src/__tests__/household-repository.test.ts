@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { MemberRepository } from '@/features/household/infrastructure/household.repository';
+import { repositoryCache } from '@/utils/cache';
 
 vi.mock('@/features/shared/infrastructure/supabase.client', () => ({
   supabase: {
@@ -12,6 +13,7 @@ describe('MemberRepository', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    repositoryCache.clear();
     repository = new MemberRepository();
   });
 

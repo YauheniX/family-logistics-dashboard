@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { supabase } from '@/features/shared/infrastructure/supabase.client';
+import { repositoryCache } from '@/utils/cache';
 
 // Mock supabase
 vi.mock('@/features/shared/infrastructure/supabase.client', () => ({
@@ -49,6 +50,7 @@ describe('BaseRepository', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    repositoryCache.clear();
     repository = new TestRepository();
   });
 

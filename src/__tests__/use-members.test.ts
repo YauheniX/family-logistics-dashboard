@@ -3,6 +3,7 @@ import { setActivePinia, createPinia } from 'pinia';
 import { useMembers } from '@/composables/useMembers';
 import { useHouseholdStore } from '@/stores/household';
 import { useToastStore } from '@/stores/toast';
+import { repositoryCache } from '@/utils/cache';
 
 // Mock the factory to return real repositories (not mocks) so we can test with mocked Supabase
 vi.mock('@/features/household/infrastructure/household.factory', async () => {
@@ -83,6 +84,7 @@ describe('useMembers', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.clearAllMocks();
+    repositoryCache.clear();
   });
 
   describe('fetchMembers', () => {
