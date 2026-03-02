@@ -30,6 +30,7 @@ export class LinkPreviewRepository {
         method: 'POST',
         headers: {
           apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ url, config }),
