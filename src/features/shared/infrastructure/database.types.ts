@@ -319,6 +319,13 @@ export interface Database {
         };
         Returns: Json;
       };
+      get_dashboard_summary: {
+        Args: {
+          p_household_id: string;
+          p_user_id: string;
+        };
+        Returns: Json;
+      };
     };
     Enums: {
       [_ in never]: never;

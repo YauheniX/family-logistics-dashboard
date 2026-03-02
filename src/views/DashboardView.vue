@@ -98,11 +98,7 @@
     </template>
 
     <EmptyState
-      v-if="
-        !householdEntityStore.loading &&
-        !householdEntityStore.households.length &&
-        !wishlistStore.wishlists.length
-      "
+      v-if="!householdEntityStore.loading && !householdEntityStore.households.length"
       :title="$t('dashboard.welcomeTitle')"
       :description="$t('dashboard.welcomeDescription')"
       :cta="$t('dashboard.createHousehold')"
@@ -125,6 +121,7 @@ import { useHouseholdStore } from '@/stores/household';
 import { useHouseholdEntityStore } from '@/features/household/presentation/household.store';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
 import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
+import { dashboardRepository } from '@/features/shared/infrastructure/dashboard.repository';
 import { useUserProfile } from '@/composables/useUserProfile';
 import { resolveUserProfile } from '@/utils/profileResolver';
 import { getVisibilityVariant, getVisibilityLabel } from '@/composables/useVisibilityDisplay';
@@ -158,6 +155,11 @@ const userName = computed(() => {
 
 const allActiveLists = computed(() => shoppingStore.lists.filter((l) => l.status === 'active'));
 
+function clearDashboardCollections() {
+  shoppingStore.setLists([]);
+  wishlistStore.setHouseholdWishlists([]);
+}
+
 async function handleInvitationAccepted() {
   // Reload households when user accepts an invitation
   if (authStore.user?.id) {
@@ -190,19 +192,37 @@ async function loadCurrentHouseholdData() {
   lastLoadedHouseholdId.value = null;
 
   const currentToken = ++loadRequestToken.value;
-  try {
-    await Promise.all([
-      shoppingStore.loadLists(householdId),
-      wishlistStore.loadWishlistsByHousehold(userId, householdId),
-      wishlistStore.loadHouseholdWishlists(householdId, userId),
-    ]);
 
-    // Only mark as loaded if this is still the latest request
-    if (currentToken === loadRequestToken.value) {
+  clearDashboardCollections();
+
+  try {
+    // Single aggregate RPC call replaces the previous 3 parallel queries:
+    //   shoppingStore.loadLists(householdId)
+    //   wishlistStore.loadWishlistsByHousehold(userId, householdId)
+    //   wishlistStore.loadHouseholdWishlists(householdId, userId)
+    const response = await dashboardRepository.getDashboardSummary(householdId, userId);
+
+    // Only update state if this is still the latest request
+    if (currentToken !== loadRequestToken.value) {
+      return;
+    }
+
+    if (response.error) {
+      console.error('[Dashboard] Failed to load data:', response.error);
+      clearDashboardCollections();
+    } else if (response.data) {
+      shoppingStore.setLists(response.data.shoppingLists);
+      wishlistStore.setHouseholdWishlists(response.data.householdWishlists);
+
       lastLoadedHouseholdId.value = householdId;
     }
   } catch (error) {
+    if (currentToken !== loadRequestToken.value) {
+      return;
+    }
+
     console.error('[Dashboard] Failed to load data:', error);
+    clearDashboardCollections();
   }
 }
 
@@ -230,6 +250,7 @@ watch(
   async ([householdId, isInitialized]) => {
     if (!householdId) {
       lastLoadedHouseholdId.value = null;
+      clearDashboardCollections();
       return;
     }
     if (!isInitialized) {

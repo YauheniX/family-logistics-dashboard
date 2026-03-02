@@ -6,11 +6,20 @@ import { createRouter, createMemoryHistory } from 'vue-router';
 import DashboardView from '@/views/DashboardView.vue';
 import { useHouseholdStore } from '@/stores/household';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
+import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
 import i18n from '@/i18n';
 
-// Shared mock functions for wishlist store
-const loadWishlistsByHouseholdMock = vi.fn().mockResolvedValue(undefined);
-const loadHouseholdWishlistsMock = vi.fn().mockResolvedValue(undefined);
+// Use vi.hoisted so the mock reference is available before vi.mock is hoisted
+const { getDashboardSummaryMock } = vi.hoisted(() => ({
+  getDashboardSummaryMock: vi.fn().mockResolvedValue({
+    data: { shoppingLists: [], householdWishlists: [] },
+    error: null,
+  }),
+}));
+
+vi.mock('@/features/shared/infrastructure/dashboard.repository', () => ({
+  dashboardRepository: { getDashboardSummary: getDashboardSummaryMock },
+}));
 
 // Mock the composables and stores
 vi.mock('@/composables/useUserProfile', () => ({
@@ -31,15 +40,6 @@ vi.mock('@/features/household/presentation/household.store', () => ({
     loading: false,
     households: [],
     loadHouseholds: vi.fn(),
-  }),
-}));
-
-vi.mock('@/features/wishlist/presentation/wishlist.store', () => ({
-  useWishlistStore: () => ({
-    wishlists: [],
-    householdWishlists: [],
-    loadWishlistsByHousehold: loadWishlistsByHouseholdMock,
-    loadHouseholdWishlists: loadHouseholdWishlistsMock,
   }),
 }));
 
@@ -72,37 +72,35 @@ async function mountDashboard() {
 
   const householdStore = useHouseholdStore();
   const shoppingStore = useShoppingStore();
+  const wishlistStore = useWishlistStore();
 
   // IMPORTANT: Set household store as initialized to allow data loading
   // This simulates the completed initialization that happens in App.vue
   householdStore.initialized = true;
-
-  // Mock loadLists to prevent real service calls
-  const loadListsSpy = vi.spyOn(shoppingStore, 'loadLists').mockResolvedValue(undefined);
 
   // Wait for initial mount side effects to complete
   await flushPromises();
   await nextTick();
 
   // Clear any calls from initial mount
-  loadListsSpy.mockClear();
-  loadWishlistsByHouseholdMock.mockClear();
-  loadHouseholdWishlistsMock.mockClear();
+  getDashboardSummaryMock.mockClear();
 
-  return { wrapper, householdStore, shoppingStore, loadListsSpy };
+  return { wrapper, householdStore, shoppingStore, wishlistStore };
 }
 
 describe('DashboardView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    loadWishlistsByHouseholdMock.mockReset().mockResolvedValue(undefined);
-    loadHouseholdWishlistsMock.mockReset().mockResolvedValue(undefined);
+    getDashboardSummaryMock.mockReset().mockResolvedValue({
+      data: { shoppingLists: [], householdWishlists: [] },
+      error: null,
+    });
     localStorage.clear();
   });
 
   describe('Household Switching', () => {
-    it('should reload shopping lists when household is switched', async () => {
-      const { wrapper, householdStore, loadListsSpy } = await mountDashboard();
+    it('should reload data when household is switched', async () => {
+      const { wrapper, householdStore } = await mountDashboard();
 
       // Simulate switching to household 'h1'
       householdStore.setCurrentHousehold({
@@ -115,8 +113,8 @@ describe('DashboardView', () => {
       await flushPromises();
       await nextTick();
 
-      // Verify loadLists was called with the new household ID
-      expect(loadListsSpy).toHaveBeenCalledWith('h1');
+      // Verify aggregate was called with the new household ID
+      expect(getDashboardSummaryMock).toHaveBeenCalledWith('h1', 'u1');
 
       // Simulate switching to another household 'h2'
       householdStore.setCurrentHousehold({
@@ -129,15 +127,15 @@ describe('DashboardView', () => {
       await flushPromises();
       await nextTick();
 
-      // Verify loadLists was called again with the new household ID
-      expect(loadListsSpy).toHaveBeenCalledWith('h2');
-      expect(loadListsSpy).toHaveBeenCalledTimes(2);
+      // Verify aggregate was called again with the new household ID
+      expect(getDashboardSummaryMock).toHaveBeenCalledWith('h2', 'u1');
+      expect(getDashboardSummaryMock).toHaveBeenCalledTimes(2);
 
       wrapper.unmount();
     });
 
-    it('should not reload shopping lists when household is cleared', async () => {
-      const { wrapper, householdStore, loadListsSpy } = await mountDashboard();
+    it('should not reload when household is cleared', async () => {
+      const { wrapper, householdStore } = await mountDashboard();
 
       // Set a household first
       householdStore.setCurrentHousehold({
@@ -150,7 +148,7 @@ describe('DashboardView', () => {
       await flushPromises();
       await nextTick();
 
-      expect(loadListsSpy).toHaveBeenCalledWith('h1');
+      expect(getDashboardSummaryMock).toHaveBeenCalledWith('h1', 'u1');
 
       // Clear the current household
       householdStore.setCurrentHousehold(null);
@@ -158,14 +156,14 @@ describe('DashboardView', () => {
       await flushPromises();
       await nextTick();
 
-      // loadLists should not be called again (still only 1 call)
-      expect(loadListsSpy).toHaveBeenCalledTimes(1);
+      // aggregate should not be called again (still only 1 call)
+      expect(getDashboardSummaryMock).toHaveBeenCalledTimes(1);
 
       wrapper.unmount();
     });
 
     it('should handle sequential household switches correctly', async () => {
-      const { wrapper, householdStore, loadListsSpy } = await mountDashboard();
+      const { wrapper, householdStore } = await mountDashboard();
 
       // Switch to household 1
       householdStore.setCurrentHousehold({
@@ -178,7 +176,7 @@ describe('DashboardView', () => {
       await flushPromises();
       await nextTick();
 
-      expect(loadListsSpy).toHaveBeenCalledWith('h1');
+      expect(getDashboardSummaryMock).toHaveBeenCalledWith('h1', 'u1');
 
       // Switch to household 2
       householdStore.setCurrentHousehold({
@@ -191,7 +189,7 @@ describe('DashboardView', () => {
       await flushPromises();
       await nextTick();
 
-      expect(loadListsSpy).toHaveBeenCalledWith('h2');
+      expect(getDashboardSummaryMock).toHaveBeenCalledWith('h2', 'u1');
 
       // Switch to household 3
       householdStore.setCurrentHousehold({
@@ -204,16 +202,28 @@ describe('DashboardView', () => {
       await flushPromises();
       await nextTick();
 
-      expect(loadListsSpy).toHaveBeenCalledWith('h3');
-      expect(loadListsSpy).toHaveBeenCalledTimes(3);
+      expect(getDashboardSummaryMock).toHaveBeenCalledWith('h3', 'u1');
+      expect(getDashboardSummaryMock).toHaveBeenCalledTimes(3);
 
       wrapper.unmount();
     });
 
-    it('household switch triggers exactly one load sequence', async () => {
-      const { wrapper, householdStore, loadListsSpy } = await mountDashboard();
+    it('populates store state from aggregate response', async () => {
+      const mockLists = [{ id: 'sl1', title: 'Groceries', status: 'active', household_id: 'h1' }];
+      const mockHouseholdWishlists = [
+        { id: 'w2', title: 'Christmas', visibility: 'household', household_id: 'h1' },
+      ];
 
-      // Switch to household 'h1'
+      getDashboardSummaryMock.mockResolvedValueOnce({
+        data: {
+          shoppingLists: mockLists,
+          householdWishlists: mockHouseholdWishlists,
+        },
+        error: null,
+      });
+
+      const { wrapper, householdStore, shoppingStore, wishlistStore } = await mountDashboard();
+
       householdStore.setCurrentHousehold({
         id: 'h1',
         name: 'Household 1',
@@ -224,13 +234,70 @@ describe('DashboardView', () => {
       await flushPromises();
       await nextTick();
 
-      // All three data-loading functions should be called exactly once
-      expect(loadListsSpy).toHaveBeenCalledTimes(1);
-      expect(loadListsSpy).toHaveBeenCalledWith('h1');
-      expect(loadWishlistsByHouseholdMock).toHaveBeenCalledTimes(1);
-      expect(loadWishlistsByHouseholdMock).toHaveBeenCalledWith('u1', 'h1');
-      expect(loadHouseholdWishlistsMock).toHaveBeenCalledTimes(1);
-      expect(loadHouseholdWishlistsMock).toHaveBeenCalledWith('h1', 'u1');
+      expect(shoppingStore.lists).toEqual(mockLists);
+      expect(wishlistStore.householdWishlists).toEqual(mockHouseholdWishlists);
+
+      wrapper.unmount();
+    });
+
+    it('clears dashboard collections when aggregate load fails', async () => {
+      const { wrapper, householdStore, shoppingStore, wishlistStore } = await mountDashboard();
+
+      shoppingStore.setLists([
+        {
+          id: 'old-sl',
+          household_id: 'old-household',
+          title: 'Old List',
+          description: null,
+          created_by: 'u1',
+          created_at: '2024-01-01T00:00:00Z',
+          status: 'active',
+        },
+      ]);
+      wishlistStore.setWishlists([
+        {
+          id: 'old-w1',
+          user_id: 'u1',
+          household_id: 'old-household',
+          title: 'Old Wishlist',
+          description: null,
+          is_public: false,
+          share_slug: 'old-w1-slug',
+          created_at: '2024-01-01T00:00:00Z',
+          visibility: 'private',
+        },
+      ]);
+      wishlistStore.setHouseholdWishlists([
+        {
+          id: 'old-w2',
+          user_id: 'u2',
+          household_id: 'old-household',
+          title: 'Old Shared',
+          description: null,
+          is_public: false,
+          share_slug: 'old-w2-slug',
+          created_at: '2024-01-01T00:00:00Z',
+          visibility: 'household',
+        },
+      ]);
+
+      getDashboardSummaryMock.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'RPC failed' },
+      });
+
+      householdStore.setCurrentHousehold({
+        id: 'h1',
+        name: 'Household 1',
+        slug: 'household-1',
+        role: 'owner',
+      });
+
+      await flushPromises();
+      await nextTick();
+
+      expect(shoppingStore.lists).toEqual([]);
+      expect(wishlistStore.householdWishlists).toEqual([]);
 
       wrapper.unmount();
     });
@@ -238,7 +305,7 @@ describe('DashboardView', () => {
 
   describe('Deduplication', () => {
     it('should not duplicate loads when household is already loaded', async () => {
-      const { wrapper, householdStore, loadListsSpy } = await mountDashboard();
+      const { wrapper, householdStore } = await mountDashboard();
 
       // Switch to household 'h1'
       householdStore.setCurrentHousehold({
@@ -251,7 +318,7 @@ describe('DashboardView', () => {
       await flushPromises();
       await nextTick();
 
-      expect(loadListsSpy).toHaveBeenCalledTimes(1);
+      expect(getDashboardSummaryMock).toHaveBeenCalledTimes(1);
 
       // Setting the same household again should NOT trigger another load
       householdStore.setCurrentHousehold({
@@ -265,7 +332,7 @@ describe('DashboardView', () => {
       await nextTick();
 
       // Still only 1 call - deduplication prevents redundant load
-      expect(loadListsSpy).toHaveBeenCalledTimes(1);
+      expect(getDashboardSummaryMock).toHaveBeenCalledTimes(1);
 
       wrapper.unmount();
     });
@@ -273,14 +340,74 @@ describe('DashboardView', () => {
 
   describe('Stale Requests', () => {
     it('should ignore stale request results via token pattern', async () => {
-      const { wrapper, householdStore, loadListsSpy } = await mountDashboard();
+      const { wrapper, householdStore, shoppingStore, wishlistStore } = await mountDashboard();
 
-      // Simulate a slow loadLists for household 'h1'
-      let resolveH1: () => void = () => {};
-      const h1Promise = new Promise<void>((resolve) => {
+      const staleH1Payload = {
+        data: {
+          shoppingLists: [
+            {
+              id: 'sl-h1',
+              household_id: 'h1',
+              title: 'H1 stale list',
+              description: null,
+              created_by: 'u1',
+              created_at: '2024-01-01T00:00:00Z',
+              status: 'active',
+            },
+          ],
+          householdWishlists: [
+            {
+              id: 'w-h1-shared',
+              user_id: 'u2',
+              household_id: 'h1',
+              title: 'H1 stale shared',
+              description: null,
+              is_public: false,
+              share_slug: 'h1-stale-shared',
+              created_at: '2024-01-01T00:00:00Z',
+              visibility: 'household',
+            },
+          ],
+        },
+        error: null,
+      };
+
+      const freshH2Payload = {
+        data: {
+          shoppingLists: [
+            {
+              id: 'sl-h2',
+              household_id: 'h2',
+              title: 'H2 fresh list',
+              description: null,
+              created_by: 'u1',
+              created_at: '2024-01-02T00:00:00Z',
+              status: 'active',
+            },
+          ],
+          householdWishlists: [
+            {
+              id: 'w-h2-shared',
+              user_id: 'u3',
+              household_id: 'h2',
+              title: 'H2 fresh shared',
+              description: null,
+              is_public: false,
+              share_slug: 'h2-fresh-shared',
+              created_at: '2024-01-02T00:00:00Z',
+              visibility: 'household',
+            },
+          ],
+        },
+        error: null,
+      };
+
+      // Simulate a slow aggregate call for household 'h1'
+      let resolveH1: (value: unknown) => void = () => {};
+      const h1Promise = new Promise((resolve) => {
         resolveH1 = resolve;
       });
-      loadListsSpy.mockImplementationOnce(() => h1Promise);
+      getDashboardSummaryMock.mockImplementationOnce(() => h1Promise);
 
       // Switch to household h1 (starts slow load)
       householdStore.setCurrentHousehold({
@@ -292,9 +419,7 @@ describe('DashboardView', () => {
       await nextTick();
 
       // Before h1 finishes, switch to h2 (this invalidates h1's token)
-      loadListsSpy.mockResolvedValueOnce(undefined);
-      loadWishlistsByHouseholdMock.mockResolvedValueOnce(undefined);
-      loadHouseholdWishlistsMock.mockResolvedValueOnce(undefined);
+      getDashboardSummaryMock.mockResolvedValueOnce(freshH2Payload);
 
       householdStore.setCurrentHousehold({
         id: 'h2',
@@ -307,19 +432,20 @@ describe('DashboardView', () => {
       await nextTick();
 
       // Now resolve h1's slow response
-      resolveH1();
+      resolveH1(staleH1Payload);
       await flushPromises();
       await nextTick();
 
-      // The latest call should be for h2, confirming h1's stale result was superseded
-      const lastCall = loadListsSpy.mock.calls[loadListsSpy.mock.calls.length - 1];
-      expect(lastCall[0]).toBe('h2');
+      // Stale h1 response must not overwrite newer h2 state
+      expect(householdStore.currentHousehold?.id).toBe('h2');
+      expect(shoppingStore.lists).toEqual(freshH2Payload.data.shoppingLists);
+      expect(wishlistStore.householdWishlists).toEqual(freshH2Payload.data.householdWishlists);
 
       wrapper.unmount();
     });
 
     it('should reload household A in an A→B→A switch while B is in flight', async () => {
-      const { wrapper, householdStore, loadListsSpy } = await mountDashboard();
+      const { wrapper, householdStore } = await mountDashboard();
 
       // 1. Load household A (completes successfully)
       householdStore.setCurrentHousehold({
@@ -331,17 +457,15 @@ describe('DashboardView', () => {
       await flushPromises();
       await nextTick();
 
-      expect(loadListsSpy).toHaveBeenCalledWith('hA');
-      loadListsSpy.mockClear();
-      loadWishlistsByHouseholdMock.mockClear();
-      loadHouseholdWishlistsMock.mockClear();
+      expect(getDashboardSummaryMock).toHaveBeenCalledWith('hA', 'u1');
+      getDashboardSummaryMock.mockClear();
 
       // 2. Switch to household B with a slow response (stays in flight)
-      let resolveB: () => void = () => {};
-      const bPromise = new Promise<void>((resolve) => {
+      let resolveB: (value: unknown) => void = () => {};
+      const bPromise = new Promise((resolve) => {
         resolveB = resolve;
       });
-      loadListsSpy.mockImplementationOnce(() => bPromise);
+      getDashboardSummaryMock.mockImplementationOnce(() => bPromise);
 
       householdStore.setCurrentHousehold({
         id: 'hB',
@@ -352,9 +476,10 @@ describe('DashboardView', () => {
       await nextTick();
 
       // 3. While B is still in flight, switch back to A
-      loadListsSpy.mockResolvedValueOnce(undefined);
-      loadWishlistsByHouseholdMock.mockResolvedValueOnce(undefined);
-      loadHouseholdWishlistsMock.mockResolvedValueOnce(undefined);
+      getDashboardSummaryMock.mockResolvedValueOnce({
+        data: { shoppingLists: [], householdWishlists: [] },
+        error: null,
+      });
 
       householdStore.setCurrentHousehold({
         id: 'hA',
@@ -367,15 +492,19 @@ describe('DashboardView', () => {
       await nextTick();
 
       // A must have been re-issued despite being the last *completed* load
-      expect(loadListsSpy).toHaveBeenCalledWith('hA');
+      expect(getDashboardSummaryMock).toHaveBeenCalledWith('hA', 'u1');
 
       // 4. Resolve the stale B response — it should not overwrite A
-      resolveB();
+      resolveB({
+        data: { shoppingLists: [], householdWishlists: [] },
+        error: null,
+      });
       await flushPromises();
       await nextTick();
 
       // The most recent successful call is for A, not B
-      const lastCall = loadListsSpy.mock.calls[loadListsSpy.mock.calls.length - 1];
+      const lastCall =
+        getDashboardSummaryMock.mock.calls[getDashboardSummaryMock.mock.calls.length - 1];
       expect(lastCall[0]).toBe('hA');
 
       wrapper.unmount();
