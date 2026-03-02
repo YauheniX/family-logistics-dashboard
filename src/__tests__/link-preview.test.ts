@@ -140,7 +140,11 @@ describe('LinkPreview', () => {
       await flushPromises();
 
       expect(fetch).toHaveBeenCalledTimes(1);
-      expect(fetch).toHaveBeenCalledWith(expect.stringContaining('https://api.microlink.io'));
+      const firstCallUrl = vi.mocked(fetch).mock.calls[0]?.[0];
+      const normalizedUrl = String(firstCallUrl);
+      expect(normalizedUrl).toMatch(
+        /functions\/v1\/link-preview|\.functions\.supabase\.co\/link-preview|https:\/\/api\.microlink\.io/,
+      );
     });
 
     it('displays fetched preview data', async () => {

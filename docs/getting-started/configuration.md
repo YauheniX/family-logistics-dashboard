@@ -53,13 +53,16 @@ cp env.example .env.local
 - Root deployment (Vercel, Netlify): `/`
 - GitHub Pages: `/family-logistics-dashboard/`
 
-### Link Preview (Microlink)
+### Link Preview (ZenRows)
 
-| Variable             | Required | Default | Description                                  |
-| -------------------- | -------- | ------- | -------------------------------------------- |
-| `VITE_MICROLINK_KEY` | No       | —       | Microlink Pro API key for higher rate limits |
+Link preview runs through Supabase Edge Function `link-preview`.
+Set ZenRows key as a Supabase Function secret (server-side):
 
-Free tier provides 50 requests/day per IP with no key required.
+```bash
+supabase secrets set ZENROWS_API_KEY=your-zenrows-api-key-here
+```
+
+If secret is missing, backend falls back to Microlink free tier.
 
 ---
 

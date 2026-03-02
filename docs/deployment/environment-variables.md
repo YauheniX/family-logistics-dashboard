@@ -15,7 +15,6 @@ Complete environment variable reference for all deployment environments.
 | `VITE_USE_MOCK_BACKEND`        | No       | `false`           | All          | Force mock mode          |
 | `VITE_SUPABASE_STORAGE_BUCKET` | No       | `wishlist-images` | All          | Storage bucket name      |
 | `VITE_BASE_PATH`               | No       | `/`               | All          | App base URL path        |
-| `VITE_MICROLINK_KEY`           | No       | —                 | All          | Microlink Pro API key    |
 
 > \* If absent, auto-falls back to Mock Mode.
 
@@ -99,12 +98,13 @@ This value is used by Vite as the `base` configuration option.
 
 ---
 
-### `VITE_MICROLINK_KEY`
+### `ZENROWS_API_KEY` (Supabase Function Secret)
 
-Optional API key for [Microlink](https://microlink.io) link preview service. No key is needed for the free tier (50 req/day per IP).
+Server-side API key for [ZenRows](https://www.zenrows.com), used by Edge Function `link-preview`.
+Do not store this key in frontend `VITE_*` variables.
 
-```env
-VITE_MICROLINK_KEY=your-pro-key-here
+```bash
+supabase secrets set ZENROWS_API_KEY=your-zenrows-api-key-here
 ```
 
 ---

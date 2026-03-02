@@ -83,7 +83,7 @@ toast.info('Invitation sent');
 | ---------------------- | ------------------------------------- | --------------------------------- |
 | `useMembers`           | `composables/useMembers.ts`           | Load and manage household members |
 | `useInvitations`       | `composables/useInvitations.ts`       | Invitation management             |
-| `useLinkPreview`       | `composables/useLinkPreview.ts`       | Microlink URL preview             |
+| `useLinkPreview`       | `composables/useLinkPreview.ts`       | Backend link preview service      |
 | `useTheme`             | `composables/useTheme.ts`             | Dark/light theme toggle           |
 | `useUserProfile`       | `composables/useUserProfile.ts`       | Current user profile              |
 | `useAsyncHandler`      | `composables/useAsyncHandler.ts`      | Async error handling wrapper      |

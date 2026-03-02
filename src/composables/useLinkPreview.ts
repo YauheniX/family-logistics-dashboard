@@ -18,7 +18,110 @@ interface CachedPreview {
 
 const CACHE_KEY_PREFIX = 'link_preview_';
 const CACHE_EXPIRATION_DAYS = 7;
-const API_ENDPOINT = 'https://api.microlink.io';
+const MICROLINK_API_ENDPOINT = 'https://api.microlink.io';
+const LINK_PREVIEW_FUNCTION_NAME = 'link-preview';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+
+function getLinkPreviewFunctionEndpoint(): string | null {
+  if (!SUPABASE_URL) return null;
+
+  const baseUrl = new URL(SUPABASE_URL);
+  return baseUrl.origin.endsWith('.supabase.co')
+    ? `${baseUrl.origin.replace('.supabase.co', '.functions.supabase.co')}/${LINK_PREVIEW_FUNCTION_NAME}`
+    : `${baseUrl.origin}/functions/v1/${LINK_PREVIEW_FUNCTION_NAME}`;
+}
+
+async function fetchViaBackend(
+  url: string,
+  config: {
+    screenshot?: boolean;
+    meta?: boolean;
+    viewportWidth?: number;
+    viewportHeight?: number;
+    deviceScaleFactor?: number;
+    isMobile?: boolean;
+  },
+): Promise<LinkPreviewData | null> {
+  const endpoint = getLinkPreviewFunctionEndpoint();
+  if (!endpoint || !SUPABASE_ANON_KEY) return null;
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url, config }),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const result = await response.json();
+    if (result?.status !== 'success' || !result?.data) {
+      return null;
+    }
+
+    const data = result.data;
+    return {
+      title: data.title || '',
+      description: data.description || '',
+      image: data.image || data.screenshot?.url || data.image?.url || '',
+      domain: extractDomain(data.url || url),
+      url: data.url || url,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function fetchViaMicrolink(
+  url: string,
+  config: {
+    screenshot?: boolean;
+    meta?: boolean;
+    viewportWidth?: number;
+    viewportHeight?: number;
+    deviceScaleFactor?: number;
+    isMobile?: boolean;
+  },
+): Promise<LinkPreviewData | null> {
+  const params = new URLSearchParams({
+    url: url,
+    screenshot: config.screenshot !== false ? 'true' : 'false',
+    meta: config.meta !== false ? 'true' : 'false',
+    'viewport.width': String(config.viewportWidth || 480),
+    'viewport.height': String(config.viewportHeight || 480),
+    'viewport.deviceScaleFactor': String(config.deviceScaleFactor || 2),
+    'viewport.isMobile': config.isMobile !== false ? 'true' : 'false',
+  });
+
+  const response = await fetch(`${MICROLINK_API_ENDPOINT}?${params.toString()}`);
+
+  if (!response.ok) {
+    // Silently fail for rate limits (429 = Too Many Requests)
+    return null;
+  }
+
+  const result = await response.json();
+
+  // Validate response structure
+  if (result.status !== 'success' || !result.data) {
+    return null;
+  }
+
+  const { data } = result;
+  return {
+    title: data.title || '',
+    description: data.description || '',
+    image: data.screenshot?.url || data.image?.url || '',
+    domain: extractDomain(data.url || url),
+    url: data.url || url,
+  };
+}
 
 /**
  * Get cache key for a URL
@@ -97,7 +200,7 @@ export function saveCachePreview(url: string, data: LinkPreviewData): void {
 }
 
 /**
- * Fetch preview from Microlink API with screenshot
+ * Fetch preview from backend link-preview API (Microlink fallback)
  * @param url - URL to fetch preview for
  * @param config - Optional API configuration
  * @param options - Fetch options (force: skip cache)
@@ -124,39 +227,12 @@ export async function fetchLinkPreview(
   }
 
   try {
-    // Build API URL with parameters
-    const params = new URLSearchParams({
-      url: url,
-      screenshot: config.screenshot !== false ? 'true' : 'false',
-      meta: config.meta !== false ? 'true' : 'false',
-      'viewport.width': String(config.viewportWidth || 480),
-      'viewport.height': String(config.viewportHeight || 480),
-      'viewport.deviceScaleFactor': String(config.deviceScaleFactor || 2),
-      'viewport.isMobile': config.isMobile !== false ? 'true' : 'false',
-    });
+    const previewData =
+      (await fetchViaBackend(url, config)) || (await fetchViaMicrolink(url, config));
 
-    const response = await fetch(`${API_ENDPOINT}?${params.toString()}`);
-
-    if (!response.ok) {
-      // Silently fail for rate limits (429 = Too Many Requests)
+    if (!previewData) {
       return null;
     }
-
-    const result = await response.json();
-
-    // Validate response structure
-    if (result.status !== 'success' || !result.data) {
-      return null;
-    }
-
-    const { data } = result;
-    const previewData: LinkPreviewData = {
-      title: data.title || '',
-      description: data.description || '',
-      image: data.screenshot?.url || data.image?.url || '',
-      domain: extractDomain(data.url || url),
-      url: data.url || url,
-    };
 
     // Save to cache
     saveCachePreview(url, previewData);
