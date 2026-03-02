@@ -6,8 +6,8 @@ import { toApiError } from './base.repository';
 /**
  * Repository for the get_dashboard_summary RPC.
  *
- * Replaces three separate Supabase queries with a single server-side
- * aggregate call, reducing dashboard round-trips from 3 → 1.
+ * Replaces dashboard Supabase queries with a single server-side
+ * aggregate call, reducing round-trips.
  */
 export class DashboardRepository {
   /**
@@ -16,8 +16,8 @@ export class DashboardRepository {
    * @param householdId - The UUID of the household to load data for.
    * @param userId      - The UUID of the currently authenticated user.
    *                      Must equal auth.uid() (enforced server-side).
-   * @returns Shopping lists, the user's personal wishlists (non-child),
-   *          and other members' shared wishlists — all in a single response.
+   * @returns Shopping lists and other members' shared wishlists
+   *          in a single response.
    */
   async getDashboardSummary(
     householdId: string,
@@ -39,14 +39,12 @@ export class DashboardRepository {
 
       const raw = data as unknown as {
         shopping_lists: DashboardAggregate['shoppingLists'];
-        my_wishlists: DashboardAggregate['myWishlists'];
         household_wishlists: DashboardAggregate['householdWishlists'];
       };
 
       return {
         data: {
           shoppingLists: Array.isArray(raw.shopping_lists) ? raw.shopping_lists : [],
-          myWishlists: Array.isArray(raw.my_wishlists) ? raw.my_wishlists : [],
           householdWishlists: Array.isArray(raw.household_wishlists) ? raw.household_wishlists : [],
         },
         error: null,

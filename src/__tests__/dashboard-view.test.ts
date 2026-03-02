@@ -12,7 +12,7 @@ import i18n from '@/i18n';
 // Use vi.hoisted so the mock reference is available before vi.mock is hoisted
 const { getDashboardSummaryMock } = vi.hoisted(() => ({
   getDashboardSummaryMock: vi.fn().mockResolvedValue({
-    data: { shoppingLists: [], myWishlists: [], householdWishlists: [] },
+    data: { shoppingLists: [], householdWishlists: [] },
     error: null,
   }),
 }));
@@ -92,7 +92,7 @@ describe('DashboardView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getDashboardSummaryMock.mockReset().mockResolvedValue({
-      data: { shoppingLists: [], myWishlists: [], householdWishlists: [] },
+      data: { shoppingLists: [], householdWishlists: [] },
       error: null,
     });
     localStorage.clear();
@@ -210,9 +210,6 @@ describe('DashboardView', () => {
 
     it('populates store state from aggregate response', async () => {
       const mockLists = [{ id: 'sl1', title: 'Groceries', status: 'active', household_id: 'h1' }];
-      const mockMyWishlists = [
-        { id: 'w1', title: 'Birthday', visibility: 'private', household_id: 'h1' },
-      ];
       const mockHouseholdWishlists = [
         { id: 'w2', title: 'Christmas', visibility: 'household', household_id: 'h1' },
       ];
@@ -220,7 +217,6 @@ describe('DashboardView', () => {
       getDashboardSummaryMock.mockResolvedValueOnce({
         data: {
           shoppingLists: mockLists,
-          myWishlists: mockMyWishlists,
           householdWishlists: mockHouseholdWishlists,
         },
         error: null,
@@ -239,7 +235,6 @@ describe('DashboardView', () => {
       await nextTick();
 
       expect(shoppingStore.lists).toEqual(mockLists);
-      expect(wishlistStore.wishlists).toEqual(mockMyWishlists);
       expect(wishlistStore.householdWishlists).toEqual(mockHouseholdWishlists);
 
       wrapper.unmount();
@@ -302,7 +297,6 @@ describe('DashboardView', () => {
       await nextTick();
 
       expect(shoppingStore.lists).toEqual([]);
-      expect(wishlistStore.wishlists).toEqual([]);
       expect(wishlistStore.householdWishlists).toEqual([]);
 
       wrapper.unmount();
@@ -361,19 +355,6 @@ describe('DashboardView', () => {
               status: 'active',
             },
           ],
-          myWishlists: [
-            {
-              id: 'w-h1-me',
-              user_id: 'u1',
-              household_id: 'h1',
-              title: 'H1 stale mine',
-              description: null,
-              is_public: false,
-              share_slug: 'h1-stale-me',
-              created_at: '2024-01-01T00:00:00Z',
-              visibility: 'private',
-            },
-          ],
           householdWishlists: [
             {
               id: 'w-h1-shared',
@@ -402,19 +383,6 @@ describe('DashboardView', () => {
               created_by: 'u1',
               created_at: '2024-01-02T00:00:00Z',
               status: 'active',
-            },
-          ],
-          myWishlists: [
-            {
-              id: 'w-h2-me',
-              user_id: 'u1',
-              household_id: 'h2',
-              title: 'H2 fresh mine',
-              description: null,
-              is_public: false,
-              share_slug: 'h2-fresh-me',
-              created_at: '2024-01-02T00:00:00Z',
-              visibility: 'private',
             },
           ],
           householdWishlists: [
@@ -471,7 +439,6 @@ describe('DashboardView', () => {
       // Stale h1 response must not overwrite newer h2 state
       expect(householdStore.currentHousehold?.id).toBe('h2');
       expect(shoppingStore.lists).toEqual(freshH2Payload.data.shoppingLists);
-      expect(wishlistStore.wishlists).toEqual(freshH2Payload.data.myWishlists);
       expect(wishlistStore.householdWishlists).toEqual(freshH2Payload.data.householdWishlists);
 
       wrapper.unmount();
@@ -510,7 +477,7 @@ describe('DashboardView', () => {
 
       // 3. While B is still in flight, switch back to A
       getDashboardSummaryMock.mockResolvedValueOnce({
-        data: { shoppingLists: [], myWishlists: [], householdWishlists: [] },
+        data: { shoppingLists: [], householdWishlists: [] },
         error: null,
       });
 
@@ -529,7 +496,7 @@ describe('DashboardView', () => {
 
       // 4. Resolve the stale B response — it should not overwrite A
       resolveB({
-        data: { shoppingLists: [], myWishlists: [], householdWishlists: [] },
+        data: { shoppingLists: [], householdWishlists: [] },
         error: null,
       });
       await flushPromises();

@@ -98,11 +98,7 @@
     </template>
 
     <EmptyState
-      v-if="
-        !householdEntityStore.loading &&
-        !householdEntityStore.households.length &&
-        !wishlistStore.wishlists.length
-      "
+      v-if="!householdEntityStore.loading && !householdEntityStore.households.length"
       :title="$t('dashboard.welcomeTitle')"
       :description="$t('dashboard.welcomeDescription')"
       :cta="$t('dashboard.createHousehold')"
@@ -161,7 +157,6 @@ const allActiveLists = computed(() => shoppingStore.lists.filter((l) => l.status
 
 function clearDashboardCollections() {
   shoppingStore.setLists([]);
-  wishlistStore.setWishlists([]);
   wishlistStore.setHouseholdWishlists([]);
 }
 
@@ -217,7 +212,6 @@ async function loadCurrentHouseholdData() {
       clearDashboardCollections();
     } else if (response.data) {
       shoppingStore.setLists(response.data.shoppingLists);
-      wishlistStore.setWishlists(response.data.myWishlists);
       wishlistStore.setHouseholdWishlists(response.data.householdWishlists);
 
       lastLoadedHouseholdId.value = householdId;

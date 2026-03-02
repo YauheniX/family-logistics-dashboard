@@ -26,22 +26,6 @@ const mockAggregate = {
       updated_at: null,
     },
   ],
-  my_wishlists: [
-    {
-      id: 'w1',
-      user_id: 'u1',
-      member_id: 'm1',
-      household_id: 'h1',
-      title: 'Birthday Wishes',
-      description: null,
-      visibility: 'private',
-      share_slug: 'abc12345',
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: null,
-      member_name: 'Alice',
-      is_public: false,
-    },
-  ],
   household_wishlists: [
     {
       id: 'w2',
@@ -93,11 +77,6 @@ describe('DashboardRepository', () => {
       expect(result.data!.shoppingLists[0].id).toBe('sl1');
       expect(result.data!.shoppingLists[0].status).toBe('active');
 
-      // My wishlists shape
-      expect(result.data!.myWishlists).toHaveLength(1);
-      expect(result.data!.myWishlists[0].id).toBe('w1');
-      expect(result.data!.myWishlists[0].title).toBe('Birthday Wishes');
-
       // Household wishlists shape
       expect(result.data!.householdWishlists).toHaveLength(1);
       expect(result.data!.householdWishlists[0].id).toBe('w2');
@@ -106,7 +85,7 @@ describe('DashboardRepository', () => {
 
     it('returns empty arrays when RPC returns empty collections', async () => {
       mockRpc.mockResolvedValue({
-        data: { shopping_lists: [], my_wishlists: [], household_wishlists: [] },
+        data: { shopping_lists: [], household_wishlists: [] },
         error: null,
       });
 
@@ -114,7 +93,6 @@ describe('DashboardRepository', () => {
 
       expect(result.error).toBeNull();
       expect(result.data!.shoppingLists).toEqual([]);
-      expect(result.data!.myWishlists).toEqual([]);
       expect(result.data!.householdWishlists).toEqual([]);
     });
 
