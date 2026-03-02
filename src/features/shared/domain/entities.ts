@@ -218,3 +218,11 @@ export interface DashboardStats {
   itemsToBuy: number;
   reservedWishlistItems: number;
 }
+
+// ─── Dashboard Aggregate ─────────────────────────────────
+/** Returned by the get_dashboard_summary RPC — all dashboard data in one call. */
+export interface DashboardAggregate {
+  shoppingLists: ShoppingList[];
+  myWishlists: Wishlist[];
+  householdWishlists: Wishlist[];
+}
