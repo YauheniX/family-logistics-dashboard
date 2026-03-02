@@ -54,6 +54,16 @@ export const useWishlistStore = defineStore('wishlist', () => {
     error.value = null;
   }
 
+  /** Bulk-replace the personal wishlists array (used by the dashboard aggregate loader) */
+  function setWishlists(data: Wishlist[]) {
+    wishlists.value = data;
+  }
+
+  /** Bulk-replace the household wishlists array (used by the dashboard aggregate loader) */
+  function setHouseholdWishlists(data: Wishlist[]) {
+    householdWishlists.value = data;
+  }
+
   // ─── Wishlist Actions ──────────────────────────────────────
 
   async function loadWishlists(userId: string) {
@@ -319,6 +329,8 @@ export const useWishlistStore = defineStore('wishlist', () => {
     itemsByPriority,
     // Reset
     $reset,
+    setWishlists,
+    setHouseholdWishlists,
     // Wishlist Actions
     loadWishlists,
     loadWishlistsByHousehold,

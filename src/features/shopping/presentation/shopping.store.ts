@@ -52,6 +52,11 @@ export const useShoppingStore = defineStore('shopping', () => {
     currentList.value = list;
   }
 
+  /** Bulk-replace the lists array (used by the dashboard aggregate loader) */
+  function setLists(data: ShoppingList[]) {
+    lists.value = data;
+  }
+
   // ─── List Actions ───────────────────────────────────────
 
   function clearLists() {
@@ -236,6 +241,7 @@ export const useShoppingStore = defineStore('shopping', () => {
     // Reset & Setters
     $reset,
     setCurrentList,
+    setLists,
     // List Actions
     clearLists,
     loadLists,
