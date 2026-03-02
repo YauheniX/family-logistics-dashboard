@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="isLoading"
-    class="w-full h-1 bg-neutral-200 dark:bg-neutral-700 overflow-hidden"
+    class="fixed left-0 top-83 w-full h-1 bg-neutral-200 dark:bg-neutral-700 overflow-hidden z-50"
     role="progressbar"
     aria-label="Page loading"
     aria-valuemin="0"
