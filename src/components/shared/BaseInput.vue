@@ -1,5 +1,9 @@
 <template>
   <div class="space-y-1">
+    <label v-if="!floatingLabel && label" :for="inputId" class="label block mb-1">
+      {{ label }}
+      <span v-if="required" class="text-danger-500 dark:text-danger-400">*</span>
+    </label>
     <!-- Floating Label -->
     <div class="relative">
       <!-- Icon Left with Focus Animation -->
@@ -23,12 +27,6 @@
             : 'top-1/2 -translate-y-1/2 text-sm text-neutral-500 dark:text-neutral-400',
         ]"
       >
-        {{ label }}
-        <span v-if="required" class="text-danger-500 dark:text-danger-400">*</span>
-      </label>
-
-      <!-- Standard Label (when floatingLabel is false) -->
-      <label v-else-if="label" :for="inputId" class="label block mb-1">
         {{ label }}
         <span v-if="required" class="text-danger-500 dark:text-danger-400">*</span>
       </label>
