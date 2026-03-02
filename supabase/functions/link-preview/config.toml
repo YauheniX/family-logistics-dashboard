@@ -1,0 +1,4 @@
+# Supabase Edge Function config
+# Disable gateway JWT verification so browser preflight OPTIONS can pass
+# and this public link-preview endpoint can be called from the frontend.
+verify_jwt = false
