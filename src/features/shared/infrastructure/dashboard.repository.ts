@@ -45,9 +45,9 @@ export class DashboardRepository {
 
       return {
         data: {
-          shoppingLists: raw.shopping_lists ?? [],
-          myWishlists: raw.my_wishlists ?? [],
-          householdWishlists: raw.household_wishlists ?? [],
+          shoppingLists: Array.isArray(raw.shopping_lists) ? raw.shopping_lists : [],
+          myWishlists: Array.isArray(raw.my_wishlists) ? raw.my_wishlists : [],
+          householdWishlists: Array.isArray(raw.household_wishlists) ? raw.household_wishlists : [],
         },
         error: null,
       };

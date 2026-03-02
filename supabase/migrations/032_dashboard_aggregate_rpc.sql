@@ -146,7 +146,8 @@ begin
   left  join members m on m.id = w.member_id
   where w.household_id = p_household_id
     and w.visibility   in ('household', 'public')
-    and w.member_id    is distinct from v_member_id;
+    and w.member_id    is distinct from v_member_id
+    and w.user_id      is distinct from p_user_id;
 
   -- ── Return aggregate ─────────────────────────────────────────
   return jsonb_build_object(

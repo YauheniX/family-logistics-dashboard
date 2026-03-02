@@ -223,6 +223,10 @@ async function loadCurrentHouseholdData() {
       lastLoadedHouseholdId.value = householdId;
     }
   } catch (error) {
+    if (currentToken !== loadRequestToken.value) {
+      return;
+    }
+
     console.error('[Dashboard] Failed to load data:', error);
     clearDashboardCollections();
   }
