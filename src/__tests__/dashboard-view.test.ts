@@ -261,6 +261,67 @@ describe('DashboardView', () => {
 
       wrapper.unmount();
     });
+
+    it('clears dashboard collections when aggregate load fails', async () => {
+      const { wrapper, householdStore, shoppingStore, wishlistStore } = await mountDashboard();
+
+      shoppingStore.setLists([
+        {
+          id: 'old-sl',
+          household_id: 'old-household',
+          title: 'Old List',
+          description: null,
+          created_by: 'u1',
+          created_at: '2024-01-01T00:00:00Z',
+          status: 'active',
+        },
+      ]);
+      wishlistStore.setWishlists([
+        {
+          id: 'old-w1',
+          user_id: 'u1',
+          title: 'Old Wishlist',
+          description: null,
+          is_public: false,
+          share_slug: 'old-w1-slug',
+          created_at: '2024-01-01T00:00:00Z',
+          visibility: 'private',
+        },
+      ]);
+      wishlistStore.setHouseholdWishlists([
+        {
+          id: 'old-w2',
+          user_id: 'u2',
+          title: 'Old Shared',
+          description: null,
+          is_public: false,
+          share_slug: 'old-w2-slug',
+          created_at: '2024-01-01T00:00:00Z',
+          visibility: 'household',
+        },
+      ]);
+
+      getDashboardSummaryMock.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'RPC failed' },
+      });
+
+      householdStore.setCurrentHousehold({
+        id: 'h1',
+        name: 'Household 1',
+        slug: 'household-1',
+        role: 'owner',
+      });
+
+      await flushPromises();
+      await nextTick();
+
+      expect(shoppingStore.lists).toEqual([]);
+      expect(wishlistStore.wishlists).toEqual([]);
+      expect(wishlistStore.householdWishlists).toEqual([]);
+
+      wrapper.unmount();
+    });
   });
 
   describe('Deduplication', () => {
@@ -335,12 +396,16 @@ describe('DashboardView', () => {
       await nextTick();
 
       // Now resolve h1's slow response
-      resolveH1({ data: { shoppingLists: [], myWishlists: [], householdWishlists: [] }, error: null });
+      resolveH1({
+        data: { shoppingLists: [], myWishlists: [], householdWishlists: [] },
+        error: null,
+      });
       await flushPromises();
       await nextTick();
 
       // The latest call should be for h2, confirming h1's stale result was superseded
-      const lastCall = getDashboardSummaryMock.mock.calls[getDashboardSummaryMock.mock.calls.length - 1];
+      const lastCall =
+        getDashboardSummaryMock.mock.calls[getDashboardSummaryMock.mock.calls.length - 1];
       expect(lastCall[0]).toBe('h2');
 
       wrapper.unmount();
@@ -397,12 +462,16 @@ describe('DashboardView', () => {
       expect(getDashboardSummaryMock).toHaveBeenCalledWith('hA', 'u1');
 
       // 4. Resolve the stale B response — it should not overwrite A
-      resolveB({ data: { shoppingLists: [], myWishlists: [], householdWishlists: [] }, error: null });
+      resolveB({
+        data: { shoppingLists: [], myWishlists: [], householdWishlists: [] },
+        error: null,
+      });
       await flushPromises();
       await nextTick();
 
       // The most recent successful call is for A, not B
-      const lastCall = getDashboardSummaryMock.mock.calls[getDashboardSummaryMock.mock.calls.length - 1];
+      const lastCall =
+        getDashboardSummaryMock.mock.calls[getDashboardSummaryMock.mock.calls.length - 1];
       expect(lastCall[0]).toBe('hA');
 
       wrapper.unmount();

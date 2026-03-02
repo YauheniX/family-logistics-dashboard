@@ -159,6 +159,12 @@ const userName = computed(() => {
 
 const allActiveLists = computed(() => shoppingStore.lists.filter((l) => l.status === 'active'));
 
+function clearDashboardCollections() {
+  shoppingStore.setLists([]);
+  wishlistStore.setWishlists([]);
+  wishlistStore.setHouseholdWishlists([]);
+}
+
 async function handleInvitationAccepted() {
   // Reload households when user accepts an invitation
   if (authStore.user?.id) {
@@ -191,6 +197,9 @@ async function loadCurrentHouseholdData() {
   lastLoadedHouseholdId.value = null;
 
   const currentToken = ++loadRequestToken.value;
+
+  clearDashboardCollections();
+
   try {
     // Single aggregate RPC call replaces the previous 3 parallel queries:
     //   shoppingStore.loadLists(householdId)
@@ -205,15 +214,17 @@ async function loadCurrentHouseholdData() {
 
     if (response.error) {
       console.error('[Dashboard] Failed to load data:', response.error);
+      clearDashboardCollections();
     } else if (response.data) {
       shoppingStore.setLists(response.data.shoppingLists);
       wishlistStore.setWishlists(response.data.myWishlists);
       wishlistStore.setHouseholdWishlists(response.data.householdWishlists);
-    }
 
-    lastLoadedHouseholdId.value = householdId;
+      lastLoadedHouseholdId.value = householdId;
+    }
   } catch (error) {
     console.error('[Dashboard] Failed to load data:', error);
+    clearDashboardCollections();
   }
 }
 
@@ -241,6 +252,7 @@ watch(
   async ([householdId, isInitialized]) => {
     if (!householdId) {
       lastLoadedHouseholdId.value = null;
+      clearDashboardCollections();
       return;
     }
     if (!isInitialized) {
