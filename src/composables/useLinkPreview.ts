@@ -3,6 +3,11 @@
  * Used by LinkPreview component and WishlistListView
  */
 
+import {
+  linkPreviewRepository,
+  type LinkPreviewConfig,
+} from '@/features/shared/infrastructure/link-preview.repository';
+
 export interface LinkPreviewData {
   title: string;
   description: string;
@@ -19,75 +24,50 @@ interface CachedPreview {
 const CACHE_KEY_PREFIX = 'link_preview_';
 const CACHE_EXPIRATION_DAYS = 7;
 const MICROLINK_API_ENDPOINT = 'https://api.microlink.io';
-const LINK_PREVIEW_FUNCTION_NAME = 'link-preview';
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
-function getLinkPreviewFunctionEndpoint(): string | null {
-  if (!SUPABASE_URL) return null;
+function normalizeImage(value: unknown): string {
+  if (typeof value === 'string') {
+    return value.trim();
+  }
 
-  const baseUrl = new URL(SUPABASE_URL);
-  return baseUrl.origin.endsWith('.supabase.co')
-    ? `${baseUrl.origin.replace('.supabase.co', '.functions.supabase.co')}/${LINK_PREVIEW_FUNCTION_NAME}`
-    : `${baseUrl.origin}/functions/v1/${LINK_PREVIEW_FUNCTION_NAME}`;
+  if (value && typeof value === 'object') {
+    const imageObject = value as { url?: unknown; src?: unknown; srcUrl?: unknown };
+    if (typeof imageObject.url === 'string') return imageObject.url.trim();
+    if (typeof imageObject.src === 'string') return imageObject.src.trim();
+    if (typeof imageObject.srcUrl === 'string') return imageObject.srcUrl.trim();
+  }
+
+  return '';
 }
 
 async function fetchViaBackend(
   url: string,
-  config: {
-    screenshot?: boolean;
-    meta?: boolean;
-    viewportWidth?: number;
-    viewportHeight?: number;
-    deviceScaleFactor?: number;
-    isMobile?: boolean;
-  },
+  config: LinkPreviewConfig,
 ): Promise<LinkPreviewData | null> {
-  const endpoint = getLinkPreviewFunctionEndpoint();
-  if (!endpoint || !SUPABASE_ANON_KEY) return null;
+  const data = (await linkPreviewRepository.callLinkPreview(url, config)) as {
+    title?: unknown;
+    description?: unknown;
+    image?: unknown;
+    screenshot?: unknown;
+    url?: unknown;
+  } | null;
 
-  try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ url, config }),
-    });
+  if (!data) return null;
 
-    if (!response.ok) {
-      return null;
-    }
+  const backendUrl = typeof data.url === 'string' ? data.url : url;
 
-    const result = await response.json();
-    if (result?.status !== 'success' || !result?.data) {
-      return null;
-    }
-
-    const data = result.data;
-    return {
-      title: data.title || '',
-      description: data.description || '',
-      image: data.image || data.screenshot?.url || data.image?.url || '',
-      domain: extractDomain(data.url || url),
-      url: data.url || url,
-    };
-  } catch {
-    return null;
-  }
+  return {
+    title: typeof data.title === 'string' ? data.title : '',
+    description: typeof data.description === 'string' ? data.description : '',
+    image: normalizeImage(data.image) || normalizeImage(data.screenshot),
+    domain: extractDomain(backendUrl),
+    url: backendUrl,
+  };
 }
 
 async function fetchViaMicrolink(
   url: string,
-  config: {
-    screenshot?: boolean;
-    meta?: boolean;
-    viewportWidth?: number;
-    viewportHeight?: number;
-    deviceScaleFactor?: number;
-    isMobile?: boolean;
-  },
+  config: LinkPreviewConfig,
 ): Promise<LinkPreviewData | null> {
   const params = new URLSearchParams({
     url: url,
@@ -117,7 +97,7 @@ async function fetchViaMicrolink(
   return {
     title: data.title || '',
     description: data.description || '',
-    image: data.screenshot?.url || data.image?.url || '',
+    image: normalizeImage(data.image) || normalizeImage(data.screenshot),
     domain: extractDomain(data.url || url),
     url: data.url || url,
   };
@@ -208,14 +188,7 @@ export function saveCachePreview(url: string, data: LinkPreviewData): void {
  */
 export async function fetchLinkPreview(
   url: string,
-  config: {
-    screenshot?: boolean;
-    meta?: boolean;
-    viewportWidth?: number;
-    viewportHeight?: number;
-    deviceScaleFactor?: number;
-    isMobile?: boolean;
-  } = {},
+  config: LinkPreviewConfig = {},
   options: { force?: boolean } = {},
 ): Promise<LinkPreviewData | null> {
   // Check cache first (unless force=true)

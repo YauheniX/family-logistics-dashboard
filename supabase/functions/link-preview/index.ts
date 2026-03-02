@@ -13,6 +13,15 @@ type LinkPreviewRequest = {
   };
 };
 
+type ResolvedLinkPreviewConfig = {
+  screenshot: boolean;
+  meta: boolean;
+  viewportWidth: number;
+  viewportHeight: number;
+  deviceScaleFactor: number;
+  isMobile: boolean;
+};
+
 type LinkPreviewData = {
   title: string;
   description: string;
@@ -23,6 +32,19 @@ type LinkPreviewData = {
 
 const ZENROWS_ENDPOINT = 'https://api.zenrows.com/v1/';
 const MICROLINK_ENDPOINT = 'https://api.microlink.io';
+const PROVIDER_TIMEOUT_MS = Number(Deno.env.get('LINK_PREVIEW_PROVIDER_TIMEOUT_MS') ?? '12000');
+const RATE_LIMIT_WINDOW_MS = Number(Deno.env.get('LINK_PREVIEW_RATE_LIMIT_WINDOW_MS') ?? '60000');
+const RATE_LIMIT_MAX_REQUESTS = Number(
+  Deno.env.get('LINK_PREVIEW_RATE_LIMIT_MAX_REQUESTS') ?? '20',
+);
+const PREVIEW_CACHE_TTL_MS = Number(Deno.env.get('LINK_PREVIEW_CACHE_TTL_MS') ?? '21600000');
+const PREVIEW_CACHE_MAX_ENTRIES = Number(Deno.env.get('LINK_PREVIEW_CACHE_MAX_ENTRIES') ?? '500');
+
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+const previewCacheStore = new Map<
+  string,
+  { data: LinkPreviewData; expiresAt: number; createdAt: number }
+>();
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -55,17 +77,55 @@ serve(async (req) => {
     return json({ status: 'error', message: 'Invalid URL' }, 400);
   }
 
-  const config = body.config ?? {};
+  const normalizedUrl = new URL(targetUrl).toString();
+  const resolvedConfig = resolveConfig(body.config);
+  const cacheKey = await buildCacheKey(normalizedUrl, resolvedConfig);
+  const cachedPreview = getCachedPreview(cacheKey);
+  if (cachedPreview) {
+    return json({ status: 'success', data: cachedPreview }, 200);
+  }
+
+  const rateLimitKey = getRateLimitKey(req);
+  const rateCheck = checkRateLimit(rateLimitKey);
+  if (!rateCheck.allowed) {
+    return json(
+      { status: 'error', message: 'Rate limit exceeded' },
+      429,
+      rateCheck.retryAfterSeconds
+        ? { 'Retry-After': String(rateCheck.retryAfterSeconds) }
+        : undefined,
+    );
+  }
+
+  const config = resolvedConfig;
   const zenrowsApiKey = Deno.env.get('ZENROWS_API_KEY')?.trim();
 
   try {
-    const preview =
-      (zenrowsApiKey ? await fetchViaZenRows(targetUrl, config, zenrowsApiKey) : null) ||
-      (await fetchViaMicrolink(targetUrl, config));
+    let zenrowsPreview: LinkPreviewData | null = null;
+    if (zenrowsApiKey) {
+      try {
+        zenrowsPreview = await fetchViaZenRows(normalizedUrl, config, zenrowsApiKey);
+      } catch (error) {
+        console.warn('ZenRows provider failed, falling back to Microlink', error);
+      }
+    }
+
+    let microlinkPreview: LinkPreviewData | null = null;
+    if (!zenrowsPreview) {
+      try {
+        microlinkPreview = await fetchViaMicrolink(normalizedUrl, config);
+      } catch (error) {
+        console.warn('Microlink provider failed', error);
+      }
+    }
+
+    const preview = zenrowsPreview || microlinkPreview;
 
     if (!preview) {
       return json({ status: 'error', message: 'Preview fetch failed' }, 502);
     }
+
+    setCachedPreview(cacheKey, preview);
 
     return json({ status: 'success', data: preview }, 200);
   } catch {
@@ -73,14 +133,167 @@ serve(async (req) => {
   }
 });
 
-function json(payload: unknown, status = 200): Response {
+function json(payload: unknown, status = 200, extraHeaders?: Record<string, string>): Response {
   return new Response(JSON.stringify(payload), {
     status,
     headers: {
       ...corsHeaders,
       'Content-Type': 'application/json; charset=utf-8',
+      ...extraHeaders,
     },
   });
+}
+
+function parseJwtUserId(authorizationHeader: string | null): string | null {
+  if (!authorizationHeader?.startsWith('Bearer ')) return null;
+
+  const token = authorizationHeader.slice(7);
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+
+  try {
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+    const payload = JSON.parse(atob(padded)) as { sub?: unknown };
+    return typeof payload.sub === 'string' && payload.sub.length > 0 ? payload.sub : null;
+  } catch {
+    return null;
+  }
+}
+
+function getClientIp(req: Request): string {
+  const forwarded = req.headers.get('x-forwarded-for');
+  if (forwarded) {
+    const firstIp = forwarded.split(',')[0]?.trim();
+    if (firstIp) return firstIp;
+  }
+
+  return (
+    req.headers.get('cf-connecting-ip') ||
+    req.headers.get('x-real-ip') ||
+    req.headers.get('x-client-ip') ||
+    'unknown'
+  );
+}
+
+function getRateLimitKey(req: Request): string {
+  const userId = parseJwtUserId(req.headers.get('authorization'));
+  if (userId) return `user:${userId}`;
+  return `ip:${getClientIp(req)}`;
+}
+
+function checkRateLimit(key: string): { allowed: boolean; retryAfterSeconds?: number } {
+  const now = Date.now();
+  const existing = rateLimitStore.get(key);
+
+  if (!existing || existing.resetAt <= now) {
+    rateLimitStore.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true };
+  }
+
+  if (existing.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return {
+      allowed: false,
+      retryAfterSeconds: Math.max(1, Math.ceil((existing.resetAt - now) / 1000)),
+    };
+  }
+
+  existing.count += 1;
+  rateLimitStore.set(key, existing);
+  return { allowed: true };
+}
+
+function normalizeImage(value: unknown): string {
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+
+  if (value && typeof value === 'object') {
+    const imageObject = value as { url?: unknown; src?: unknown; srcUrl?: unknown };
+    if (typeof imageObject.url === 'string') return imageObject.url.trim();
+    if (typeof imageObject.src === 'string') return imageObject.src.trim();
+    if (typeof imageObject.srcUrl === 'string') return imageObject.srcUrl.trim();
+  }
+
+  return '';
+}
+
+function resolveConfig(config?: LinkPreviewRequest['config']): ResolvedLinkPreviewConfig {
+  return {
+    screenshot: config?.screenshot !== false,
+    meta: config?.meta !== false,
+    viewportWidth: config?.viewportWidth || 480,
+    viewportHeight: config?.viewportHeight || 480,
+    deviceScaleFactor: config?.deviceScaleFactor || 2,
+    isMobile: config?.isMobile !== false,
+  };
+}
+
+async function buildCacheKey(url: string, config: ResolvedLinkPreviewConfig): Promise<string> {
+  const payload = `${url}|${JSON.stringify(config)}`;
+  const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(payload));
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function getCachedPreview(key: string): LinkPreviewData | null {
+  const cached = previewCacheStore.get(key);
+  if (!cached) return null;
+
+  if (cached.expiresAt <= Date.now()) {
+    previewCacheStore.delete(key);
+    return null;
+  }
+
+  return cached.data;
+}
+
+function setCachedPreview(key: string, data: LinkPreviewData): void {
+  const now = Date.now();
+  previewCacheStore.set(key, {
+    data,
+    expiresAt: now + PREVIEW_CACHE_TTL_MS,
+    createdAt: now,
+  });
+
+  if (previewCacheStore.size <= PREVIEW_CACHE_MAX_ENTRIES) return;
+
+  for (const [entryKey, entry] of previewCacheStore.entries()) {
+    if (entry.expiresAt <= now) {
+      previewCacheStore.delete(entryKey);
+    }
+  }
+
+  if (previewCacheStore.size <= PREVIEW_CACHE_MAX_ENTRIES) return;
+
+  let oldestKey: string | null = null;
+  let oldestCreatedAt = Number.POSITIVE_INFINITY;
+  for (const [entryKey, entry] of previewCacheStore.entries()) {
+    if (entry.createdAt < oldestCreatedAt) {
+      oldestCreatedAt = entry.createdAt;
+      oldestKey = entryKey;
+    }
+  }
+
+  if (oldestKey) {
+    previewCacheStore.delete(oldestKey);
+  }
+}
+
+async function fetchWithTimeout(url: string): Promise<Response | null> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
+
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      return null;
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 function isValidHttpUrl(url: string): boolean {
@@ -148,22 +361,23 @@ function parseHtmlMeta(
 
 async function fetchViaZenRows(
   url: string,
-  config: NonNullable<LinkPreviewRequest['config']>,
+  config: ResolvedLinkPreviewConfig,
   apiKey: string,
 ): Promise<LinkPreviewData | null> {
   const params = new URLSearchParams({
     url,
     apikey: apiKey,
-    screenshot: config.screenshot !== false ? 'true' : 'false',
+    screenshot: config.screenshot ? 'true' : 'false',
     json_response: 'true',
     js_render: 'true',
-    window_width: String(config.viewportWidth || 480),
-    window_height: String(config.viewportHeight || 480),
-    device: config.isMobile !== false ? 'mobile' : 'desktop',
+    window_width: String(config.viewportWidth),
+    window_height: String(config.viewportHeight),
+    device: config.isMobile ? 'mobile' : 'desktop',
     original_status: 'true',
   });
 
-  const response = await fetch(`${ZENROWS_ENDPOINT}?${params.toString()}`);
+  const response = await fetchWithTimeout(`${ZENROWS_ENDPOINT}?${params.toString()}`);
+  if (!response) return null;
   if (!response.ok) return null;
 
   const result = await response.json();
@@ -173,7 +387,7 @@ async function fetchViaZenRows(
     return {
       title: data.title || '',
       description: data.description || '',
-      image: data.screenshot?.url || data.image?.url || '',
+      image: normalizeImage(data.image) || normalizeImage(data.screenshot),
       domain: getDomain(data.url || url),
       url: data.url || url,
     };
@@ -189,7 +403,7 @@ async function fetchViaZenRows(
 
   return {
     title: meta.title,
-    description: config.meta === false ? '' : meta.description,
+    description: config.meta ? meta.description : '',
     image: screenshotBase64 ? `data:image/png;base64,${screenshotBase64}` : meta.image,
     domain: getDomain(meta.url || url),
     url: meta.url || url,
@@ -198,19 +412,20 @@ async function fetchViaZenRows(
 
 async function fetchViaMicrolink(
   url: string,
-  config: NonNullable<LinkPreviewRequest['config']>,
+  config: ResolvedLinkPreviewConfig,
 ): Promise<LinkPreviewData | null> {
   const params = new URLSearchParams({
     url,
-    screenshot: config.screenshot !== false ? 'true' : 'false',
-    meta: config.meta !== false ? 'true' : 'false',
-    'viewport.width': String(config.viewportWidth || 480),
-    'viewport.height': String(config.viewportHeight || 480),
-    'viewport.deviceScaleFactor': String(config.deviceScaleFactor || 2),
-    'viewport.isMobile': config.isMobile !== false ? 'true' : 'false',
+    screenshot: config.screenshot ? 'true' : 'false',
+    meta: config.meta ? 'true' : 'false',
+    'viewport.width': String(config.viewportWidth),
+    'viewport.height': String(config.viewportHeight),
+    'viewport.deviceScaleFactor': String(config.deviceScaleFactor),
+    'viewport.isMobile': config.isMobile ? 'true' : 'false',
   });
 
-  const response = await fetch(`${MICROLINK_ENDPOINT}?${params.toString()}`);
+  const response = await fetchWithTimeout(`${MICROLINK_ENDPOINT}?${params.toString()}`);
+  if (!response) return null;
   if (!response.ok) return null;
 
   const result = await response.json();
@@ -220,7 +435,7 @@ async function fetchViaMicrolink(
   return {
     title: data.title || '',
     description: data.description || '',
-    image: data.screenshot?.url || data.image?.url || '',
+    image: normalizeImage(data.image) || normalizeImage(data.screenshot),
     domain: getDomain(data.url || url),
     url: data.url || url,
   };
