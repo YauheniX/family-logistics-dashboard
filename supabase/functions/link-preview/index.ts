@@ -364,15 +364,16 @@ async function fetchViaZenRows(
   config: ResolvedLinkPreviewConfig,
   apiKey: string,
 ): Promise<LinkPreviewData | null> {
+  // ZenRows valid params: apikey, url, js_render, screenshot, json_response, original_status
+  // Note: ZenRows does NOT support viewport size or mobile emulation.
+  // Screenshots render at default desktop viewport (1920×1080).
+  // Mobile viewport screenshots are handled by the Microlink fallback.
   const params = new URLSearchParams({
     url,
     apikey: apiKey,
     screenshot: config.screenshot ? 'true' : 'false',
     json_response: 'true',
     js_render: 'true',
-    window_width: String(config.viewportWidth),
-    window_height: String(config.viewportHeight),
-    device: config.isMobile ? 'mobile' : 'desktop',
     original_status: 'true',
   });
 
@@ -393,18 +394,21 @@ async function fetchViaZenRows(
     };
   }
 
+  // json_response format: { html: "...", xhr: [...], screenshot?: { data, type, width, height } }
   const html = typeof result?.html === 'string' ? result.html : '';
   const meta = parseHtmlMeta(html, url);
 
-  const screenshotBase64 =
+  const screenshotData =
     typeof result?.screenshot?.data === 'string' && result.screenshot.data.length > 0
       ? result.screenshot.data
       : '';
+  const screenshotMime =
+    typeof result?.screenshot?.type === 'string' ? result.screenshot.type : 'image/png';
 
   return {
     title: meta.title,
     description: config.meta ? meta.description : '',
-    image: screenshotBase64 ? `data:image/png;base64,${screenshotBase64}` : meta.image,
+    image: screenshotData ? `data:${screenshotMime};base64,${screenshotData}` : meta.image,
     domain: getDomain(meta.url || url),
     url: meta.url || url,
   };
