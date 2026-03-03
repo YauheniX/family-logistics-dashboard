@@ -14,11 +14,12 @@ app.use(pinia);
 app.use(i18n);
 
 // IMPORTANT bootstrap order:
-// 1) Handle Supabase OAuth redirect hash (tokens/code) and clean URL
+// 1) Handle Supabase OAuth redirect (tokens/code) and clean URL
 // 2) Initialize auth store (so router guards see authenticated state)
 // 3) Install router (initial navigation happens here)
 // 4) Redirect away from guest-only routes if already authenticated
-// 5) Mount
+// 5) Apply any post-auth redirect stored in sessionStorage
+// 6) Mount
 (async () => {
   try {
     await handleSupabaseAuthRedirect();
@@ -39,19 +40,29 @@ app.use(i18n);
   try {
     if (authStore.isAuthenticated) {
       const current = router.currentRoute.value;
+
+      // Consume post-auth redirect (set by OAuth flow in sessionStorage).
+      const redirectFromStorage = window.sessionStorage.getItem('postAuthRedirect');
+      window.sessionStorage.removeItem('postAuthRedirect');
+
       if (current.meta.guestOnly) {
+        // Authenticated user landed on login/register — redirect to intended page.
         const redirectQuery = current.query.redirect;
         const redirectParam = Array.isArray(redirectQuery) ? redirectQuery[0] : redirectQuery;
         const redirectFromQuery = typeof redirectParam === 'string' ? redirectParam : undefined;
-        const redirectFromStorage = window.sessionStorage.getItem('postAuthRedirect');
 
         const fromQuery = normalizeRedirectParam(redirectFromQuery);
         const fromStorage = normalizeRedirectParam(redirectFromStorage ?? undefined);
         // Try query param first, then storage, then default to '/'
         const target = fromQuery !== '/' ? fromQuery : fromStorage;
 
-        window.sessionStorage.removeItem('postAuthRedirect');
         await router.replace(target);
+      } else if (redirectFromStorage) {
+        // Post-OAuth redirect: user landed on default route, apply saved redirect.
+        const target = normalizeRedirectParam(redirectFromStorage);
+        if (target !== '/' && target !== current.fullPath) {
+          await router.replace(target);
+        }
       }
     }
   } catch {

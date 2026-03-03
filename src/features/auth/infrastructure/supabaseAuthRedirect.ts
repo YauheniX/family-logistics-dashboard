@@ -1,9 +1,7 @@
 import { supabase } from '@/features/shared/infrastructure/supabase.client';
 import { isMockMode } from '@/config/backend.config';
-import { isSafeInternalPath, normalizeHashPath } from '@/utils/pathValidation';
 
 function parseHashParams(hash: string): URLSearchParams {
-  // Supports both '#access_token=...' and '#/access_token=...'
   const cleaned = hash.replace(/^#\/?/, '');
   return new URLSearchParams(cleaned);
 }
@@ -17,40 +15,23 @@ function hasAnyAuthParams(params: URLSearchParams): boolean {
   );
 }
 
-function cleanToHomeHash(): void {
-  // Hash-router expects '#/...' – cleaning prevents Vue Router from trying to resolve
-  // '/access_token=...' as a path and avoids leaking tokens via copy/paste.
-  const next = `${window.location.pathname}${window.location.search}#/`;
-  window.history.replaceState({}, document.title, next);
-}
-
-function getAndClearPostAuthRedirect(): string | null {
-  try {
-    const value = window.sessionStorage.getItem('postAuthRedirect');
-    if (value) {
-      window.sessionStorage.removeItem('postAuthRedirect');
-      return value;
-    }
-  } catch {
-    // ignore
-  }
-  return null;
-}
-
-function cleanToRedirectHash(targetHashPath: string): void {
-  const safe = normalizeHashPath(targetHashPath);
-  const next = `${window.location.pathname}${window.location.search}#${safe.startsWith('/') ? '/' : ''}${safe}`;
-  // If safe is '/x', we want '#/x'
-  const fixed = next.replace(/#\/+/, '#/');
-  window.history.replaceState({}, document.title, fixed);
+function cleanUrl(): void {
+  const url = new URL(window.location.href);
+  url.searchParams.delete('code');
+  url.hash = '';
+  window.history.replaceState({}, document.title, url.pathname + url.search);
 }
 
 /**
- * Handles Supabase OAuth redirects in SPAs using hash routing.
+ * Handles Supabase OAuth redirects.
  *
- * Why needed:
- * - Supabase implicit flow returns tokens in URL hash (sometimes '#/access_token=...' depending on redirect URL).
- * - Vue Router hash history will interpret that as a route and show a blank page.
+ * - PKCE flow: exchanges `?code=...` for a session.
+ * - Implicit flow: reads tokens from the URL hash (`#access_token=...`)
+ *   and sets the session explicitly.
+ *
+ * After processing, the URL is cleaned so tokens are never visible.
+ * A post-auth redirect stored in sessionStorage is left for `main.ts`
+ * to consume via `router.replace()`.
  */
 export async function handleSupabaseAuthRedirect(): Promise<void> {
   if (isMockMode()) return;
@@ -61,18 +42,7 @@ export async function handleSupabaseAuthRedirect(): Promise<void> {
     const code = url.searchParams.get('code');
     if (code) {
       await supabase.auth.exchangeCodeForSession(code);
-      url.searchParams.delete('code');
-      const postAuth = getAndClearPostAuthRedirect();
-      if (postAuth && isSafeInternalPath(postAuth)) {
-        const next = `${url.pathname}${url.search}#${normalizeHashPath(postAuth)}`.replace(
-          /#\/+/,
-          '#/',
-        );
-        window.history.replaceState({}, document.title, next);
-      } else {
-        const next = `${url.pathname}${url.search}#/`;
-        window.history.replaceState({}, document.title, next);
-      }
+      cleanUrl();
       return;
     }
   } catch {
@@ -86,7 +56,7 @@ export async function handleSupabaseAuthRedirect(): Promise<void> {
     }
   }
 
-  // Implicit flow: #access_token=... or #/access_token=...
+  // Implicit flow: #access_token=...
   try {
     if (!window.location.hash) return;
     const params = parseHashParams(window.location.hash);
@@ -95,7 +65,7 @@ export async function handleSupabaseAuthRedirect(): Promise<void> {
     const accessToken = params.get('access_token');
     const refreshToken = params.get('refresh_token');
 
-    // If tokens are present, set session explicitly (more reliable than hoping router won't choke).
+    // If tokens are present, set session explicitly.
     if (accessToken && refreshToken) {
       await supabase.auth.setSession({
         access_token: accessToken,
@@ -103,13 +73,8 @@ export async function handleSupabaseAuthRedirect(): Promise<void> {
       });
     }
 
-    // Always clean URL if we detected auth params.
-    const postAuth = getAndClearPostAuthRedirect();
-    if (postAuth && isSafeInternalPath(postAuth)) {
-      cleanToRedirectHash(postAuth);
-    } else {
-      cleanToHomeHash();
-    }
+    // Clean URL so tokens are never visible.
+    cleanUrl();
   } catch {
     // Session set failed – clean up corrupted state so subsequent loads
     // can start fresh rather than rendering a white screen.
@@ -118,6 +83,6 @@ export async function handleSupabaseAuthRedirect(): Promise<void> {
     } catch {
       // best-effort cleanup
     }
-    cleanToHomeHash();
+    cleanUrl();
   }
 }

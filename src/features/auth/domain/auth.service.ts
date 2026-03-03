@@ -1,7 +1,7 @@
 import { supabase } from '../../shared/infrastructure/supabase.client';
 import type { User, Session } from '@supabase/supabase-js';
 import type { ApiResponse } from '../../shared/domain/repository.interface';
-import { isSafeInternalPath, normalizeHashPath } from '@/utils/pathValidation';
+import { isSafeInternalPath } from '@/utils/pathValidation';
 
 export interface AuthUser {
   id: string;
@@ -212,19 +212,14 @@ export class AuthService {
   ): Promise<ApiResponse<AuthUser>> {
     try {
       // Persist intended in-app route across full-page OAuth redirects.
-      // Must be a hash-router path like '/households/123' (no origin).
       if (postAuthRedirect && isSafeInternalPath(postAuthRedirect)) {
-        window.sessionStorage.setItem('postAuthRedirect', normalizeHashPath(postAuthRedirect));
+        window.sessionStorage.setItem('postAuthRedirect', postAuthRedirect);
       } else {
         window.sessionStorage.removeItem('postAuthRedirect');
       }
 
-      // IMPORTANT:
-      // - Google OAuth redirect URIs cannot contain URL fragments (#), so we must not use hash routes here.
-      // - Using window.location.pathname makes this work for sub-path deployments (e.g. GitHub Pages)
-      //   even if Vite BASE_URL / env config is incorrect.
-      // Example on GitHub Pages: https://example.com/family-logistics-dashboard/#/login
-      // pathname => /family-logistics-dashboard/
+      // Using window.location.pathname makes this work for sub-path deployments
+      // (e.g. GitHub Pages) even if Vite BASE_URL / env config is incorrect.
       const path = window.location.pathname.endsWith('/')
         ? window.location.pathname
         : `${window.location.pathname}/`;
