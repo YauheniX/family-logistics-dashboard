@@ -19,13 +19,13 @@ vi.mock('@/stores/toast', () => ({
   }),
 }));
 
-describe('Legacy Auth Store', () => {
+describe('Auth Store (via @/stores/auth re-export)', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.clearAllMocks();
   });
 
-  it('isAuthenticated is true when user is set even without session', async () => {
+  it('isAuthenticated is true when user is set', async () => {
     const { authService } = await import('@/features/auth');
     vi.mocked(authService.getCurrentUser).mockResolvedValue({
       data: { id: 'u1', email: 'a@b.com' },
@@ -39,10 +39,7 @@ describe('Legacy Auth Store', () => {
     const store = useAuthStore();
     await store.initialize();
 
-    // User is set from getCurrentUser, but session is still null
-    // isAuthenticated should be true based on user alone
     expect(store.user).not.toBeNull();
-    expect(store.session).toBeNull();
     expect(store.isAuthenticated).toBe(true);
   });
 
@@ -186,7 +183,7 @@ describe('Legacy Auth Store', () => {
   });
 
   describe('logout', () => {
-    it('should clear user and session on logout', async () => {
+    it('should clear user on logout', async () => {
       const { authService } = await import('@/features/auth');
       vi.mocked(authService.signOut).mockResolvedValue({
         data: null,
@@ -195,12 +192,10 @@ describe('Legacy Auth Store', () => {
 
       const store = useAuthStore();
       store.user = { id: 'u1', email: 'a@b.com' };
-      store.session = { access_token: 'token' } as never;
 
       await store.logout();
 
       expect(store.user).toBeNull();
-      expect(store.session).toBeNull();
       expect(authService.signOut).toHaveBeenCalled();
     });
 

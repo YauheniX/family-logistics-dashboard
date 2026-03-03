@@ -3,8 +3,7 @@ import { createPinia } from 'pinia';
 import App from './App.vue';
 import router from './router';
 import './styles/main.css';
-import { useAuthStore } from '@/stores/auth';
-import { handleSupabaseAuthRedirect } from '@/utils/supabaseAuthRedirect';
+import { useAuthStore, handleSupabaseAuthRedirect } from '@/features/auth';
 import { normalizeRedirectParam } from '@/utils/pathValidation';
 import i18n from './i18n';
 

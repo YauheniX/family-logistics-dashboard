@@ -9,3 +9,9 @@ export * from './domain/auth.service.mock';
 
 // Factory (default export)
 export { authService } from './domain/auth-service.factory';
+
+// Infrastructure
+export { handleSupabaseAuthRedirect } from './infrastructure/supabaseAuthRedirect';
+
+// Presentation
+export { useAuthStore } from './presentation/auth.store';

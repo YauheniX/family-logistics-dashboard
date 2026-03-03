@@ -87,10 +87,7 @@ describe('ReportProblemModal', () => {
     authStore.user = {
       id: 'user-123',
       email: 'test@example.com',
-      app_metadata: {},
       user_metadata: {},
-      aud: 'authenticated',
-      created_at: new Date().toISOString(),
     };
 
     const wrapper = mount(ReportProblemModal, {
@@ -153,10 +150,7 @@ describe('ReportProblemModal', () => {
     authStore.user = {
       id: 'user-123',
       email: 'test@example.com',
-      app_metadata: {},
       user_metadata: {},
-      aud: 'authenticated',
-      created_at: new Date().toISOString(),
     };
 
     const wrapper = mount(ReportProblemModal, {
