@@ -2,7 +2,7 @@
 
 Deploy the Family Logistics Dashboard to production.
 
-**Last Updated**: February 21, 2026
+**Last Updated**: March 3, 2026
 
 ---
 
@@ -26,6 +26,44 @@ Before deploying:
 ✅ **GitHub Secrets** configured (see [GitHub Secrets Setup](github-secrets-setup.md))  
 ✅ **Google OAuth** configured (see [Authentication](../frontend/authentication.md))  
 ✅ **Code tested** and passing CI
+
+---
+
+## Router History Mode
+
+This app uses **`createWebHistory`** (HTML5 History API), which produces clean URLs like
+`/wishlist/abc123` instead of hash-based URLs like `/#/wishlist/abc123`.
+
+**Why HTML5 history mode?**
+
+- Clean, shareable URLs (especially important for public wishlist share links)
+- Better SEO
+- Consistent with modern SPA conventions
+
+**⚠️ Important deployment requirement**: Every hosting platform must serve `index.html` for
+all paths that are not static assets. Without this, a direct URL or page refresh returns a
+404. See each platform section below for the exact configuration.
+
+### Rollback to Hash History
+
+If you need to revert to hash-based routing (e.g., deploying to a platform where you cannot
+configure server-side rewrites):
+
+1. In `src/router/index.ts`, change:
+   ```typescript
+   // From:
+   import { createRouter, createWebHistory } from 'vue-router';
+   history: createWebHistory(),
+   // To:
+   import { createRouter, createWebHashHistory } from 'vue-router';
+   history: createWebHashHistory(),
+   ```
+2. Remove or disable the `rewrites` block from `vercel.json` (or equivalent platform config).
+3. Redeploy.
+
+> **Note**: After rolling back, existing bookmarks and shared wishlist links that use clean
+> URLs (e.g., `/wishlist/abc123`) will stop working. Users will need new hash-based links
+> (e.g., `/#/wishlist/abc123`).
 
 ---
 
@@ -54,21 +92,25 @@ npm install -g vercel
 vercel login
 ```
 
-#### 3. Configure Environment Variables
+#### 3. Configure `vercel.json`
 
-Create `vercel.json`:
+A `vercel.json` is **already committed** at the project root. It includes the SPA rewrite
+rule required for `createWebHistory` routing:
 
 ```json
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "env": {
-    "VITE_SUPABASE_URL": "@supabase-url",
-    "VITE_SUPABASE_ANON_KEY": "@supabase-anon-key"
-  }
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
 ```
+
+> The `rewrites` rule ensures that all paths (including `/wishlist/:shareSlug` and deep
+> links like `/shopping/list-id`) are served by `index.html` so Vue Router handles them
+> client-side. Without this, page refreshes and direct URL access return 404.
+
+To add Supabase environment variables, use the Vercel dashboard or CLI secrets (see step 4).
 
 #### 4. Add Secrets
 
@@ -163,6 +205,7 @@ netlify login
   command = "npm run build"
   publish = "dist"
 
+# Required for createWebHistory: serve index.html for all paths
 [[redirects]]
   from = "/*"
   to = "/index.html"
@@ -624,19 +667,21 @@ export default defineConfig({
 
 ### 404 on Refresh
 
-**Cause**: SPA routing not configured
+**Cause**: SPA routing requires all paths to be served by `index.html`. With
+`createWebHistory` (HTML5 History API), the server must be configured to fall back to
+`index.html` for any path that is not a static file.
 
 **Solution**:
 
-**Vercel** - Add `vercel.json`:
+**Vercel** — already handled by the committed `vercel.json`:
 
 ```json
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
 ```
 
-**Netlify** - Add `netlify.toml`:
+**Netlify** — Add `netlify.toml`:
 
 ```toml
 [[redirects]]
@@ -713,4 +758,4 @@ export default defineConfig({
 
 ---
 
-**Last Updated**: February 21, 2026
+**Last Updated**: March 3, 2026
