@@ -6,4 +6,3 @@
  * statements continue to work without changes.
  */
 export { useAuthStore } from '@/features/auth/presentation/auth.store';
-

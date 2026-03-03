@@ -48,20 +48,18 @@ Every `defineStore()` must use a **unique ID** across the entire application:
 // ✅ Good
 export const useShoppingStore = defineStore('shopping', () => { ... });
 
-// ❌ Bad — duplicates the global auth store ID
-export const useAuthStore = defineStore('auth', () => { ... }); // in features/auth/
+// ❌ Bad — duplicates an existing store ID
+export const useMyAuthStore = defineStore('auth', () => { ... }); // collides with the auth feature store
 ```
 
 ### 2. Import from Primary Store Paths
 
 ```typescript
-// ✅ Good — primary stores
+// ✅ Good — both resolve to the same canonical auth store
 import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '@/features/auth/presentation/auth.store';
 import { useHouseholdStore } from '@/stores/household';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
-
-// ❌ Bad — feature-internal stores not meant for app-wide use
-import { useAuthStore } from '@/features/auth/presentation/auth.store';
 ```
 
 ### 3. Use Setter Actions, Not Direct Mutation
@@ -168,16 +166,19 @@ export const useShoppingStore = defineStore('shopping', () => {
 
 ## Auth Store
 
-The global auth store manages Supabase session state:
+The canonical auth store lives in the auth feature module (`src/features/auth/presentation/auth.store.ts`)
+and is re-exported at `src/stores/auth.ts` for convenience:
 
 ```typescript
-// src/stores/auth.ts — use this, not features/auth/presentation/auth.store.ts
 import { useAuthStore } from '@/stores/auth';
 
 const auth = useAuthStore();
-auth.user; // current User | null
-auth.isLoggedIn; // boolean computed
-await auth.signOut();
+auth.user; // current AuthUser | null
+auth.isAuthenticated; // boolean computed
+auth.error; // string | null
+await auth.signIn(email, password);
+await auth.loginWithGoogle();
+await auth.logout();
 ```
 
 ---

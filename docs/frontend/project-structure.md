@@ -39,7 +39,7 @@ src/
 │   ├── wishlist/           # Wishlists and items
 │   └── shared/             # Shared domain entities
 ├── stores/                 # Global Pinia stores
-│   ├── auth.ts             # Global auth store
+│   ├── auth.ts             # Re-export of feature auth store
 │   ├── household.ts        # Global household store
 │   └── toast.ts            # Toast notification store
 ├── components/             # Reusable UI components
