@@ -9,7 +9,29 @@ vi.mock('@/features/auth', () => ({
     signIn: vi.fn(),
     signUp: vi.fn(),
     signOut: vi.fn(),
+    signInWithOAuth: vi.fn(),
   },
+}));
+
+vi.mock('@/stores/toast', () => ({
+  useToastStore: () => ({
+    error: vi.fn(),
+  }),
+}));
+
+// Mock dependent stores so we can assert $reset calls
+const mockHouseholdReset = vi.fn();
+const mockShoppingReset = vi.fn();
+const mockWishlistReset = vi.fn();
+
+vi.mock('@/stores/household', () => ({
+  useHouseholdStore: () => ({ $reset: mockHouseholdReset }),
+}));
+vi.mock('@/features/shopping/presentation/shopping.store', () => ({
+  useShoppingStore: () => ({ $reset: mockShoppingReset }),
+}));
+vi.mock('@/features/wishlist/presentation/wishlist.store', () => ({
+  useWishlistStore: () => ({ $reset: mockWishlistReset }),
 }));
 
 describe('Auth Store', () => {
@@ -161,7 +183,7 @@ describe('Auth Store', () => {
     expect(store.user).toBeNull();
   });
 
-  it('signs out successfully', async () => {
+  it('signs out successfully and resets dependent stores', async () => {
     const { authService } = await import('@/features/auth');
     vi.mocked(authService.signOut).mockResolvedValue({
       data: undefined,
@@ -169,15 +191,18 @@ describe('Auth Store', () => {
     });
 
     const store = useAuthStore();
-    store.user = { id: 'u1', email: 'a@b.com' };
+    store.$patch({ user: { id: 'u1', email: 'a@b.com' } });
 
     await store.signOut();
 
     expect(store.user).toBeNull();
     expect(store.loading).toBe(false);
+    expect(mockHouseholdReset).toHaveBeenCalled();
+    expect(mockShoppingReset).toHaveBeenCalled();
+    expect(mockWishlistReset).toHaveBeenCalled();
   });
 
-  it('handles sign out error', async () => {
+  it('handles sign out error without resetting stores', async () => {
     const { authService } = await import('@/features/auth');
     vi.mocked(authService.signOut).mockResolvedValue({
       data: null,
@@ -185,10 +210,203 @@ describe('Auth Store', () => {
     });
 
     const store = useAuthStore();
-    store.user = { id: 'u1', email: 'a@b.com' };
+    store.$patch({ user: { id: 'u1', email: 'a@b.com' } });
 
     await store.signOut();
 
     expect(store.user).not.toBeNull();
+    expect(mockHouseholdReset).not.toHaveBeenCalled();
+    expect(mockShoppingReset).not.toHaveBeenCalled();
+    expect(mockWishlistReset).not.toHaveBeenCalled();
+  });
+
+  it('initializes with null error state', () => {
+    const store = useAuthStore();
+    expect(store.error).toBeNull();
+  });
+
+  it('sets error on sign in failure', async () => {
+    const { authService } = await import('@/features/auth');
+    vi.mocked(authService.signIn).mockResolvedValue({
+      data: null,
+      error: { message: 'Invalid credentials' },
+    });
+
+    const store = useAuthStore();
+    await store.signIn('a@b.com', 'wrong');
+
+    expect(store.error).toBe('Invalid credentials');
+  });
+
+  it('clears error on successful sign in', async () => {
+    const { authService } = await import('@/features/auth');
+    vi.mocked(authService.signIn).mockResolvedValue({
+      data: { id: 'u1', email: 'a@b.com' },
+      error: null,
+    });
+
+    const store = useAuthStore();
+    store.error = 'previous error';
+    await store.signIn('a@b.com', 'password');
+
+    expect(store.error).toBeNull();
+  });
+
+  describe('loginWithGoogle', () => {
+    it('calls signInWithOAuth and handles success', async () => {
+      const { authService } = await import('@/features/auth');
+      vi.mocked(authService.signInWithOAuth).mockResolvedValue({
+        data: null,
+        error: null,
+      });
+
+      const store = useAuthStore();
+      await store.loginWithGoogle();
+
+      expect(authService.signInWithOAuth).toHaveBeenCalledWith('google');
+      expect(store.error).toBeNull();
+      expect(store.loading).toBe(false);
+    });
+
+    it('sets error and throws on OAuth failure', async () => {
+      const { authService } = await import('@/features/auth');
+      vi.mocked(authService.signInWithOAuth).mockResolvedValue({
+        data: null,
+        error: { message: 'OAuth failed' },
+      });
+
+      const store = useAuthStore();
+
+      await expect(store.loginWithGoogle()).rejects.toThrow('OAuth failed');
+      expect(store.error).toBe('OAuth failed');
+      expect(store.loading).toBe(false);
+    });
+
+    it('handles unexpected errors', async () => {
+      const { authService } = await import('@/features/auth');
+      vi.mocked(authService.signInWithOAuth).mockRejectedValue(new Error('Network error'));
+
+      const store = useAuthStore();
+
+      await expect(store.loginWithGoogle()).rejects.toThrow('Network error');
+      expect(store.error).toBe('Network error');
+    });
+  });
+
+  describe('logout', () => {
+    it('clears user and resets dependent stores on successful logout', async () => {
+      const { authService } = await import('@/features/auth');
+      vi.mocked(authService.signOut).mockResolvedValue({
+        data: null,
+        error: null,
+      });
+
+      const store = useAuthStore();
+      store.$patch({ user: { id: 'u1', email: 'a@b.com' } });
+
+      await store.logout();
+
+      expect(store.user).toBeNull();
+      expect(authService.signOut).toHaveBeenCalled();
+      expect(mockHouseholdReset).toHaveBeenCalled();
+      expect(mockShoppingReset).toHaveBeenCalled();
+      expect(mockWishlistReset).toHaveBeenCalled();
+    });
+
+    it('throws on logout failure without resetting dependent stores', async () => {
+      const { authService } = await import('@/features/auth');
+      vi.mocked(authService.signOut).mockResolvedValue({
+        data: null,
+        error: { message: 'Logout failed' },
+      });
+
+      const store = useAuthStore();
+      store.$patch({ user: { id: 'u1', email: 'a@b.com' } });
+
+      await expect(store.logout()).rejects.toThrow('Logout failed');
+      expect(store.user).not.toBeNull();
+      expect(mockHouseholdReset).not.toHaveBeenCalled();
+      expect(mockShoppingReset).not.toHaveBeenCalled();
+      expect(mockWishlistReset).not.toHaveBeenCalled();
+    });
+  });
+
+  it('resets all state via $reset', () => {
+    const store = useAuthStore();
+    store.user = { id: 'u1', email: 'a@b.com' };
+    store.loading = true;
+    store.initialized = true;
+    store.error = 'some error';
+
+    store.$reset();
+
+    expect(store.user).toBeNull();
+    expect(store.loading).toBe(false);
+    expect(store.initialized).toBe(false);
+    expect(store.error).toBeNull();
+  });
+
+  describe('onAuthStateChange event filtering', () => {
+    // Helper: capture the callback passed to onAuthStateChange during initialize()
+    async function initWithCallback() {
+      const { authService } = await import('@/features/auth');
+      let capturedCallback: (event: string, user: unknown, session: unknown) => void = () => {};
+      vi.mocked(authService.getCurrentUser).mockResolvedValue({
+        data: { id: 'u1', email: 'a@b.com' },
+        error: null,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      vi.mocked(authService.onAuthStateChange).mockImplementation((cb: any) => {
+        capturedCallback = cb as typeof capturedCallback;
+        return {
+          data: { subscription: { id: 'sub', callback: vi.fn(), unsubscribe: vi.fn() } },
+        };
+      });
+
+      const store = useAuthStore();
+      await store.initialize();
+      return { store, capturedCallback };
+    }
+
+    it('ignores INITIAL_SESSION events (handled by getCurrentUser)', async () => {
+      const { store, capturedCallback } = await initWithCallback();
+      expect(store.user).toEqual({ id: 'u1', email: 'a@b.com' });
+
+      // INITIAL_SESSION with null should NOT clear user
+      capturedCallback('INITIAL_SESSION', null, null);
+      expect(store.user).toEqual({ id: 'u1', email: 'a@b.com' });
+    });
+
+    it('clears user on SIGNED_OUT', async () => {
+      const { store, capturedCallback } = await initWithCallback();
+      expect(store.user).not.toBeNull();
+
+      capturedCallback('SIGNED_OUT', null, null);
+      expect(store.user).toBeNull();
+    });
+
+    it('updates user on TOKEN_REFRESHED', async () => {
+      const { store, capturedCallback } = await initWithCallback();
+
+      capturedCallback('TOKEN_REFRESHED', { id: 'u1', email: 'refreshed@b.com' }, {});
+      expect(store.user).toEqual({ id: 'u1', email: 'refreshed@b.com' });
+    });
+
+    it('updates user on SIGNED_IN', async () => {
+      const { store, capturedCallback } = await initWithCallback();
+      store.user = null;
+
+      capturedCallback('SIGNED_IN', { id: 'u2', email: 'new@b.com' }, {});
+      expect(store.user).toEqual({ id: 'u2', email: 'new@b.com' });
+    });
+
+    it('does not clear user on TOKEN_REFRESHED with null user', async () => {
+      const { store, capturedCallback } = await initWithCallback();
+      expect(store.user).not.toBeNull();
+
+      // TOKEN_REFRESHED with null user (transient state) should NOT clear user
+      capturedCallback('TOKEN_REFRESHED', null, null);
+      expect(store.user).toEqual({ id: 'u1', email: 'a@b.com' });
+    });
   });
 });

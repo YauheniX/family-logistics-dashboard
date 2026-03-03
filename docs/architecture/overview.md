@@ -589,15 +589,16 @@ See [RLS Policies](../backend/rls-policies.md) for complete policy documentation
 
 ### Store Registry
 
-| Store ID           | Location                                               | Purpose                       |
-| ------------------ | ------------------------------------------------------ | ----------------------------- |
-| `auth`             | `@/stores/auth.ts`                                     | User authentication (primary) |
-| `auth-feature`     | `@/features/auth/presentation/auth.store.ts`           | Feature testing only          |
-| `household`        | `@/stores/household.ts`                                | Current household context     |
-| `household-entity` | `@/features/household/presentation/household.store.ts` | CRUD operations               |
-| `shopping`         | `@/features/shopping/presentation/shopping.store.ts`   | Shopping lists & items        |
-| `wishlist`         | `@/features/wishlist/presentation/wishlist.store.ts`   | Wishlists & items             |
-| `toast`            | `@/stores/toast.ts`                                    | Toast notifications           |
+| Store ID           | Location                                               | Purpose                   |
+| ------------------ | ------------------------------------------------------ | ------------------------- |
+| `auth`             | `@/features/auth/presentation/auth.store.ts`           | User authentication       |
+| `household`        | `@/stores/household.ts`                                | Current household context |
+| `household-entity` | `@/features/household/presentation/household.store.ts` | CRUD operations           |
+| `shopping`         | `@/features/shopping/presentation/shopping.store.ts`   | Shopping lists & items    |
+| `wishlist`         | `@/features/wishlist/presentation/wishlist.store.ts`   | Wishlists & items         |
+| `toast`            | `@/stores/toast.ts`                                    | Toast notifications       |
+
+> `@/stores/auth.ts` re-exports the feature store for backward compatibility.
 
 **⚠️ CRITICAL**: Store IDs must be unique across the entire application. Duplicate IDs cause silent state-sharing bugs.
 

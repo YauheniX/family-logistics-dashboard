@@ -2,7 +2,7 @@
 
 Complete authentication setup guide for the Family Logistics Dashboard.
 
-**Last Updated**: February 21, 2026
+**Last Updated**: March 3, 2026
 
 ---
 
@@ -114,6 +114,28 @@ Customize templates for:
 
 ## Frontend Implementation
 
+### Architecture
+
+Auth follows the **clean-architecture feature-boundary** pattern:
+
+```
+src/features/auth/
+├── domain/
+│   ├── auth.service.ts           # Real Supabase auth service
+│   ├── auth.service.mock.ts      # Mock auth for frontend-only mode
+│   └── auth-service.factory.ts   # Factory (real or mock based on config)
+├── infrastructure/
+│   └── supabaseAuthRedirect.ts   # OAuth redirect handling (PKCE + implicit)
+├── presentation/
+│   └── auth.store.ts             # Canonical Pinia store (ID: 'auth')
+└── index.ts                      # Barrel exports
+```
+
+The store is re-exported at `src/stores/auth.ts` for backward compatibility — both
+`import { useAuthStore } from '@/stores/auth'` and
+`import { useAuthStore } from '@/features/auth'` resolve to the same Pinia store
+instance (ID `'auth'`).
+
 ### Supabase Client
 
 **Location**: `src/features/shared/infrastructure/supabase.client.ts`
@@ -140,28 +162,51 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 
 **Key Methods**:
 
-- `signInWithGoogle()` - OAuth sign-in
-- `signInWithPassword()` - Email/password sign-in
+- `signInWithOAuth()` - OAuth sign-in (Google, GitHub, etc.)
+- `signIn()` - Email/password sign-in
 - `signUp()` - Create account
 - `signOut()` - End session
-- `resetPassword()` - Password reset
+- `getCurrentUser()` - Validate session and retrieve user
+- `onAuthStateChange()` - Subscribe to auth state events
+
+### Auth Store
+
+**Location**: `src/features/auth/presentation/auth.store.ts`
+
+**Store ID**: `'auth'`
+
+**State**: `user`, `loading`, `initialized`, `error`
+
+**Key Actions**:
+
+- `initialize()` - Registers auth listener and loads current user
+- `signIn(email, password)` - Email/password sign-in
+- `signUp(email, password)` - Create account
+- `signOut()` - End session (returns response)
+- `loginWithGoogle()` - OAuth sign-in via Google
+- `logout()` - End session, reset dependent stores (`householdStore`, `shoppingStore`, `wishlistStore`), toast on failure
 
 ### Protected Routes
 
 **Location**: `src/router/index.ts`
 
 ```typescript
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore();
-  await authStore.initializeAuth();
+
+  if (!authStore.initialized) {
+    await authStore.initialize();
+  }
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    next('/login');
-  } else if (to.meta.guestOnly && authStore.isAuthenticated) {
-    next('/');
-  } else {
-    next();
+    return next({ name: 'login', query: { redirect: to.fullPath } });
   }
+
+  if (to.meta.guestOnly && authStore.isAuthenticated) {
+    return next({ name: 'dashboard' });
+  }
+
+  return next();
 });
 ```
 
@@ -300,4 +345,4 @@ https://your-production-domain.com
 
 ---
 
-**Last Updated**: February 21, 2026
+**Last Updated**: March 3, 2026

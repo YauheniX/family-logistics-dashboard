@@ -41,8 +41,7 @@ This app uses **`createWebHistory`** (HTML5 History API), which produces clean U
 - Consistent with modern SPA conventions
 
 **⚠️ Important deployment requirement**: Every hosting platform must serve `index.html` for
-all paths that are not static assets. Without this, a direct URL or page refresh returns a
-404. See each platform section below for the exact configuration.
+all paths that are not static assets. Without this, a direct URL or page refresh returns a 404. See each platform section below for the exact configuration.
 
 ### Rollback to Hash History
 

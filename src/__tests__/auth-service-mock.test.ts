@@ -103,7 +103,7 @@ describe('MockAuthService', () => {
       await service.signUp('user@example.com', 'password');
 
       return new Promise<void>((resolve) => {
-        service.onAuthStateChange((user) => {
+        service.onAuthStateChange((_event, user) => {
           if (user) {
             expect(user.email).toBe('user@example.com');
             resolve();
@@ -117,7 +117,7 @@ describe('MockAuthService', () => {
       await service.signOut();
 
       const notifications: Array<string | null> = [];
-      service.onAuthStateChange((user) => {
+      service.onAuthStateChange((_event, user) => {
         if (user) notifications.push(user.email);
       });
 
@@ -134,7 +134,7 @@ describe('MockAuthService', () => {
 
     it('unsubscribe prevents future notifications', async () => {
       const received: string[] = [];
-      const subscription = service.onAuthStateChange((user) => {
+      const subscription = service.onAuthStateChange((_event, user) => {
         if (user) received.push(user.email);
       });
 

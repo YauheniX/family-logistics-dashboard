@@ -85,7 +85,7 @@ describe('handleSupabaseAuthRedirect', () => {
     });
   });
 
-  it('handles hash-router implicit flow format (#/access_token=...)', async () => {
+  it('handles implicit flow format (#/access_token=...)', async () => {
     const { supabase } = await import('@/features/shared/infrastructure/supabase.client');
     const replaceStateSpy = vi.spyOn(window.history, 'replaceState');
     setLocation('https://example.com/app/#/access_token=tok&refresh_token=ref');
@@ -101,7 +101,7 @@ describe('handleSupabaseAuthRedirect', () => {
       access_token: 'tok',
       refresh_token: 'ref',
     });
-    expect(replaceStateSpy).toHaveBeenCalledWith({}, document.title, '/app/#/');
+    expect(replaceStateSpy).toHaveBeenCalledWith({}, document.title, '/app/');
   });
 
   it('does nothing when no auth params present', async () => {
