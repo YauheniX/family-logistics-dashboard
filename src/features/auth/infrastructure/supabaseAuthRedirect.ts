@@ -37,23 +37,25 @@ export async function handleSupabaseAuthRedirect(): Promise<void> {
   if (isMockMode()) return;
 
   // PKCE flow (preferred): ?code=...
-  try {
-    const url = new URL(window.location.href);
-    const code = url.searchParams.get('code');
-    if (code) {
-      await supabase.auth.exchangeCodeForSession(code);
-      cleanUrl();
-      return;
-    }
-  } catch {
-    // Code exchange failed – remove any partially-written session so the app
-    // does not get stuck on a corrupted auth state that only a cache-clear
-    // would fix (see: white-screen-on-mobile issue).
+  const url = new URL(window.location.href);
+  const code = url.searchParams.get('code');
+  if (code) {
     try {
-      await supabase.auth.signOut();
+      await supabase.auth.exchangeCodeForSession(code);
     } catch {
-      // best-effort cleanup
+      // Code exchange failed – remove any partially-written session so the app
+      // does not get stuck on a corrupted auth state that only a cache-clear
+      // would fix (see: white-screen-on-mobile issue).
+      try {
+        await supabase.auth.signOut();
+      } catch {
+        // best-effort cleanup
+      }
+    } finally {
+      // Always clean the URL so the code is never retried or visible.
+      cleanUrl();
     }
+    return;
   }
 
   // Implicit flow: #access_token=...

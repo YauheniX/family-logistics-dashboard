@@ -54,12 +54,15 @@ export const useMyAuthStore = defineStore('auth', () => { ... }); // collides wi
 
 ### 2. Import from Primary Store Paths
 
+> **Rule**: Import stores from primary locations only.  
+> Do **not** import directly from feature-internal paths like `@/features/auth/presentation/auth.store`.
+
 ```typescript
-// ✅ Good — either path works (they resolve to the same store)
+// ✅ Approved primary imports
 import { useAuthStore } from '@/stores/auth';
-// or: import { useAuthStore } from '@/features/auth/presentation/auth.store';
 import { useHouseholdStore } from '@/stores/household';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
+import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
 ```
 
 ### 3. Use Setter Actions, Not Direct Mutation

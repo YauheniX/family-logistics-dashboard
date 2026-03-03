@@ -19,6 +19,21 @@ vi.mock('@/stores/toast', () => ({
   }),
 }));
 
+// Mock dependent stores so we can assert $reset calls
+const mockHouseholdReset = vi.fn();
+const mockShoppingReset = vi.fn();
+const mockWishlistReset = vi.fn();
+
+vi.mock('@/stores/household', () => ({
+  useHouseholdStore: () => ({ $reset: mockHouseholdReset }),
+}));
+vi.mock('@/features/shopping/presentation/shopping.store', () => ({
+  useShoppingStore: () => ({ $reset: mockShoppingReset }),
+}));
+vi.mock('@/features/wishlist/presentation/wishlist.store', () => ({
+  useWishlistStore: () => ({ $reset: mockWishlistReset }),
+}));
+
 describe('Auth Store', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -168,7 +183,7 @@ describe('Auth Store', () => {
     expect(store.user).toBeNull();
   });
 
-  it('signs out successfully', async () => {
+  it('signs out successfully and resets dependent stores', async () => {
     const { authService } = await import('@/features/auth');
     vi.mocked(authService.signOut).mockResolvedValue({
       data: undefined,
@@ -176,15 +191,18 @@ describe('Auth Store', () => {
     });
 
     const store = useAuthStore();
-    store.user = { id: 'u1', email: 'a@b.com' };
+    store.$patch({ user: { id: 'u1', email: 'a@b.com' } });
 
     await store.signOut();
 
     expect(store.user).toBeNull();
     expect(store.loading).toBe(false);
+    expect(mockHouseholdReset).toHaveBeenCalled();
+    expect(mockShoppingReset).toHaveBeenCalled();
+    expect(mockWishlistReset).toHaveBeenCalled();
   });
 
-  it('handles sign out error', async () => {
+  it('handles sign out error without resetting stores', async () => {
     const { authService } = await import('@/features/auth');
     vi.mocked(authService.signOut).mockResolvedValue({
       data: null,
@@ -192,11 +210,14 @@ describe('Auth Store', () => {
     });
 
     const store = useAuthStore();
-    store.user = { id: 'u1', email: 'a@b.com' };
+    store.$patch({ user: { id: 'u1', email: 'a@b.com' } });
 
     await store.signOut();
 
     expect(store.user).not.toBeNull();
+    expect(mockHouseholdReset).not.toHaveBeenCalled();
+    expect(mockShoppingReset).not.toHaveBeenCalled();
+    expect(mockWishlistReset).not.toHaveBeenCalled();
   });
 
   it('initializes with null error state', () => {
@@ -273,7 +294,7 @@ describe('Auth Store', () => {
   });
 
   describe('logout', () => {
-    it('clears user on successful logout', async () => {
+    it('clears user and resets dependent stores on successful logout', async () => {
       const { authService } = await import('@/features/auth');
       vi.mocked(authService.signOut).mockResolvedValue({
         data: null,
@@ -281,15 +302,18 @@ describe('Auth Store', () => {
       });
 
       const store = useAuthStore();
-      store.user = { id: 'u1', email: 'a@b.com' };
+      store.$patch({ user: { id: 'u1', email: 'a@b.com' } });
 
       await store.logout();
 
       expect(store.user).toBeNull();
       expect(authService.signOut).toHaveBeenCalled();
+      expect(mockHouseholdReset).toHaveBeenCalled();
+      expect(mockShoppingReset).toHaveBeenCalled();
+      expect(mockWishlistReset).toHaveBeenCalled();
     });
 
-    it('throws on logout failure', async () => {
+    it('throws on logout failure without resetting dependent stores', async () => {
       const { authService } = await import('@/features/auth');
       vi.mocked(authService.signOut).mockResolvedValue({
         data: null,
@@ -297,8 +321,13 @@ describe('Auth Store', () => {
       });
 
       const store = useAuthStore();
+      store.$patch({ user: { id: 'u1', email: 'a@b.com' } });
 
       await expect(store.logout()).rejects.toThrow('Logout failed');
+      expect(store.user).not.toBeNull();
+      expect(mockHouseholdReset).not.toHaveBeenCalled();
+      expect(mockShoppingReset).not.toHaveBeenCalled();
+      expect(mockWishlistReset).not.toHaveBeenCalled();
     });
   });
 

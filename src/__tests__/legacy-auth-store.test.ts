@@ -19,6 +19,16 @@ vi.mock('@/stores/toast', () => ({
   }),
 }));
 
+vi.mock('@/stores/household', () => ({
+  useHouseholdStore: () => ({ $reset: vi.fn() }),
+}));
+vi.mock('@/features/shopping/presentation/shopping.store', () => ({
+  useShoppingStore: () => ({ $reset: vi.fn() }),
+}));
+vi.mock('@/features/wishlist/presentation/wishlist.store', () => ({
+  useWishlistStore: () => ({ $reset: vi.fn() }),
+}));
+
 describe('Auth Store (via @/stores/auth re-export)', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -191,7 +201,7 @@ describe('Auth Store (via @/stores/auth re-export)', () => {
       });
 
       const store = useAuthStore();
-      store.user = { id: 'u1', email: 'a@b.com' };
+      store.$patch({ user: { id: 'u1', email: 'a@b.com' } });
 
       await store.logout();
 

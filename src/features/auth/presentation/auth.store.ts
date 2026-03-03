@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia';
 import { authService, type AuthUser } from '@/features/auth';
 import { useToastStore } from '@/stores/toast';
+import { useHouseholdStore } from '@/stores/household';
+import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
+import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
 import type { ApiResponse } from '@/features/shared/domain/repository.interface';
 
 interface AuthState {
@@ -101,7 +104,7 @@ export const useAuthStore = defineStore('auth', {
       try {
         const response = await authService.signOut();
         if (!response.error) {
-          this.user = null;
+          this._resetAppState();
         }
         return response;
       } finally {
@@ -136,10 +139,21 @@ export const useAuthStore = defineStore('auth', {
           useToastStore().error(`Logout failed: ${response.error.message}`);
           throw new Error(response.error.message);
         }
-        this.user = null;
+        this._resetAppState();
       } finally {
         this.loading = false;
       }
+    },
+
+    /**
+     * Shared teardown: clears user and resets dependent stores to prevent
+     * data leakage between sessions.  Called by both signOut() and logout().
+     */
+    _resetAppState() {
+      this.user = null;
+      useHouseholdStore().$reset();
+      useShoppingStore().$reset();
+      useWishlistStore().$reset();
     },
   },
 });

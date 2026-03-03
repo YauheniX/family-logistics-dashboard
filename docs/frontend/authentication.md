@@ -184,7 +184,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 - `signUp(email, password)` - Create account
 - `signOut()` - End session (returns response)
 - `loginWithGoogle()` - OAuth sign-in via Google
-- `logout()` - End session with toast on failure
+- `logout()` - End session, reset dependent stores (`householdStore`, `shoppingStore`, `wishlistStore`), toast on failure
 
 ### Protected Routes
 
