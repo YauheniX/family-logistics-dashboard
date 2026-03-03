@@ -361,7 +361,7 @@ describe('AuthService', () => {
   });
 
   describe('onAuthStateChange', () => {
-    it('calls callback with user when session has user', async () => {
+    it('calls callback with event and user when session has user', async () => {
       const { supabase } = await import('@/features/shared/infrastructure/supabase.client');
       const mockCallback = vi.fn();
       vi.mocked(supabase.auth.onAuthStateChange).mockImplementation((cb) => {
@@ -374,12 +374,13 @@ describe('AuthService', () => {
       service.onAuthStateChange(mockCallback);
 
       expect(mockCallback).toHaveBeenCalledWith(
+        'SIGNED_IN',
         expect.objectContaining({ id: 'u1' }),
         expect.anything(),
       );
     });
 
-    it('calls callback with null when no session', async () => {
+    it('calls callback with event and null when no session', async () => {
       const { supabase } = await import('@/features/shared/infrastructure/supabase.client');
       const mockCallback = vi.fn();
       vi.mocked(supabase.auth.onAuthStateChange).mockImplementation((cb) => {
@@ -389,7 +390,7 @@ describe('AuthService', () => {
 
       service.onAuthStateChange(mockCallback);
 
-      expect(mockCallback).toHaveBeenCalledWith(null, null);
+      expect(mockCallback).toHaveBeenCalledWith('SIGNED_OUT', null, null);
     });
   });
 

@@ -1,5 +1,5 @@
 import { supabase } from '../../shared/infrastructure/supabase.client';
-import type { User, Session } from '@supabase/supabase-js';
+import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 import type { ApiResponse } from '../../shared/domain/repository.interface';
 import { isSafeInternalPath } from '@/utils/pathValidation';
 
@@ -191,14 +191,17 @@ export class AuthService {
   }
 
   /**
-   * Subscribe to auth state changes
+   * Subscribe to auth state changes.
+   * Passes the Supabase event type so callers can decide how to react.
    */
-  onAuthStateChange(callback: (user: AuthUser | null, session: Session | null) => void) {
+  onAuthStateChange(
+    callback: (event: AuthChangeEvent, user: AuthUser | null, session: Session | null) => void,
+  ) {
     return supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
-        callback(this.mapUser(session.user), session);
+        callback(event, this.mapUser(session.user), session);
       } else {
-        callback(null, null);
+        callback(event, null, null);
       }
     });
   }

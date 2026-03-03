@@ -316,4 +316,68 @@ describe('Auth Store', () => {
     expect(store.initialized).toBe(false);
     expect(store.error).toBeNull();
   });
+
+  describe('onAuthStateChange event filtering', () => {
+    // Helper: capture the callback passed to onAuthStateChange during initialize()
+    async function initWithCallback() {
+      const { authService } = await import('@/features/auth');
+      let capturedCallback: (event: string, user: unknown, session: unknown) => void = () => {};
+      vi.mocked(authService.getCurrentUser).mockResolvedValue({
+        data: { id: 'u1', email: 'a@b.com' },
+        error: null,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      vi.mocked(authService.onAuthStateChange).mockImplementation((cb: any) => {
+        capturedCallback = cb as typeof capturedCallback;
+        return {
+          data: { subscription: { id: 'sub', callback: vi.fn(), unsubscribe: vi.fn() } },
+        };
+      });
+
+      const store = useAuthStore();
+      await store.initialize();
+      return { store, capturedCallback };
+    }
+
+    it('ignores INITIAL_SESSION events (handled by getCurrentUser)', async () => {
+      const { store, capturedCallback } = await initWithCallback();
+      expect(store.user).toEqual({ id: 'u1', email: 'a@b.com' });
+
+      // INITIAL_SESSION with null should NOT clear user
+      capturedCallback('INITIAL_SESSION', null, null);
+      expect(store.user).toEqual({ id: 'u1', email: 'a@b.com' });
+    });
+
+    it('clears user on SIGNED_OUT', async () => {
+      const { store, capturedCallback } = await initWithCallback();
+      expect(store.user).not.toBeNull();
+
+      capturedCallback('SIGNED_OUT', null, null);
+      expect(store.user).toBeNull();
+    });
+
+    it('updates user on TOKEN_REFRESHED', async () => {
+      const { store, capturedCallback } = await initWithCallback();
+
+      capturedCallback('TOKEN_REFRESHED', { id: 'u1', email: 'refreshed@b.com' }, {});
+      expect(store.user).toEqual({ id: 'u1', email: 'refreshed@b.com' });
+    });
+
+    it('updates user on SIGNED_IN', async () => {
+      const { store, capturedCallback } = await initWithCallback();
+      store.user = null;
+
+      capturedCallback('SIGNED_IN', { id: 'u2', email: 'new@b.com' }, {});
+      expect(store.user).toEqual({ id: 'u2', email: 'new@b.com' });
+    });
+
+    it('does not clear user on TOKEN_REFRESHED with null user', async () => {
+      const { store, capturedCallback } = await initWithCallback();
+      expect(store.user).not.toBeNull();
+
+      // TOKEN_REFRESHED with null user (transient state) should NOT clear user
+      capturedCallback('TOKEN_REFRESHED', null, null);
+      expect(store.user).toEqual({ id: 'u1', email: 'a@b.com' });
+    });
+  });
 });

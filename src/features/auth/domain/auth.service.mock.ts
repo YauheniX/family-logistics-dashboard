@@ -191,14 +191,15 @@ export class MockAuthService {
   /**
    * Subscribe to auth state changes (mock)
    */
-  onAuthStateChange(callback: (user: AuthUser | null, session: unknown) => void) {
+  onAuthStateChange(callback: (event: string, user: AuthUser | null, session: unknown) => void) {
     // Create wrapper function to track for unsubscribe
-    const wrapper = (user: AuthUser | null) => callback(user, user ? { user } : null);
+    const wrapper = (user: AuthUser | null) =>
+      callback(user ? 'SIGNED_IN' : 'SIGNED_OUT', user, user ? { user } : null);
     this.authChangeCallbacks.push(wrapper);
 
-    // Immediately call with current user
+    // Immediately call with current user (mirrors Supabase INITIAL_SESSION)
     this.getCurrentUser().then((result) => {
-      callback(result.data, result.data ? { user: result.data } : null);
+      callback('INITIAL_SESSION', result.data, result.data ? { user: result.data } : null);
     });
 
     // Return unsubscribe function

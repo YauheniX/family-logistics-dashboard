@@ -39,8 +39,21 @@ export const useAuthStore = defineStore('auth', {
         // events fired by Supabase during the (potentially slow) getCurrentUser
         // call are not missed – e.g. the client finishing its own
         // `detectSessionInUrl` processing on a slow mobile connection.
-        authService.onAuthStateChange((user) => {
-          this.user = user;
+        //
+        // We filter by event type to avoid acting on transient events:
+        // - INITIAL_SESSION is skipped because getCurrentUser() handles it below.
+        // - SIGNED_OUT explicitly clears the user.
+        // - SIGNED_IN / TOKEN_REFRESHED / USER_UPDATED update the user.
+        authService.onAuthStateChange((event, user) => {
+          if (event === 'INITIAL_SESSION') return;
+          if (event === 'SIGNED_OUT') {
+            this.user = null;
+            return;
+          }
+          // SIGNED_IN, TOKEN_REFRESHED, USER_UPDATED – keep user in sync
+          if (user) {
+            this.user = user;
+          }
         });
 
         const response = await authService.getCurrentUser();
@@ -102,9 +115,7 @@ export const useAuthStore = defineStore('auth', {
       try {
         const response = await authService.signInWithOAuth('google');
         if (response.error) {
-          this.error = response.error.message;
-          useToastStore().error(this.error);
-          throw new Error(this.error);
+          throw new Error(response.error.message);
         }
         // In real OAuth, data is null (redirect happens)
         // User and session will be set via onAuthStateChange after redirect
