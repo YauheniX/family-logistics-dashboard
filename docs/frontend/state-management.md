@@ -55,9 +55,9 @@ export const useMyAuthStore = defineStore('auth', () => { ... }); // collides wi
 ### 2. Import from Primary Store Paths
 
 ```typescript
-// ✅ Good — both resolve to the same canonical auth store
+// ✅ Good — either path works (they resolve to the same store)
 import { useAuthStore } from '@/stores/auth';
-import { useAuthStore } from '@/features/auth/presentation/auth.store';
+// or: import { useAuthStore } from '@/features/auth/presentation/auth.store';
 import { useHouseholdStore } from '@/stores/household';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
 ```
