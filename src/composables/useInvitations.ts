@@ -2,6 +2,9 @@ import { ref, type Ref } from 'vue';
 import { supabase } from '@/features/shared/infrastructure/supabase.client';
 import { useToastStore } from '@/stores/toast';
 import type { ApiError } from '@/features/shared/domain/repository.interface';
+import { createLogger, serializeError } from '@/utils/logger';
+
+const logger = createLogger('Invitations');
 
 export interface PendingInvitation {
   id: string;
@@ -51,7 +54,7 @@ export function useInvitations(): UseInvitationsReturn {
           code: rpcError.code,
           details: rpcError.details,
         };
-        console.error('Failed to fetch invitations:', rpcError);
+        logger.error('Failed to fetch invitations', { code: rpcError.code });
         return;
       }
 
@@ -60,7 +63,7 @@ export function useInvitations(): UseInvitationsReturn {
       error.value = {
         message: err instanceof Error ? err.message : 'Failed to fetch invitations',
       };
-      console.error('Failed to fetch invitations:', err);
+      logger.error('Failed to fetch invitations', serializeError(err));
     } finally {
       loading.value = false;
     }

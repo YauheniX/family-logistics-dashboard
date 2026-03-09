@@ -4,6 +4,9 @@ import { isMockMode } from '@/config/backend.config';
 import { supabase } from '@/features/shared/infrastructure/supabase.client';
 import { useToastStore } from '@/stores/toast';
 import { householdService } from '@/features/household/domain/household.service';
+import { createLogger, serializeError } from '@/utils/logger';
+
+const logger = createLogger('Household');
 
 export interface Household {
   id: string;
@@ -47,7 +50,7 @@ export const useHouseholdStore = defineStore('household', () => {
         slug: savedSlug || savedId,
         role: (savedRole as Household['role']) || 'member',
       };
-      console.log('[household] Restored from localStorage:', currentHousehold.value);
+      logger.debug('Restored from localStorage', { id: currentHousehold.value?.id });
     }
   };
 
@@ -155,12 +158,15 @@ export const useHouseholdStore = defineStore('household', () => {
 
       // Guard: abort if user changed during async operation (e.g., logged out)
       if (_activeUserId.value !== userId) {
-        console.log('[household] initializeForUser aborted: user changed during fetch');
+        logger.debug('initializeForUser aborted: user changed during fetch');
         return;
       }
 
       if (error) {
-        console.error('Failed to load households:', error);
+        logger.error('Failed to load households', {
+          errorMessage:
+            error instanceof Object && 'message' in error ? String(error.message) : 'Unknown error',
+        });
         loadHouseholds([]);
         setCurrentHousehold(null);
         initialized.value = true;
@@ -223,7 +229,7 @@ export const useHouseholdStore = defineStore('household', () => {
     const toast = useToastStore();
     if (!userId) return null;
     if (ensuringForUserIds.has(userId)) {
-      console.log('[household] Skipping duplicate default household creation for user', userId);
+      logger.debug('Skipping duplicate default household creation for user', { userId });
       return null;
     }
 
@@ -233,7 +239,7 @@ export const useHouseholdStore = defineStore('household', () => {
     loading.value = true;
 
     try {
-      console.log('[household] Verifying default household for user', userId);
+      logger.debug('Verifying default household for user', { userId });
       const { data: existingMemberships, error: membershipError } = await supabase
         .from('members')
         .select('id, household_id')
@@ -243,21 +249,20 @@ export const useHouseholdStore = defineStore('household', () => {
 
       // Guard: abort if user changed during async operation (e.g., logged out)
       if (_activeUserId.value !== userId) {
-        console.log('[household] ensureDefaultHouseholdForUser aborted: user changed');
+        logger.debug('ensureDefaultHouseholdForUser aborted: user changed');
         return null;
       }
 
       if (membershipError) {
-        console.error('[household] Failed to check existing memberships', membershipError);
+        logger.error('Failed to check existing memberships', {
+          errorMessage: membershipError.message,
+        });
         toast.error('Failed to verify household membership');
         return null;
       }
 
       if ((existingMemberships ?? []).length > 0) {
-        console.log(
-          '[household] Existing household membership found, skipping creation',
-          existingMemberships,
-        );
+        logger.debug('Existing household membership found, skipping creation');
         return null;
       }
 
@@ -266,21 +271,21 @@ export const useHouseholdStore = defineStore('household', () => {
 
       // Guard: abort if user changed during household creation
       if (_activeUserId.value !== userId) {
-        console.log('[household] ensureDefaultHouseholdForUser aborted after create: user changed');
+        logger.debug('ensureDefaultHouseholdForUser aborted after create: user changed');
         return null;
       }
 
       if (!created) {
-        console.error('[household] Default household creation failed for user', userId);
+        logger.error('Default household creation failed for user', { userId });
         toast.error('Could not create your default household');
         return null;
       }
 
-      console.log('[household] Default household created', created);
+      logger.info('Default household created', { id: created?.id });
       toast.success('Your household is ready');
       return created;
     } catch (error) {
-      console.error('[household] Unexpected error while ensuring default household', error);
+      logger.error('Unexpected error while ensuring default household', serializeError(error));
       toast.error('Unexpected error while creating household');
       return null;
     } finally {
@@ -350,7 +355,7 @@ export const useHouseholdStore = defineStore('household', () => {
 
       // Guard: don't set state if user logged out during async operation
       if (_activeUserId.value === null) {
-        console.log('[household] createHousehold aborted: user logged out');
+        logger.debug('createHousehold aborted: user logged out');
         return null;
       }
 
@@ -401,7 +406,7 @@ export const useHouseholdStore = defineStore('household', () => {
 
       // Guard: abort if user changed during async operation
       if (_activeUserId.value !== initiatingUserId) {
-        console.log('[household] deleteHousehold aborted: user changed during operation');
+        logger.debug('deleteHousehold aborted: user changed during operation');
         return false;
       }
 
@@ -423,7 +428,7 @@ export const useHouseholdStore = defineStore('household', () => {
 
       return true;
     } catch (error) {
-      console.error('[household] Unexpected error while deleting household:', error);
+      logger.error('Unexpected error while deleting household', serializeError(error));
       toast.error('Unexpected error while deleting household');
       return false;
     } finally {

@@ -287,11 +287,14 @@ import { useToastStore } from '@/stores/toast';
 import { useAuthStore } from '@/stores/auth';
 import { useUserProfile } from '@/composables/useUserProfile';
 import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
+import { createLogger, serializeError } from '@/utils/logger';
 import type {
   ItemPriority,
   WishlistItem,
   WishlistVisibility,
 } from '@/features/shared/domain/entities';
+
+const logger = createLogger('WishlistEdit');
 
 const props = defineProps<{ id: string }>();
 
@@ -419,7 +422,7 @@ const copyPublicLink = async () => {
     await navigator.clipboard.writeText(url);
     toastStore.success('Public link copied to clipboard!');
   } catch (error) {
-    console.error('Failed to copy link:', error);
+    logger.error('Failed to copy link', serializeError(error));
     toastStore.error('Failed to copy public link');
   }
 };

@@ -23,23 +23,28 @@ that log streams are easy to filter and correlate.
 
 ---
 
-## Feature Flag — Verbose Diagnostics
+## Configuration
 
-Set `VITE_VERBOSE_LOGS=true` in your `.env` (or `.env.local`) to enable `debug`-level output:
+### `VITE_LOG_LEVEL` (recommended)
+
+Set the minimum log level in your `.env` (or `.env.local`):
 
 ```env
 # .env.local
-VITE_VERBOSE_LOGS=true
+VITE_LOG_LEVEL=debug    # debug | info | warn | error (default: info)
 ```
 
-When the flag is **not** set (the default), only `info`, `warn`, and `error` entries are emitted.
+### `VITE_VERBOSE_LOGS` (legacy)
+
+The boolean flag `VITE_VERBOSE_LOGS=true` is still supported for backward compatibility and
+behaves like `VITE_LOG_LEVEL=debug`. When both are set, `VITE_LOG_LEVEL` takes precedence.
 
 ---
 
 ## Usage
 
 ```ts
-import { createLogger } from '@/utils/logger';
+import { createLogger, serializeError } from '@/utils/logger';
 
 // Create a logger bound to a context label
 const logger = createLogger('Dashboard');
@@ -51,11 +56,140 @@ logger.warn('Stale request discarded', { token: 2 });
 logger.error('Failed to load data', { token: 3 });
 ```
 
-**Output format**
+Output format:
 
-```
+```text
 [2025-01-01T12:00:00.000Z] [INFO] [Dashboard] Data loaded {"householdId":"h1","count":5}
 ```
+
+---
+
+## Error Serialization
+
+Use `serializeError()` instead of manually extracting error messages:
+
+```ts
+import { createLogger, serializeError } from '@/utils/logger';
+
+const logger = createLogger('MyFeature');
+
+try {
+  await riskyOperation();
+} catch (err) {
+  // ✅ Good — concise and consistent
+  logger.error('Operation failed', serializeError(err));
+
+  // ✅ Good — with extra context
+  logger.error('Operation failed', { token: 3, ...serializeError(err) });
+
+  // ❌ Avoid — repetitive boilerplate
+  logger.error('Operation failed', {
+    errorMessage: err instanceof Error ? err.message : 'Unknown error',
+  });
+}
+```
+
+`serializeError()` safely extracts `errorMessage`, and optionally `errorName` and `errorCode`
+from the caught value.
+
+---
+
+## Child Loggers
+
+Use `logger.child()` to create sub-context loggers for different concerns within a file:
+
+```ts
+const logger = createLogger('Household');
+const initLog = logger.child('Init'); // → [Household.Init]
+const deleteLog = logger.child('Delete'); // → [Household.Delete]
+
+initLog.debug('Starting initialization');
+deleteLog.error('Failed to delete');
+```
+
+Children can be nested: `logger.child('A').child('B')` → `[Parent.A.B]`.
+
+---
+
+## Performance Timing
+
+Use `logger.timed()` to measure and log async operation duration:
+
+```ts
+const logger = createLogger('Dashboard');
+
+// Automatically logs duration on success (debug level) or failure (error level)
+const data = await logger.timed('loadDashboard', () => repo.getDashboardSummary(id, userId));
+
+// With extra meta
+await logger.timed('loadLists', () => store.loadLists(id), { householdId: id });
+```
+
+Output on success:
+
+```text
+[...] [DEBUG] [Dashboard] loadDashboard completed {"durationMs":142}
+```
+
+Output on failure:
+
+```text
+[...] [ERROR] [Dashboard] loadDashboard failed {"durationMs":3012,"errorMessage":"timeout"}
+```
+
+---
+
+## Log Sinks (Pluggable Transports)
+
+Register custom log sinks to send entries to external services:
+
+```ts
+import { addLogSink, removeLogSink, clearLogSinks, type LogSink } from '@/utils/logger';
+
+// Send errors to an external tracking service
+const sentrySink: LogSink = (entry) => {
+  if (entry.level === 'error') {
+    captureException(entry);
+  }
+};
+
+addLogSink(sentrySink);
+
+// Later: remove a specific sink
+removeLogSink(sentrySink);
+
+// Or clear all sinks (useful in tests)
+clearLogSinks();
+```
+
+Sinks receive every `LogEntry` that passes the level filter. A faulty sink (one that throws)
+will not break application logging.
+
+---
+
+## In-Memory Ring Buffer
+
+The logger keeps the most recent 100 log entries in memory. This buffer is automatically
+attached to bug reports submitted via the issue reporter.
+
+```ts
+import { getRecentLogs, clearRecentLogs, setRingBufferSize } from '@/utils/logger';
+
+// Get a snapshot of recent entries
+const entries = getRecentLogs();
+
+// Adjust capacity (default: 100)
+setRingBufferSize(200);
+
+// Clear (e.g. on logout)
+clearRecentLogs();
+```
+
+### Integration with Issue Reporter
+
+When a user submits a bug report via `reportProblem()`, the description is automatically
+enriched with recent log entries in a collapsible `<details>` block. No action is needed — this
+happens transparently.
 
 ---
 
@@ -90,38 +224,26 @@ logger.debug('Request sent', { authToken: session.access_token });
 
 ---
 
-## Dashboard Logging (DashboardView)
-
-The dashboard uses the logger for all critical data-loading paths:
-
-| Event                                         | Level   | Meta                |
-| --------------------------------------------- | ------- | ------------------- |
-| `getDashboardSummary` returned an error       | `error` | `{ token }`         |
-| Unexpected exception during data load         | `error` | `{ token }`         |
-| Households failed to load on user change      | `error` | _(none)_            |
-| Households failed to reload after invitation  | `error` | _(none)_            |
-
-The **correlation token** (`token`) is an incrementing integer that identifies a specific load
-request.  When the same token appears in multiple log lines you can trace the full lifecycle of
-one load operation.
-
----
-
 ## Adding Logging to a New Feature
 
 1. Import and instantiate a logger at the top of your file:
 
    ```ts
-   import { createLogger } from '@/utils/logger';
+   import { createLogger, serializeError } from '@/utils/logger';
    const logger = createLogger('MyFeature');
    ```
 
 2. Replace `console.error` / `console.log` calls with the appropriate logger method.
 
-3. Include a correlation token in the `meta` if your feature uses a request-token pattern.
+3. Use `serializeError(err)` in catch blocks instead of manual error extraction.
 
-4. **Never** pass raw `Error` objects or user data into `meta`; log only the error message or a
-   sanitised subset.
+4. Use `logger.child('SubTask')` if the file has multiple distinct concerns.
+
+5. Use `logger.timed('label', fn)` for operations where duration matters.
+
+6. Include a correlation token in the `meta` if your feature uses a request-token pattern.
+
+7. **Never** pass raw `Error` objects or user data into `meta`.
 
 ---
 
@@ -130,3 +252,4 @@ one load operation.
 - `src/utils/logger.ts` — implementation
 - `src/utils/__tests__/logger.test.ts` — unit tests
 - `src/views/DashboardView.vue` — reference usage
+- `src/services/issueReporter.ts` — ring buffer integration

@@ -125,7 +125,7 @@ import { dashboardRepository } from '@/features/shared/infrastructure/dashboard.
 import { useUserProfile } from '@/composables/useUserProfile';
 import { resolveUserProfile } from '@/utils/profileResolver';
 import { getVisibilityVariant, getVisibilityLabel } from '@/composables/useVisibilityDisplay';
-import { createLogger } from '@/utils/logger';
+import { createLogger, serializeError } from '@/utils/logger';
 
 const logger = createLogger('Dashboard');
 
@@ -169,9 +169,10 @@ async function handleInvitationAccepted() {
     try {
       await householdEntityStore.loadHouseholds(authStore.user.id);
     } catch (error) {
-      logger.error('Failed to reload households after invitation acceptance', {
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
-      });
+      logger.error(
+        'Failed to reload households after invitation acceptance',
+        serializeError(error),
+      );
     }
   }
 }
@@ -228,7 +229,7 @@ async function loadCurrentHouseholdData() {
 
     logger.error('Unexpected error loading data', {
       token: currentToken,
-      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      ...serializeError(error),
     });
     clearDashboardCollections();
   }
@@ -242,9 +243,7 @@ watch(
       try {
         await householdEntityStore.loadHouseholds(userId);
       } catch (error) {
-        logger.error('Failed to load households', {
-          errorMessage: error instanceof Error ? error.message : 'Unknown error',
-        });
+        logger.error('Failed to load households', serializeError(error));
       }
     }
   },

@@ -1,5 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { createLogger } from '@/utils/logger';
+
+const logger = createLogger('Router');
 
 const router = createRouter({
   history: createWebHistory(),
@@ -121,10 +124,14 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    logger.debug('Redirecting unauthenticated user to login', { from: to.fullPath });
     return next({ name: 'login', query: { redirect: to.fullPath } });
   }
 
   if (to.meta.guestOnly && authStore.isAuthenticated) {
+    logger.debug('Redirecting authenticated user away from guest-only route', {
+      from: to.fullPath,
+    });
     return next({ name: 'dashboard' });
   }
 

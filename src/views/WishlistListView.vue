@@ -319,6 +319,9 @@ import { wishlistService } from '@/features/wishlist/domain/wishlist.service';
 import { isValidUrl } from '@/utils/validation';
 import { fetchLinkPreview } from '@/composables/useLinkPreview';
 import { getVisibilityVariant, getVisibilityLabel } from '@/composables/useVisibilityDisplay';
+import { createLogger } from '@/utils/logger';
+
+const logger = createLogger('WishlistList');
 
 const authStore = useAuthStore();
 const householdStore = useHouseholdStore();
@@ -444,9 +447,9 @@ const loadWishlistPreviews = async () => {
           return { wishlistId: wishlist.id, url: itemWithLink.link };
         }
       }
-    } catch (error) {
+    } catch {
       // Silently fail for individual wishlists
-      console.warn(`Failed to load items for wishlist ${wishlist.id}`, error);
+      logger.warn('Failed to load items for wishlist', { wishlistId: wishlist.id });
     }
     return null;
   });
@@ -470,8 +473,8 @@ const loadWishlistPreviews = async () => {
       if (preview?.image) {
         return { wishlistId, image: preview.image };
       }
-    } catch (error) {
-      console.warn(`Failed to fetch screenshot for wishlist ${wishlistId}`, error);
+    } catch {
+      logger.warn('Failed to fetch screenshot for wishlist', { wishlistId });
     }
     return null;
   });
