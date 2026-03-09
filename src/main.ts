@@ -6,6 +6,7 @@ import './styles/main.css';
 import { useAuthStore } from '@/stores/auth';
 import { handleSupabaseAuthRedirect } from '@/features/auth';
 import { normalizeRedirectParam } from '@/utils/pathValidation';
+import { createLogger, serializeError } from '@/utils/logger';
 import i18n from './i18n';
 
 const app = createApp(App);
@@ -32,7 +33,7 @@ app.use(i18n);
   try {
     await authStore.initialize();
   } catch (error) {
-    console.error('Auth initialization failed:', error);
+    createLogger('App').error('Auth initialization failed', serializeError(error));
   }
 
   app.use(router);

@@ -1,7 +1,11 @@
+import { createLogger } from '@/utils/logger';
+
 /**
  * Configuration for backend mode
  * Controls whether to use Supabase or mock backend
  */
+
+const logger = createLogger('BackendConfig');
 
 /**
  * Check if we're in mock mode
@@ -21,8 +25,8 @@ export function isMockMode(): boolean {
 
   // Auto-enable mock mode if Supabase credentials are missing
   if (!supabaseUrl || !supabaseKey) {
-    console.info(
-      '🔧 Running in MOCK MODE - Supabase credentials not found. Using localStorage for data persistence.',
+    logger.info(
+      'Running in MOCK MODE - Supabase credentials not found. Using localStorage for data persistence.',
     );
     return true;
   }

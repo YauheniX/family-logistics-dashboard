@@ -82,7 +82,7 @@ async function fetchViaMicrolink(
   const response = await fetch(`${MICROLINK_API_ENDPOINT}?${params.toString()}`);
 
   if (!response.ok) {
-    // Silently fail for rate limits (429 = Too Many Requests)
+    // Non-critical: rate limits (429), server errors, etc.
     return null;
   }
 
@@ -146,8 +146,8 @@ export function getCachedPreview(url: string): LinkPreviewData | null {
     }
 
     return parsedCache.data;
-  } catch (err) {
-    console.error('Failed to read cache:', err);
+  } catch {
+    // Cache read failure is non-critical; log and fall through.
     return null;
   }
 }
@@ -174,8 +174,8 @@ export function saveCachePreview(url: string, data: LinkPreviewData): void {
   try {
     const cacheData: CachedPreview = { data, timestamp: Date.now() };
     localStorage.setItem(getCacheKey(url), JSON.stringify(cacheData));
-  } catch (err) {
-    console.error('Failed to save cache:', err);
+  } catch {
+    // Cache write failure is non-critical; silently ignored.
   }
 }
 
@@ -211,8 +211,8 @@ export async function fetchLinkPreview(
     saveCachePreview(url, previewData);
 
     return previewData;
-  } catch (err) {
-    console.error('Failed to fetch link preview:', err);
+  } catch {
+    // Fetch failure is non-critical for UI; return null.
     return null;
   }
 }

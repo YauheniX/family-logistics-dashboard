@@ -167,6 +167,9 @@ import { useHouseholdStore } from '@/stores/household';
 import { useToastStore } from '@/stores/toast';
 import { resolveMemberProfile } from '@/utils/profileResolver';
 import type { Member } from '@/features/shared/domain/entities';
+import { createLogger } from '@/utils/logger';
+
+const logger = createLogger('HouseholdDetail');
 
 const props = defineProps<{ id: string }>();
 
@@ -270,25 +273,21 @@ const handleInvite = async () => {
 
 const confirmDelete = async () => {
   if (!householdEntityStore.currentHousehold) {
-    if (import.meta.env.DEV) {
-      console.error('No current household to delete');
-    }
+    logger.warn('No current household to delete');
     return;
   }
 
-  if (import.meta.env.DEV) {
-    console.log('Attempting to delete household:', householdEntityStore.currentHousehold.id);
-    console.log('Current user:', authStore.user?.id);
-    console.log('Is owner:', isOwner.value);
-  }
+  logger.debug('Attempting to delete household', {
+    householdId: householdEntityStore.currentHousehold.id,
+    userId: authStore.user?.id,
+    isOwner: isOwner.value,
+  });
 
   const deleted = await householdEntityStore.removeHousehold(
     householdEntityStore.currentHousehold.id,
   );
 
-  if (import.meta.env.DEV) {
-    console.log('Delete result:', deleted);
-  }
+  logger.debug('Delete result', { deleted });
 
   if (deleted) {
     showDeleteModal.value = false;
@@ -299,8 +298,8 @@ const confirmDelete = async () => {
     }
 
     router.push('/households');
-  } else if (import.meta.env.DEV) {
-    console.error('Failed to delete household');
+  } else {
+    logger.error('Failed to delete household');
   }
 };
 

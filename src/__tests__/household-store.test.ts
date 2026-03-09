@@ -377,8 +377,7 @@ describe('Household Store', () => {
       await store.initializeForUser('test-user-id');
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Failed to load households:',
-        expect.objectContaining({ message: 'Database error' }),
+        expect.stringContaining('Failed to load households'),
       );
       expect(store.households).toEqual([]);
       expect(store.currentHousehold).toBeNull();

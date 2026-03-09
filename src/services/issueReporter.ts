@@ -1,5 +1,19 @@
 import { supabase } from '@/features/shared/infrastructure/supabase.client';
 import { isMockMode } from '@/config/backend.config';
+import { createLogger, getRecentLogs, formatEntry } from '@/utils/logger';
+
+const logger = createLogger('IssueReporter');
+
+/**
+ * Build a Markdown-formatted section with recent log entries.
+ * Returns an empty string when no logs are available.
+ */
+export function formatRecentLogsForReport(maxEntries = 50): string {
+  const entries = getRecentLogs().slice(-maxEntries);
+  if (entries.length === 0) return '';
+  const lines = entries.map((e) => formatEntry(e));
+  return `\n\n<details><summary>Recent application logs (${entries.length})</summary>\n\n\`\`\`\n${lines.join('\n')}\n\`\`\`\n\n</details>`;
+}
 export type IssueLabel = 'bug' | 'enhancement' | 'super buba issue';
 
 export type ReportProblemInput = {
@@ -128,9 +142,14 @@ export async function reportProblem(input: ReportProblemInput): Promise<ReportPr
     : `${functionsBaseUrl.origin}/functions/v1/report-issue`;
 
   if (enableAuthDebug) {
-    // eslint-disable-next-line no-console
-    console.info('[reportProblem] endpoint', { endpoint });
+    logger.debug('Endpoint resolved', { endpoint });
   }
+
+  // Enrich the description with recent application logs for diagnostics
+  const enrichedInput = {
+    ...input,
+    description: input.description + formatRecentLogsForReport(),
+  };
 
   const response = await fetch(endpoint, {
     method: 'POST',
@@ -139,7 +158,7 @@ export async function reportProblem(input: ReportProblemInput): Promise<ReportPr
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(input),
+    body: JSON.stringify(enrichedInput),
   });
 
   if (!response.ok) {
@@ -158,8 +177,7 @@ export async function reportProblem(input: ReportProblemInput): Promise<ReportPr
           : typeof body === 'string'
             ? body.slice(0, 300)
             : JSON.stringify(body).slice(0, 300);
-      // eslint-disable-next-line no-console
-      console.warn('[reportProblem] non-2xx', { status: response.status, bodySnippet: snippet });
+      logger.warn('Non-2xx response', { status: response.status, bodySnippet: snippet });
     }
 
     if (response.status === 401) {

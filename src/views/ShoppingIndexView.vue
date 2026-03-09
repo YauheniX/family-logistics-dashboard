@@ -131,6 +131,9 @@ import ModalDialog from '@/components/shared/ModalDialog.vue';
 import { useHouseholdStore } from '@/stores/household';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
 import { useToastStore } from '@/stores/toast';
+import { createLogger } from '@/utils/logger';
+
+const logger = createLogger('ShoppingIndex');
 
 const router = useRouter();
 const { t } = useI18n();
@@ -180,7 +183,7 @@ const handleCreateList = async () => {
 onMounted(async () => {
   // Wait for household store initialization if needed
   if (!householdStore.initialized) {
-    console.log('[ShoppingIndex] Waiting for household store initialization...');
+    logger.debug('Waiting for household store initialization...');
     // Watch for initialization to complete
     const unwatch = watch(
       () => householdStore.initialized,

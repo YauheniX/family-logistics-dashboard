@@ -125,6 +125,9 @@ import { dashboardRepository } from '@/features/shared/infrastructure/dashboard.
 import { useUserProfile } from '@/composables/useUserProfile';
 import { resolveUserProfile } from '@/utils/profileResolver';
 import { getVisibilityVariant, getVisibilityLabel } from '@/composables/useVisibilityDisplay';
+import { createLogger, serializeError } from '@/utils/logger';
+
+const logger = createLogger('Dashboard');
 
 const authStore = useAuthStore();
 const householdStore = useHouseholdStore();
@@ -166,7 +169,10 @@ async function handleInvitationAccepted() {
     try {
       await householdEntityStore.loadHouseholds(authStore.user.id);
     } catch (error) {
-      console.error('Failed to reload households after invitation acceptance:', error);
+      logger.error(
+        'Failed to reload households after invitation acceptance',
+        serializeError(error),
+      );
     }
   }
 }
@@ -208,7 +214,7 @@ async function loadCurrentHouseholdData() {
     }
 
     if (response.error) {
-      console.error('[Dashboard] Failed to load data:', response.error);
+      logger.error('Failed to load data', { token: currentToken });
       clearDashboardCollections();
     } else if (response.data) {
       shoppingStore.setLists(response.data.shoppingLists);
@@ -221,7 +227,10 @@ async function loadCurrentHouseholdData() {
       return;
     }
 
-    console.error('[Dashboard] Failed to load data:', error);
+    logger.error('Unexpected error loading data', {
+      token: currentToken,
+      ...serializeError(error),
+    });
     clearDashboardCollections();
   }
 }
@@ -234,7 +243,7 @@ watch(
       try {
         await householdEntityStore.loadHouseholds(userId);
       } catch (error) {
-        console.error('Failed to load dashboard data:', error);
+        logger.error('Failed to load households', serializeError(error));
       }
     }
   },
