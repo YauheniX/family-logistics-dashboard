@@ -9,18 +9,18 @@ End-to-end smoke tests for the critical user flows in the Family Logistics Dashb
 ## Overview
 
 The E2E suite uses **[Playwright](https://playwright.dev/)** and runs against a local Vite
-preview server configured in **mock mode** (`VITE_USE_MOCK_BACKEND=true`).  No real Supabase
+preview server configured in **mock mode** (`VITE_USE_MOCK_BACKEND=true`). No real Supabase
 instance or network connectivity is required; all data is persisted to `localStorage` via the
 mock backend.
 
 ### Flows Covered
 
-| # | Flow | Route(s) | Auth Required |
-|---|------|----------|---------------|
-| 1 | Login / Register | `/login`, `/register` | No |
-| 2 | Household selection | `/households` | Yes (mock) |
-| 3 | Shopping list create + item add/edit | `/shopping`, `/shopping/:listId` | Yes (mock) |
-| 4 | Public wishlist share + anonymous reserve | `/wishlist/:shareSlug` | No |
+| #   | Flow                                      | Route(s)                         | Auth Required |
+| --- | ----------------------------------------- | -------------------------------- | ------------- |
+| 1   | Login / Register                          | `/login`, `/register`            | No            |
+| 2   | Household selection                       | `/households`                    | Yes (mock)    |
+| 3   | Shopping list create + item add/edit      | `/shopping`, `/shopping/:listId` | Yes (mock)    |
+| 4   | Public wishlist share + anonymous reserve | `/wishlist/:shareSlug`           | No            |
 
 ---
 
@@ -93,10 +93,10 @@ playwright.config.ts        # Playwright configuration
 
 Provides three seed helpers used in `beforeEach` hooks:
 
-| Helper | Purpose |
-|--------|---------|
-| `seedAuthState(page, opts?)` | Pre-seeds a mock authenticated user so tests skip the login form |
-| `seedHouseholdState(page, opts?)` | Persists the active household to localStorage for instant household context |
+| Helper                            | Purpose                                                                      |
+| --------------------------------- | ---------------------------------------------------------------------------- |
+| `seedAuthState(page, opts?)`      | Pre-seeds a mock authenticated user so tests skip the login form             |
+| `seedHouseholdState(page, opts?)` | Persists the active household to localStorage for instant household context  |
 | `seedPublicWishlist(page, opts?)` | Seeds a public wishlist + item so the public route renders without a backend |
 
 ---
@@ -104,7 +104,7 @@ Provides three seed helpers used in `beforeEach` hooks:
 ## CI Integration
 
 The E2E suite runs in a **separate, non-blocking** GitHub Actions workflow
-(`.github/workflows/e2e.yml`).  A failure in the E2E job does **not** block PR merges;
+(`.github/workflows/e2e.yml`). A failure in the E2E job does **not** block PR merges;
 it is surfaced as a warning alongside an uploaded Playwright HTML report artifact.
 
 ### Path to Blocking
@@ -120,13 +120,13 @@ it is surfaced as a warning alongside an uploaded Playwright HTML report artifac
 
 Tests prefer stable, accessibility-aware Playwright locators:
 
-| Strategy | Example | When to Use |
-|----------|---------|-------------|
-| `getByRole` | `page.getByRole('button', { name: /sign in/i })` | Buttons, links, headings |
-| `getByLabel` | `page.getByLabel('Email')` | Form inputs with a `<label>` |
-| `getByPlaceholder` | `page.getByPlaceholder(/item name/i)` | Inputs with placeholder text |
-| `getByText` | `page.getByText('Smith Family')` | Unique text content |
-| `data-testid` | `page.getByTestId('login-submit')` | Reserve for highly dynamic UI elements |
+| Strategy           | Example                                          | When to Use                            |
+| ------------------ | ------------------------------------------------ | -------------------------------------- |
+| `getByRole`        | `page.getByRole('button', { name: /sign in/i })` | Buttons, links, headings               |
+| `getByLabel`       | `page.getByLabel('Email')`                       | Form inputs with a `<label>`           |
+| `getByPlaceholder` | `page.getByPlaceholder(/item name/i)`            | Inputs with placeholder text           |
+| `getByText`        | `page.getByText('Smith Family')`                 | Unique text content                    |
+| `data-testid`      | `page.getByTestId('login-submit')`               | Reserve for highly dynamic UI elements |
 
 Avoid CSS class selectors — they break on restyling.
 
@@ -136,30 +136,30 @@ Avoid CSS class selectors — they break on restyling.
 
 ### Tests time out waiting for elements
 
-- Make sure the app built with `VITE_USE_MOCK_BACKEND=true`.  A Supabase-mode build will try
+- Make sure the app built with `VITE_USE_MOCK_BACKEND=true`. A Supabase-mode build will try
   to contact the real backend, hang, and time out.
 - Check that `playwright.config.ts` `webServer.env` includes `VITE_USE_MOCK_BACKEND: 'true'`.
 
 ### `net::ERR_CONNECTION_REFUSED`
 
-The preview server failed to start.  Run `npm run build && npm run preview` manually to see
+The preview server failed to start. Run `npm run build && npm run preview` manually to see
 if the build or server start itself fails.
 
 ### "Wishlist not found" on the public wishlist test
 
-The seed helper writes to `localStorage` before navigation.  If you see this error, the
-`addInitScript` did not fire before the page loaded.  Make sure `seedPublicWishlist` is called
+The seed helper writes to `localStorage` before navigation. If you see this error, the
+`addInitScript` did not fire before the page loaded. Make sure `seedPublicWishlist` is called
 **before** `page.goto(…)`.
 
 ### Existing localStorage state interfering
 
-Each test gets an isolated browser context in Playwright (fresh `localStorage`).  If tests
+Each test gets an isolated browser context in Playwright (fresh `localStorage`). If tests
 are sharing state unexpectedly, confirm that `workers: 1` is set in `playwright.config.ts`
 and that `page.addInitScript` is being used (not `page.evaluate` after navigation).
 
 ### Headed mode shows a flash of unauthenticated content
 
-This is expected for the ~1 frame before the auth store reads from localStorage.  The tests
+This is expected for the ~1 frame before the auth store reads from localStorage. The tests
 use `await expect(...).toBeVisible({ timeout: 8_000 })` which waits through this transient
 state.
 
