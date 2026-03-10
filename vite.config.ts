@@ -54,6 +54,8 @@ export default defineConfig(() => {
     test: {
       environment: 'jsdom',
       globals: true,
+      // Exclude Playwright E2E tests from the Vitest run
+      exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**'],
       coverage: {
         provider: 'v8',
         reporter: ['text', 'lcov'],

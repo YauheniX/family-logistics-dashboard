@@ -11,3 +11,5 @@ family-logistics-dashboard.code-workspace
 .env
 coverage/
 package-lock.json
+playwright-report/
+test-results/
