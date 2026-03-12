@@ -53,7 +53,13 @@ export default defineConfig(() => {
     },
     test: {
       environment: 'jsdom',
+      environmentOptions: {
+        jsdom: {
+          url: 'https://example.com/',
+        },
+      },
       globals: true,
+      pool: 'vmForks',
       // Exclude Playwright E2E tests from the Vitest run
       exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**'],
       coverage: {

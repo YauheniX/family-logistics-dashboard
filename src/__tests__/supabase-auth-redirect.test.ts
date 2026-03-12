@@ -17,35 +17,19 @@ vi.mock('@/config/backend.config', () => ({
 const { handleSupabaseAuthRedirect } = await import('@/utils/supabaseAuthRedirect');
 
 describe('handleSupabaseAuthRedirect', () => {
-  let originalLocation: Location;
-
   beforeEach(() => {
     vi.clearAllMocks();
-    originalLocation = window.location;
+    window.history.pushState({}, '', '/');
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
-    Object.defineProperty(window, 'location', {
-      value: originalLocation,
-      writable: true,
-      configurable: true,
-    });
+    window.history.pushState({}, '', '/');
   });
 
   function setLocation(href: string) {
     const url = new URL(href);
-    Object.defineProperty(window, 'location', {
-      value: {
-        href: url.href,
-        origin: url.origin,
-        pathname: url.pathname,
-        search: url.search,
-        hash: url.hash,
-      },
-      writable: true,
-      configurable: true,
-    });
+    window.history.pushState({}, '', url.pathname + url.search + url.hash);
   }
 
   describe('PKCE flow error recovery', () => {

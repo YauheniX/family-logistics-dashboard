@@ -161,6 +161,7 @@ const items = computed(() => [
   },
   { name: 'shopping', label: t('nav.shopping'), to: { name: 'shopping' }, emoji: '🛒' },
   { name: 'wishlist-list', label: t('nav.wishlists'), to: '/wishlists', emoji: '🎁' },
+  { name: 'school', label: t('nav.school'), to: '/school', emoji: '🏫' },
   { name: 'apps', label: t('nav.apps'), to: '/apps', emoji: '🎮' },
   { name: 'settings', label: t('nav.settings'), to: '/settings', emoji: '⚙️' },
 ]);

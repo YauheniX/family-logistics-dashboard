@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 vi.mock('@/features/shared/infrastructure/supabase.client', () => ({
   supabase: {
@@ -396,11 +396,11 @@ describe('AuthService', () => {
 
   describe('signInWithOAuth', () => {
     beforeEach(() => {
-      Object.defineProperty(window, 'location', {
-        value: { origin: 'https://example.com', pathname: '/' },
-        writable: true,
-        configurable: true,
-      });
+      window.history.pushState({}, '', '/');
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
     });
 
     it('returns null data on successful OAuth redirect', async () => {
@@ -477,11 +477,7 @@ describe('AuthService', () => {
         data: { provider: 'google', url: 'https://accounts.google.com' },
         error: null,
       } as never);
-      Object.defineProperty(window, 'location', {
-        value: { origin: 'https://example.com', pathname: '/app' },
-        writable: true,
-        configurable: true,
-      });
+      window.history.pushState({}, '', '/app');
 
       const result = await service.signInWithOAuth('github');
 
