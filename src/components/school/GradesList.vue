@@ -75,10 +75,6 @@ const bySubjectWithAvg = computed(() =>
   })),
 );
 
-function average(grades: SchoolGrade[]): number | null {
-  return schoolService.calculateAverage(grades);
-}
-
 function averageClass(avg: number): string {
   if (avg >= 4.5) return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300';
   if (avg >= 3.5) return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300';
