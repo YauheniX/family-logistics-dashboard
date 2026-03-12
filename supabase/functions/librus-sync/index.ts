@@ -65,19 +65,21 @@ async function refreshToken(refreshTokenStr: string): Promise<{
   refresh_token: string;
   expires_in: number;
 } | null> {
+  const body = new URLSearchParams({
+    grant_type: 'refresh_token',
+    refresh_token: refreshTokenStr,
+    librus_long_term_token: '1',
+    librus_rules_accepted: '1',
+  });
+
+  // Pass URLSearchParams directly — Deno sets Content-Type automatically.
   const resp = await fetch(LIBRUS_API_TOKEN_URL, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
       Authorization: `Basic ${LIBRUS_API_AUTHORIZATION}`,
       'User-Agent': LIBRUS_USER_AGENT,
     },
-    body: new URLSearchParams({
-      grant_type: 'refresh_token',
-      refresh_token: refreshTokenStr,
-      librus_long_term_token: '1',
-      librus_rules_accepted: '1',
-    }).toString(),
+    body,
   });
   if (!resp.ok) return null;
   return resp.json();

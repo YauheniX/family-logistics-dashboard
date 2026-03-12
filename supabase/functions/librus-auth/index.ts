@@ -22,7 +22,8 @@ const LIBRUS_API_TOKEN_URL = 'https://api.librus.pl/OAuth/Token';
 const LIBRUS_API_URL = 'https://api.librus.pl/2.0';
 // Public client credentials from the open-source szkolny-android project.
 // Can be overridden via Supabase secret LIBRUS_API_AUTHORIZATION.
-const LIBRUS_API_AUTHORIZATION = Deno.env.get('LIBRUS_API_AUTHORIZATION');
+const LIBRUS_API_AUTHORIZATION =
+  Deno.env.get('LIBRUS_API_AUTHORIZATION') ?? 'Mjg6ODRmZGQzYTg3YjAzZDNlYTZmZmU3NzdiNThiMzMyYjE=';
 
 // User-Agent must include the Android Dalvik prefix or Librus rejects the request.
 const LIBRUS_USER_AGENT =
@@ -54,14 +55,15 @@ async function fetchLibrusToken(
     ...params,
   });
 
+  // Pass URLSearchParams directly — Deno's fetch sets Content-Type:
+  // application/x-www-form-urlencoded automatically, which is required by Librus.
   const resp = await fetch(LIBRUS_API_TOKEN_URL, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
       Authorization: `Basic ${LIBRUS_API_AUTHORIZATION}`,
       'User-Agent': LIBRUS_USER_AGENT,
     },
-    body: body.toString(),
+    body,
   });
 
   if (!resp.ok) {
