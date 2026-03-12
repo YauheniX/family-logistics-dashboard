@@ -130,8 +130,8 @@ async function handleSubmit() {
   const success = await schoolStore.connectSchool({
     household_id: props.householdId,
     member_id: form.member_id,
-    username: form.username,
-    password: form.password,
+    username: form.username.trim(),
+    password: form.password.trim(),
   });
 
   if (success) {

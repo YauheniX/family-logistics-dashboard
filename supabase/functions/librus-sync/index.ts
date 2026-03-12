@@ -12,7 +12,7 @@ const LIBRUS_API_TOKEN_URL = 'https://api.librus.pl/OAuth/Token';
 // User-Agent must include the Android Dalvik prefix or Librus rejects the request.
 // Source: https://github.com/szkolny-eu/szkolny-android/blob/master/app/src/main/java/pl/szczodrzynski/edziennik/data/api/Constants.kt
 const LIBRUS_USER_AGENT =
-  'Dalvik/2.1.0 (Linux; U; Android 11; Android SDK built for x86) LibrusMobileApp';
+  'Dalvik/2.1.0 (Linux; U; Android 11; Android SDK built for x86)LibrusMobileApp';
 // Public client credentials (can be overridden via Supabase secret LIBRUS_API_AUTHORIZATION).
 const LIBRUS_API_AUTHORIZATION =
   Deno.env.get('LIBRUS_API_AUTHORIZATION') ?? 'Mjg6ODRmZGQzYTg3YjAzZDNlYTZmZmU3NzdiNThiMzMyYjE=';
@@ -43,6 +43,10 @@ async function librusGet(endpoint: string, accessToken: string): Promise<LibrusR
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'User-Agent': LIBRUS_USER_AGENT,
+        Accept: 'application/json',
+        'Accept-Language': 'pl-PL',
+        'Accept-Encoding': 'gzip',
+        Connection: 'Keep-Alive',
       },
     });
     if (!resp.ok) {
@@ -76,8 +80,13 @@ async function refreshToken(refreshTokenStr: string): Promise<{
   const resp = await fetch(LIBRUS_API_TOKEN_URL, {
     method: 'POST',
     headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
       Authorization: `Basic ${LIBRUS_API_AUTHORIZATION}`,
       'User-Agent': LIBRUS_USER_AGENT,
+      Accept: 'application/json',
+      'Accept-Language': 'pl-PL',
+      'Accept-Encoding': 'gzip',
+      Connection: 'Keep-Alive',
     },
     body,
   });

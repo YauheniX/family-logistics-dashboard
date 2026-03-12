@@ -16,18 +16,22 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
-// ─── Librus API constants (from szkolny-android open-source code) ──────────
-// Source: https://github.com/szkolny-eu/szkolny-android/blob/master/app/src/main/java/pl/szczodrzynski/edziennik/data/api/Constants.kt
-const LIBRUS_API_TOKEN_URL = 'https://api.librus.pl/OAuth/Token';
+// ─── Librus constants (source: szkolny-android/Constants.kt) ─────────────────
+// Direct API (api.librus.pl)
 const LIBRUS_API_URL = 'https://api.librus.pl/2.0';
-// Public client credentials from the open-source szkolny-android project.
-// Can be overridden via Supabase secret LIBRUS_API_AUTHORIZATION.
-const LIBRUS_API_AUTHORIZATION =
-  Deno.env.get('LIBRUS_API_AUTHORIZATION') ?? 'Mjg6ODRmZGQzYTg3YjAzZDNlYTZmZmU3NzdiNThiMzMyYjE=';
-
-// User-Agent must include the Android Dalvik prefix or Librus rejects the request.
+// Portal OAuth (portal.librus.pl) — the only login path that works from cloud IPs
+const LIBRUS_AUTHORIZE_URL = 'https://portal.librus.pl/konto-librus/redirect/dru';
+const LIBRUS_LOGIN_URL = 'https://portal.librus.pl/konto-librus/login/action';
+const LIBRUS_TOKEN_URL = 'https://portal.librus.pl/oauth2/access_token';
+const LIBRUS_PORTAL_URL = 'https://portal.librus.pl/api';
+// Portal OAuth client credentials
+const LIBRUS_CLIENT_ID = 'VaItV6oRutdo8fnjJwysnTjVlvaswf52ZqmXsJGP';
+const LIBRUS_REDIRECT_URL = 'app://librus';
+// X-Requested-With value the Librus portal SPA expects
+const LIBRUS_HEADER = 'pl.librus.synergiaDru2';
+// Mobile User-Agent used by szkolny-android for all Librus requests
 const LIBRUS_USER_AGENT =
-  'Dalvik/2.1.0 (Linux; U; Android 11; Android SDK built for x86) LibrusMobileApp';
+  'Dalvik/2.1.0 (Linux; U; Android 11; Android SDK built for x86)LibrusMobileApp';
 
 // ─── CORS headers ──────────────────────────────────────────
 const corsHeaders = {
@@ -43,36 +47,321 @@ function json(data: unknown, status = 200) {
   });
 }
 
-// ─── Librus token fetch ─────────────────────────────────────
-async function fetchLibrusToken(
-  grantType: 'password' | 'refresh_token',
-  params: Record<string, string>,
+// ─── Cookie helpers ─────────────────────────────────────────
+// Parse a single Set-Cookie string "name=value; Path=...; ..." → [name, value]
+function parseSingleCookie(setCookie: string): [string, string] | null {
+  const semi = setCookie.indexOf(';');
+  const kv = semi === -1 ? setCookie : setCookie.slice(0, semi);
+  const eq = kv.indexOf('=');
+  if (eq <= 0) return null;
+  return [kv.slice(0, eq).trim(), kv.slice(eq + 1).trim()];
+}
+
+// Merge all Set-Cookie response headers into the cookie jar.
+// Uses getSetCookie() (WHATWG Fetch API) to get each cookie as a separate
+// string — avoids the comma-splitting ambiguity of headers.get('set-cookie').
+function mergeCookies(resp: Response, jar: Record<string, string>) {
+  // Deno 1.38+ supports getSetCookie(); fall back to manual split if unavailable
+  type HeadersWithGSC = Headers & { getSetCookie?: () => string[] };
+  const setCookies: string[] =
+    (resp.headers as HeadersWithGSC).getSetCookie?.() ??
+    (resp.headers.get('set-cookie') ?? '')
+      .split(/,(?=\s*[A-Za-z_][A-Za-z0-9_-]*=)/) // best-effort fallback
+      .filter(Boolean);
+
+  for (const sc of setCookies) {
+    const pair = parseSingleCookie(sc);
+    if (pair) jar[pair[0]] = pair[1];
+  }
+}
+
+function formatCookies(cookies: Record<string, string>): string {
+  return Object.entries(cookies)
+    .map(([k, v]) => `${k}=${v}`)
+    .join('; ');
+}
+
+function resolveUrl(location: string, base: string): string {
+  if (/^https?:\/\//.test(location) || location.startsWith('app://')) return location;
+  try {
+    return new URL(location, base).toString();
+  } catch {
+    return location;
+  }
+}
+
+// ─── Portal login flow (mirrors LibrusLoginPortal.kt from szkolny-android) ───
+//
+// Step 1: GET LIBRUS_AUTHORIZE_URL → follow redirects; collect cookies;
+//         stop at the 200 login-form page on portal.librus.pl
+// Step 2: Extract CSRF token + hidden inputs from the form HTML
+// Step 3: POST LIBRUS_LOGIN_URL with email/password + X-CSRF-TOKEN header
+// Step 4: Follow redirects until Location matches app://librus?code=XXX
+// Step 5: POST LIBRUS_TOKEN_URL to exchange code → portalAccessToken + portalRefreshToken
+// Step 6: GET /v3/SynergiaAccounts/fresh/{email} → API accessToken for api.librus.pl
+async function loginWithWebFlow(
+  email: string,
+  password: string,
 ): Promise<{ access_token: string; refresh_token: string; expires_in: number } | null> {
-  const body = new URLSearchParams({
-    grant_type: grantType,
-    librus_long_term_token: '1',
-    librus_rules_accepted: '1',
-    ...params,
+  const jar: Record<string, string> = {};
+
+  const baseHeaders = () => ({
+    'User-Agent': LIBRUS_USER_AGENT,
+    Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Language': 'pl-PL,pl;q=0.9,en;q=0.8',
+    // No Accept-Encoding — let Deno handle decompression transparently
+    'X-Requested-With': LIBRUS_HEADER,
+    Cookie: formatCookies(jar),
   });
 
-  // Pass URLSearchParams directly — Deno's fetch sets Content-Type:
-  // application/x-www-form-urlencoded automatically, which is required by Librus.
-  const resp = await fetch(LIBRUS_API_TOKEN_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: `Basic ${LIBRUS_API_AUTHORIZATION}`,
-      'User-Agent': LIBRUS_USER_AGENT,
-    },
-    body,
-  });
+  // ── Step 1: follow redirects from the authorize URL until we hit the login form
+  let currentUrl = LIBRUS_AUTHORIZE_URL;
+  let formHtml = '';
+  let formReferer = LIBRUS_AUTHORIZE_URL;
 
-  if (!resp.ok) {
-    const text = await resp.text();
-    console.error(`Librus token error ${resp.status}: ${text}`);
+  for (let i = 0; i < 10; i++) {
+    const resp = await fetch(currentUrl, { headers: baseHeaders(), redirect: 'manual' });
+    mergeCookies(resp, jar);
+
+    const location = resp.headers.get('location') ?? '';
+
+    if (resp.status >= 300 && resp.status < 400) {
+      console.error(`Redirect ${i}`, { from: currentUrl, to: location, status: resp.status });
+      if (!location) break;
+      formReferer = currentUrl;
+      currentUrl = resolveUrl(location, currentUrl);
+      continue;
+    }
+
+    // 200 — this is the login form
+    formHtml = await resp.text().catch(() => '');
+    console.error('Login form found', {
+      url: currentUrl,
+      htmlLen: formHtml.length,
+      htmlSnippet: formHtml.slice(0, 300),
+    });
+    break;
+  }
+
+  if (!formHtml) {
+    console.error('loginWithWebFlow: could not reach login form', { finalUrl: currentUrl });
     return null;
   }
 
-  return resp.json();
+  // ── Step 2: extract CSRF token and all hidden inputs
+  const csrfMeta =
+    /<meta[^>]+name=["']csrf-token["'][^>]+content=["']([^"']+)["']/i.exec(formHtml) ??
+    /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']csrf-token["']/i.exec(formHtml);
+  const csrfToken = csrfMeta?.[1] ?? '';
+
+  const hiddenInputs: Record<string, string> = {};
+  const inputRe = /<input[^>]+type=["']hidden["'][^>]*>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = inputRe.exec(formHtml)) !== null) {
+    const nameM = /name=["']([^"']+)["']/.exec(m[0]);
+    const valM = /value=["']([^"']*)/.exec(m[0]);
+    if (nameM) hiddenInputs[nameM[1]] = valM?.[1] ?? '';
+  }
+
+  console.error('Form meta', {
+    csrfToken: csrfToken.slice(0, 20) + '…',
+    hiddenFields: Object.keys(hiddenInputs),
+  });
+
+  // ── Step 3: POST credentials to the login action URL
+  // Extract actual <form action="..."> in case it differs from LIBRUS_LOGIN_URL
+  let loginActionUrl = LIBRUS_LOGIN_URL;
+  const formActionM =
+    /<form[^>]+method=["']post["'][^>]*action=["']([^"']+)["']/i.exec(formHtml) ??
+    /<form[^>]+action=["']([^"']+)["'][^>]*method=["']post["']/i.exec(formHtml);
+  if (formActionM?.[1]) {
+    loginActionUrl = resolveUrl(formActionM[1], currentUrl);
+  }
+  console.error('Login action URL', { url: loginActionUrl });
+
+  const loginBody = new URLSearchParams({
+    ...hiddenInputs,
+    email,
+    password,
+  });
+
+  const loginHeaders: Record<string, string> = {
+    ...baseHeaders(),
+    'Content-Type': 'application/x-www-form-urlencoded',
+    Referer: currentUrl,
+  };
+  if (csrfToken) loginHeaders['X-CSRF-TOKEN'] = csrfToken;
+
+  const loginResp = await fetch(loginActionUrl, {
+    method: 'POST',
+    headers: loginHeaders,
+    redirect: 'manual',
+    body: loginBody.toString(),
+  });
+  mergeCookies(loginResp, jar);
+
+  const loginLocation = loginResp.headers.get('location') ?? '';
+  console.error('After login POST', {
+    status: loginResp.status,
+    location: loginLocation,
+    cookieKeys: Object.keys(jar),
+    sessionLen: jar['portal_librus_session']?.length ?? 0,
+  });
+
+  if (loginResp.status >= 400) {
+    const txt = await loginResp.text().catch(() => '');
+    console.error('Login POST rejected', { status: loginResp.status, body: txt.slice(0, 400) });
+    return null;
+  }
+
+  // ── Step 4: follow redirects until app://librus?code=XXX
+  let code: string | null = null;
+  let nextUrl = loginLocation ? resolveUrl(loginLocation, LIBRUS_LOGIN_URL) : LIBRUS_AUTHORIZE_URL;
+
+  for (let i = 0; i < 10; i++) {
+    if (nextUrl.startsWith('app://librus')) {
+      const codeParam = nextUrl.slice(nextUrl.indexOf('?') + 1);
+      code = new URLSearchParams(codeParam).get('code');
+      console.error('Got auth code', { codePrefix: code?.slice(0, 8) + '…' });
+      break;
+    }
+
+    const resp = await fetch(nextUrl, { headers: baseHeaders(), redirect: 'manual' });
+    mergeCookies(resp, jar);
+    const loc = resp.headers.get('location') ?? '';
+    console.error(`Follow ${i}`, { url: nextUrl, status: resp.status, location: loc });
+    if (!loc) break;
+    nextUrl = resolveUrl(loc, nextUrl);
+  }
+
+  if (!code) {
+    console.error('loginWithWebFlow: no auth code in redirect chain', { lastUrl: nextUrl });
+    return null;
+  }
+
+  // ── Step 5: exchange code for portal access token
+  const tokenResp = await fetch(LIBRUS_TOKEN_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'User-Agent': LIBRUS_USER_AGENT,
+    },
+    body: new URLSearchParams({
+      client_id: LIBRUS_CLIENT_ID,
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: LIBRUS_REDIRECT_URL,
+    }).toString(),
+  });
+
+  const tokenText = await tokenResp.text();
+  console.error('Portal token exchange', {
+    status: tokenResp.status,
+    body: tokenText.slice(0, 300),
+  });
+
+  if (!tokenResp.ok) return null;
+
+  let portalToken: Record<string, unknown>;
+  try {
+    portalToken = JSON.parse(tokenText);
+  } catch {
+    return null;
+  }
+
+  const portalAccessToken = portalToken.access_token as string;
+  const portalRefreshToken = (portalToken.refresh_token as string) ?? '';
+  const expiresIn = (portalToken.expires_in as number) ?? 3600;
+
+  // ── Step 6: exchange portal token for Synergia API access token
+  // Use /v3/SynergiaAccounts (no login param) — portal email ≠ Synergia numeric login
+  const apiToken = await fetchSynergiaToken(portalAccessToken);
+  if (!apiToken) return null;
+
+  return { access_token: apiToken, refresh_token: portalRefreshToken, expires_in: expiresIn };
+}
+
+// ─── Fetch Synergia API token from the Portal accounts endpoint ───────────────
+// Uses the portal Bearer token to get the api.librus.pl access token.
+async function fetchSynergiaToken(
+  portalAccessToken: string,
+  login?: string,
+): Promise<string | null> {
+  const url = login
+    ? `${LIBRUS_PORTAL_URL}/v3/SynergiaAccounts/fresh/${encodeURIComponent(login)}`
+    : `${LIBRUS_PORTAL_URL}/v3/SynergiaAccounts`;
+
+  const resp = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${portalAccessToken}`,
+      'User-Agent': LIBRUS_USER_AGENT,
+      Accept: 'application/json',
+    },
+  });
+
+  const txt = await resp.text();
+  console.error('SynergiaAccounts', { url, status: resp.status, body: txt.slice(0, 400) });
+  if (!resp.ok) return null;
+
+  let data: Record<string, unknown>;
+  try {
+    data = JSON.parse(txt);
+  } catch {
+    return null;
+  }
+
+  // Response is either { account: { accessToken } } (fresh) or { accounts: [{ accessToken }] }
+  const account =
+    (data.account as Record<string, unknown>) ??
+    ((data.accounts as Record<string, unknown>[])?.[0] as Record<string, unknown>);
+  const apiToken = (account?.accessToken as string) ?? (account?.access_token as string);
+
+  if (!apiToken) {
+    console.error('SynergiaAccounts: no accessToken in response', { keys: Object.keys(data) });
+  }
+  return apiToken ?? null;
+}
+
+// ─── Refresh portal token → new Synergia API token ───────────────────────────
+async function refreshAccessToken(
+  portalRefreshToken: string,
+): Promise<{ access_token: string; refresh_token: string; expires_in: number } | null> {
+  const resp = await fetch(LIBRUS_TOKEN_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'User-Agent': LIBRUS_USER_AGENT,
+    },
+    body: new URLSearchParams({
+      client_id: LIBRUS_CLIENT_ID,
+      grant_type: 'refresh_token',
+      refresh_token: portalRefreshToken,
+    }).toString(),
+  });
+
+  const txt = await resp.text();
+  console.error('Portal refresh', { status: resp.status, body: txt.slice(0, 300) });
+  if (!resp.ok) {
+    console.error('Librus refresh_token failed', { status: resp.status });
+    return null;
+  }
+
+  let portalToken: Record<string, unknown>;
+  try {
+    portalToken = JSON.parse(txt);
+  } catch {
+    return null;
+  }
+
+  const newPortalAccessToken = portalToken.access_token as string;
+  const newPortalRefreshToken = (portalToken.refresh_token as string) ?? portalRefreshToken;
+  const expiresIn = (portalToken.expires_in as number) ?? 3600;
+
+  // Exchange portal access token for Synergia API access token
+  const apiToken = await fetchSynergiaToken(newPortalAccessToken);
+  if (!apiToken) return null;
+
+  return { access_token: apiToken, refresh_token: newPortalRefreshToken, expires_in: expiresIn };
 }
 
 // ─── Librus API GET request ─────────────────────────────────
@@ -84,14 +373,13 @@ async function librusGet(
     headers: {
       Authorization: `Bearer ${accessToken}`,
       'User-Agent': LIBRUS_USER_AGENT,
+      Accept: 'application/json',
     },
   });
-
   if (!resp.ok) {
     console.error(`Librus API error ${resp.status} for /${endpoint}`);
     return null;
   }
-
   return resp.json();
 }
 
@@ -146,6 +434,15 @@ serve(async (req) => {
       return json({ error: 'household_id, member_id, username and password are required' }, 400);
     }
 
+    // Trim whitespace — a trailing space in the username causes Librus to
+    // return unsupported_grant_type even though the grant_type field is correct.
+    const trimmedUsername = username.trim();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedUsername || !trimmedPassword) {
+      return json({ error: 'username and password must not be blank' }, 400);
+    }
+
     // Verify caller is an active member of the household.
     // We must filter by user_id explicitly so that maybeSingle() never
     // receives multiple rows (owners/admins can see all household members
@@ -175,8 +472,8 @@ serve(async (req) => {
       return json({ error: 'Forbidden: member_id does not belong to this household' }, 403);
     }
 
-    // Authenticate with Librus
-    const tokens = await fetchLibrusToken('password', { username, password });
+    // Authenticate with Librus via the web OAuth flow (client_id=46)
+    const tokens = await loginWithWebFlow(trimmedUsername, trimmedPassword);
     if (!tokens) {
       return json(
         {
@@ -223,7 +520,7 @@ serve(async (req) => {
           sync_error: null,
         },
         {
-          onConflict: 'household_id,member_id,platform',
+          onConflict: 'member_id,platform',
           ignoreDuplicates: false,
         },
       )
@@ -279,9 +576,7 @@ serve(async (req) => {
     if (connErr || !conn) return json({ error: 'Connection not found or access denied' }, 404);
     if (!conn.refresh_token) return json({ error: 'No refresh token stored' }, 400);
 
-    const tokens = await fetchLibrusToken('refresh_token', {
-      refresh_token: conn.refresh_token,
-    });
+    const tokens = await refreshAccessToken(conn.refresh_token);
 
     if (!tokens) return json({ error: 'Token refresh failed' }, 502);
 
