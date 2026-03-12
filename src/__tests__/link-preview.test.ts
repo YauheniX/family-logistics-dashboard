@@ -31,7 +31,7 @@ describe('LinkPreview', () => {
 
     // Mock localStorage
     localStorageMock = {};
-    global.localStorage = {
+    vi.stubGlobal('localStorage', {
       getItem: vi.fn((key: string) => localStorageMock[key] || null),
       setItem: vi.fn((key: string, value: string) => {
         localStorageMock[key] = value;
@@ -44,11 +44,12 @@ describe('LinkPreview', () => {
       }),
       key: vi.fn(),
       length: 0,
-    } as Storage;
+    } as Storage);
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   afterAll(() => {

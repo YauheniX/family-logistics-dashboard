@@ -105,36 +105,42 @@ alter table public.school_connections
 -- Replace table-level UNIQUE(connection_id, external_id) (which treats
 -- NULL as distinct, allowing infinite NULLs) with partial unique indexes
 -- that only enforce uniqueness when external_id IS NOT NULL.
+--
+-- NOTE (updated): partial unique indexes with a WHERE clause cannot be
+-- resolved by PostgREST's column-name onConflict syntax, which would break
+-- Edge Function upserts.  Standard UNIQUE constraints already permit
+-- multiple NULL external_id rows (PostgreSQL NULL != NULL semantics), so
+-- we restore named UNIQUE constraints that PostgREST can resolve.
 
 -- school_grades
 alter table public.school_grades drop constraint if exists school_grades_connection_id_external_id_key;
-create unique index if not exists idx_school_grades_conn_ext_id_unique
-  on public.school_grades (connection_id, external_id)
-  where external_id is not null;
+alter table public.school_grades
+  add constraint school_grades_connection_id_external_id_key
+  unique (connection_id, external_id);
 
 -- school_homework
 alter table public.school_homework drop constraint if exists school_homework_connection_id_external_id_key;
-create unique index if not exists idx_school_homework_conn_ext_id_unique
-  on public.school_homework (connection_id, external_id)
-  where external_id is not null;
+alter table public.school_homework
+  add constraint school_homework_connection_id_external_id_key
+  unique (connection_id, external_id);
 
 -- school_attendance
 alter table public.school_attendance drop constraint if exists school_attendance_connection_id_external_id_key;
-create unique index if not exists idx_school_attendance_conn_ext_id_unique
-  on public.school_attendance (connection_id, external_id)
-  where external_id is not null;
+alter table public.school_attendance
+  add constraint school_attendance_connection_id_external_id_key
+  unique (connection_id, external_id);
 
 -- school_messages
 alter table public.school_messages drop constraint if exists school_messages_connection_id_external_id_key;
-create unique index if not exists idx_school_messages_conn_ext_id_unique
-  on public.school_messages (connection_id, external_id)
-  where external_id is not null;
+alter table public.school_messages
+  add constraint school_messages_connection_id_external_id_key
+  unique (connection_id, external_id);
 
 -- school_announcements
 alter table public.school_announcements drop constraint if exists school_announcements_connection_id_external_id_key;
-create unique index if not exists idx_school_announcements_conn_ext_id_unique
-  on public.school_announcements (connection_id, external_id)
-  where external_id is not null;
+alter table public.school_announcements
+  add constraint school_announcements_connection_id_external_id_key
+  unique (connection_id, external_id);
 
 -- school_timetable already uses (connection_id, date, lesson_number) and has
 -- no external_id unique constraint, so no change needed there.

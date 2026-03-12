@@ -1,53 +1,64 @@
 <template>
   <div>
-    <!-- Empty state -->
-    <div v-if="!grouped.length" class="text-center py-10 text-neutral-400">
-      <span class="text-4xl block mb-2">✅</span>
+    <!-- No-permission state: shown when the user has no role in the current household -->
+    <div
+      v-if="!canReadHouseholdResource"
+      class="text-center py-10 text-neutral-400 dark:text-neutral-500"
+    >
+      <span class="text-4xl block mb-2">🔒</span>
       {{ $t('school.attendance.empty') }}
     </div>
 
-    <!-- Records grouped by date -->
-    <div v-else class="space-y-4">
-      <div v-for="group in grouped" :key="group.date" class="space-y-1">
-        <h3
-          class="text-xs font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wide px-1"
-        >
-          {{ formatDay(group.date) }}
-        </h3>
+    <template v-else>
+      <!-- Empty state -->
+      <div v-if="!grouped.length" class="text-center py-10 text-neutral-400">
+        <span class="text-4xl block mb-2">✅</span>
+        {{ $t('school.attendance.empty') }}
+      </div>
 
-        <div
-          v-for="item in group.items"
-          :key="item.id"
-          class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700"
-        >
-          <!-- Type badge -->
-          <span
-            class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full text-sm font-bold"
-            :class="badgeClass(item.type_short ?? item.type)"
+      <!-- Records grouped by date -->
+      <div v-else class="space-y-4">
+        <div v-for="group in grouped" :key="group.date" class="space-y-1">
+          <h3
+            class="text-xs font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wide px-1"
           >
-            {{ item.type_short ?? item.type.charAt(0).toUpperCase() }}
-          </span>
+            {{ formatDay(group.date) }}
+          </h3>
 
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-neutral-800 dark:text-neutral-100 truncate">
-              {{ item.subject ?? typeName(item.type_short ?? item.type) }}
-            </p>
-            <p v-if="item.lesson_number" class="text-xs text-neutral-400 dark:text-neutral-500">
-              {{ $t('school.tabs.timetable') }} {{ item.lesson_number }}
-              <span v-if="item.teacher"> · {{ item.teacher }}</span>
-            </p>
+          <div
+            v-for="item in group.items"
+            :key="item.id"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700"
+          >
+            <!-- Type badge -->
+            <span
+              class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full text-sm font-bold"
+              :class="badgeClass(item.type_short ?? item.type)"
+            >
+              {{ item.type_short ?? (item.type?.charAt(0).toUpperCase() || '?') }}
+            </span>
+
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-neutral-800 dark:text-neutral-100 truncate">
+                {{ item.subject ?? typeName(item.type_short ?? item.type) }}
+              </p>
+              <p v-if="item.lesson_number" class="text-xs text-neutral-400 dark:text-neutral-500">
+                {{ $t('school.tabs.timetable') }} {{ item.lesson_number }}
+                <span v-if="item.teacher"> · {{ item.teacher }}</span>
+              </p>
+            </div>
+
+            <!-- New badge -->
+            <span
+              v-if="item.is_new"
+              class="text-[10px] font-semibold bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 px-1.5 py-0.5 rounded-full"
+            >
+              {{ $t('school.messages.unread') }}
+            </span>
           </div>
-
-          <!-- New badge -->
-          <span
-            v-if="item.is_new"
-            class="text-[10px] font-semibold bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 px-1.5 py-0.5 rounded-full"
-          >
-            {{ $t('school.messages.unread') }}
-          </span>
         </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -55,9 +66,11 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useSchoolStore } from '@/features/school/presentation/school.store';
+import { useHouseholdPermissions } from '@/composables/useHouseholdPermissions';
 
 const { t, locale } = useI18n();
 const schoolStore = useSchoolStore();
+const { canReadHouseholdResource } = useHouseholdPermissions();
 
 // ─── Group records by date ────────────────────────────────
 const grouped = computed(() => {

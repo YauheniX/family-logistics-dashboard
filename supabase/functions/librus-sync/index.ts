@@ -37,17 +37,29 @@ function json(data: unknown, status = 200) {
 type LibrusResponse = Record<string, unknown>;
 
 async function librusGet(endpoint: string, accessToken: string): Promise<LibrusResponse> {
-  const resp = await fetch(`${LIBRUS_API_URL}/${endpoint}`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'User-Agent': LIBRUS_USER_AGENT,
-    },
-  });
-  if (!resp.ok) {
-    const body = await resp.text().catch(() => '');
-    throw new Error(`Librus GET /${endpoint} ${resp.status}: ${body}`);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10_000);
+  try {
+    const resp = await fetch(`${LIBRUS_API_URL}/${endpoint}`, {
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'User-Agent': LIBRUS_USER_AGENT,
+      },
+    });
+    if (!resp.ok) {
+      const body = await resp.text().catch(() => '');
+      throw new Error(`Librus GET /${endpoint} ${resp.status}: ${body}`);
+    }
+    return resp.json();
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new Error(`Librus GET /${endpoint} timed out after 10s`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
   }
-  return resp.json();
 }
 
 async function refreshToken(refreshTokenStr: string): Promise<{
