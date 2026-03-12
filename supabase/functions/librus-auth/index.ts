@@ -126,6 +126,15 @@ serve(async (req) => {
     return json({ error: 'Invalid JSON body' }, 400);
   }
 
+  // Resolve caller identity once; used by permission checks below.
+  const {
+    data: { user },
+    error: userErr,
+  } = await userClient.auth.getUser();
+  if (userErr || !user) {
+    return json({ error: 'Unauthorized: invalid or missing auth token' }, 401);
+  }
+
   const action = body.action as string;
 
   // ── action: connect ──────────────────────────────────────
@@ -141,11 +150,15 @@ serve(async (req) => {
       return json({ error: 'household_id, member_id, username and password are required' }, 400);
     }
 
-    // Verify caller is an active member of the household
+    // Verify caller is an active member of the household.
+    // We must filter by user_id explicitly so that maybeSingle() never
+    // receives multiple rows (owners/admins can see all household members
+    // via RLS, which would cause maybeSingle to return an error).
     const { data: membership, error: memberErr } = await userClient
       .from('members')
       .select('id, role')
       .eq('household_id', household_id)
+      .eq('user_id', user.id)
       .eq('is_active', true)
       .maybeSingle();
 
