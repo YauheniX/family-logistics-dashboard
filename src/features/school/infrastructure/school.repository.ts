@@ -20,7 +20,22 @@ async function invokeFunction<T>(
   name: string,
   body: Record<string, unknown>,
 ): Promise<ApiResponse<T>> {
-  const { data, error } = await supabase.functions.invoke<T>(name, { body });
+  // Explicitly fetch the session and forward the Bearer token.
+  // supabase.functions.invoke() does this internally too, but only when its
+  // internal GoTrueClient finds the session under the configured storageKey.
+  // Being explicit avoids a silent 401 if that lookup ever misses.
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    return { data: null, error: { message: 'Not authenticated. Please sign in and try again.' } };
+  }
+
+  const { data, error } = await supabase.functions.invoke<T>(name, {
+    body,
+    headers: { Authorization: `Bearer ${session.access_token}` },
+  });
   if (error) return { data: null, error: { message: error.message } };
   return { data: data as T, error: null };
 }

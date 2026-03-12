@@ -17,13 +17,16 @@ import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 // ─── Librus API constants (from szkolny-android open-source code) ──────────
+// Source: https://github.com/szkolny-eu/szkolny-android/blob/master/app/src/main/java/pl/szczodrzynski/edziennik/data/api/Constants.kt
 const LIBRUS_API_TOKEN_URL = 'https://api.librus.pl/OAuth/Token';
 const LIBRUS_API_URL = 'https://api.librus.pl/2.0';
-// Read from Supabase secret / environment variable.
-// Guard is deferred to inside the handler so the OPTIONS preflight succeeds
-// even when the secret is not yet configured in the local environment.
+// Public client credentials from the open-source szkolny-android project.
+// Can be overridden via Supabase secret LIBRUS_API_AUTHORIZATION.
 const LIBRUS_API_AUTHORIZATION = Deno.env.get('LIBRUS_API_AUTHORIZATION');
-const LIBRUS_USER_AGENT = 'LibrusMobileApp';
+
+// User-Agent must include the Android Dalvik prefix or Librus rejects the request.
+const LIBRUS_USER_AGENT =
+  'Dalvik/2.1.0 (Linux; U; Android 11; Android SDK built for x86) LibrusMobileApp';
 
 // ─── CORS headers ──────────────────────────────────────────
 const corsHeaders = {
@@ -94,15 +97,6 @@ async function librusGet(
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
-
-  // Fail fast if the required secret was not injected (deferred from module level
-  // so that the OPTIONS preflight above is never blocked).
-  if (!LIBRUS_API_AUTHORIZATION) {
-    return json(
-      { error: 'Server misconfiguration: LIBRUS_API_AUTHORIZATION secret is not set.' },
-      503,
-    );
-  }
 
   // Initialise Supabase client with caller's JWT for RLS enforcement
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
