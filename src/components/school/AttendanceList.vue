@@ -23,14 +23,14 @@
           <!-- Type badge -->
           <span
             class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full text-sm font-bold"
-            :class="badgeClass(item.type)"
+            :class="badgeClass(item.type_short ?? item.type)"
           >
             {{ item.type_short ?? item.type.charAt(0).toUpperCase() }}
           </span>
 
           <div class="flex-1 min-w-0">
             <p class="text-sm font-medium text-neutral-800 dark:text-neutral-100 truncate">
-              {{ item.subject ?? typeName(item.type) }}
+              {{ item.subject ?? typeName(item.type_short ?? item.type) }}
             </p>
             <p v-if="item.lesson_number" class="text-xs text-neutral-400 dark:text-neutral-500">
               {{ $t('school.tabs.timetable') }} {{ item.lesson_number }}
@@ -75,7 +75,8 @@ const grouped = computed(() => {
 
 // ─── Helpers ─────────────────────────────────────────────
 function formatDay(iso: string): string {
-  return new Date(iso).toLocaleDateString(locale.value, {
+  const [year, month, day] = iso.split('-').map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString(locale.value, {
     weekday: 'long',
     day: 'numeric',
     month: 'short',

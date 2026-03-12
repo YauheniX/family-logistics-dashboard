@@ -19,8 +19,13 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 // ─── Librus API constants (from szkolny-android open-source code) ──────────
 const LIBRUS_API_TOKEN_URL = 'https://api.librus.pl/OAuth/Token';
 const LIBRUS_API_URL = 'https://api.librus.pl/2.0';
-// Authorization: Basic base64("28:84fdd3a87b03d3ea6ffe777b58b332b1")
-const LIBRUS_API_AUTHORIZATION = 'Mjg6ODRmZGQzYTg3YjAzZDNlYTZmZmU3NzdiNThiMzMyYjE=';
+// Read from Supabase secret / environment variable; fail fast if missing
+const LIBRUS_API_AUTHORIZATION = Deno.env.get('LIBRUS_API_AUTHORIZATION');
+if (!LIBRUS_API_AUTHORIZATION) {
+  throw new Error(
+    'Missing required secret: LIBRUS_API_AUTHORIZATION. Set it via `supabase secrets set`.',
+  );
+}
 const LIBRUS_USER_AGENT = 'LibrusMobileApp';
 
 // ─── CORS headers ──────────────────────────────────────────
@@ -140,6 +145,19 @@ serve(async (req) => {
 
     if (memberErr || !membership) {
       return json({ error: 'Forbidden: not a household member' }, 403);
+    }
+
+    // Verify the submitted member_id belongs to the same household
+    const { data: targetMember, error: targetMemberErr } = await serviceClient
+      .from('members')
+      .select('id')
+      .eq('id', member_id)
+      .eq('household_id', household_id)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (targetMemberErr || !targetMember) {
+      return json({ error: 'Forbidden: member_id does not belong to this household' }, 403);
     }
 
     // Authenticate with Librus

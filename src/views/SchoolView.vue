@@ -131,7 +131,7 @@
 
       <!-- ─── Disconnect button ───────────────────────────── -->
       <div
-        v-if="schoolStore.activeConnectionId && !showConnect"
+        v-if="schoolStore.activeConnectionId && !showConnect && householdStore.isOwnerOrAdmin"
         class="pt-4 border-t border-neutral-100 dark:border-neutral-800 flex justify-end"
       >
         <button
@@ -149,7 +149,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, defineAsyncComponent } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { storeToRefs } from 'pinia';
 import { useSchoolStore } from '@/features/school/presentation/school.store';
 import { useHouseholdStore } from '@/stores/household';
 import { useMembers } from '@/composables/useMembers';
@@ -241,11 +240,15 @@ onMounted(async () => {
 });
 
 // ─── Handlers ────────────────────────────────────────────────
+async function switchConnection(connId: string) {
+  schoolStore.setActiveConnection(connId);
+  await schoolStore.loadAllData(connId);
+}
+
 async function onConnected(connectionId: string) {
   showConnect.value = false;
   if (connectionId) {
-    schoolStore.setActiveConnection(connectionId);
-    await schoolStore.syncConnection(connectionId);
+    await switchConnection(connectionId);
   }
 }
 

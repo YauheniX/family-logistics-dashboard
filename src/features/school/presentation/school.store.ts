@@ -100,6 +100,19 @@ export const useSchoolStore = defineStore('school', () => {
         error.value = response.error.message;
       } else {
         connections.value = response.data ?? [];
+        // If the previously-active connection no longer exists in this household, clear it and its caches
+        if (
+          activeConnectionId.value &&
+          !connections.value.find((c) => c.id === activeConnectionId.value)
+        ) {
+          activeConnectionId.value = null;
+          grades.value = {};
+          timetable.value = {};
+          homework.value = {};
+          attendance.value = {};
+          messages.value = {};
+          announcements.value = {};
+        }
         // Auto-select first active connection if none selected
         if (!activeConnectionId.value && connections.value.length > 0) {
           activeConnectionId.value = connections.value[0].id;
@@ -123,6 +136,10 @@ export const useSchoolStore = defineStore('school', () => {
 
       // Reload connections to get the full row
       await loadConnections(dto.household_id);
+      if (error.value) {
+        useToastStore().error(`Connected but failed to reload connections: ${error.value}`);
+        return false;
+      }
       useToastStore().success('School account connected!');
       return true;
     } finally {
@@ -130,7 +147,7 @@ export const useSchoolStore = defineStore('school', () => {
     }
   }
 
-  async function disconnectSchool(connectionId: string, householdId: string): Promise<boolean> {
+  async function disconnectSchool(connectionId: string, _householdId: string): Promise<boolean> {
     loading.value = true;
     try {
       const response = await schoolService.disconnectSchool(connectionId);
@@ -220,10 +237,15 @@ export const useSchoolStore = defineStore('school', () => {
   }
 
   async function loadMessages(connectionId: string) {
-    const response = await schoolService.getMessages(connectionId, 'inbox');
-    if (!response.error && response.data) {
-      messages.value = { ...messages.value, [connectionId]: response.data };
-    }
+    const [inboxRes, sentRes] = await Promise.allSettled([
+      schoolService.getMessages(connectionId, 'inbox'),
+      schoolService.getMessages(connectionId, 'sent'),
+    ]);
+    const inbox =
+      inboxRes.status === 'fulfilled' && !inboxRes.value.error ? (inboxRes.value.data ?? []) : [];
+    const sent =
+      sentRes.status === 'fulfilled' && !sentRes.value.error ? (sentRes.value.data ?? []) : [];
+    messages.value = { ...messages.value, [connectionId]: [...inbox, ...sent] };
   }
 
   async function loadAnnouncements(connectionId: string) {

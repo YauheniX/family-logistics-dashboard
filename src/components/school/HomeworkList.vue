@@ -69,17 +69,22 @@ const { t, locale } = useI18n();
 
 const homework = computed(() => schoolStore.activeHomework);
 
-const todayStr = new Date().toISOString().slice(0, 10);
+// Local start-of-today (no UTC shift)
+const today = new Date();
+today.setHours(0, 0, 0, 0);
 
 async function toggleDone(item: SchoolHomework) {
   if (!schoolStore.activeConnectionId) return;
   await schoolStore.toggleHomeworkDone(item.id, schoolStore.activeConnectionId, !item.is_done);
 }
 
+function parseDateLocal(dateStr: string): Date {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
 function dueDateClass(dateStr: string): string {
-  const diff = Math.floor(
-    (new Date(dateStr).getTime() - new Date(todayStr).getTime()) / 86_400_000,
-  );
+  const diff = Math.floor((parseDateLocal(dateStr).getTime() - today.getTime()) / 86_400_000);
   if (diff < 0) return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300';
   if (diff === 0) return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300';
   if (diff <= 2) return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300';
@@ -87,13 +92,12 @@ function dueDateClass(dateStr: string): string {
 }
 
 function formatDue(dateStr: string): string {
-  const diff = Math.floor(
-    (new Date(dateStr).getTime() - new Date(todayStr).getTime()) / 86_400_000,
-  );
+  const due = parseDateLocal(dateStr);
+  const diff = Math.floor((due.getTime() - today.getTime()) / 86_400_000);
   if (diff < 0) return t('school.homework.overdue', { date: dateStr });
   if (diff === 0) return t('school.homework.today');
   if (diff === 1) return t('school.homework.tomorrow');
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString(locale.value, {
+  return due.toLocaleDateString(locale.value, {
     weekday: 'short',
     day: 'numeric',
     month: 'short',

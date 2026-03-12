@@ -111,22 +111,19 @@ export class SchoolRepository {
   }
 
   async getTodayTimetable(connectionId: string): Promise<ApiResponse<SchoolLesson[]>> {
-    const today = new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     return this.getTimetable(connectionId, today, today);
   }
 
   async getWeekTimetable(connectionId: string): Promise<ApiResponse<SchoolLesson[]>> {
-    const today = new Date();
-    const day = today.getDay() || 7;
-    const monday = new Date(today);
-    monday.setDate(today.getDate() - day + 1);
-    const friday = new Date(monday);
-    friday.setDate(monday.getDate() + 4);
-    return this.getTimetable(
-      connectionId,
-      monday.toISOString().slice(0, 10),
-      friday.toISOString().slice(0, 10),
-    );
+    const now = new Date();
+    const day = now.getDay() || 7;
+    const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day + 1);
+    const friday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 4);
+    const fmt = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return this.getTimetable(connectionId, fmt(monday), fmt(friday));
   }
 
   // ── Homework ───────────────────────────────────────────

@@ -11,13 +11,18 @@
       <div
         v-for="item in schoolStore.activeAnnouncements"
         :key="item.id"
-        class="px-4 py-3 rounded-xl border"
+        role="button"
+        tabindex="0"
+        :aria-expanded="expanded.has(item.id)"
+        class="px-4 py-3 rounded-xl border cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
         :class="
           item.is_new
             ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-700'
             : 'bg-white dark:bg-neutral-800 border-neutral-100 dark:border-neutral-700'
         "
         @click="toggleExpanded(item.id)"
+        @keydown.enter.prevent="toggleExpanded(item.id)"
+        @keydown.space.prevent="toggleExpanded(item.id)"
       >
         <!-- Header -->
         <div class="flex items-start gap-2">

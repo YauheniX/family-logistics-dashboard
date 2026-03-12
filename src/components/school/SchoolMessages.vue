@@ -32,13 +32,18 @@
       <div
         v-for="msg in filtered"
         :key="msg.id"
-        class="px-4 py-3 rounded-xl border transition-colors cursor-default"
+        role="button"
+        tabindex="0"
+        :aria-expanded="expanded.has(msg.id)"
+        class="px-4 py-3 rounded-xl border transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
         :class="
           !msg.is_read
             ? 'bg-primary-50 dark:bg-primary-900/10 border-primary-200 dark:border-primary-700'
             : 'bg-white dark:bg-neutral-800 border-neutral-100 dark:border-neutral-700'
         "
         @click="toggleExpanded(msg.id)"
+        @keydown.enter.prevent="toggleExpanded(msg.id)"
+        @keydown.space.prevent="toggleExpanded(msg.id)"
       >
         <!-- Header row -->
         <div class="flex items-start gap-2">

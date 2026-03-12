@@ -62,13 +62,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { useSchoolStore } from '@/features/school/presentation/school.store';
 import { schoolService } from '@/features/school/domain/school.service';
 import type { SchoolGrade } from '@/features/school/domain/school.entities';
 
 const schoolStore = useSchoolStore();
-const { t } = useI18n();
 
 const bySubject = computed(() => schoolStore.gradesBySubject);
 

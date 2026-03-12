@@ -102,11 +102,12 @@ import { useI18n } from 'vue-i18n';
 import { useSchoolStore } from '@/features/school/presentation/school.store';
 
 const schoolStore = useSchoolStore();
-const { t, locale } = useI18n();
+const { locale } = useI18n();
 
 const lessonsByDate = computed(() => schoolStore.lessonsByDate);
 
-const todayStr = new Date().toISOString().slice(0, 10);
+const _now = new Date();
+const todayStr = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-${String(_now.getDate()).padStart(2, '0')}`;
 
 function isToday(date: string): boolean {
   return date === todayStr;

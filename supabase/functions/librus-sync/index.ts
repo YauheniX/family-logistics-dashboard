@@ -9,8 +9,15 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 const LIBRUS_API_URL = 'https://api.librus.pl/2.0';
 const LIBRUS_API_TOKEN_URL = 'https://api.librus.pl/OAuth/Token';
-const LIBRUS_API_AUTHORIZATION = 'Mjg6ODRmZGQzYTg3YjAzZDNlYTZmZmU3NzdiNThiMzMyYjE=';
 const LIBRUS_USER_AGENT = 'LibrusMobileApp';
+
+// Read from Supabase secret / environment variable; fail fast if missing
+const LIBRUS_API_AUTHORIZATION = Deno.env.get('LIBRUS_API_AUTHORIZATION');
+if (!LIBRUS_API_AUTHORIZATION) {
+  throw new Error(
+    'Missing required secret: LIBRUS_API_AUTHORIZATION. Set it via `supabase secrets set`.',
+  );
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -29,7 +36,7 @@ function json(data: unknown, status = 200) {
 
 type LibrusResponse = Record<string, unknown>;
 
-async function librusGet(endpoint: string, accessToken: string): Promise<LibrusResponse | null> {
+async function librusGet(endpoint: string, accessToken: string): Promise<LibrusResponse> {
   const resp = await fetch(`${LIBRUS_API_URL}/${endpoint}`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -37,8 +44,8 @@ async function librusGet(endpoint: string, accessToken: string): Promise<LibrusR
     },
   });
   if (!resp.ok) {
-    console.warn(`Librus GET /${endpoint} → ${resp.status}`);
-    return null;
+    const body = await resp.text().catch(() => '');
+    throw new Error(`Librus GET /${endpoint} ${resp.status}: ${body}`);
   }
   return resp.json();
 }
