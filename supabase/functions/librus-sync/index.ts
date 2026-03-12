@@ -50,6 +50,9 @@ async function librusGet(endpoint: string, accessToken: string): Promise<LibrusR
       },
     });
     if (!resp.ok) {
+      // 403 AccessDeny means the account type lacks access to this resource
+      // (e.g. parent accounts can't access Messages). Treat as empty — not an error.
+      if (resp.status === 403) return null as unknown as LibrusResponse;
       const body = await resp.text().catch(() => '');
       throw new Error(`Librus GET /${endpoint} ${resp.status}: ${body}`);
     }
@@ -139,32 +142,92 @@ async function syncGrades(
   accessToken: string,
   serviceClient: ReturnType<typeof createClient>,
 ) {
-  const [gradesData, categoriesData, subjectsData, usersData] = await Promise.all([
+  // Fetch all grade types + lookup data in parallel.
+  // Librus schools use different grading systems: numbered (1-6), point-based, or descriptive.
+  const [
+    gradesData,
+    pointGradesData,
+    descriptiveGradesData,
+    categoriesData,
+    subjectsData,
+    usersData,
+  ] = await Promise.all([
     librusGet('Grades', accessToken),
+    librusGet('PointGrades', accessToken),
+    librusGet('DescriptiveGrades', accessToken),
     librusGet('Grades/Categories', accessToken),
     librusGet('Subjects', accessToken),
     librusGet('Users', accessToken),
   ]);
 
-  const grades = (gradesData?.Grades as Record<string, unknown>[]) ?? [];
   const catMap = buildCategoryMap(categoriesData, 'Categories');
   const subMap = buildSubjectMap(subjectsData);
   const userMap = buildUserMap(usersData);
 
-  if (!grades.length) return 0;
+  const rows: Record<string, unknown>[] = [];
 
-  const rows = grades.map((g) => ({
-    connection_id: connectionId,
-    external_id: String(g.Id),
-    subject: resolveRef(g as Record<string, unknown>, 'Subject', subMap),
-    grade: String(g.Grade ?? ''),
-    weight: Number(g.Weight) || null,
-    category: resolveRef(g as Record<string, unknown>, 'Category', catMap),
-    comment: (g.Comments as string) ?? null,
-    added_by: resolveRef(g as Record<string, unknown>, 'AddedBy', userMap),
-    date: (g.Date as string) ?? new Date().toISOString().slice(0, 10),
-    is_new: false,
-  }));
+  // Normal numbered grades (1–6 scale)
+  const normalGrades = (gradesData?.Grades as Record<string, unknown>[]) ?? [];
+  for (const g of normalGrades) {
+    rows.push({
+      connection_id: connectionId,
+      external_id: `n_${g.Id}`,
+      subject: resolveRef(g, 'Subject', subMap),
+      grade: String(g.Grade ?? ''),
+      weight: Number(g.Weight) || null,
+      category: resolveRef(g, 'Category', catMap),
+      comment: g.Comments ? JSON.stringify(g.Comments) : null,
+      added_by: resolveRef(g, 'AddedBy', userMap),
+      date: (g.Date as string) ?? (g.AddDate as string) ?? new Date().toISOString().slice(0, 10),
+      is_new: false,
+    });
+  }
+
+  // Point-based grades (e.g. 18/25)
+  const pointGrades = (pointGradesData?.Grades as Record<string, unknown>[]) ?? [];
+  for (const g of pointGrades) {
+    const gradeValue = g.GradeValue ?? g.Grade;
+    rows.push({
+      connection_id: connectionId,
+      external_id: `p_${g.Id}`,
+      subject: resolveRef(g, 'Subject', subMap),
+      grade: String(gradeValue ?? ''),
+      weight: Number(g.Weight) || null,
+      category: resolveRef(g, 'Category', catMap),
+      comment: null,
+      added_by: resolveRef(g, 'AddedBy', userMap),
+      date: (g.Date as string) ?? (g.AddDate as string) ?? new Date().toISOString().slice(0, 10),
+      is_new: false,
+    });
+  }
+
+  // Descriptive / text grades
+  const descriptiveGrades = (descriptiveGradesData?.Grades as Record<string, unknown>[]) ?? [];
+  for (const g of descriptiveGrades) {
+    const gradeText =
+      (g.Map as string) ?? (g.RealGradeValue as string) ?? (g.Grade as string) ?? '';
+    rows.push({
+      connection_id: connectionId,
+      external_id: `d_${g.Id}`,
+      subject: resolveRef(g, 'Subject', subMap),
+      grade: gradeText,
+      weight: null,
+      category: resolveRef(g, 'Skill', catMap),
+      comment: (g.Phrase as string) ?? null,
+      added_by: resolveRef(g, 'AddedBy', userMap),
+      date: (g.Date as string) ?? (g.AddDate as string) ?? new Date().toISOString().slice(0, 10),
+      is_new: false,
+    });
+  }
+
+  console.error('Grades sync summary', {
+    normal: normalGrades.length,
+    point: pointGrades.length,
+    descriptive: descriptiveGrades.length,
+    total: rows.length,
+  });
+
+  if (!rows.length) return 0;
 
   const { error } = await serviceClient.from('school_grades').upsert(rows, {
     onConflict: 'connection_id,external_id',
