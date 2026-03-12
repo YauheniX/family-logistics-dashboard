@@ -122,6 +122,7 @@ const navItems = computed<NavItem[]>(() => [
 // Additional items in "More" menu
 const moreItems = computed<NavItem[]>(() => [
   { name: 'household-list', label: t('nav.households'), to: '/households', emoji: '🏠' },
+  { name: 'school', label: t('nav.school'), to: '/school', emoji: '🏫' },
   { name: 'apps', label: t('nav.apps'), to: '/apps', emoji: '📱' },
   { name: 'settings', label: t('nav.settings'), to: '/settings', emoji: '⚙️' },
 ]);

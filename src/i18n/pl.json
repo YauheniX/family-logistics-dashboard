@@ -22,7 +22,8 @@
     "apps": "Aplikacje",
     "settings": "Ustawienia",
     "home": "Strona główna",
-    "more": "Więcej"
+    "more": "Więcej",
+    "school": "Szkoła"
   },
   "auth": {
     "login": {
@@ -270,6 +271,73 @@
     "inviteModal": {
       "title": "Zaproś członka gospodarstwa",
       "emailLabel": "Adres e-mail"
+    }
+  },
+  "school": {
+    "title": "Szkoła",
+    "sync": "Synchronizuj",
+    "syncing": "Synchronizacja\u2026",
+    "addConnection": "+ Połącz",
+    "loading": "Ładowanie\u2026",
+    "noConnectionTitle": "Połącz szkołę swojego dziecka",
+    "noConnectionDesc": "Połącz konto Librus Synergia, aby zobaczyć oceny, plan lekcji, zadania i więcej.",
+    "connectAccountBtn": "Połącz konto szkolne",
+    "lastSynced": "Ostatnia synchronizacja: {date}",
+    "notSyncedYet": "Jeszcze nie zsynchronizowano. Naciśnij Synchronizuj, aby pobrać dane.",
+    "disconnectBtn": "Rozłącz konto",
+    "disconnectConfirm": "Odłączyć to konto szkolne? Wszystkie zapisane dane zostaną usunięte.",
+    "connect": {
+      "title": "Połącz konto szkolne",
+      "subtitle": "Librus Synergia",
+      "instructions": "Podaj login Synergia i hasło ucznia.",
+      "memberLabel": "Członek gospodarstwa",
+      "memberPlaceholder": "Wybierz członka\u2026",
+      "loginLabel": "Login Synergia",
+      "loginPlaceholder": "np. 1234567u",
+      "passwordLabel": "Hasło",
+      "connectingBtn": "Łączenie\u2026",
+      "connectBtn": "Połącz",
+      "disclaimer": "Dane logowania są używane wyłącznie do pobrania tokenu API i nie są nigdzie przechowywane."
+    },
+    "tabs": {
+      "timetable": "Plan lekcji",
+      "grades": "Oceny",
+      "homework": "Zadania",
+      "attendance": "Frekwencja",
+      "messages": "Wiadomości",
+      "announcements": "Ogłoszenia"
+    },
+    "grades": {
+      "empty": "Brak ocen. Zsynchronizuj, aby załadować najnowsze oceny.",
+      "avg": "śr"
+    },
+    "timetable": {
+      "empty": "Nie załadowano planu lekcji. Zsynchronizuj, aby zobaczyć plan na ten tydzień.",
+      "today": "Dziś",
+      "substitution": "Zastępstwo"
+    },
+    "attendance": {
+      "empty": "Brak danych o obecności. Zsynchronizuj dane.",
+      "present": "Obecny",
+      "absent": "Nieobecny",
+      "late": "Spóźniony",
+      "excused": "Usprawiedliwiony"
+    },
+    "messages": {
+      "empty": "Brak wiadomości. Zsynchronizuj skrzynkę.",
+      "inbox": "Odebrane",
+      "sent": "Wysłane",
+      "unread": "nieprzeczytanych"
+    },
+    "announcements": {
+      "empty": "Brak ogłoszeń. Zsynchronizuj dane.",
+      "new": "nowe"
+    },
+    "homework": {
+      "empty": "Nie znaleziono zadań. Zsynchronizuj, aby załadować zadania.",
+      "today": "Dziś",
+      "tomorrow": "Jutro",
+      "overdue": "po terminie ({date})"
     }
   }
 }

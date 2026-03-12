@@ -118,6 +118,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useHouseholdStore } from '@/stores/household';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
 import { useWishlistStore } from '@/features/wishlist/presentation/wishlist.store';
+import { useSchoolStore } from '@/features/school/presentation/school.store';
 import { useTheme } from '@/composables/useTheme';
 import { useUserProfile } from '@/composables/useUserProfile';
 import { resolveUserProfile } from '@/utils/profileResolver';
@@ -126,6 +127,7 @@ const authStore = useAuthStore();
 const householdStore = useHouseholdStore();
 const shoppingStore = useShoppingStore();
 const wishlistStore = useWishlistStore();
+const schoolStore = useSchoolStore();
 const route = useRoute();
 const router = useRouter();
 const { initTheme } = useTheme();
@@ -175,6 +177,7 @@ watch(
       householdStore.$reset();
       shoppingStore.$reset();
       wishlistStore.$reset();
+      schoolStore.$reset();
     }
   },
 );

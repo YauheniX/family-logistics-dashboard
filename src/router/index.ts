@@ -108,6 +108,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/school',
+      name: 'school',
+      component: () => import('@/views/SchoolView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       redirect: { name: 'dashboard' },

@@ -22,7 +22,8 @@
     "apps": "Apps",
     "settings": "Settings",
     "home": "Home",
-    "more": "More"
+    "more": "More",
+    "school": "School"
   },
   "auth": {
     "login": {
@@ -270,6 +271,73 @@
     "inviteModal": {
       "title": "Invite Household Member",
       "emailLabel": "Email address"
+    }
+  },
+  "school": {
+    "title": "School",
+    "sync": "Sync",
+    "syncing": "Syncing\u2026",
+    "addConnection": "+ Connect",
+    "loading": "Loading\u2026",
+    "noConnectionTitle": "Connect your child's school",
+    "noConnectionDesc": "Link a Librus Synergia account to see grades, timetable, homework, and more.",
+    "connectAccountBtn": "Connect School Account",
+    "lastSynced": "Last synced: {date}",
+    "notSyncedYet": "Not synced yet. Press Sync to fetch school data.",
+    "disconnectBtn": "Disconnect this account",
+    "disconnectConfirm": "Disconnect this school account? All cached data will be deleted.",
+    "connect": {
+      "title": "Connect School Account",
+      "subtitle": "Librus Synergia",
+      "instructions": "Enter the student's Synergia login (e.g. 1234567u) and password.",
+      "memberLabel": "Household member",
+      "memberPlaceholder": "Select a member\u2026",
+      "loginLabel": "Synergia login",
+      "loginPlaceholder": "e.g. 1234567u",
+      "passwordLabel": "Password",
+      "connectingBtn": "Connecting\u2026",
+      "connectBtn": "Connect",
+      "disclaimer": "Credentials are used only to obtain an API token and are never stored."
+    },
+    "tabs": {
+      "timetable": "Timetable",
+      "grades": "Grades",
+      "homework": "Homework",
+      "attendance": "Attendance",
+      "messages": "Messages",
+      "announcements": "Notices"
+    },
+    "grades": {
+      "empty": "No grades yet. Sync to load the latest grades.",
+      "avg": "avg"
+    },
+    "timetable": {
+      "empty": "No timetable loaded. Sync to see this week's schedule.",
+      "today": "Today",
+      "substitution": "Substitution"
+    },
+    "homework": {
+      "empty": "No homework found. Sync to load assignments.",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "overdue": "overdue ({date})"
+    },
+    "attendance": {
+      "empty": "No attendance records. Sync to load data.",
+      "present": "Present",
+      "absent": "Absent",
+      "late": "Late",
+      "excused": "Excused"
+    },
+    "messages": {
+      "empty": "No messages. Sync to load your inbox.",
+      "inbox": "Inbox",
+      "sent": "Sent",
+      "unread": "unread"
+    },
+    "announcements": {
+      "empty": "No announcements. Sync to load notices.",
+      "new": "new"
     }
   }
 }
