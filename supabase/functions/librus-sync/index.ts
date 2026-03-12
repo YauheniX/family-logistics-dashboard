@@ -11,13 +11,10 @@ const LIBRUS_API_URL = 'https://api.librus.pl/2.0';
 const LIBRUS_API_TOKEN_URL = 'https://api.librus.pl/OAuth/Token';
 const LIBRUS_USER_AGENT = 'LibrusMobileApp';
 
-// Read from Supabase secret / environment variable; fail fast if missing
+// Read from Supabase secret / environment variable.
+// Guard is deferred to inside the handler so the OPTIONS preflight succeeds
+// even when the secret is not yet configured in the local environment.
 const LIBRUS_API_AUTHORIZATION = Deno.env.get('LIBRUS_API_AUTHORIZATION');
-if (!LIBRUS_API_AUTHORIZATION) {
-  throw new Error(
-    'Missing required secret: LIBRUS_API_AUTHORIZATION. Set it via `supabase secrets set`.',
-  );
-}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -407,6 +404,15 @@ async function syncAnnouncements(
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+
+  // Fail fast if the required secret was not injected (deferred from module level
+  // so that the OPTIONS preflight above is never blocked).
+  if (!LIBRUS_API_AUTHORIZATION) {
+    return json(
+      { error: 'Server misconfiguration: LIBRUS_API_AUTHORIZATION secret is not set.' },
+      503,
+    );
+  }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
