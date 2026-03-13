@@ -117,7 +117,6 @@ async function loginWithWebFlow(
   // ── Step 1: follow redirects from the authorize URL until we hit the login form
   let currentUrl = LIBRUS_AUTHORIZE_URL;
   let formHtml = '';
-  let _formReferer = LIBRUS_AUTHORIZE_URL;
 
   for (let i = 0; i < 10; i++) {
     const resp = await fetch(currentUrl, { headers: baseHeaders(), redirect: 'manual' });
@@ -128,7 +127,6 @@ async function loginWithWebFlow(
     if (resp.status >= 300 && resp.status < 400) {
       console.error(`Redirect ${i}`, { from: currentUrl, to: location, status: resp.status });
       if (!location) break;
-      _formReferer = currentUrl;
       currentUrl = resolveUrl(location, currentUrl);
       continue;
     }

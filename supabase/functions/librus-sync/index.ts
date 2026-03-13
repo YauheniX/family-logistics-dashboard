@@ -34,7 +34,7 @@ function json(data: unknown, status = 200) {
 
 type LibrusResponse = Record<string, unknown>;
 
-async function librusGet(endpoint: string, accessToken: string): Promise<LibrusResponse> {
+async function librusGet(endpoint: string, accessToken: string): Promise<LibrusResponse | null> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10_000);
   try {
@@ -55,7 +55,7 @@ async function librusGet(endpoint: string, accessToken: string): Promise<LibrusR
       //   403 – AccessDeny  (e.g. parent accounts can't access Messages)
       //   404 – endpoint doesn't exist for this account (e.g. Messages/Sent)
       if (resp.status === 400 || resp.status === 403 || resp.status === 404) {
-        return null as unknown as LibrusResponse;
+        return null;
       }
       const body = await resp.text().catch(() => '');
       throw new Error(`Librus GET /${endpoint} ${resp.status}: ${body}`);
@@ -145,7 +145,7 @@ function djb2(str: string): string {
 /** Hash of the meaningful fields of a row (excludes bookkeeping columns). */
 function rowHash(row: Record<string, unknown>): string {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { connection_id: _c, external_id: _e, is_new: _n, ...rest } = row;
+  const { connection_id: _c, external_id: _e, is_new: _n, content_hash: _h, ...rest } = row;
   const sorted = Object.fromEntries(Object.entries(rest).sort(([a], [b]) => a.localeCompare(b)));
   return djb2(JSON.stringify(sorted));
 }
@@ -208,7 +208,8 @@ async function syncGrades(
   });
 
   if (error) console.error('Sync grades error:', error);
-  return changedRows.length;
+  // Return total fetched (not just changed) so counts.grades reflects how many grades exist.
+  return rows.length;
 }
 
 async function syncTimetable(
