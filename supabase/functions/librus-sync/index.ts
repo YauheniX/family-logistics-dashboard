@@ -170,24 +170,38 @@ async function syncGrades(
   const rawGrades = (descriptiveGradesData?.Grades as Record<string, unknown>[]) ?? [];
   if (!rawGrades.length) return 0;
 
-  const rows: Record<string, unknown>[] = rawGrades.map((g) => ({
-    connection_id: connectionId,
-    external_id: `d_${g.Id}`,
-    subject: resolveRef(g, 'Subject', subMap),
-    grade: (g.Map as string) ?? (g.RealGradeValue as string) ?? (g.Grade as string) ?? '',
-    weight: null,
-    category: resolveRef(g, 'Skill', subMap), // descriptive grades use Skill refs
-    comment: (g.Phrase as string) ?? null,
-    added_by: resolveRef(g, 'AddedBy', userMap),
-    date: (g.Date as string) ?? (g.AddDate as string) ?? new Date().toISOString().slice(0, 10),
-    is_new: false,
-  }));
+  const rows: Record<string, unknown>[] = rawGrades
+    .map((g) => ({
+      connection_id: connectionId,
+      external_id: `d_${g.Id}`,
+      subject: resolveRef(g, 'Subject', subMap),
+      grade: (g.Map as string) ?? (g.RealGradeValue as string) ?? (g.Grade as string) ?? '',
+      weight: null,
+      category: resolveRef(g, 'Skill', subMap), // descriptive grades use Skill refs
+      comment: (g.Phrase as string) ?? null,
+      added_by: resolveRef(g, 'AddedBy', userMap),
+      // Only use the API-supplied date — no Date() fallback to prevent rowHash drift.
+      date: (g.Date as string) ?? (g.AddDate as string) ?? null,
+      is_new: false,
+    }))
+    // Drop any grades the API returned without a date (schema requires non-null).
+    .filter((r) => r.date !== null);
+
+  // ── Delete grades removed upstream ─────────────────────
+  const currentIds = rows.map((r) => r.external_id as string);
+  const { error: delError } = await serviceClient
+    .from('school_grades')
+    .delete()
+    .eq('connection_id', connectionId)
+    .not('external_id', 'in', `(${currentIds.map((id) => `"${id}"`).join(',')})`);
+  if (delError) throw delError;
 
   // ── Skip rows whose content hasn't changed ─────────────
-  const { data: existing } = await serviceClient
+  const { data: existing, error: selectError } = await serviceClient
     .from('school_grades')
     .select('external_id, content_hash')
     .eq('connection_id', connectionId);
+  if (selectError) throw selectError;
 
   const storedHash = new Map(
     (existing ?? []).map((r: { external_id: string; content_hash: string }) => [
@@ -200,15 +214,16 @@ async function syncGrades(
     .map((r) => ({ ...r, content_hash: rowHash(r) }))
     .filter((r) => storedHash.get(r.external_id as string) !== r.content_hash);
 
-  if (!changedRows.length) return 0;
+  // Nothing to upsert — still return total so counts.grades reflects reality.
+  if (!changedRows.length) return rows.length;
 
-  const { error } = await serviceClient.from('school_grades').upsert(changedRows, {
+  const { error: upsertError } = await serviceClient.from('school_grades').upsert(changedRows, {
     onConflict: 'connection_id,external_id',
     ignoreDuplicates: false,
   });
+  if (upsertError) throw upsertError;
 
-  if (error) console.error('Sync grades error:', error);
-  // Return total fetched (not just changed) so counts.grades reflects how many grades exist.
+  // Return total fetched so counts.grades reflects how many grades exist.
   return rows.length;
 }
 
