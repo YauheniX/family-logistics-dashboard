@@ -4,9 +4,11 @@
     <div
       class="sticky top-0 z-10 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-700"
     >
-      <div class="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+      <div class="max-w-4xl mx-auto px-3 sm:px-6 py-3 flex items-center gap-2 sm:gap-3">
         <span class="text-2xl">🏫</span>
-        <h1 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 flex-1">
+        <h1
+          class="text-base sm:text-lg font-semibold text-neutral-900 dark:text-neutral-100 flex-1 truncate"
+        >
           {{ $t('school.title') }}
         </h1>
 
@@ -15,21 +17,24 @@
           v-if="schoolStore.activeConnectionId"
           type="button"
           :disabled="schoolStore.syncing"
-          class="btn-secondary text-sm flex items-center gap-1.5"
+          class="btn-secondary text-sm flex items-center gap-1.5 shrink-0"
           @click="handleSync"
         >
           <span :class="schoolStore.syncing ? 'animate-spin' : ''">🔄</span>
-          {{ schoolStore.syncing ? $t('school.syncing') : $t('school.sync') }}
+          <span class="hidden sm:inline">{{
+            schoolStore.syncing ? $t('school.syncing') : $t('school.sync')
+          }}</span>
         </button>
 
         <!-- Add connection button -->
-        <button type="button" class="btn-primary text-sm" @click="showConnect = true">
-          {{ $t('school.addConnection') }}
+        <button type="button" class="btn-primary text-sm shrink-0" @click="showConnect = true">
+          <span class="sm:hidden">+</span>
+          <span class="hidden sm:inline">{{ $t('school.addConnection') }}</span>
         </button>
       </div>
     </div>
 
-    <div class="max-w-2xl mx-auto px-4 py-4 space-y-4">
+    <div class="max-w-4xl mx-auto px-3 sm:px-6 py-4 space-y-4">
       <!-- ─── Loading ──────────────────────────────────────── -->
       <div v-if="schoolStore.loading" class="text-center py-12 text-neutral-400">
         <span class="text-4xl block mb-2 animate-pulse">⏳</span>
@@ -51,13 +56,15 @@
       </div>
 
       <!-- ─── Connect form ────────────────────────────────── -->
-      <SchoolConnect
-        v-if="showConnect"
-        :household-id="householdId"
-        :members="householdMembers"
-        @cancel="showConnect = false"
-        @connected="onConnected"
-      />
+      <div v-if="showConnect" class="sm:flex sm:justify-center">
+        <SchoolConnect
+          :household-id="householdId"
+          :members="householdMembers"
+          class="w-full sm:max-w-md"
+          @cancel="showConnect = false"
+          @connected="onConnected"
+        />
+      </div>
 
       <!-- ─── Connected: connection picker ───────────────── -->
       <div v-else-if="schoolStore.connections.length" class="flex gap-2 flex-wrap">
@@ -78,17 +85,21 @@
       </div>
 
       <!-- ─── Last synced info ─────────────────────────────── -->
-      <p
+      <div
         v-if="schoolStore.activeConnection?.last_synced_at"
-        class="text-xs text-neutral-400 dark:text-neutral-500"
+        class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3"
       >
-        {{
-          $t('school.lastSynced', { date: formatDate(schoolStore.activeConnection.last_synced_at) })
-        }}
-        <span v-if="schoolStore.activeConnection.sync_error" class="text-red-500 ml-2">
+        <p class="text-xs text-neutral-400 dark:text-neutral-500">
+          {{
+            $t('school.lastSynced', {
+              date: formatDate(schoolStore.activeConnection.last_synced_at),
+            })
+          }}
+        </p>
+        <p v-if="schoolStore.activeConnection.sync_error" class="text-xs text-red-500">
           ⚠️ {{ schoolStore.activeConnection.sync_error }}
-        </span>
-      </p>
+        </p>
+      </div>
       <p
         v-else-if="schoolStore.activeConnectionId && !schoolStore.syncing"
         class="text-xs text-neutral-400 dark:text-neutral-500"
@@ -100,13 +111,13 @@
       <div v-if="schoolStore.activeConnectionId && !showConnect">
         <!-- Tab bar -->
         <div
-          class="flex gap-1 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl mb-4 overflow-x-auto"
+          class="grid grid-cols-3 sm:flex sm:flex-wrap gap-1 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl mb-4"
         >
           <button
             v-for="tab in tabs"
             :key="tab.id"
             type="button"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0"
+            class="flex items-center justify-center sm:justify-start gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors"
             :class="
               activeTab === tab.id
                 ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm'
@@ -115,10 +126,10 @@
             @click="activeTab = tab.id"
           >
             <span>{{ tab.icon }}</span>
-            {{ tab.label }}
+            <span class="hidden xs:inline sm:inline truncate">{{ tab.label }}</span>
             <span
               v-if="tab.badge"
-              class="ml-0.5 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center"
+              class="ml-0.5 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center shrink-0"
             >
               {{ tab.badge }}
             </span>
