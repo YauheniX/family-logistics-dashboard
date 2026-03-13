@@ -50,9 +50,13 @@ async function librusGet(endpoint: string, accessToken: string): Promise<LibrusR
       },
     });
     if (!resp.ok) {
-      // 403 AccessDeny means the account type lacks access to this resource
-      // (e.g. parent accounts can't access Messages). Treat as empty — not an error.
-      if (resp.status === 403) return null as unknown as LibrusResponse;
+      // Treat "resource unavailable for this account type" as empty rather than an error:
+      //   400 – InvalidRequest / wrong endpoint for this account variant (e.g. Timetables)
+      //   403 – AccessDeny  (e.g. parent accounts can't access Messages)
+      //   404 – endpoint doesn't exist for this account (e.g. Messages/Sent)
+      if (resp.status === 400 || resp.status === 403 || resp.status === 404) {
+        return null as unknown as LibrusResponse;
+      }
       const body = await resp.text().catch(() => '');
       throw new Error(`Librus GET /${endpoint} ${resp.status}: ${body}`);
     }
@@ -120,19 +124,30 @@ function buildSubjectMap(subjectsData: LibrusResponse | null): IdMap {
   return map;
 }
 
-function buildCategoryMap(categoriesData: LibrusResponse | null, key: string): IdMap {
-  const cats = (categoriesData?.[key] as Record<string, unknown>[]) ?? [];
-  const map: IdMap = {};
-  for (const c of cats) {
-    map[c.Id as string | number] = c.Name as string;
-  }
-  return map;
-}
-
 function resolveRef(obj: Record<string, unknown> | undefined, field: string, map: IdMap): string {
   const ref = obj?.[field] as Record<string, unknown> | undefined;
   if (!ref?.Id) return '';
   return map[ref.Id as string | number] ?? String(ref.Id);
+}
+
+// ─── Content-hash helpers ─────────────────────────────────
+// Lightweight djb2 hash — sync, no async crypto overhead.
+// Used to detect whether a grade row has actually changed since last sync.
+
+function djb2(str: string): string {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = (((hash << 5) + hash) ^ str.charCodeAt(i)) | 0;
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
+/** Hash of the meaningful fields of a row (excludes bookkeeping columns). */
+function rowHash(row: Record<string, unknown>): string {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { connection_id: _c, external_id: _e, is_new: _n, ...rest } = row;
+  const sorted = Object.fromEntries(Object.entries(rest).sort(([a], [b]) => a.localeCompare(b)));
+  return djb2(JSON.stringify(sorted));
 }
 
 // ─── Sync routines ──────────────────────────────────────────
@@ -142,100 +157,58 @@ async function syncGrades(
   accessToken: string,
   serviceClient: ReturnType<typeof createClient>,
 ) {
-  // Fetch all grade types + lookup data in parallel.
-  // Librus schools use different grading systems: numbered (1-6), point-based, or descriptive.
-  const [
-    gradesData,
-    pointGradesData,
-    descriptiveGradesData,
-    categoriesData,
-    subjectsData,
-    usersData,
-  ] = await Promise.all([
-    librusGet('Grades', accessToken),
-    librusGet('PointGrades', accessToken),
+  // Fetch descriptive/text grades + lookup tables in parallel.
+  const [descriptiveGradesData, subjectsData, usersData] = await Promise.all([
     librusGet('DescriptiveGrades', accessToken),
-    librusGet('Grades/Categories', accessToken),
     librusGet('Subjects', accessToken),
     librusGet('Users', accessToken),
   ]);
 
-  const catMap = buildCategoryMap(categoriesData, 'Categories');
   const subMap = buildSubjectMap(subjectsData);
   const userMap = buildUserMap(usersData);
 
-  const rows: Record<string, unknown>[] = [];
+  const rawGrades = (descriptiveGradesData?.Grades as Record<string, unknown>[]) ?? [];
+  if (!rawGrades.length) return 0;
 
-  // Normal numbered grades (1–6 scale)
-  const normalGrades = (gradesData?.Grades as Record<string, unknown>[]) ?? [];
-  for (const g of normalGrades) {
-    rows.push({
-      connection_id: connectionId,
-      external_id: `n_${g.Id}`,
-      subject: resolveRef(g, 'Subject', subMap),
-      grade: String(g.Grade ?? ''),
-      weight: Number(g.Weight) || null,
-      category: resolveRef(g, 'Category', catMap),
-      comment: g.Comments ? JSON.stringify(g.Comments) : null,
-      added_by: resolveRef(g, 'AddedBy', userMap),
-      date: (g.Date as string) ?? (g.AddDate as string) ?? new Date().toISOString().slice(0, 10),
-      is_new: false,
-    });
-  }
+  const rows: Record<string, unknown>[] = rawGrades.map((g) => ({
+    connection_id: connectionId,
+    external_id: `d_${g.Id}`,
+    subject: resolveRef(g, 'Subject', subMap),
+    grade: (g.Map as string) ?? (g.RealGradeValue as string) ?? (g.Grade as string) ?? '',
+    weight: null,
+    category: resolveRef(g, 'Skill', subMap), // descriptive grades use Skill refs
+    comment: (g.Phrase as string) ?? null,
+    added_by: resolveRef(g, 'AddedBy', userMap),
+    date: (g.Date as string) ?? (g.AddDate as string) ?? new Date().toISOString().slice(0, 10),
+    is_new: false,
+  }));
 
-  // Point-based grades (e.g. 18/25)
-  const pointGrades = (pointGradesData?.Grades as Record<string, unknown>[]) ?? [];
-  for (const g of pointGrades) {
-    const gradeValue = g.GradeValue ?? g.Grade;
-    rows.push({
-      connection_id: connectionId,
-      external_id: `p_${g.Id}`,
-      subject: resolveRef(g, 'Subject', subMap),
-      grade: String(gradeValue ?? ''),
-      weight: Number(g.Weight) || null,
-      category: resolveRef(g, 'Category', catMap),
-      comment: null,
-      added_by: resolveRef(g, 'AddedBy', userMap),
-      date: (g.Date as string) ?? (g.AddDate as string) ?? new Date().toISOString().slice(0, 10),
-      is_new: false,
-    });
-  }
+  // ── Skip rows whose content hasn't changed ─────────────
+  const { data: existing } = await serviceClient
+    .from('school_grades')
+    .select('external_id, content_hash')
+    .eq('connection_id', connectionId);
 
-  // Descriptive / text grades
-  const descriptiveGrades = (descriptiveGradesData?.Grades as Record<string, unknown>[]) ?? [];
-  for (const g of descriptiveGrades) {
-    const gradeText =
-      (g.Map as string) ?? (g.RealGradeValue as string) ?? (g.Grade as string) ?? '';
-    rows.push({
-      connection_id: connectionId,
-      external_id: `d_${g.Id}`,
-      subject: resolveRef(g, 'Subject', subMap),
-      grade: gradeText,
-      weight: null,
-      category: resolveRef(g, 'Skill', catMap),
-      comment: (g.Phrase as string) ?? null,
-      added_by: resolveRef(g, 'AddedBy', userMap),
-      date: (g.Date as string) ?? (g.AddDate as string) ?? new Date().toISOString().slice(0, 10),
-      is_new: false,
-    });
-  }
+  const storedHash = new Map(
+    (existing ?? []).map((r: { external_id: string; content_hash: string }) => [
+      r.external_id,
+      r.content_hash,
+    ]),
+  );
 
-  console.error('Grades sync summary', {
-    normal: normalGrades.length,
-    point: pointGrades.length,
-    descriptive: descriptiveGrades.length,
-    total: rows.length,
-  });
+  const changedRows = rows
+    .map((r) => ({ ...r, content_hash: rowHash(r) }))
+    .filter((r) => storedHash.get(r.external_id as string) !== r.content_hash);
 
-  if (!rows.length) return 0;
+  if (!changedRows.length) return 0;
 
-  const { error } = await serviceClient.from('school_grades').upsert(rows, {
+  const { error } = await serviceClient.from('school_grades').upsert(changedRows, {
     onConflict: 'connection_id,external_id',
     ignoreDuplicates: false,
   });
 
   if (error) console.error('Sync grades error:', error);
-  return rows.length;
+  return changedRows.length;
 }
 
 async function syncTimetable(
