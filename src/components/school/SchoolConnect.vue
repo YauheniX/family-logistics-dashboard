@@ -35,7 +35,7 @@
         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
           {{ $t('school.connect.memberLabel') }}
         </label>
-        <select v-model="form.member_id" required class="input-field w-full">
+        <select v-model="form.member_id" required class="input w-full">
           <option value="" disabled>{{ $t('school.connect.memberPlaceholder') }}</option>
           <option v-for="m in members" :key="m.id" :value="m.id">
             {{ m.display_name }}
@@ -50,12 +50,15 @@
         </label>
         <input
           v-model="form.username"
-          type="text"
-          autocomplete="username"
+          type="email"
+          autocomplete="email"
           :placeholder="$t('school.connect.loginPlaceholder')"
           required
-          class="input-field w-full"
+          class="input w-full"
         />
+        <p class="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+          {{ $t('school.connect.loginHint') }}
+        </p>
       </div>
 
       <!-- Password -->
@@ -69,7 +72,7 @@
           autocomplete="current-password"
           placeholder="••••••••"
           required
-          class="input-field w-full"
+          class="input w-full"
         />
       </div>
 

@@ -475,7 +475,8 @@ serve(async (req) => {
     if (!tokens) {
       return json(
         {
-          error: 'Librus authentication failed. Check your username and password (Synergia login).',
+          error:
+            'Librus authentication failed. Check your Librus email and password (portal.librus.pl account, not Synergia numeric login).',
         },
         401,
       );

@@ -135,10 +135,11 @@ export class SchoolRepository {
     const now = new Date();
     const day = now.getDay() || 7;
     const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day + 1);
-    const friday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 4);
+    // Show 2 weeks: current week Mon + 13 days (Mon–Sun of next week)
+    const twoWeeksFriday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 11);
     const fmt = (d: Date) =>
       `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    return this.getTimetable(connectionId, fmt(monday), fmt(friday));
+    return this.getTimetable(connectionId, fmt(monday), fmt(twoWeeksFriday));
   }
 
   // ── Homework ───────────────────────────────────────────

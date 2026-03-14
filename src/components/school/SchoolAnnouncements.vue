@@ -47,13 +47,13 @@
         <!-- Expanded content -->
         <p
           v-if="expanded.has(item.id) && item.content"
-          class="mt-2 text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap cursor-default"
+          class="mt-2 text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap cursor-default max-h-64 overflow-y-auto"
         >
           {{ item.content }}
         </p>
         <p
           v-else-if="item.content"
-          class="mt-1 text-xs text-neutral-500 dark:text-neutral-400 truncate cursor-pointer"
+          class="mt-1 text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2 cursor-pointer"
         >
           {{ item.content }}
         </p>

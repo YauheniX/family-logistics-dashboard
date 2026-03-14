@@ -276,8 +276,8 @@ async function syncTimetable(
           classroom: (classroomRef.Name as string) ?? '',
           start_time: (lesson.HourFrom as string) ?? null,
           end_time: (lesson.HourTo as string) ?? null,
-          is_substitution: Boolean(lesson.IsSubstitutionClass),
-          is_cancelled: Boolean(lesson.IsCanceled),
+          is_substitution: Boolean(lessonData.IsSubstitutionClass),
+          is_cancelled: Boolean(lessonData.IsCanceled),
           substitution_note: (lesson.SubstitutionNote as string) ?? null,
           external_id: `${dateStr}_${lessonNum}`,
         });
@@ -292,7 +292,7 @@ async function syncTimetable(
     ignoreDuplicates: false,
   });
 
-  if (error) console.error('Sync timetable error:', error);
+  if (error) throw new Error(`Sync timetable DB error: ${error.message}`);
   return rows.length;
 }
 
@@ -393,28 +393,62 @@ async function syncMessages(
   serviceClient: ReturnType<typeof createClient>,
 ) {
   const endpoint = direction === 'inbox' ? 'Messages' : 'Messages/Sent';
-  const data = await librusGet(endpoint, accessToken);
-  const messages = (data?.Messages as Record<string, unknown>[]) ?? [];
 
+  // Fetch messages list + users in parallel for sender name resolution.
+  // Sender/Receivers in the list are refs {Id, Url} — NOT inline name objects.
+  const [data, usersData] = await Promise.all([
+    librusGet(endpoint, accessToken),
+    librusGet('Users', accessToken),
+  ]);
+
+  if (data === null) {
+    // 403/404 → this account type doesn't support Messages.
+    console.error(`syncMessages(${direction}): endpoint returned null (403/404) — skipping`);
+    return 0;
+  }
+
+  const messages = (data?.Messages as Record<string, unknown>[]) ?? [];
   if (!messages.length) return 0;
 
-  const rows = messages.map((m) => {
-    const sender = m.Sender as Record<string, unknown>;
-    const senderName = sender ? [sender.FirstName, sender.LastName].filter(Boolean).join(' ') : '';
+  const userMap = buildUserMap(usersData);
 
-    const recipients = (m.Receivers as Record<string, unknown>[]) ?? [];
-    const recipientNames = recipients.map((r) =>
-      [r.FirstName, r.LastName].filter(Boolean).join(' '),
-    );
+  // Fetch bodies in parallel — the list endpoint omits Body.
+  // Cap at 30 to avoid excessive requests.
+  const bodyMap = new Map<string, string>();
+  const toFetch = messages.slice(0, 30);
+  const bodyResults = await Promise.allSettled(
+    toFetch.map((m) => librusGet(`Messages/${m.Id}`, accessToken)),
+  );
+  for (let i = 0; i < toFetch.length; i++) {
+    const r = bodyResults[i];
+    const id = String(toFetch[i].Id);
+    if (r.status === 'fulfilled' && r.value) {
+      const msgObj = r.value.Message as Record<string, unknown> | undefined;
+      const body = (msgObj?.Body as string) ?? (r.value.Body as string) ?? null;
+      if (body) bodyMap.set(id, body);
+    }
+  }
+
+  const rows = messages.map((m) => {
+    const id = String(m.Id);
+    // Sender is a ref {Id, Url} — resolve via userMap
+    const senderRef = m.Sender as Record<string, unknown> | undefined;
+    const senderName = senderRef?.Id ? (userMap[senderRef.Id as string | number] ?? null) : null;
+
+    // Receivers/Recipients are also refs
+    const recipientRefs = (m.Receivers as Record<string, unknown>[]) ?? [];
+    const recipientNames = recipientRefs
+      .map((r) => userMap[r.Id as string | number] ?? '')
+      .filter(Boolean);
 
     return {
       connection_id: connectionId,
-      external_id: String(m.Id),
+      external_id: id,
       direction,
-      sender: senderName || null,
+      sender: senderName,
       recipients: recipientNames,
       subject: (m.Subject as string) ?? '(no subject)',
-      body: (m.Body as string) ?? null,
+      body: bodyMap.get(id) ?? null,
       sent_at: (m.SendDate as string) ?? null,
       is_read: Boolean(m.IsRead),
       is_new: false,
@@ -426,7 +460,7 @@ async function syncMessages(
     ignoreDuplicates: false,
   });
 
-  if (error) console.error(`Sync messages (${direction}) error:`, error);
+  if (error) throw new Error(`Sync messages (${direction}) DB error: ${error.message}`);
   return rows.length;
 }
 
