@@ -28,9 +28,11 @@ export const useSchoolStore = defineStore('school', () => {
   const announcements = ref<Record<string, SchoolAnnouncement[]>>({});
 
   const loading = ref(false);
+  const dataLoading = ref(false);
   const syncing = ref(false);
   const connecting = ref(false);
   const error = ref<string | null>(null);
+  const dataError = ref<string | null>(null);
 
   // ─── Getters ──────────────────────────────────────────────
 
@@ -80,9 +82,11 @@ export const useSchoolStore = defineStore('school', () => {
     messages.value = {};
     announcements.value = {};
     loading.value = false;
+    dataLoading.value = false;
     syncing.value = false;
     connecting.value = false;
     error.value = null;
+    dataError.value = null;
   }
 
   function setActiveConnection(id: string | null) {
@@ -181,6 +185,7 @@ export const useSchoolStore = defineStore('school', () => {
   async function syncConnection(connectionId: string): Promise<SyncResult | null> {
     syncing.value = true;
     error.value = null;
+    dataError.value = null;
     try {
       const response = await schoolService.sync(connectionId);
       if (response.error) {
@@ -217,7 +222,9 @@ export const useSchoolStore = defineStore('school', () => {
 
   async function loadTimetable(connectionId: string) {
     const response = await schoolService.getWeekTimetable(connectionId);
-    if (!response.error && response.data) {
+    if (response.error) {
+      dataError.value = response.error.message;
+    } else if (response.data) {
       timetable.value = { ...timetable.value, [connectionId]: response.data };
     }
   }
@@ -245,6 +252,16 @@ export const useSchoolStore = defineStore('school', () => {
       inboxRes.status === 'fulfilled' && !inboxRes.value.error ? (inboxRes.value.data ?? []) : [];
     const sent =
       sentRes.status === 'fulfilled' && !sentRes.value.error ? (sentRes.value.data ?? []) : [];
+    if (
+      (inboxRes.status === 'fulfilled' && inboxRes.value.error) ||
+      (sentRes.status === 'fulfilled' && sentRes.value.error)
+    ) {
+      const msg =
+        (inboxRes.status === 'fulfilled' && inboxRes.value.error?.message) ||
+        (sentRes.status === 'fulfilled' && sentRes.value.error?.message) ||
+        'Failed to load messages';
+      dataError.value = msg as string;
+    }
     messages.value = { ...messages.value, [connectionId]: [...inbox, ...sent] };
   }
 
@@ -256,6 +273,8 @@ export const useSchoolStore = defineStore('school', () => {
   }
 
   async function loadAllData(connectionId: string) {
+    dataLoading.value = true;
+    dataError.value = null;
     await Promise.allSettled([
       loadGrades(connectionId),
       loadTimetable(connectionId),
@@ -264,6 +283,7 @@ export const useSchoolStore = defineStore('school', () => {
       loadMessages(connectionId),
       loadAnnouncements(connectionId),
     ]);
+    dataLoading.value = false;
   }
 
   async function toggleHomeworkDone(homeworkId: string, connectionId: string, isDone: boolean) {
@@ -288,9 +308,11 @@ export const useSchoolStore = defineStore('school', () => {
     messages,
     announcements,
     loading,
+    dataLoading,
     syncing,
     connecting,
     error,
+    dataError,
     // Getters
     activeConnection,
     activeGrades,

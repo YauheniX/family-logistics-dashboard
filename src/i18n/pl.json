@@ -315,7 +315,9 @@
     "timetable": {
       "empty": "Nie załadowano planu lekcji. Zsynchronizuj, aby zobaczyć plan na ten tydzień.",
       "today": "Dziś",
-      "substitution": "Zastępstwo"
+      "substitution": "Zastępstwo",
+      "emptyAfterSync": "Brak lekcji w tym okresie.",
+      "emptyAfterSyncHint": "Plan może nie być jeszcze opublikowany lub plan zajęć może być niedostępny dla tego typu konta."
     },
     "attendance": {
       "empty": "Brak danych o obecności. Zsynchronizuj dane.",
@@ -325,7 +327,11 @@
       "excused": "Usprawiedliwiony"
     },
     "messages": {
-      "empty": "Brak wiadomości. Zsynchronizuj skrzynkę.",
+      "empty": "Brak wiadomości. Zsynchronizuj, aby załadować skrzynkę.",
+      "emptyInbox": "Skrzynka odbiorcza jest pusta.",
+      "emptySent": "Brak wysłanych wiadomości.",
+      "unavailable": "Wiadomości niedostępne dla tego konta.",
+      "unavailableHint": "Moduł Wiadomości jest wyłączony dla tego typu konta Librus (np. konto ucznia lub rodzica bez funkcji Wiadomości).",
       "inbox": "Odebrane",
       "sent": "Wysłane",
       "unread": "nieprzeczytanych"
@@ -334,6 +340,7 @@
       "empty": "Brak ogłoszeń. Zsynchronizuj dane.",
       "new": "nowe"
     },
+    "luckyNumber": "Szczęśliwy numerek",
     "homework": {
       "empty": "Nie znaleziono zadań. Zsynchronizuj, aby załadować zadania.",
       "today": "Dziś",

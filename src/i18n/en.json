@@ -315,7 +315,9 @@
     "timetable": {
       "empty": "No timetable loaded. Sync to see this week's schedule.",
       "today": "Today",
-      "substitution": "Substitution"
+      "substitution": "Substitution",
+      "emptyAfterSync": "No lessons found for this period.",
+      "emptyAfterSyncHint": "The schedule may not be published yet, or timetables may not be available for this account type."
     },
     "homework": {
       "empty": "No homework found. Sync to load assignments.",
@@ -332,6 +334,10 @@
     },
     "messages": {
       "empty": "No messages. Sync to load your inbox.",
+      "emptyInbox": "Your inbox is empty.",
+      "emptySent": "No sent messages.",
+      "unavailable": "Messages not available for this account.",
+      "unavailableHint": "The Messages module is disabled for this Librus account type (e.g. student or parent account without the Messages feature).",
       "inbox": "Inbox",
       "sent": "Sent",
       "unread": "unread"
@@ -339,6 +345,7 @@
     "announcements": {
       "empty": "No announcements. Sync to load notices.",
       "new": "new"
-    }
+    },
+    "luckyNumber": "Lucky number"
   }
 }

@@ -76,7 +76,7 @@ export class SchoolRepository {
     const { data, error } = await db
       .from('school_connections')
       .select(
-        'id, household_id, member_id, platform, display_label, student_name, class_name, school_name, is_active, last_synced_at, sync_error, token_expiry, created_at, updated_at',
+        'id, household_id, member_id, platform, display_label, student_name, class_name, school_name, is_active, last_synced_at, sync_error, token_expiry, lucky_number, lucky_number_day, created_at, updated_at',
       )
       .eq('household_id', householdId)
       .order('created_at', { ascending: true });

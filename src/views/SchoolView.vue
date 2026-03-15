@@ -82,7 +82,12 @@
           "
           @click="schoolStore.setActiveConnection(conn.id)"
         >
-          {{ conn.sync_error ? '⚠️' : '🎓' }} {{ conn.display_label }}
+          {{ conn.sync_error ? '⚠️' : '🎓' }} {{ conn.display_label
+          }}<span
+            v-if="conn.lucky_number && conn.lucky_number_day === todayDate"
+            class="ml-1.5 font-normal opacity-90"
+            >🍀{{ conn.lucky_number }}</span
+          >
         </button>
       </div>
 
@@ -196,6 +201,8 @@ const householdId = computed(() => householdStore.currentHousehold?.id ?? '');
 const householdMembers = computed(() =>
   (members.value ?? []).map((m) => ({ id: m.id, display_name: m.display_name })),
 );
+
+const todayDate = computed(() => new Date().toISOString().slice(0, 10));
 
 const tabs = computed(() => [
   { id: 'timetable' as const, icon: '📅', label: t('school.tabs.timetable') },

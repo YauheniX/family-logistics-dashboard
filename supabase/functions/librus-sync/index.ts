@@ -33,6 +33,14 @@ function json(data: unknown, status = 200) {
 
 type LibrusResponse = Record<string, unknown>;
 
+/** Thrown when the API returns 400 with alternative Resource URLs */
+class Librus400Error extends Error {
+  resources: Record<string, { Url: string }> | null;
+  constructor(endpoint: string, resources: Record<string, { Url: string }> | null) {
+    super(`Librus GET /${endpoint} 400 InvalidRequest`);
+    this.resources = resources;
+  }
+}
 async function librusGet(endpoint: string, accessToken: string): Promise<LibrusResponse | null> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10_000);
@@ -49,15 +57,30 @@ async function librusGet(endpoint: string, accessToken: string): Promise<LibrusR
       },
     });
     if (!resp.ok) {
-      // Treat "resource unavailable for this account type" as empty rather than an error:
-      //   400 – InvalidRequest / wrong endpoint for this account variant (e.g. Timetables)
-      //   403 – AccessDeny  (e.g. parent accounts can't access Messages)
-      //   404 – endpoint doesn't exist for this account (e.g. Messages/Sent)
-      if (resp.status === 400 || resp.status === 403 || resp.status === 404) {
+      const body = await resp.text().catch(() => '');
+      // 403 / 404 → feature not available for this account type → treat as empty (not an error)
+      if (resp.status === 403 || resp.status === 404) {
+        console.warn(
+          `librusGet /${endpoint} → ${resp.status} (feature unavailable): ${body.slice(0, 200)}`,
+        );
         return null;
       }
-      const body = await resp.text().catch(() => '');
-      throw new Error(`Librus GET /${endpoint} ${resp.status}: ${body}`);
+      // 400 → "Invalid request params" — the response body contains a Resources map
+      //         of valid alternative endpoint URLs for this account type.
+      //         Throw a typed error so callers (e.g. syncTimetable) can fall back.
+      let resources: Record<string, { Url: string }> | null = null;
+      try {
+        resources = (JSON.parse(body) as LibrusResponse).Resources as Record<
+          string,
+          { Url: string }
+        >;
+      } catch {
+        /* ok */
+      }
+      console.warn(
+        `librusGet /${endpoint} → 400. Available resources: ${resources ? Object.keys(resources).join(', ') : 'none'}`,
+      );
+      throw new Librus400Error(endpoint, resources);
     }
     return resp.json();
   } catch (err) {
@@ -270,19 +293,6 @@ async function syncTimetable(
   accessToken: string,
   serviceClient: ReturnType<typeof createClient>,
 ) {
-  // Librus timetable requires a week param: WeekStart=YYYY-MM-DD
-  const today = new Date();
-  const dayOfWeek = today.getDay() || 7;
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - dayOfWeek + 1);
-
-  const weeks: string[] = [];
-  for (let w = 0; w < 2; w++) {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + w * 7);
-    weeks.push(d.toISOString().slice(0, 10));
-  }
-
   const subjectsData = await librusGet('Subjects', accessToken);
   const usersData = await librusGet('Users', accessToken);
   const subMap = buildSubjectMap(subjectsData);
@@ -290,37 +300,123 @@ async function syncTimetable(
 
   const rows: Record<string, unknown>[] = [];
 
-  for (const weekStart of weeks) {
-    const data = await librusGet(`Timetables?WeekStart=${weekStart}`, accessToken);
-    const timetable = (data?.Timetable as Record<string, unknown>) ?? {};
-
+  // Parse a Timetable response object (keyed by date → slot array) into rows.
+  function parseTimetableResponse(timetable: Record<string, unknown>, label: string) {
+    const dateKeys = Object.keys(timetable);
+    console.log(`syncTimetable: ${label} → ${dateKeys.length} days`);
     for (const [dateStr, dayData] of Object.entries(timetable)) {
-      const dayLessons = dayData as Record<string, unknown[]>;
-      for (const [lessonNum, lessonArr] of Object.entries(dayLessons)) {
-        const lesson = lessonArr?.[0] as Record<string, unknown>;
-        if (!lesson) continue;
-
-        const lessonData = (lesson.Lesson as Record<string, unknown>) ?? {};
-        const subjRef = (lessonData.Subject as Record<string, unknown>) ?? {};
-        const teacherRef = (lessonData.Teacher as Record<string, unknown>) ?? {};
-        const classroomRef = (lesson.Classroom as Record<string, unknown>) ?? {};
-
-        rows.push({
-          connection_id: connectionId,
-          date: dateStr,
-          lesson_number: Number(lessonNum),
-          subject: subMap[subjRef.Id as string | number] ?? (subjRef.Name as string) ?? '',
-          teacher: userMap[teacherRef.Id as string | number] ?? '',
-          classroom: (classroomRef.Name as string) ?? '',
-          start_time: (lesson.HourFrom as string) ?? null,
-          end_time: (lesson.HourTo as string) ?? null,
-          is_substitution: Boolean(lessonData.IsSubstitutionClass),
-          is_cancelled: Boolean(lessonData.IsCanceled),
-          substitution_note: (lesson.SubstitutionNote as string) ?? null,
-          external_id: `${dateStr}_${lessonNum}`,
-        });
+      // dayData is an array of lesson-slot arrays: [[lesson, ...], null, ...]
+      const daySlots = dayData as (Record<string, unknown>[] | null)[];
+      for (const lessonSlot of Array.isArray(daySlots) ? daySlots : []) {
+        if (!lessonSlot || !lessonSlot.length) continue;
+        for (const lesson of lessonSlot) {
+          if (!lesson || typeof lesson !== 'object') continue;
+          const subjRef = (lesson.Subject as Record<string, unknown>) ?? {};
+          const teacherRef = (lesson.Teacher as Record<string, unknown>) ?? {};
+          const classroomRef = (lesson.Classroom as Record<string, unknown>) ?? {};
+          rows.push({
+            connection_id: connectionId,
+            date: dateStr,
+            lesson_number: Number(lesson.LessonNo) || null,
+            subject: subMap[subjRef.Id as string | number] ?? (subjRef.Name as string) ?? '',
+            teacher: userMap[teacherRef.Id as string | number] ?? '',
+            classroom: (classroomRef.Name as string) ?? '',
+            start_time: (lesson.HourFrom as string) ?? null,
+            end_time: (lesson.HourTo as string) ?? null,
+            is_substitution: Boolean(lesson.IsSubstitutionClass),
+            is_cancelled: Boolean(lesson.IsCanceled),
+            substitution_note: (lesson.SubstitutionNote as string) ?? null,
+            external_id: `${dateStr}_${lesson.LessonNo}`,
+          });
+        }
       }
     }
+  }
+
+  // Try WeekStart-based fetching (standard accounts).
+  // On 400 the API returns alternative Resource endpoints for this account type
+  // (e.g. IndividualLearningPath) — try those instead.
+  const today = new Date();
+  const dayOfWeek = today.getDay() || 7;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - dayOfWeek + 1);
+  const weeks: string[] = [];
+  for (let w = 0; w < 2; w++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + w * 7);
+    weeks.push(d.toISOString().slice(0, 10));
+  }
+
+  let usedFallback = false;
+  for (const weekStart of weeks) {
+    let data: LibrusResponse | null;
+    try {
+      data = await librusGet(`Timetables?WeekStart=${weekStart}`, accessToken);
+    } catch (err) {
+      if (err instanceof Librus400Error && err.resources && !usedFallback) {
+        // This account type doesn't support WeekStart — use the Resources endpoints instead.
+        usedFallback = true;
+        for (const [name, { Url }] of Object.entries(err.resources)) {
+          const path = Url.replace(`${LIBRUS_API_URL}/`, '');
+          console.log(`syncTimetable: trying fallback endpoint ${name} (${path})`);
+          try {
+            const altData = await librusGet(path, accessToken);
+            if (!altData) {
+              console.warn(`syncTimetable: ${name} → null response (403/404)`);
+              continue;
+            }
+            // Standard endpoint: { Timetable: { "YYYY-MM-DD": [...] } }
+            // ILP / other endpoints: { Url: "...", Resources: { "YYYY-MM-DD": [...] } }
+            const timetableObj =
+              altData.Timetable ??
+              (altData.Resources &&
+              typeof altData.Resources === 'object' &&
+              !Array.isArray(altData.Resources)
+                ? altData.Resources
+                : null);
+
+            if (timetableObj) {
+              const firstKey = Object.keys(timetableObj as object)[0] ?? '(empty)';
+              console.log(
+                `syncTimetable: ${name} → timetable key "${Object.keys(altData).find((k) => altData[k] === timetableObj)}", first date key: ${firstKey}`,
+              );
+              parseTimetableResponse(timetableObj as Record<string, unknown>, name);
+            } else {
+              // Dump enough info to understand the response shape
+              const preview: Record<string, unknown> = {};
+              for (const k of Object.keys(altData).slice(0, 5)) {
+                const v = altData[k];
+                preview[k] = Array.isArray(v)
+                  ? `Array(${(v as unknown[]).length})`
+                  : typeof v === 'object' && v !== null
+                    ? `object{${Object.keys(v as object)
+                        .slice(0, 3)
+                        .join(',')}}`
+                    : v;
+              }
+              console.warn(
+                `syncTimetable: ${name} → unrecognised shape: ${JSON.stringify(preview)}`,
+              );
+            }
+          } catch (altErr) {
+            console.warn(`syncTimetable: fallback ${name} failed: ${String(altErr)}`);
+          }
+        }
+        break; // fallback endpoints return full data, no need to iterate weeks
+      }
+      throw err; // re-throw other errors
+    }
+    if (data === null) {
+      console.warn(`syncTimetable: week ${weekStart} → API returned null (403/404)`);
+      continue;
+    }
+    if (!data.Timetable) {
+      console.warn(
+        `syncTimetable: week ${weekStart} → no Timetable key. Keys: ${Object.keys(data).join(', ')}`,
+      );
+      continue;
+    }
+    parseTimetableResponse(data.Timetable as Record<string, unknown>, `week ${weekStart}`);
   }
 
   if (!rows.length) return 0;
@@ -441,12 +537,19 @@ async function syncMessages(
 
   if (data === null) {
     // 403/404 → this account type doesn't support Messages.
-    console.error(`syncMessages(${direction}): endpoint returned null (403/404) — skipping`);
+    console.warn(
+      `syncMessages(${direction}): endpoint ${endpoint} returned null (403/404) \u2014 feature unavailable for this account`,
+    );
     return 0;
   }
 
   const messages = (data?.Messages as Record<string, unknown>[]) ?? [];
-  if (!messages.length) return 0;
+  if (!messages.length) {
+    console.log(
+      `syncMessages(${direction}): empty list. Top-level keys: ${Object.keys(data).join(', ')}`,
+    );
+    return 0;
+  }
 
   const userMap = buildUserMap(usersData);
 
@@ -536,6 +639,22 @@ async function syncAnnouncements(
   return rows.length;
 }
 
+/**
+ * Fetch today's lucky number (Szczęśliwy numerek) from LuckyNumbers endpoint.
+ * Returns null silently if unavailable for this account type.
+ */
+async function fetchLuckyNumber(
+  accessToken: string,
+): Promise<{ number: number; day: string } | null> {
+  const data = await librusGet('LuckyNumbers', accessToken);
+  const ln = data?.LuckyNumber as Record<string, unknown> | undefined;
+  if (!ln?.LuckyNumber) return null;
+  return {
+    number: Number(ln.LuckyNumber),
+    day: String(ln.LuckyNumberDay),
+  };
+}
+
 // ─── Main handler ───────────────────────────────────────────
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -615,9 +734,14 @@ serve(async (req) => {
     syncMessages(connection_id, accessToken, 'inbox', serviceClient),
     syncMessages(connection_id, accessToken, 'sent', serviceClient),
     syncAnnouncements(connection_id, accessToken, serviceClient),
+    fetchLuckyNumber(accessToken).catch(() => null), // non-critical — never fail the sync
   ]);
 
-  const [gradesR, timetableR, homeworkR, attendanceR, inboxR, sentR, announcementsR] = results;
+  const [gradesR, timetableR, homeworkR, attendanceR, inboxR, sentR, announcementsR, luckyR] =
+    results;
+
+  const luckyData = luckyR.status === 'fulfilled' ? luckyR.value : null;
+  if (luckyData) console.log(`Lucky number today (${luckyData.day}): ${luckyData.number}`);
 
   const counts = {
     grades: gradesR.status === 'fulfilled' ? gradesR.value : 0,
@@ -630,15 +754,17 @@ serve(async (req) => {
   };
 
   const errors = results
+    .slice(0, 7) // only the 7 sync tasks — luckyNumber is non-critical
     .map((r, i) => (r.status === 'rejected' ? { task: i, reason: String(r.reason) } : null))
     .filter(Boolean);
 
-  // Update last_synced_at
+  // Update last_synced_at and (if available) today's lucky number
   await serviceClient
     .from('school_connections')
     .update({
       last_synced_at: new Date().toISOString(),
       sync_error: errors.length > 0 ? `Partial sync errors: ${errors.length}` : null,
+      ...(luckyData ? { lucky_number: luckyData.number, lucky_number_day: luckyData.day } : {}),
     })
     .eq('id', connection_id);
 

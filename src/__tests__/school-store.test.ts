@@ -62,6 +62,8 @@ function makeConnection(overrides = {}) {
     last_synced_at: null,
     sync_error: null,
     token_expiry: null,
+    lucky_number: null,
+    lucky_number_day: null,
     created_at: '2025-09-01T00:00:00Z',
     updated_at: '2025-09-01T00:00:00Z',
     ...overrides,

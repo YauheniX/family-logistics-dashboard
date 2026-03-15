@@ -1,12 +1,56 @@
 <template>
   <div class="space-y-4">
+    <!-- Loading -->
+    <div
+      v-if="schoolStore.dataLoading"
+      class="text-center py-10 text-neutral-400 dark:text-neutral-500"
+    >
+      <span class="text-4xl block mb-2 animate-pulse">📅</span>
+      <p>{{ $t('school.loading') }}</p>
+    </div>
+
+    <!-- Error state -->
+    <div
+      v-else-if="schoolStore.dataError && !Object.keys(lessonsByDate).length"
+      class="text-center py-10 text-neutral-400 dark:text-neutral-500"
+    >
+      <span class="text-4xl block mb-2">⚠️</span>
+      <p class="text-sm text-red-500 mb-4">{{ schoolStore.dataError }}</p>
+      <button
+        type="button"
+        class="btn-primary text-sm"
+        :disabled="schoolStore.syncing"
+        @click="handleSync"
+      >
+        <span :class="schoolStore.syncing ? 'animate-spin' : ''">🔄</span>
+        {{ schoolStore.syncing ? $t('school.syncing') : $t('school.sync') }}
+      </button>
+    </div>
+
     <!-- Empty state -->
     <div
-      v-if="!Object.keys(lessonsByDate).length"
+      v-else-if="!Object.keys(lessonsByDate).length"
       class="text-center py-10 text-neutral-400 dark:text-neutral-500"
     >
       <span class="text-4xl block mb-2">📅</span>
-      <p>{{ $t('school.timetable.empty') }}</p>
+      <template v-if="hasSynced">
+        <p class="mb-1 font-medium text-neutral-500 dark:text-neutral-400">
+          {{ $t('school.timetable.emptyAfterSync') }}
+        </p>
+        <p class="text-xs mb-2">{{ $t('school.timetable.emptyAfterSyncHint') }}</p>
+      </template>
+      <template v-else>
+        <p class="mb-4">{{ $t('school.timetable.empty') }}</p>
+        <button
+          type="button"
+          class="btn-primary text-sm"
+          :disabled="schoolStore.syncing"
+          @click="handleSync"
+        >
+          <span :class="schoolStore.syncing ? 'animate-spin' : ''">🔄</span>
+          {{ schoolStore.syncing ? $t('school.syncing') : $t('school.sync') }}
+        </button>
+      </template>
     </div>
 
     <!-- One card per day -->
@@ -105,6 +149,13 @@ const schoolStore = useSchoolStore();
 const { locale } = useI18n();
 
 const lessonsByDate = computed(() => schoolStore.lessonsByDate);
+const hasSynced = computed(() => Boolean(schoolStore.activeConnection?.last_synced_at));
+
+async function handleSync() {
+  if (schoolStore.activeConnectionId) {
+    await schoolStore.syncConnection(schoolStore.activeConnectionId);
+  }
+}
 
 const _now = new Date();
 const todayStr = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-${String(_now.getDate()).padStart(2, '0')}`;

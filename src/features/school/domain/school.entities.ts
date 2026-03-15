@@ -19,6 +19,8 @@ export interface SchoolConnection {
   last_synced_at: string | null;
   sync_error: string | null;
   token_expiry: string | null;
+  lucky_number: number | null;
+  lucky_number_day: string | null;
   created_at: string;
   updated_at: string;
 }
