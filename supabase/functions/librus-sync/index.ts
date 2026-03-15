@@ -8,14 +8,13 @@ import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 const LIBRUS_API_URL = 'https://api.librus.pl/2.0';
-const LIBRUS_API_TOKEN_URL = 'https://api.librus.pl/OAuth/Token';
+// Portal OAuth — must match what librus-auth uses for token refresh
+const LIBRUS_PORTAL_TOKEN_URL = 'https://portal.librus.pl/oauth2/access_token';
+const LIBRUS_PORTAL_API_URL = 'https://portal.librus.pl/api';
+const LIBRUS_CLIENT_ID = 'VaItV6oRutdo8fnjJwysnTjVlvaswf52ZqmXsJGP';
 // User-Agent must include the Android Dalvik prefix or Librus rejects the request.
-// Source: https://github.com/szkolny-eu/szkolny-android/blob/master/app/src/main/java/pl/szczodrzynski/edziennik/data/api/Constants.kt
 const LIBRUS_USER_AGENT =
   'Dalvik/2.1.0 (Linux; U; Android 11; Android SDK built for x86)LibrusMobileApp';
-// Public client credentials (can be overridden via Supabase secret LIBRUS_API_AUTHORIZATION).
-const LIBRUS_API_AUTHORIZATION =
-  Deno.env.get('LIBRUS_API_AUTHORIZATION') ?? 'Mjg6ODRmZGQzYTg3YjAzZDNlYTZmZmU3NzdiNThiMzMyYjE=';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -71,34 +70,73 @@ async function librusGet(endpoint: string, accessToken: string): Promise<LibrusR
   }
 }
 
-async function refreshToken(refreshTokenStr: string): Promise<{
+async function refreshToken(portalRefreshToken: string): Promise<{
   access_token: string;
   refresh_token: string;
   expires_in: number;
 } | null> {
-  const body = new URLSearchParams({
-    grant_type: 'refresh_token',
-    refresh_token: refreshTokenStr,
-    librus_long_term_token: '1',
-    librus_rules_accepted: '1',
-  });
-
-  // Pass URLSearchParams directly — Deno sets Content-Type automatically.
-  const resp = await fetch(LIBRUS_API_TOKEN_URL, {
+  // Step 1: refresh the portal OAuth token
+  const resp = await fetch(LIBRUS_PORTAL_TOKEN_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${LIBRUS_API_AUTHORIZATION}`,
+      'User-Agent': LIBRUS_USER_AGENT,
+    },
+    body: new URLSearchParams({
+      client_id: LIBRUS_CLIENT_ID,
+      grant_type: 'refresh_token',
+      refresh_token: portalRefreshToken,
+    }).toString(),
+  });
+
+  if (!resp.ok) {
+    console.error('Portal token refresh failed', { status: resp.status });
+    return null;
+  }
+
+  let portalToken: Record<string, unknown>;
+  try {
+    portalToken = await resp.json();
+  } catch {
+    return null;
+  }
+
+  const newPortalAccessToken = portalToken.access_token as string;
+  const newPortalRefreshToken = (portalToken.refresh_token as string) ?? portalRefreshToken;
+  const expiresIn = (portalToken.expires_in as number) ?? 3600;
+
+  // Step 2: exchange portal access token for Synergia API access token
+  const synergiaResp = await fetch(`${LIBRUS_PORTAL_API_URL}/v3/SynergiaAccounts`, {
+    headers: {
+      Authorization: `Bearer ${newPortalAccessToken}`,
       'User-Agent': LIBRUS_USER_AGENT,
       Accept: 'application/json',
-      'Accept-Language': 'pl-PL',
-      'Accept-Encoding': 'gzip',
-      Connection: 'Keep-Alive',
     },
-    body,
   });
-  if (!resp.ok) return null;
-  return resp.json();
+
+  if (!synergiaResp.ok) {
+    console.error('SynergiaAccounts refresh failed', { status: synergiaResp.status });
+    return null;
+  }
+
+  let synergiaData: Record<string, unknown>;
+  try {
+    synergiaData = await synergiaResp.json();
+  } catch {
+    return null;
+  }
+
+  const account =
+    (synergiaData.account as Record<string, unknown>) ??
+    ((synergiaData.accounts as Record<string, unknown>[])?.[0] as Record<string, unknown>);
+  const apiToken = (account?.accessToken as string) ?? (account?.access_token as string);
+
+  if (!apiToken) {
+    console.error('SynergiaAccounts: no accessToken in refresh response');
+    return null;
+  }
+
+  return { access_token: apiToken, refresh_token: newPortalRefreshToken, expires_in: expiresIn };
 }
 
 // ─── ID → name lookup helpers ──────────────────────────────
@@ -529,7 +567,6 @@ serve(async (req) => {
     .from('school_connections')
     .select('id, access_token, refresh_token, token_expiry, platform, is_active')
     .eq('id', connection_id)
-    .eq('is_active', true)
     .single();
 
   if (connErr || !conn) {
@@ -552,7 +589,7 @@ serve(async (req) => {
     if (!newTokens) {
       await serviceClient
         .from('school_connections')
-        .update({ sync_error: 'Token refresh failed – please reconnect', is_active: false })
+        .update({ sync_error: 'Token refresh failed – please reconnect' })
         .eq('id', connection_id);
       return json({ error: 'Token refresh failed – please reconnect' }, 502);
     }

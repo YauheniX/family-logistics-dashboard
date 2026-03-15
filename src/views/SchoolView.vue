@@ -76,11 +76,13 @@
           :class="
             schoolStore.activeConnectionId === conn.id
               ? 'bg-primary-500 text-white border-primary-500'
-              : 'bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700'
+              : conn.sync_error
+                ? 'bg-red-50 dark:bg-red-900/10 text-red-700 dark:text-red-400 border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/20'
+                : 'bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700'
           "
           @click="schoolStore.setActiveConnection(conn.id)"
         >
-          🎓 {{ conn.display_label }}
+          {{ conn.sync_error ? '⚠️' : '🎓' }} {{ conn.display_label }}
         </button>
       </div>
 

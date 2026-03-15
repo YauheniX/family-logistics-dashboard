@@ -79,7 +79,6 @@ export class SchoolRepository {
         'id, household_id, member_id, platform, display_label, student_name, class_name, school_name, is_active, last_synced_at, sync_error, token_expiry, created_at, updated_at',
       )
       .eq('household_id', householdId)
-      .eq('is_active', true)
       .order('created_at', { ascending: true });
 
     if (error) return { data: null, error: { message: error.message } };
