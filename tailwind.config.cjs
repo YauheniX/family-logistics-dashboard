@@ -9,8 +9,8 @@ module.exports = {
         xs: '475px',
       },
       fontFamily: {
-        sans: ['Turret Road', 'Inter', 'Poppins', ...defaultTheme.fontFamily.sans],
-        display: ['Turret Road', 'Inter', ...defaultTheme.fontFamily.sans],
+        sans: ['Montserrat', 'Inter', 'Poppins', ...defaultTheme.fontFamily.sans],
+        display: ['Montserrat', 'Inter', ...defaultTheme.fontFamily.sans],
       },
       colors: {
         // Primary colors
