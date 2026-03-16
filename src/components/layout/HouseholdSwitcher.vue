@@ -10,15 +10,7 @@
       <span class="md:inline max-w-[100px] truncate">
         {{ currentHousehold?.name || 'Select Household' }}
       </span>
-      <svg
-        class="h-6 w-6 transition-transform"
-        :class="{ 'rotate-180': isOpen }"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-      </svg>
+      <ChevronDown class="h-6 w-6 transition-transform" :class="{ 'rotate-180': isOpen }" />
     </button>
 
     <!-- Dropdown Menu -->
@@ -49,18 +41,10 @@
               {{ household.role }}
             </p>
           </div>
-          <svg
+          <Check
             v-if="household.id === currentHousehold?.id"
             class="h-5 w-5 text-primary-600 dark:text-primary-400"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-              clip-rule="evenodd"
-            />
-          </svg>
+          />
         </button>
       </div>
 
@@ -110,6 +94,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ChevronDown, Check } from 'lucide-vue-next';
 import { useHouseholdStore } from '@/stores/household';
 import { useToastStore } from '@/stores/toast';
 import ModalDialog from '@/components/shared/ModalDialog.vue';

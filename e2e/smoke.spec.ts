@@ -57,16 +57,13 @@ test.describe('Login flow', () => {
   test('signs in with existing credentials and lands on dashboard', async ({ page }) => {
     // Pre-seed a known user WITHOUT a currentUser so the app starts as logged-out
     // but the user account already "exists" in the mock auth store.
-    await page.addInitScript(
-      ({ key, value }) => localStorage.setItem(key, value),
-      {
-        key: lsKey('auth-data'),
-        value: JSON.stringify({
-          users: [{ id: 'preset-user-1', email: 'preset@example.com', password: 'password123' }],
-          currentUser: null,
-        }),
-      },
-    );
+    await page.addInitScript(({ key, value }) => localStorage.setItem(key, value), {
+      key: lsKey('auth-data'),
+      value: JSON.stringify({
+        users: [{ id: 'preset-user-1', email: 'preset@example.com', password: 'password123' }],
+        currentUser: null,
+      }),
+    });
 
     await page.goto('/login');
 
@@ -103,9 +100,7 @@ test.describe('Household selection', () => {
       timeout: 8_000,
     });
     // "Create Household" action button should be visible
-    await expect(
-      page.getByRole('button', { name: /create household/i }),
-    ).toBeVisible();
+    await expect(page.getByRole('button', { name: /create household/i })).toBeVisible();
     // The seeded household name should appear somewhere on the page
     // (in the sidebar, header selector, or the household list itself)
     await expect(page.getByText('Smith Family').first()).toBeAttached({ timeout: 8_000 });
@@ -187,7 +182,10 @@ test.describe('Shopping list – create and edit', () => {
     // Fill in item name in the modal
     const itemInput = page.getByPlaceholder(/item name/i);
     await itemInput.fill('Milk');
-    await page.getByRole('button', { name: /add item/i }).last().click();
+    await page
+      .getByRole('button', { name: /add item/i })
+      .last()
+      .click();
 
     // Item should appear in the list
     await expect(page.getByText('Milk')).toBeVisible({ timeout: 8_000 });
@@ -209,11 +207,17 @@ test.describe('Shopping list – create and edit', () => {
     await page.getByRole('button', { name: /edit/i }).first().click();
     await page.getByRole('button', { name: /add item/i }).click();
     await page.getByPlaceholder(/item name/i).fill('Eggs');
-    await page.getByRole('button', { name: /add item/i }).last().click();
+    await page
+      .getByRole('button', { name: /add item/i })
+      .last()
+      .click();
     await expect(page.getByText('Eggs')).toBeVisible({ timeout: 8_000 });
 
     // Switch to Shopping mode and toggle the item
-    await page.getByRole('button', { name: /shopping/i }).first().click();
+    await page
+      .getByRole('button', { name: /shopping/i })
+      .first()
+      .click();
     // Find the checkbox associated with the "Eggs" label (not the filter checkboxes)
     const itemCheckbox = page.getByLabel('Eggs');
     await itemCheckbox.check();
@@ -259,7 +263,9 @@ test.describe('Public wishlist – share and reserve', () => {
     await page.getByRole('button', { name: /reserve this/i }).click();
 
     // The reservation modal should open — identified by its title heading
-    await expect(page.getByRole('heading', { name: 'Reserve Item' })).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByRole('heading', { name: 'Reserve Item' })).toBeVisible({
+      timeout: 5_000,
+    });
     await expect(page.getByLabel('Your Name')).toBeVisible();
     await expect(page.getByLabel('Your Email')).toBeVisible();
 

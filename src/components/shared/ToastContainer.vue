@@ -11,7 +11,7 @@
         :class="toastClasses(toast.type)"
         class="flex items-center gap-3 rounded-lg px-4 py-3 shadow-lg w-full"
       >
-        <span class="text-lg">{{ toastIcon(toast.type) }}</span>
+        <component :is="toastIcon(toast.type)" class="w-5 h-5 flex-shrink-0" />
         <p class="flex-1 text-sm font-medium">{{ toast.message }}</p>
         <button
           type="button"
@@ -27,6 +27,8 @@
 
 <script setup lang="ts">
 import { useToastStore } from '@/stores/toast';
+import { CheckCircle, CircleX, AlertTriangle, Info } from 'lucide-vue-next';
+import type { Component } from 'vue';
 import type { ToastType } from '@/types/api';
 
 const toastStore = useToastStore();
@@ -44,12 +46,12 @@ const toastClasses = (type: ToastType) => {
   return classes[type] || classes.info;
 };
 
-const toastIcon = (type: ToastType) => {
-  const icons = {
-    success: '✓',
-    error: '✕',
-    warning: '⚠',
-    info: 'ℹ',
+const toastIcon = (type: ToastType): Component => {
+  const icons: Record<ToastType, Component> = {
+    success: CheckCircle,
+    error: CircleX,
+    warning: AlertTriangle,
+    info: Info,
   };
   return icons[type] || icons.info;
 };

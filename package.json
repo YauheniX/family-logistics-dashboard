@@ -26,6 +26,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
     "chart.js": "^4.4.7",
+    "lucide-vue-next": "^0.577.0",
     "pinia": "^2.1.7",
     "supabase": "^2.76.12",
     "vue": "^3.4.21",

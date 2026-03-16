@@ -6,6 +6,8 @@
  */
 
 import type { MemberRole } from '@/features/shared/domain/entities';
+import type { Component } from 'vue';
+import { Crown, Star, User, Baby, Eye } from 'lucide-vue-next';
 
 export const ROLE_LABELS: Record<MemberRole, string> = {
   owner: 'Owner',
@@ -15,12 +17,12 @@ export const ROLE_LABELS: Record<MemberRole, string> = {
   viewer: 'Viewer',
 };
 
-export const ROLE_ICONS: Record<MemberRole, string> = {
-  owner: '👑',
-  admin: '⭐',
-  member: '👤',
-  child: '👶',
-  viewer: '👀',
+export const ROLE_ICONS: Record<MemberRole, Component> = {
+  owner: Crown,
+  admin: Star,
+  member: User,
+  child: Baby,
+  viewer: Eye,
 };
 
 export const ROLE_STYLES = {
@@ -48,10 +50,10 @@ export function getRoleLabel(role: string): string {
 }
 
 /**
- * Get the emoji icon for a role
+ * Get the icon component for a role
  */
-export function getRoleIcon(role: string): string {
-  return ROLE_ICONS[role as MemberRole] || '👤';
+export function getRoleIcon(role: string): Component {
+  return ROLE_ICONS[role as MemberRole] || User;
 }
 
 /**

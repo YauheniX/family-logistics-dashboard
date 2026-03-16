@@ -26,12 +26,12 @@
         "
         :aria-label="item.label"
       >
-        <span
-          class="text-xl transition-transform"
+        <component
+          :is="item.icon"
+          class="w-5 h-5 transition-transform"
           :class="isActive(item.name) ? 'scale-110' : ''"
           aria-hidden="true"
-          >{{ item.emoji }}</span
-        >
+        />
         <span class="text-[10px] sm:text-xs font-medium truncate max-w-[70px] sm:max-w-[80px]">{{
           item.label
         }}</span>
@@ -49,12 +49,11 @@
         aria-label="More options"
         @click="toggleMoreMenu"
       >
-        <span
-          class="text-xl transition-transform"
+        <MoreHorizontal
+          class="w-5 h-5 transition-transform"
           :class="showMoreMenu ? 'rotate-90' : ''"
           aria-hidden="true"
-          >⋯</span
-        >
+        />
         <span class="text-[10px] sm:text-xs font-medium">{{ $t('nav.more') }}</span>
       </button>
     </div>
@@ -85,9 +84,11 @@
             "
             @click="closeMoreMenu"
           >
-            <span class="text-lg transition-transform hover:scale-110" aria-hidden="true">{{
-              item.emoji
-            }}</span>
+            <component
+              :is="item.icon"
+              class="w-5 h-5 transition-transform hover:scale-110"
+              aria-hidden="true"
+            />
             <span class="text-sm font-medium">{{ item.label }}</span>
           </RouterLink>
         </div>
@@ -98,8 +99,19 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import type { Component } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import {
+  Home,
+  ShoppingCart,
+  Gift,
+  Building2,
+  School,
+  LayoutGrid,
+  Settings,
+  MoreHorizontal,
+} from 'lucide-vue-next';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -109,22 +121,22 @@ interface NavItem {
   name: string;
   label: string;
   to: string | { name: string };
-  emoji: string;
+  icon: Component;
 }
 
 // Primary navigation items (always visible)
 const navItems = computed<NavItem[]>(() => [
-  { name: 'dashboard', label: t('nav.home'), to: { name: 'dashboard' }, emoji: '🏠' },
-  { name: 'shopping', label: t('nav.shopping'), to: { name: 'shopping' }, emoji: '🛒' },
-  { name: 'wishlist-list', label: t('nav.wishlists'), to: '/wishlists', emoji: '🎁' },
+  { name: 'dashboard', label: t('nav.home'), to: { name: 'dashboard' }, icon: Home },
+  { name: 'shopping', label: t('nav.shopping'), to: { name: 'shopping' }, icon: ShoppingCart },
+  { name: 'wishlist-list', label: t('nav.wishlists'), to: '/wishlists', icon: Gift },
 ]);
 
 // Additional items in "More" menu
 const moreItems = computed<NavItem[]>(() => [
-  { name: 'household-list', label: t('nav.households'), to: '/households', emoji: '🏠' },
-  { name: 'school', label: t('nav.school'), to: '/school', emoji: '🏫' },
-  { name: 'apps', label: t('nav.apps'), to: '/apps', emoji: '📱' },
-  { name: 'settings', label: t('nav.settings'), to: '/settings', emoji: '⚙️' },
+  { name: 'household-list', label: t('nav.households'), to: '/households', icon: Building2 },
+  { name: 'school', label: t('nav.school'), to: '/school', icon: School },
+  { name: 'apps', label: t('nav.apps'), to: '/apps', icon: LayoutGrid },
+  { name: 'settings', label: t('nav.settings'), to: '/settings', icon: Settings },
 ]);
 
 function isActive(routeName: string): boolean {

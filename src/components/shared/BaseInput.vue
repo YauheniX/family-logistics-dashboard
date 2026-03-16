@@ -73,13 +73,7 @@
         class="absolute right-3 top-1/2 -translate-y-1/2 text-success-500 dark:text-success-400 animate-check-in"
         aria-hidden="true"
       >
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-          <path
-            fill-rule="evenodd"
-            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-            clip-rule="evenodd"
-          />
-        </svg>
+        <Check class="w-5 h-5" />
       </span>
 
       <!-- Password Toggle -->
@@ -91,35 +85,11 @@
         :aria-label="showPassword ? 'Hide password' : 'Show password'"
         @click="togglePasswordVisibility"
       >
-        <svg
+        <component
+          :is="showPassword ? EyeOff : Eye"
           class="w-5 h-5 transition-transform duration-200"
           :class="{ 'rotate-180': showPassword }"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            v-if="!showPassword"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-          />
-          <path
-            v-if="!showPassword"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-          />
-          <path
-            v-else
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
-          />
-        </svg>
+        />
       </button>
 
       <!-- Icon Right -->
@@ -158,13 +128,7 @@
       :id="`${inputId}-error`"
       class="text-sm text-danger-500 dark:text-danger-400 flex items-center gap-1 animate-slide-down"
     >
-      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-        <path
-          fill-rule="evenodd"
-          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-          clip-rule="evenodd"
-        />
-      </svg>
+      <CircleX class="w-4 h-4" aria-hidden="true" />
       {{ error }}
     </p>
     <!-- Hint Message -->
@@ -176,6 +140,7 @@
 
 <script setup lang="ts">
 import { computed, ref, useSlots } from 'vue';
+import { Check, Eye, EyeOff, CircleX } from 'lucide-vue-next';
 
 const slots = useSlots();
 

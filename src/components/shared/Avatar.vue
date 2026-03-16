@@ -46,10 +46,14 @@
       <span
         class="inline-flex items-center justify-center rounded-full border-2 border-white dark:border-neutral-800 transition-all"
         :class="roleIconClass"
-        :style="{ width: badgeSize, height: badgeSize, fontSize: badgeIconSize }"
+        :style="{ width: badgeSize, height: badgeSize }"
         :title="roleLabel"
       >
-        {{ roleIcon }}
+        <component
+          :is="roleIcon"
+          class="text-white"
+          :style="{ width: badgeIconSize, height: badgeIconSize }"
+        />
       </span>
     </div>
   </div>
