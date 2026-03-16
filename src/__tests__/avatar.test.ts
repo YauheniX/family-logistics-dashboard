@@ -217,7 +217,7 @@ describe('Avatar', () => {
         },
       });
 
-      expect(wrapper.text()).toContain('👑');
+      expect(wrapper.find('span[title="Owner"] svg').exists()).toBe(true);
       expect(wrapper.html()).toContain('Owner');
     });
 
@@ -230,19 +230,19 @@ describe('Avatar', () => {
         },
       });
 
-      expect(wrapper.text()).not.toContain('👑');
+      expect(wrapper.find('span[title="Owner"] svg').exists()).toBe(false);
     });
 
     it('renders correct icon for each role', () => {
       const roles = [
-        { role: 'owner', icon: '👑' },
-        { role: 'admin', icon: '⭐' },
-        { role: 'member', icon: '👤' },
-        { role: 'child', icon: '👶' },
-        { role: 'viewer', icon: '👀' },
+        { role: 'owner', label: 'Owner' },
+        { role: 'admin', label: 'Admin' },
+        { role: 'member', label: 'Member' },
+        { role: 'child', label: 'Child' },
+        { role: 'viewer', label: 'Viewer' },
       ];
 
-      roles.forEach(({ role, icon }) => {
+      roles.forEach(({ role, label }) => {
         const wrapper = mount(Avatar, {
           props: {
             name: 'Test User',
@@ -250,7 +250,7 @@ describe('Avatar', () => {
           },
         });
 
-        expect(wrapper.text()).toContain(icon);
+        expect(wrapper.find(`span[title="${label}"] svg`).exists()).toBe(true);
       });
     });
 
@@ -390,7 +390,6 @@ describe('Avatar', () => {
         // badgeIconSize should be ~25% of container
         expect(badgeStyle).toMatch(/width:\s*\d+(\.\d+)?px/);
         expect(badgeStyle).toMatch(/height:\s*\d+(\.\d+)?px/);
-        expect(badgeStyle).toMatch(/font-size:\s*\d+(\.\d+)?px/);
       }
     });
 
@@ -511,7 +510,7 @@ describe('Avatar', () => {
         },
       });
 
-      expect(wrapper.text()).toContain('👤');
+      expect(wrapper.find('span[title="Member"] svg').exists()).toBe(true);
     });
 
     it('uses default size of 64', () => {

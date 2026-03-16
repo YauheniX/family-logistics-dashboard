@@ -82,14 +82,7 @@
               >
                 <span class="text-lg" aria-hidden="true">🏠</span>
                 <span class="max-w-[150px] truncate">Smith Family</span>
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                <ChevronDown class="h-4 w-4" />
               </button>
             </div>
 
@@ -266,5 +259,6 @@
 </template>
 
 <script setup lang="ts">
+import { ChevronDown } from 'lucide-vue-next';
 // Demo view - no logic needed
 </script>

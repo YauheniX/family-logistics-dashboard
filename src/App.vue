@@ -33,20 +33,7 @@
               class="hidden sm:inline-flex hover:shadow-soft"
               @click="reportModalOpen = true"
             >
-              <svg
-                class="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
-                />
-              </svg>
+              <Flag class="h-5 w-5" aria-hidden="true" />
             </BaseButton>
             <div class="hidden sm:block">
               <ThemeToggle />
@@ -104,6 +91,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted } from 'vue';
 import { RouterView, RouterLink, useRoute, useRouter } from 'vue-router';
+import { Flag } from 'lucide-vue-next';
 import SidebarNav from '@/components/layout/SidebarNav.vue';
 import BottomNav from '@/components/layout/BottomNav.vue';
 import Breadcrumbs from '@/components/layout/Breadcrumbs.vue';

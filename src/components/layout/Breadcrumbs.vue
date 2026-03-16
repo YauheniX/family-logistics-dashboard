@@ -21,16 +21,11 @@
       >
         {{ crumb.label }}
       </span>
-      <svg
+      <ChevronRight
         v-if="index < breadcrumbs.length - 1"
         class="h-4 w-4 text-neutral-400 dark:text-neutral-500"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
         aria-hidden="true"
-      >
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-      </svg>
+      />
     </RouterLink>
   </nav>
 </template>
@@ -38,6 +33,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
+import { ChevronRight } from 'lucide-vue-next';
 import { useShoppingStore } from '@/features/shopping/presentation/shopping.store';
 import { useHouseholdStore } from '@/stores/household';
 

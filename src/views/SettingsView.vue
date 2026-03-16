@@ -27,26 +27,7 @@
           />
           <div>
             <BaseButton variant="secondary" @click="handleAvatarUpload">
-              <svg
-                class="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                />
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
+              <Camera class="h-4 w-4" aria-hidden="true" />
               {{ $t('settings.profile.changePhoto') }}
             </BaseButton>
             <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
@@ -71,20 +52,7 @@
               :aria-label="$t('settings.profile.editName')"
               @click="openEditNameModal"
             >
-              <svg
-                class="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                />
-              </svg>
+              <Pencil class="h-4 w-4" aria-hidden="true" />
             </BaseButton>
           </div>
         </div>
@@ -195,6 +163,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { Camera, Pencil } from 'lucide-vue-next';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseInput from '@/components/shared/BaseInput.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';

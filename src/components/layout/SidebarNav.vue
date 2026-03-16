@@ -14,8 +14,8 @@
     <!-- Logo/Brand -->
     <div class="mb-6">
       <div class="flex items-center gap-2 mb-1">
-        <span class="text-2xl" aria-hidden="true">🏡</span>
-        <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-50">
+        <Home class="w-6 h-6 text-primary-600 dark:text-primary-400" aria-hidden="true" />
+        <h2 class="text-xl font-bold font-display text-neutral-900 dark:text-neutral-50">
           {{ $t('nav.brandName') }}
         </h2>
       </div>
@@ -30,9 +30,10 @@
       class="mb-6 rounded-xl bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/40 dark:to-primary-800/40 p-4 border border-primary-200 dark:border-primary-700 shadow-soft hover:shadow-medium transition-shadow duration-normal"
     >
       <div class="flex items-center gap-2 mb-1">
-        <span class="text-xl animate-bounce-subtle" aria-hidden="true">{{
-          currentHousehold.emoji || '🏠'
-        }}</span>
+        <Home
+          class="w-5 h-5 text-primary-600 dark:text-primary-400 animate-bounce-subtle"
+          aria-hidden="true"
+        />
         <p class="font-semibold text-neutral-900 dark:text-neutral-50 truncate">
           {{ currentHousehold.name }}
         </p>
@@ -56,9 +57,11 @@
         "
         @click="emit('close')"
       >
-        <span class="text-lg transition-transform group-hover:scale-110" aria-hidden="true">{{
-          item.emoji
-        }}</span>
+        <component
+          :is="item.icon"
+          class="w-5 h-5 transition-transform group-hover:scale-110"
+          aria-hidden="true"
+        />
         <span>{{ item.label }}</span>
       </RouterLink>
     </nav>
@@ -70,8 +73,8 @@
     <!-- Logo/Brand -->
     <div class="mb-6">
       <div class="flex items-center gap-2 mb-1">
-        <span class="text-2xl" aria-hidden="true">🏡</span>
-        <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-50">
+        <Home class="w-6 h-6 text-primary-600 dark:text-primary-400" aria-hidden="true" />
+        <h2 class="text-xl font-bold font-display text-neutral-900 dark:text-neutral-50">
           {{ $t('nav.brandName') }}
         </h2>
       </div>
@@ -86,9 +89,10 @@
       class="mb-6 rounded-xl bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/40 dark:to-primary-800/40 p-4 border border-primary-200 dark:border-primary-700 shadow-soft hover:shadow-medium transition-shadow duration-normal"
     >
       <div class="flex items-center gap-2 mb-1">
-        <span class="text-xl animate-bounce-subtle" aria-hidden="true">{{
-          currentHousehold.emoji || '🏠'
-        }}</span>
+        <Home
+          class="w-5 h-5 text-primary-600 dark:text-primary-400 animate-bounce-subtle"
+          aria-hidden="true"
+        />
         <p class="font-semibold text-neutral-900 dark:text-neutral-50 truncate">
           {{ currentHousehold.name }}
         </p>
@@ -111,9 +115,11 @@
             : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 hover:shadow-soft hover:translate-x-1'
         "
       >
-        <span class="text-lg transition-transform group-hover:scale-110" aria-hidden="true">{{
-          item.emoji
-        }}</span>
+        <component
+          :is="item.icon"
+          class="w-5 h-5 transition-transform group-hover:scale-110"
+          aria-hidden="true"
+        />
         <span>{{ item.label }}</span>
       </RouterLink>
     </nav>
@@ -122,8 +128,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import type { Component } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import { Home, Building2, ShoppingCart, Gift, School, LayoutGrid, Settings } from 'lucide-vue-next';
 import { useHouseholdStore } from '@/stores/household';
 
 withDefaults(
@@ -157,12 +165,17 @@ const items = computed(() => [
     name: 'household-list',
     label: t('nav.households'),
     to: '/households',
-    emoji: '🏘️',
+    icon: Building2 as Component,
   },
-  { name: 'shopping', label: t('nav.shopping'), to: { name: 'shopping' }, emoji: '🛒' },
-  { name: 'wishlist-list', label: t('nav.wishlists'), to: '/wishlists', emoji: '🎁' },
-  { name: 'school', label: t('nav.school'), to: '/school', emoji: '🏫' },
-  { name: 'apps', label: t('nav.apps'), to: '/apps', emoji: '🎮' },
-  { name: 'settings', label: t('nav.settings'), to: '/settings', emoji: '⚙️' },
+  {
+    name: 'shopping',
+    label: t('nav.shopping'),
+    to: { name: 'shopping' },
+    icon: ShoppingCart as Component,
+  },
+  { name: 'wishlist-list', label: t('nav.wishlists'), to: '/wishlists', icon: Gift as Component },
+  { name: 'school', label: t('nav.school'), to: '/school', icon: School as Component },
+  { name: 'apps', label: t('nav.apps'), to: '/apps', icon: LayoutGrid as Component },
+  { name: 'settings', label: t('nav.settings'), to: '/settings', icon: Settings as Component },
 ]);
 </script>
