@@ -22,14 +22,14 @@
             class="w-full xs:w-auto"
             @click="showAddChildModal = true"
           >
-            👶 Add Child
+            <Baby class="inline w-4 h-4 mr-1" /> Add Child
           </BaseButton>
           <BaseButton
             :disabled="membersLoading"
             class="w-full xs:w-auto"
             @click="showInviteMemberModal = true"
           >
-            ➕ Invite Member
+            <Plus class="inline w-4 h-4 mr-1" /> Invite Member
           </BaseButton>
         </div>
       </div>
@@ -240,6 +240,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onActivated, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { Baby, Plus } from 'lucide-vue-next';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';

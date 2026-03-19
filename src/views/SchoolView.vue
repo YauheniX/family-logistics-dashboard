@@ -5,7 +5,7 @@
       class="sticky top-0 z-10 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-700"
     >
       <div class="max-w-4xl mx-auto px-3 sm:px-6 py-3 flex items-center gap-2 sm:gap-3">
-        <span class="text-2xl">🏫</span>
+        <School class="w-6 h-6 sm:w-7 sm:h-7 text-neutral-700 dark:text-neutral-300" />
         <h1
           class="text-base sm:text-lg font-semibold text-neutral-900 dark:text-neutral-100 flex-1 truncate"
         >
@@ -20,7 +20,7 @@
           class="btn-secondary text-sm flex items-center gap-1.5 shrink-0"
           @click="handleSync"
         >
-          <span :class="schoolStore.syncing ? 'animate-spin' : ''">🔄</span>
+          <RefreshCw :class="['w-4 h-4', schoolStore.syncing ? 'animate-spin' : '']" />
           <span class="hidden sm:inline">{{
             schoolStore.syncing ? $t('school.syncing') : $t('school.sync')
           }}</span>
@@ -37,13 +37,13 @@
     <div class="max-w-4xl mx-auto px-3 sm:px-6 py-4 space-y-4">
       <!-- ─── Loading ──────────────────────────────────────── -->
       <div v-if="schoolStore.loading" class="text-center py-12 text-neutral-400">
-        <span class="text-4xl block mb-2 animate-pulse">⏳</span>
+        <Loader2 class="w-12 h-12 mx-auto mb-2 animate-spin text-neutral-400" />
         {{ $t('school.loading') }}
       </div>
 
       <!-- ─── No connections ──────────────────────────────── -->
       <div v-else-if="!schoolStore.connections.length && !showConnect" class="text-center py-14">
-        <span class="text-6xl block mb-4">🏫</span>
+        <School class="w-16 h-16 mx-auto mb-4 text-neutral-400 dark:text-neutral-500" />
         <h2 class="text-xl font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
           {{ $t('school.noConnectionTitle') }}
         </h2>
@@ -82,11 +82,14 @@
           "
           @click="schoolStore.setActiveConnection(conn.id)"
         >
-          {{ conn.sync_error ? '⚠️' : '🎓' }} {{ conn.display_label
+          <component
+            :is="conn.sync_error ? AlertTriangle : GraduationCap"
+            class="inline w-4 h-4 mr-1"
+          />{{ conn.display_label
           }}<span
             v-if="conn.lucky_number && conn.lucky_number_day === todayDate"
             class="ml-1.5 font-normal opacity-90"
-            >🍀{{ conn.lucky_number }}</span
+            ><Leaf class="inline w-3 h-3" />{{ conn.lucky_number }}</span
           >
         </button>
       </div>
@@ -104,7 +107,9 @@
           }}
         </p>
         <p v-if="schoolStore.activeConnection.sync_error" class="text-xs text-red-500">
-          ⚠️ {{ schoolStore.activeConnection.sync_error }}
+          <AlertTriangle class="inline w-3.5 h-3.5 mr-1" />{{
+            schoolStore.activeConnection.sync_error
+          }}
         </p>
       </div>
       <p
@@ -132,7 +137,7 @@
             "
             @click="activeTab = tab.id"
           >
-            <span>{{ tab.icon }}</span>
+            <component :is="tab.icon" class="w-4 h-4 shrink-0" />
             <span class="hidden xs:inline sm:inline truncate">{{ tab.label }}</span>
             <span
               v-if="tab.badge"
@@ -167,6 +172,20 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, defineAsyncComponent } from 'vue';
 import { useI18n } from 'vue-i18n';
+import {
+  School,
+  RefreshCw,
+  Loader2,
+  AlertTriangle,
+  GraduationCap,
+  Leaf,
+  CalendarDays,
+  BarChart2,
+  FileText,
+  CheckSquare,
+  Mail,
+  Megaphone,
+} from 'lucide-vue-next';
 import { useSchoolStore } from '@/features/school/presentation/school.store';
 import { useHouseholdStore } from '@/stores/household';
 import { useMembers } from '@/composables/useMembers';
@@ -205,18 +224,18 @@ const householdMembers = computed(() =>
 const todayDate = computed(() => new Date().toISOString().slice(0, 10));
 
 const tabs = computed(() => [
-  { id: 'timetable' as const, icon: '📅', label: t('school.tabs.timetable') },
-  { id: 'grades' as const, icon: '📊', label: t('school.tabs.grades') },
+  { id: 'timetable' as const, icon: CalendarDays, label: t('school.tabs.timetable') },
+  { id: 'grades' as const, icon: BarChart2, label: t('school.tabs.grades') },
   {
     id: 'homework' as const,
-    icon: '📝',
+    icon: FileText,
     label: t('school.tabs.homework'),
     badge: schoolStore.pendingHomework.length || undefined,
   },
-  { id: 'attendance' as const, icon: '✅', label: t('school.tabs.attendance') },
+  { id: 'attendance' as const, icon: CheckSquare, label: t('school.tabs.attendance') },
   {
     id: 'messages' as const,
-    icon: '✉️',
+    icon: Mail,
     label: t('school.tabs.messages'),
     badge:
       schoolStore.activeMessages.filter((m) => !m.is_read && m.direction === 'inbox').length ||
@@ -224,7 +243,7 @@ const tabs = computed(() => [
   },
   {
     id: 'announcements' as const,
-    icon: '📢',
+    icon: Megaphone,
     label: t('school.tabs.announcements'),
     badge: schoolStore.activeAnnouncements.filter((a) => a.is_new).length || undefined,
   },

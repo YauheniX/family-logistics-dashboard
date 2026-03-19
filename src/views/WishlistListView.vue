@@ -15,7 +15,7 @@
         </div>
         <BaseButton
           variant="primary"
-          class="w-full sm:w-auto"
+          class="w-full sm:w-auto flex items-center justify-center gap-2"
           :disabled="!isHouseholdReady"
           :title="
             !householdStore.initialized
@@ -26,6 +26,7 @@
           "
           @click="showCreatePersonalModal = true"
         >
+          <Plus class="w-4 h-4" />
           {{ $t('wishlists.createWishlist') }}
         </BaseButton>
       </div>
@@ -115,7 +116,7 @@
           </div>
           <BaseButton
             variant="primary"
-            class="w-full sm:w-auto"
+            class="w-full sm:w-auto flex items-center justify-center gap-2"
             :disabled="!currentHouseholdId || childMembers.length === 0"
             :title="
               !currentHouseholdId
@@ -126,6 +127,7 @@
             "
             @click="showCreateChildModal = true"
           >
+            <Heart class="w-4 h-4" />
             {{ $t('wishlists.children.createForChild') }}
           </BaseButton>
         </div>
@@ -303,6 +305,7 @@
 import { ref, watch, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useI18n } from 'vue-i18n';
+import { Plus, Heart } from 'lucide-vue-next';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';

@@ -38,7 +38,7 @@
             class="w-full xs:w-auto"
             @click="copyPublicLink"
           >
-            📋 Copy Public Link
+            <ClipboardCopy class="inline w-4 h-4 mr-1" /> Copy Public Link
           </BaseButton>
         </div>
       </div>
@@ -276,6 +276,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { ClipboardCopy } from 'lucide-vue-next';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';

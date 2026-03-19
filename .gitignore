@@ -13,3 +13,4 @@ coverage/
 package-lock.json
 playwright-report/
 test-results/
+.claude/settings.local.json

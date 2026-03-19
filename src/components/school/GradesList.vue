@@ -5,7 +5,7 @@
       v-if="!bySubjectWithAvg.length"
       class="text-center py-10 text-neutral-400 dark:text-neutral-500"
     >
-      <span class="text-4xl block mb-2">📊</span>
+      <BarChart2 class="w-10 h-10 mx-auto mb-2 text-neutral-400 dark:text-neutral-500" />
       <p>{{ $t('school.grades.empty') }}</p>
     </div>
 
@@ -49,7 +49,7 @@
           v-if="latestComment(entry.grades)"
           class="mt-2 text-xs text-neutral-500 dark:text-neutral-400 italic truncate"
         >
-          💬 {{ latestComment(entry.grades) }}
+          <MessageSquare class="inline w-3.5 h-3.5 mr-0.5" />{{ latestComment(entry.grades) }}
         </p>
       </div>
     </div>
@@ -58,6 +58,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { BarChart2, MessageSquare } from 'lucide-vue-next';
 import { useSchoolStore } from '@/features/school/presentation/school.store';
 import { schoolService } from '@/features/school/domain/school.service';
 import type { SchoolGrade } from '@/features/school/domain/school.entities';

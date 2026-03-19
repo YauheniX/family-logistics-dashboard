@@ -28,18 +28,20 @@
         >
           <button
             type="button"
-            class="status-tab-btn"
+            class="status-tab-btn flex items-center gap-2"
             :class="{ active: statusFilter === 'active' }"
             @click="statusFilter = 'active'"
           >
+            <CheckCircle2 class="w-4 h-4" />
             {{ $t('shopping.active') }}
           </button>
           <button
             type="button"
-            class="status-tab-btn"
+            class="status-tab-btn flex items-center gap-2"
             :class="{ active: statusFilter === 'archived' }"
             @click="statusFilter = 'archived'"
           >
+            <Archive class="w-4 h-4" />
             {{ $t('shopping.archived') }}
           </button>
         </div>
@@ -123,6 +125,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import { CheckCircle2, Archive } from 'lucide-vue-next';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';

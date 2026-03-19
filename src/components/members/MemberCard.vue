@@ -56,7 +56,7 @@
             type="button"
             @click="$emit('view-wishlist', member)"
           >
-            <span class="group-hover/btn:animate-bounce-subtle">🎁 </span>
+            <Gift class="w-3.5 h-3.5 group-hover/btn:animate-bounce-subtle" />
             <span>Wishlist</span>
           </button>
           <button
@@ -64,7 +64,7 @@
             type="button"
             @click="$emit('view-achievements', member)"
           >
-            <span class="group-hover/btn:animate-bounce-subtle">🏆 </span>
+            <Trophy class="w-3.5 h-3.5 group-hover/btn:animate-bounce-subtle" />
             <span>Achievements</span>
           </button>
         </div>
@@ -104,7 +104,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { SquarePen, Trash2 } from 'lucide-vue-next';
+import { SquarePen, Trash2, Gift, Trophy } from 'lucide-vue-next';
 import Avatar from '@/components/shared/Avatar.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
 import { getRoleLabel } from '@/utils/roleUtils';

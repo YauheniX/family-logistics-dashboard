@@ -13,7 +13,11 @@
             {{ $t('households.description') }}
           </p>
         </div>
-        <BaseButton class="w-full sm:w-auto" @click="showCreateModal = true">
+        <BaseButton
+          class="w-full sm:w-auto flex items-center justify-center gap-2"
+          @click="showCreateModal = true"
+        >
+          <Plus class="w-4 h-4" />
           {{ $t('households.createHousehold') }}
         </BaseButton>
       </div>
@@ -86,6 +90,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
+import { Plus } from 'lucide-vue-next';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';

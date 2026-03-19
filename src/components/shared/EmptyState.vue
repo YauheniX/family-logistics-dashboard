@@ -10,8 +10,14 @@
       <div
         class="absolute inset-0 rounded-full bg-primary-500/10 dark:bg-primary-400/10 animate-pulse"
       />
-      <span class="text-4xl relative z-10" :aria-hidden="!iconLabel" :aria-label="iconLabel">
-        {{ icon || '📦' }}
+      <Package
+        v-if="!icon"
+        class="w-12 h-12 relative z-10 text-primary-500 dark:text-primary-400"
+        :aria-hidden="!iconLabel"
+        :aria-label="iconLabel"
+      />
+      <span v-else class="text-4xl relative z-10" :aria-hidden="!iconLabel" :aria-label="iconLabel">
+        {{ icon }}
       </span>
     </div>
 
@@ -66,7 +72,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ArrowRight } from 'lucide-vue-next';
+import { ArrowRight, Package } from 'lucide-vue-next';
 
 withDefaults(
   defineProps<{
@@ -81,7 +87,7 @@ withDefaults(
   {
     badge: '',
     cta: '',
-    icon: '📦',
+    icon: '',
     iconLabel: '',
     secondaryAction: '',
   },

@@ -2,7 +2,7 @@
   <div>
     <!-- Empty state -->
     <div v-if="!schoolStore.activeAnnouncements.length" class="text-center py-10 text-neutral-400">
-      <span class="text-4xl block mb-2">📢</span>
+      <Megaphone class="w-10 h-10 mx-auto mb-2 text-neutral-400" />
       {{ $t('school.announcements.empty') }}
     </div>
 
@@ -65,6 +65,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { Megaphone } from 'lucide-vue-next';
 import { useSchoolStore } from '@/features/school/presentation/school.store';
 
 const { locale } = useI18n();

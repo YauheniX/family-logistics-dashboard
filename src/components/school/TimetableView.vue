@@ -5,7 +5,9 @@
       v-if="schoolStore.dataLoading"
       class="text-center py-10 text-neutral-400 dark:text-neutral-500"
     >
-      <span class="text-4xl block mb-2 animate-pulse">📅</span>
+      <CalendarDays
+        class="w-10 h-10 mx-auto mb-2 animate-pulse text-neutral-400 dark:text-neutral-500"
+      />
       <p>{{ $t('school.loading') }}</p>
     </div>
 
@@ -14,7 +16,7 @@
       v-else-if="schoolStore.dataError && !Object.keys(lessonsByDate).length"
       class="text-center py-10 text-neutral-400 dark:text-neutral-500"
     >
-      <span class="text-4xl block mb-2">⚠️</span>
+      <AlertTriangle class="w-10 h-10 mx-auto mb-2 text-neutral-400 dark:text-neutral-500" />
       <p class="text-sm text-red-500 mb-4">{{ schoolStore.dataError }}</p>
       <button
         type="button"
@@ -22,7 +24,7 @@
         :disabled="schoolStore.syncing"
         @click="handleSync"
       >
-        <span :class="schoolStore.syncing ? 'animate-spin' : ''">🔄</span>
+        <RefreshCw :class="['w-4 h-4', schoolStore.syncing ? 'animate-spin' : '']" />
         {{ schoolStore.syncing ? $t('school.syncing') : $t('school.sync') }}
       </button>
     </div>
@@ -32,7 +34,7 @@
       v-else-if="!Object.keys(lessonsByDate).length"
       class="text-center py-10 text-neutral-400 dark:text-neutral-500"
     >
-      <span class="text-4xl block mb-2">📅</span>
+      <CalendarDays class="w-10 h-10 mx-auto mb-2 text-neutral-400 dark:text-neutral-500" />
       <template v-if="hasSynced">
         <p class="mb-1 font-medium text-neutral-500 dark:text-neutral-400">
           {{ $t('school.timetable.emptyAfterSync') }}
@@ -47,7 +49,7 @@
           :disabled="schoolStore.syncing"
           @click="handleSync"
         >
-          <span :class="schoolStore.syncing ? 'animate-spin' : ''">🔄</span>
+          <RefreshCw :class="['w-4 h-4', schoolStore.syncing ? 'animate-spin' : '']" />
           {{ schoolStore.syncing ? $t('school.syncing') : $t('school.sync') }}
         </button>
       </template>
@@ -123,7 +125,9 @@
               v-if="lesson.is_substitution"
               class="inline-block mt-1 text-[11px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full"
             >
-              ⚠️ {{ $t('school.timetable.substitution') }}
+              <AlertTriangle class="inline w-3.5 h-3.5 mr-1" />{{
+                $t('school.timetable.substitution')
+              }}
             </span>
           </div>
 
@@ -143,6 +147,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { CalendarDays, AlertTriangle, RefreshCw } from 'lucide-vue-next';
 import { useSchoolStore } from '@/features/school/presentation/school.store';
 
 const schoolStore = useSchoolStore();

@@ -24,18 +24,20 @@
             >
               <button
                 type="button"
-                class="mode-toggle-btn"
+                class="mode-toggle-btn flex items-center gap-2"
                 :class="{ active: !isEditMode }"
                 @click="isEditMode = false"
               >
+                <ShoppingCart class="w-4 h-4" />
                 {{ $t('shopping.list.modeShopping') }}
               </button>
               <button
                 type="button"
-                class="mode-toggle-btn"
+                class="mode-toggle-btn flex items-center gap-2"
                 :class="{ active: isEditMode }"
                 @click="isEditMode = true"
               >
+                <Pencil class="w-4 h-4" />
                 {{ $t('shopping.list.modeEdit') }}
               </button>
             </div>
@@ -47,30 +49,44 @@
           >
             <BaseButton
               variant="ghost"
-              class="w-full xs:w-auto"
+              class="w-full xs:w-auto flex items-center justify-center gap-2"
               @click="showEditListModal = true"
-              >{{ $t('shopping.list.editList') }}</BaseButton
             >
+              <Pencil class="w-4 h-4" />
+              {{ $t('shopping.list.editList') }}
+            </BaseButton>
             <BaseButton
               v-if="shoppingStore.currentList?.status === 'archived'"
               variant="secondary"
-              class="w-full xs:w-auto"
+              class="w-full xs:w-auto flex items-center justify-center gap-2"
               @click="handleUnarchiveList"
             >
+              <Archive class="w-4 h-4" />
               {{ $t('shopping.list.unarchive') }}
             </BaseButton>
             <BaseButton
               v-else
               variant="secondary"
-              class="w-full xs:w-auto"
+              class="w-full xs:w-auto flex items-center justify-center gap-2"
               @click="handleArchiveList"
             >
+              <Archive class="w-4 h-4" />
               {{ $t('shopping.list.archive') }}
             </BaseButton>
-            <BaseButton variant="danger" class="w-full xs:w-auto" @click="showDeleteModal = true">{{
-              $t('shopping.list.delete')
-            }}</BaseButton>
-            <BaseButton variant="primary" class="w-full xs:w-auto" @click="openAddItemModal()">
+            <BaseButton
+              variant="danger"
+              class="w-full xs:w-auto flex items-center justify-center gap-2"
+              @click="showDeleteModal = true"
+            >
+              <Trash2 class="w-4 h-4" />
+              {{ $t('shopping.list.delete') }}
+            </BaseButton>
+            <BaseButton
+              variant="primary"
+              class="w-full xs:w-auto flex items-center justify-center gap-2"
+              @click="openAddItemModal()"
+            >
+              <Plus class="w-4 h-4" />
               {{ $t('shopping.list.addItem') }}
             </BaseButton>
           </div>
@@ -144,7 +160,7 @@
             aria-label="Edit item"
             @click="handleEditItem(item)"
           >
-            ✏️
+            <Pencil class="w-4 h-4" />
           </button>
           <button
             v-if="isEditMode"
@@ -153,7 +169,7 @@
             aria-label="Remove item"
             @click="shoppingStore.removeItem(item.id)"
           >
-            ✕
+            <X class="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -318,6 +334,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import { Pencil, X, ShoppingCart, Archive, Trash2, Plus } from 'lucide-vue-next';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseInput from '@/components/shared/BaseInput.vue';

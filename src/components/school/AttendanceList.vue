@@ -5,14 +5,14 @@
       v-if="!canReadHouseholdResource"
       class="text-center py-10 text-neutral-400 dark:text-neutral-500"
     >
-      <span class="text-4xl block mb-2">🔒</span>
+      <Lock class="w-10 h-10 mx-auto mb-2 text-neutral-400 dark:text-neutral-500" />
       {{ $t('school.attendance.empty') }}
     </div>
 
     <template v-else>
       <!-- Empty state -->
       <div v-if="!grouped.length" class="text-center py-10 text-neutral-400">
-        <span class="text-4xl block mb-2">✅</span>
+        <CheckCircle2 class="w-10 h-10 mx-auto mb-2 text-neutral-400" />
         {{ $t('school.attendance.empty') }}
       </div>
 
@@ -65,6 +65,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { Lock, CheckCircle2 } from 'lucide-vue-next';
 import { useSchoolStore } from '@/features/school/presentation/school.store';
 import { useHouseholdPermissions } from '@/composables/useHouseholdPermissions';
 

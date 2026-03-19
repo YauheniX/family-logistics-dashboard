@@ -5,7 +5,7 @@
       v-if="!canReadHouseholdResource"
       class="text-center py-10 text-neutral-400 dark:text-neutral-500"
     >
-      <span class="text-4xl block mb-2">🔒</span>
+      <Lock class="w-10 h-10 mx-auto mb-2 text-neutral-400 dark:text-neutral-500" />
       {{ $t('school.messages.empty') }}
     </div>
 
@@ -15,13 +15,13 @@
         v-if="schoolStore.dataLoading"
         class="text-center py-10 text-neutral-400 dark:text-neutral-500"
       >
-        <span class="text-4xl block mb-2 animate-pulse">✉️</span>
+        <Mail class="w-10 h-10 mx-auto mb-2 text-neutral-400 dark:text-neutral-500" />
         <p>{{ $t('school.loading') }}</p>
       </div>
 
       <!-- Never synced -->
       <div v-else-if="!hasSynced" class="text-center py-10 text-neutral-400 dark:text-neutral-500">
-        <span class="text-4xl block mb-2">✉️</span>
+        <Mail class="w-10 h-10 mx-auto mb-2 text-neutral-400 dark:text-neutral-500" />
         <p class="mb-4">{{ $t('school.messages.empty') }}</p>
         <button
           type="button"
@@ -29,7 +29,7 @@
           :disabled="schoolStore.syncing"
           @click="handleSync"
         >
-          <span :class="schoolStore.syncing ? 'animate-spin' : ''">🔄</span>
+          <RefreshCw :class="['w-4 h-4', schoolStore.syncing ? 'animate-spin' : '']" />
           {{ schoolStore.syncing ? $t('school.syncing') : $t('school.sync') }}
         </button>
       </div>
@@ -39,7 +39,7 @@
         v-else-if="hasSynced && !schoolStore.activeMessages.length"
         class="text-center py-10 text-neutral-400 dark:text-neutral-500"
       >
-        <span class="text-4xl block mb-2">🚫</span>
+        <Ban class="w-10 h-10 mx-auto mb-2 text-neutral-400 dark:text-neutral-500" />
         <p class="font-medium text-neutral-500 dark:text-neutral-400 mb-1">
           {{ $t('school.messages.unavailable') }}
         </p>
@@ -73,7 +73,7 @@
           v-if="!filtered.length"
           class="text-center py-10 text-neutral-400 dark:text-neutral-500"
         >
-          <span class="text-4xl block mb-2">✉️</span>
+          <Mail class="w-10 h-10 mx-auto mb-2 text-neutral-400 dark:text-neutral-500" />
           <p>
             {{
               direction === 'inbox'
@@ -141,6 +141,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { Lock, Mail, RefreshCw, Ban } from 'lucide-vue-next';
 import { useSchoolStore } from '@/features/school/presentation/school.store';
 import { useHouseholdPermissions } from '@/composables/useHouseholdPermissions';
 

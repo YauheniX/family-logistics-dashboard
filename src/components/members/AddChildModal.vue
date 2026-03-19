@@ -58,19 +58,19 @@
         class="rounded-xl bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 p-4 border border-green-200 dark:border-green-800"
       >
         <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-          ✨ Coming Soon for {{ childName || 'this child' }}:
+          <Sparkles class="inline w-4 h-4 mr-1" /> Coming Soon for {{ childName || 'this child' }}:
         </p>
         <ul class="space-y-1 text-sm text-neutral-600 dark:text-neutral-400">
-          <li>🎁 Personal wishlist</li>
-          <li>🏆 Achievement tracking & gamification</li>
-          <li>🔑 Account activation when ready</li>
+          <li><Gift class="inline w-3.5 h-3.5 mr-1" /> Personal wishlist</li>
+          <li><Trophy class="inline w-3.5 h-3.5 mr-1" /> Achievement tracking & gamification</li>
+          <li><KeyRound class="inline w-3.5 h-3.5 mr-1" /> Account activation when ready</li>
         </ul>
       </div>
 
       <!-- Action Buttons -->
       <div class="flex gap-3 pt-2">
         <BaseButton type="submit" variant="primary" :disabled="!isFormValid" class="flex-1">
-          👶 Add Child
+          <Baby class="inline w-4 h-4 mr-1" /> Add Child
         </BaseButton>
         <BaseButton variant="ghost" type="button" @click="$emit('close')"> Cancel </BaseButton>
       </div>
@@ -80,6 +80,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { Sparkles, Gift, Trophy, KeyRound, Baby } from 'lucide-vue-next';
 import ModalDialog from '@/components/shared/ModalDialog.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
 

@@ -8,7 +8,11 @@
           to="/apps/rock-paper-scissors"
           class="rounded-lg border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-8 text-center transition-all hover:shadow-lg hover:border-primary-500 dark:hover:border-primary-500 cursor-pointer"
         >
-          <div class="text-4xl mb-3">✊✋✌️</div>
+          <div class="flex justify-center gap-1 mb-3">
+            <Hand class="w-9 h-9 text-neutral-700 dark:text-neutral-300" />
+            <HandMetal class="w-9 h-9 text-neutral-700 dark:text-neutral-300" />
+            <Scissors class="w-9 h-9 text-neutral-700 dark:text-neutral-300" />
+          </div>
           <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50 mb-2">
             Rock-Paper-Scissors
           </h3>
@@ -19,7 +23,7 @@
         <div
           class="rounded-lg border-2 border-dashed border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 p-8 text-center"
         >
-          <div class="text-4xl mb-3">📱</div>
+          <Smartphone class="w-10 h-10 mx-auto mb-3 text-neutral-400 dark:text-neutral-500" />
           <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50 mb-2">
             Coming Soon
           </h3>
@@ -32,6 +36,7 @@
 
 <script setup lang="ts">
 import { RouterLink } from 'vue-router';
+import { Smartphone, Hand, HandMetal, Scissors } from 'lucide-vue-next';
 
 // Apps view - integrations and connected applications
 </script>

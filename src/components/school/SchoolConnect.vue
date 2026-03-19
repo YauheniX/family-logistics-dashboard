@@ -5,7 +5,7 @@
       <div
         class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-lg sm:text-xl shrink-0"
       >
-        🏫
+        <School class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
       </div>
       <div class="min-w-0">
         <h2
@@ -24,7 +24,7 @@
       class="flex items-start gap-2 mb-4 sm:mb-5 p-2.5 sm:p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800"
     >
       <span class="text-blue-600 dark:text-blue-400 text-xs sm:text-sm leading-relaxed">
-        📚 {{ $t('school.connect.instructions') }}
+        <BookOpen class="inline w-3.5 h-3.5 mr-1" />{{ $t('school.connect.instructions') }}
       </span>
     </div>
 
@@ -91,7 +91,7 @@
           :disabled="schoolStore.connecting"
           class="btn-primary flex-1 flex items-center justify-center gap-2"
         >
-          <span v-if="schoolStore.connecting" class="animate-spin">⏳</span>
+          <Loader2 v-if="schoolStore.connecting" class="w-4 h-4 animate-spin" />
           {{
             schoolStore.connecting
               ? $t('school.connect.connectingBtn')
@@ -110,6 +110,7 @@
 
 <script setup lang="ts">
 import { reactive } from 'vue';
+import { School, BookOpen, Loader2 } from 'lucide-vue-next';
 import { useSchoolStore } from '@/features/school/presentation/school.store';
 import type { Member } from '@/features/shared/domain/entities';
 

@@ -2,7 +2,7 @@
   <div class="space-y-2">
     <!-- Empty state -->
     <div v-if="!homework.length" class="text-center py-10 text-neutral-400 dark:text-neutral-500">
-      <span class="text-4xl block mb-2">📝</span>
+      <FileText class="w-10 h-10 mx-auto mb-2 text-neutral-400 dark:text-neutral-500" />
       <p>{{ $t('school.homework.empty') }}</p>
     </div>
 
@@ -41,7 +41,7 @@
             class="text-xs px-2 py-0.5 rounded-full"
             :class="dueDateClass(item.date_due)"
           >
-            📅 {{ formatDue(item.date_due) }}
+            <CalendarDays class="inline w-3.5 h-3.5 mr-0.5" />{{ formatDue(item.date_due) }}
           </span>
         </div>
         <p
@@ -51,7 +51,7 @@
           {{ item.description }}
         </p>
         <p v-if="item.teacher" class="mt-0.5 text-xs text-neutral-400 dark:text-neutral-500">
-          👨‍🏫 {{ item.teacher }}
+          <GraduationCap class="inline w-3.5 h-3.5 mr-0.5" />{{ item.teacher }}
         </p>
       </div>
     </div>
@@ -61,6 +61,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { FileText, CalendarDays, GraduationCap } from 'lucide-vue-next';
 import { useSchoolStore } from '@/features/school/presentation/school.store';
 import type { SchoolHomework } from '@/features/school/domain/school.entities';
 

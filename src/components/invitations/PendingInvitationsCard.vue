@@ -1,8 +1,10 @@
 <template>
   <BaseCard v-if="invitations.length > 0" :padding="false">
     <div class="p-5">
-      <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-        📨 Pending Invitations
+      <h3
+        class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 flex items-center gap-2"
+      >
+        <Mail class="w-5 h-5" /> Pending Invitations
       </h3>
       <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
         You have {{ invitations.length }} invitation{{ invitations.length === 1 ? '' : 's' }} to
@@ -58,6 +60,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { Mail } from 'lucide-vue-next';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import { useInvitations } from '@/composables/useInvitations';

@@ -197,8 +197,8 @@ describe('MemberCard', () => {
       global: globalConfig,
     });
 
-    expect(wrapper.text()).toContain('🎁 Wishlist');
-    expect(wrapper.text()).toContain('🏆 Achievements');
+    expect(wrapper.text()).toContain('Wishlist');
+    expect(wrapper.text()).toContain('Achievements');
   });
 
   it('falls back to email when display_name is empty', () => {

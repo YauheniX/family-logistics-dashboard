@@ -70,10 +70,10 @@ describe('AppsView', () => {
       expect(comingSoon.text()).toContain('More apps coming soon');
     });
 
-    it('Coming Soon has correct emoji', () => {
+    it('Coming Soon has icon', () => {
       const wrapper = mountAppsView();
       const comingSoon = wrapper.find('.border-dashed');
-      expect(comingSoon.html()).toContain('📱');
+      expect(comingSoon.html()).toContain('lucide-smartphone');
     });
   });
 

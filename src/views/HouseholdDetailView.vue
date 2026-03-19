@@ -25,7 +25,7 @@
             class="w-full xs:w-auto"
             @click="router.push({ name: 'member-management', params: { id: props.id } })"
           >
-            👥 Manage Members
+            <Users class="inline w-4 h-4 mr-1" /> Manage Members
           </BaseButton>
           <BaseButton
             v-if="isOwner"
@@ -148,7 +148,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { Pencil } from 'lucide-vue-next';
+import { Pencil, Users } from 'lucide-vue-next';
 import BaseButton from '@/components/shared/BaseButton.vue';
 import BaseCard from '@/components/shared/BaseCard.vue';
 import BaseBadge from '@/components/shared/BaseBadge.vue';
